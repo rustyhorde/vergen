@@ -1,0 +1,25 @@
+;;;; Emacs Bookmark Format Version 1 ;;;;
+;;; This format is meant to be slightly human-readable;
+;;; nevertheless, you probably don't want to edit it.
+;;; -*- End Of Bookmark File Format Version Stamp -*-
+(#1=(#("README.md" 0 9
+      (bmkp-full-record #1#))
+    (filename . "/home/jozias/projects/vergen/README.md")
+    (position . 0)
+    (created 21723 47768 132150 645000))
+#1=(#("Cargo.toml" 0 10
+      (bmkp-full-record #1#))
+    (filename . "/home/jozias/projects/vergen/Cargo.toml")
+    (position . 0)
+    (created 21723 47668 556167 106000))
+#1=(#("lib.rs" 0 6
+      (bmkp-full-record #1#))
+    (filename . "/home/jozias/projects/vergen/src/lib.rs")
+    (position . 0)
+    (created 21723 47661 317029 452000))
+#1=(#(".gitignore" 0 10
+      (bmkp-full-record #1#))
+    (filename . "/home/jozias/projects/vergen/.gitignore")
+    (position . 0)
+    (created 21723 47655 153620 187000))
+)
