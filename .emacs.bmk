@@ -14,8 +14,11 @@
     (created 21723 47668 556167 106000))
 #1=(#("lib.rs" 0 6
       (bmkp-full-record #1#))
+    (end-position . 1)
+    (time 21723 48347 214986 349000)
+    (visits . 0)
     (filename . "/home/jozias/projects/vergen/src/lib.rs")
-    (position . 0)
+    (position . 1)
     (created 21723 47661 317029 452000))
 #1=(#(".gitignore" 0 10
       (bmkp-full-record #1#))

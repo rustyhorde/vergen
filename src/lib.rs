@@ -46,7 +46,7 @@ fn gen_sha_fn() -> String {
 }
 
 fn gen_semver_fn() -> String {
-    let mut semver_fn = "pub fn branch() -> &'static str {\n".to_string();
+    let mut semver_fn = "pub fn semver() -> &'static str {\n".to_string();
 
     let mut branch_cmd = Command::new("git");
     branch_cmd.args(&["describe"]);
