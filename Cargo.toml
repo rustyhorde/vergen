@@ -1,0 +1,14 @@
+[package]
+name = "vergen"
+version = "0.0.1"
+authors = ["Jason Ozias <jason.g.ozias@gmail.com>"]
+description = "Generate version related functions"
+documentation = "http://rustyhorde.github.io/vergen"
+homepage = "http://rustyhorde.github.io/vergen"
+repository = "https://github.com/rustyhorde/vergen"
+readme = "README.md"
+license = "MIT"
+keywords = ["rust","rustyhorde","vergen"]
+
+[dependencies]
+time = "*"
