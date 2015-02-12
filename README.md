@@ -5,7 +5,7 @@ Note:  This currently only works for projects using git building on Linux or msy
 
 ```rust
 pub fn now() -> &'static str {
-   // Output of 'date --frc-3339=ns'
+   // Output of 'date --rc-3339=ns'
 }
 
 pub fn sha() -> &'static str {
@@ -13,7 +13,9 @@ pub fn sha() -> &'static str {
 }
 
 pub fn semver() -> &'static str {
-   // output of 'git describe
+   // output of 'git describe'
+   // this works best if you tag your releases 'vX.X.X'
+   // and create a new tag on master after a release 'vX.X.Y-pre'
 }
 ```
 
