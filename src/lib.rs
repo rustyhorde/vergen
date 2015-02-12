@@ -66,7 +66,7 @@ fn gen_semver_fn() -> String {
 }
 
 pub fn vergen() {
-    let dst = Path::new(env::var_string("OUT_DIR").unwrap());
+    let dst = Path::new(env::var("OUT_DIR").unwrap());
     let mut f = File::create(&dst.join("version.rs")).unwrap();
     f.write_str(gen_now_fn().as_slice()).unwrap();
     f.write_str(gen_sha_fn().as_slice()).unwrap();
