@@ -72,3 +72,18 @@ pub fn vergen() {
     f.write_str(gen_sha_fn().as_slice()).unwrap();
     f.write_str(gen_semver_fn().as_slice()).unwrap();
 }
+
+#[cfg(test)]
+mod test {
+    use std::env;
+    use std::old_io::fs::PathExtensions;
+    use super::vergen;
+
+    #[test]
+    fn test_vergen() {
+        let tmp = env::temp_dir();
+        env::set_var("OUT_DIR",tmp.as_str().unwrap());
+        vergen();
+        assert!(&tmp.join("version.rs").exists());
+    }
+}
