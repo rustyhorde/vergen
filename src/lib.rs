@@ -50,7 +50,7 @@ use std::old_io::File;
 use std::old_io::process::Command;
 
 fn gen_now_fn() -> String {
-    let mut now_fn = "fn now() -> &'static str {\n".to_string();
+    let mut now_fn = "pub fn now() -> &'static str {\n".to_string();
 
     let mut now = Command::new("date");
     now.arg("--rfc-3339=ns");
@@ -70,7 +70,7 @@ fn gen_now_fn() -> String {
 }
 
 fn gen_sha_fn() -> String {
-    let mut sha_fn = "fn sha() -> &'static str {\n".to_string();
+    let mut sha_fn = "pub fn sha() -> &'static str {\n".to_string();
 
     let mut sha_cmd = Command::new("git");
     sha_cmd.args(&["rev-parse", "HEAD"]);
@@ -90,7 +90,7 @@ fn gen_sha_fn() -> String {
 }
 
 fn gen_semver_fn() -> String {
-    let mut semver_fn = "fn semver() -> &'static str {\n".to_string();
+    let mut semver_fn = "pub fn semver() -> &'static str {\n".to_string();
 
     let mut branch_cmd = Command::new("git");
     branch_cmd.args(&["describe"]);
