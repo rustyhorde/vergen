@@ -40,14 +40,16 @@
 //! }
 //! # }
 //! ```
-#![feature(core,old_io,old_path,staged_api)]
+#![feature(core,fs,io,path,process,staged_api)]
 #![staged_api]
 #![unstable(feature = "vergen")]
 extern crate time;
 
 use std::env;
-use std::old_io::File;
-use std::old_io::process::Command;
+use std::fs::File;
+use std::io::prelude::*;
+use std::path::PathBuf;
+use std::process::Command;
 
 fn gen_now_fn() -> String {
     let mut now_fn = "pub fn now() -> &'static str {\n".to_string();
@@ -57,7 +59,7 @@ fn gen_now_fn() -> String {
 
     match now.output() {
         Ok(o) => {
-            let po = String::from_utf8_lossy(o.output.as_slice());
+            let po = String::from_utf8_lossy(o.stdout.as_slice());
             now_fn.push_str("    \"");
             now_fn.push_str(po.trim());
             now_fn.push_str("\"\n");
@@ -77,7 +79,7 @@ fn gen_sha_fn() -> String {
 
     match sha_cmd.output() {
         Ok(o) => {
-            let po = String::from_utf8_lossy(o.output.as_slice());
+            let po = String::from_utf8_lossy(o.stdout.as_slice());
             sha_fn.push_str("    \"");
             sha_fn.push_str(po.trim());
             sha_fn.push_str("\"\n");
@@ -97,7 +99,7 @@ fn gen_semver_fn() -> String {
 
     match branch_cmd.output() {
         Ok(o) => {
-            let po = String::from_utf8_lossy(o.output.as_slice());
+            let po = String::from_utf8_lossy(o.stdout.as_slice());
             semver_fn.push_str("    \"");
             semver_fn.push_str(po.trim());
             semver_fn.push_str("\"\n");
@@ -139,24 +141,24 @@ fn gen_semver_fn() -> String {
 /// ```
 #[unstable(feature = "vergen")]
 pub fn vergen() {
-    let dst = Path::new(env::var("OUT_DIR").unwrap());
+    let dst = PathBuf::new(&env::var_os("OUT_DIR").unwrap());
     let mut f = File::create(&dst.join("version.rs")).unwrap();
-    f.write_str(gen_now_fn().as_slice()).unwrap();
-    f.write_str(gen_sha_fn().as_slice()).unwrap();
-    f.write_str(gen_semver_fn().as_slice()).unwrap();
+    f.write_all(gen_now_fn().as_bytes()).unwrap();
+    f.write_all(gen_sha_fn().as_bytes()).unwrap();
+    f.write_all(gen_semver_fn().as_bytes()).unwrap();
 }
 
 #[cfg(test)]
 mod test {
     use std::env;
-    use std::old_io::fs::PathExtensions;
+    use std::fs::PathExt;
     use super::vergen;
 
     #[test]
     #[unstable(feature = "vergen")]
     fn test_vergen() {
         let tmp = env::temp_dir();
-        env::set_var("OUT_DIR",tmp.as_str().unwrap());
+        env::set_var("OUT_DIR",&tmp);
         vergen();
         assert!(&tmp.join("version.rs").exists());
     }
