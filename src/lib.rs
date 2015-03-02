@@ -40,7 +40,7 @@
 //! }
 //! # }
 //! ```
-#![feature(core,env,old_io,old_path,staged_api)]
+#![feature(core,old_io,old_path,staged_api)]
 #![staged_api]
 #![unstable(feature = "vergen")]
 extern crate time;
