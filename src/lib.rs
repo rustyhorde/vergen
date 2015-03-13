@@ -40,7 +40,6 @@
 //! # }
 //! ```
 #![feature(core,io,path,staged_api)]
-#![staged_api]
 extern crate time;
 
 use std::env;
