@@ -40,6 +40,7 @@
 //! # }
 //! ```
 #![feature(core,io,path,staged_api)]
+#![staged_api]
 extern crate time;
 
 use std::env;
@@ -136,6 +137,7 @@ fn gen_semver_fn() -> String {
 ///     "v0.0.1-pre-24-g002735c"
 /// }
 /// ```
+#[stable(feature = "vergen", since="0.0.5")]
 pub fn vergen() {
     let dst = PathBuf::new(&env::var_os("OUT_DIR").unwrap());
     let mut f = File::create(&dst.join("version.rs")).unwrap();
@@ -151,7 +153,6 @@ mod test {
     use super::vergen;
 
     #[test]
-    #[unstable(feature = "vergen")]
     fn test_vergen() {
         let tmp = env::temp_dir();
         env::set_var("OUT_DIR",&tmp);
