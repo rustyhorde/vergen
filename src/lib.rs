@@ -18,7 +18,6 @@
 //! # Example build.rs
 //! ```ignore
 //! // build.rs
-//! #[feature(vergen)]
 //! extern crate vergen;
 //!
 //! use vergen::vergen;
@@ -42,7 +41,6 @@
 //! ```
 #![feature(core,io,path,staged_api)]
 #![staged_api]
-#![unstable(feature = "vergen")]
 extern crate time;
 
 use std::env;
@@ -139,7 +137,6 @@ fn gen_semver_fn() -> String {
 ///     "v0.0.1-pre-24-g002735c"
 /// }
 /// ```
-#[unstable(feature = "vergen")]
 pub fn vergen() {
     let dst = PathBuf::new(&env::var_os("OUT_DIR").unwrap());
     let mut f = File::create(&dst.join("version.rs")).unwrap();
