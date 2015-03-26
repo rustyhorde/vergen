@@ -39,7 +39,7 @@
 //! }
 //! # }
 //! ```
-#![feature(core,io,path,staged_api)]
+#![feature(convert,staged_api)]
 #![staged_api]
 #![stable(feature = "vergen", since = "0.0.5")]
 extern crate time;
@@ -58,7 +58,7 @@ fn gen_now_fn() -> String {
 
     match now.output() {
         Ok(o) => {
-            let po = String::from_utf8_lossy(o.stdout.as_slice());
+            let po = String::from_utf8_lossy(&o.stdout[..]);
             now_fn.push_str("    \"");
             now_fn.push_str(po.trim());
             now_fn.push_str("\"\n");
@@ -78,7 +78,7 @@ fn gen_sha_fn() -> String {
 
     match sha_cmd.output() {
         Ok(o) => {
-            let po = String::from_utf8_lossy(o.stdout.as_slice());
+            let po = String::from_utf8_lossy(&o.stdout[..]);
             sha_fn.push_str("    \"");
             sha_fn.push_str(po.trim());
             sha_fn.push_str("\"\n");
@@ -98,7 +98,7 @@ fn gen_semver_fn() -> String {
 
     match branch_cmd.output() {
         Ok(o) => {
-            let po = String::from_utf8_lossy(o.stdout.as_slice());
+            let po = String::from_utf8_lossy(&o.stdout[..]);
             semver_fn.push_str("    \"");
             semver_fn.push_str(po.trim());
             semver_fn.push_str("\"\n");
@@ -140,7 +140,7 @@ fn gen_semver_fn() -> String {
 /// ```
 #[stable(feature = "vergen", since="0.0.4")]
 pub fn vergen() {
-    let dst = PathBuf::new(&env::var_os("OUT_DIR").unwrap());
+    let dst = PathBuf::from(&env::var_os("OUT_DIR").unwrap());
     let mut f = File::create(&dst.join("version.rs")).unwrap();
     f.write_all(gen_now_fn().as_bytes()).unwrap();
     f.write_all(gen_sha_fn().as_bytes()).unwrap();
