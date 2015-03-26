@@ -40,6 +40,7 @@
 //! # }
 //! ```
 #![feature(convert,staged_api)]
+#![cfg(test)] #![feature(path_ext)]
 #![staged_api]
 #![stable(feature = "vergen", since = "0.0.5")]
 extern crate time;
@@ -150,7 +151,7 @@ pub fn vergen() {
 #[cfg(test)]
 mod test {
     use std::env;
-    use std::fs::PathExt;
+    use std::io::prelude::*;
     use super::vergen;
 
     #[test]
