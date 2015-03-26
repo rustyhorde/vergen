@@ -40,7 +40,6 @@
 //! # }
 //! ```
 #![feature(convert,staged_api)]
-#![cfg(test)] #![feature(path_ext)]
 #![staged_api]
 #![stable(feature = "vergen", since = "0.0.5")]
 extern crate time;
@@ -146,19 +145,4 @@ pub fn vergen() {
     f.write_all(gen_now_fn().as_bytes()).unwrap();
     f.write_all(gen_sha_fn().as_bytes()).unwrap();
     f.write_all(gen_semver_fn().as_bytes()).unwrap();
-}
-
-#[cfg(test)]
-mod test {
-    use std::env;
-    use std::io::prelude::*;
-    use super::vergen;
-
-    #[test]
-    fn test_vergen() {
-        let tmp = env::temp_dir();
-        env::set_var("OUT_DIR",&tmp);
-        vergen();
-        assert!(&tmp.join("version.rs").exists());
-    }
 }
