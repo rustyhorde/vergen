@@ -20,6 +20,10 @@ pub fn short_sha() -> &'static str {
    // Output of 'git rev-parse --short HEAD'
 }
 
+pub fn commit_date() -> &'static str {
+   // Output of 'git log --pretty=format:"%ad" -n1 --date=short'
+}
+
 pub fn semver() -> &'static str {
    // output of 'git describe'
    // this works best if you tag your releases 'vX.X.X'
