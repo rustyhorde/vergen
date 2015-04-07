@@ -130,6 +130,26 @@ fn gen_short_sha_fn() -> String {
     sha_fn
 }
 
+fn gen_commit_date_fn() -> String {
+    let mut commit_date_fn = "pub fn commit_date() -> &'static str {\n".to_string();
+
+    let mut log_cmd = Command::new("git");
+    log_cmd.args(&["log", "--pretty=format:\"%ad\"", "-n1", "--date=short"]);
+
+    match log_cmd.output() {
+        Ok(o) => {
+            let po = String::from_utf8_lossy(&o.stdout[..]);
+            commit_date_fn.push_str("    ");
+            commit_date_fn.push_str(po.trim());
+            commit_date_fn.push_str("\n");
+            commit_date_fn.push_str("}\n");
+        },
+        Err(e) => panic!("failed to execute process: {}", e),
+    };
+
+    commit_date_fn
+}
+
 fn gen_semver_fn() -> String {
     let mut semver_fn = "pub fn semver() -> &'static str {\n".to_string();
 
@@ -184,6 +204,16 @@ fn gen_semver_fn() -> String {
 /// }
 /// ```
 ///
+///
+/// # commit_date
+/// ```rust
+/// fn commit_date() -> &'static str {
+///     // Output of the system cmd
+///     // 'git log --pretty=format:"%ad" -n1 --date=short'
+///     "2015-04-07"
+/// }
+/// ```
+///
 /// # semver
 /// ```rust
 /// fn semver() -> &'static str {
@@ -202,5 +232,6 @@ pub fn vergen() {
     f.write_all(gen_short_now_fn().as_bytes()).unwrap();
     f.write_all(gen_short_sha_fn().as_bytes()).unwrap();
     f.write_all(gen_sha_fn().as_bytes()).unwrap();
+    f.write_all(gen_commit_date_fn().as_bytes()).unwrap();
     f.write_all(gen_semver_fn().as_bytes()).unwrap();
 }
