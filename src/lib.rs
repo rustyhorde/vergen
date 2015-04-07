@@ -142,7 +142,7 @@ fn gen_commit_date_fn() -> String {
             commit_date_fn.push_str("    ");
             commit_date_fn.push_str(po.trim());
             commit_date_fn.push_str("\n");
-            commit_date_fn.push_str("}\n");
+            commit_date_fn.push_str("}\n\n");
         },
         Err(e) => panic!("failed to execute process: {}", e),
     };
@@ -153,10 +153,10 @@ fn gen_commit_date_fn() -> String {
 fn gen_target_fn() -> String {
     let mut target_fn = "pub fn target() -> &'static str {\n".to_string();
 
-    target_fn.push_str("    ");
+    target_fn.push_str("    \"");
     target_fn.push_str(&env::var("TARGET").unwrap()[..]);
-    target_fn.push_str("\n");
-    target_fn.push_str("}\n");
+    target_fn.push_str("\"\n");
+    target_fn.push_str("}\n\n");
 
     target_fn
 }
