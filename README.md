@@ -24,6 +24,10 @@ pub fn commit_date() -> &'static str {
    // Output of 'git log --pretty=format:"%ad" -n1 --date=short'
 }
 
+pub fn target() -> &'static str {
+   // env::var("TARGET")
+}
+
 pub fn semver() -> &'static str {
    // output of 'git describe'
    // this works best if you tag your releases 'vX.X.X'

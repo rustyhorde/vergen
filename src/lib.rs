@@ -150,6 +150,17 @@ fn gen_commit_date_fn() -> String {
     commit_date_fn
 }
 
+fn gen_target_fn() -> String {
+    let mut target_fn = "pub fn target() -> &'static str {\n".to_string();
+
+    target_fn.push_str("    ");
+    target_fn.push_str(&env::var("TARGET").unwrap()[..]);
+    target_fn.push_str("\n");
+    target_fn.push_str("}\n");
+
+    target_fn
+}
+
 fn gen_semver_fn() -> String {
     let mut semver_fn = "pub fn semver() -> &'static str {\n".to_string();
 
@@ -204,13 +215,20 @@ fn gen_semver_fn() -> String {
 /// }
 /// ```
 ///
-///
 /// # commit_date
 /// ```rust
 /// fn commit_date() -> &'static str {
 ///     // Output of the system cmd
 ///     // 'git log --pretty=format:"%ad" -n1 --date=short'
 ///     "2015-04-07"
+/// }
+/// ```
+///
+/// # target
+/// ```rust
+/// fn target() -> &'static str {
+///     // env::var("TARGET"), set by cargo
+///     "x86_64-unknown-linux-gnu"
 /// }
 /// ```
 ///
@@ -233,5 +251,6 @@ pub fn vergen() {
     f.write_all(gen_short_sha_fn().as_bytes()).unwrap();
     f.write_all(gen_sha_fn().as_bytes()).unwrap();
     f.write_all(gen_commit_date_fn().as_bytes()).unwrap();
+    f.write_all(gen_target_fn().as_bytes()).unwrap();
     f.write_all(gen_semver_fn().as_bytes()).unwrap();
 }
