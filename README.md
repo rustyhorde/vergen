@@ -8,8 +8,16 @@ pub fn now() -> &'static str {
    // Output of 'date --rc-3339=ns'
 }
 
+pub fn short_now() -> &'static str {
+   // Output of 'date --rc-3339=date'
+}
+
 pub fn sha() -> &'static str {
    // Output of 'git rev-parse HEAD'
+}
+
+pub fn short_sha() -> &'static str {
+   // Output of 'git rev-parse --short HEAD'
 }
 
 pub fn semver() -> &'static str {
