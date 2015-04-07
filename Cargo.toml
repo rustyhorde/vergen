@@ -11,4 +11,5 @@ license = "MIT"
 keywords = ["rust","rustyhorde","vergen"]
 
 [dependencies]
+bitflags = "*"
 time = "*"
