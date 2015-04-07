@@ -39,7 +39,7 @@
 //! }
 //! # }
 //! ```
-#![feature(convert,staged_api)]
+#![feature(staged_api)]
 #![staged_api]
 #![stable(feature = "vergen", since = "0.0.5")]
 extern crate time;
@@ -70,11 +70,51 @@ fn gen_now_fn() -> String {
     now_fn
 }
 
+fn gen_short_now_fn() -> String {
+    let mut now_fn = "pub fn short_now() -> &'static str {\n".to_string();
+
+    let mut now = Command::new("date");
+    now.arg("--rfc-3339=date");
+
+    match now.output() {
+        Ok(o) => {
+            let po = String::from_utf8_lossy(&o.stdout[..]);
+            now_fn.push_str("    \"");
+            now_fn.push_str(po.trim());
+            now_fn.push_str("\"\n");
+            now_fn.push_str("}\n\n");
+        },
+        Err(e) => panic!("failed to execute process: {}", e),
+    }
+
+    now_fn
+}
+
 fn gen_sha_fn() -> String {
     let mut sha_fn = "pub fn sha() -> &'static str {\n".to_string();
 
     let mut sha_cmd = Command::new("git");
     sha_cmd.args(&["rev-parse", "HEAD"]);
+
+    match sha_cmd.output() {
+        Ok(o) => {
+            let po = String::from_utf8_lossy(&o.stdout[..]);
+            sha_fn.push_str("    \"");
+            sha_fn.push_str(po.trim());
+            sha_fn.push_str("\"\n");
+            sha_fn.push_str("}\n\n");
+        },
+        Err(e) => panic!("failed to execute process: {}", e),
+    };
+
+    sha_fn
+}
+
+fn gen_short_sha_fn() -> String {
+    let mut sha_fn = "pub fn short_sha() -> &'static str {\n".to_string();
+
+    let mut sha_cmd = Command::new("git");
+    sha_cmd.args(&["rev-parse", "--short", "HEAD"]);
 
     match sha_cmd.output() {
         Ok(o) => {
@@ -120,11 +160,27 @@ fn gen_semver_fn() -> String {
 /// }
 /// ```
 ///
+/// # short_now
+/// ```rust
+/// fn short_now() -> &'static str {
+///     // Output of the system cmd 'date '--rfc-3339=date'
+///     "2015-04-07"
+/// }
+/// ```
+///
 /// # sha
 /// ```rust
 /// fn sha() -> &'static str {
 ///     // Output of the system cmd 'git rev-parse HEAD'
 ///     "002735cb66437b96cee2a948fcdfc79d9bf96c94"
+/// }
+/// ```
+///
+/// # short_sha
+/// ```rust
+/// fn short_sha() -> &'static str {
+///     // Output of the system cmd 'git rev-parse --short HEAD'
+///     "002735c"
 /// }
 /// ```
 ///
@@ -143,6 +199,8 @@ pub fn vergen() {
     let dst = PathBuf::from(&env::var_os("OUT_DIR").unwrap());
     let mut f = File::create(&dst.join("version.rs")).unwrap();
     f.write_all(gen_now_fn().as_bytes()).unwrap();
+    f.write_all(gen_short_now_fn().as_bytes()).unwrap();
+    f.write_all(gen_short_sha_fn().as_bytes()).unwrap();
     f.write_all(gen_sha_fn().as_bytes()).unwrap();
     f.write_all(gen_semver_fn().as_bytes()).unwrap();
 }
