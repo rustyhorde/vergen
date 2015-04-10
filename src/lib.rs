@@ -139,9 +139,9 @@ fn gen_commit_date_fn() -> String {
     match log_cmd.output() {
         Ok(o) => {
             let po = String::from_utf8_lossy(&o.stdout[..]);
-            commit_date_fn.push_str("    ");
+            commit_date_fn.push_str("    \"");
             commit_date_fn.push_str(po.trim());
-            commit_date_fn.push_str("\n");
+            commit_date_fn.push_str("\"\n");
             commit_date_fn.push_str("}\n\n");
         },
         Err(e) => panic!("failed to execute process: {}", e),
