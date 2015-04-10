@@ -1,6 +1,6 @@
 [package]
 name = "vergen"
-version = "0.0.12-pre"
+version = "0.0.12"
 authors = ["Jason Ozias <jason.g.ozias@gmail.com>"]
 description = "Generate version related functions"
 documentation = "http://rustyhorde.github.io/vergen"

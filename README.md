@@ -36,7 +36,7 @@ pub fn semver() -> &'static str {
 ```
 
 ## Status
-[![Build Status](https://travis-ci.org/rustyhorde/vergen.svg?branch=master)](https://travis-ci.org/rustyhorde/vergen)
+[![Build Status](https://travis-ci.org/rustyhorde/vergen.svg?branch=0.0.12)](https://travis-ci.org/rustyhorde/vergen)
 
 ## Basic Usage
 #### Cargo.toml
