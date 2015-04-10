@@ -39,16 +39,26 @@
 //! }
 //! # }
 //! ```
-#![feature(staged_api)]
-#![staged_api]
-#![stable(feature = "vergen", since = "0.0.5")]
 extern crate time;
+#[macro_use] extern crate bitflags;
 
 use std::env;
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::PathBuf;
 use std::process::Command;
+
+bitflags!(
+    flags Flags: u32 {
+        const NOW         = 0x00000001,
+        const SHORT_NOW   = 0x00000010,
+        const SHA         = 0x00000100,
+        const SHORT_SHA   = 0x00001000,
+        const COMMIT_DATE = 0x00010000,
+        const TARGET      = 0x00100000,
+        const SEMVER      = 0x01000000,
+    }
+);
 
 fn gen_now_fn() -> String {
     let mut now_fn = "pub fn now() -> &'static str {\n".to_string();
@@ -242,15 +252,35 @@ fn gen_semver_fn() -> String {
 ///     "v0.0.1-pre-24-g002735c"
 /// }
 /// ```
-#[stable(feature = "vergen", since="0.0.4")]
-pub fn vergen() {
+pub fn vergen(flags: Flags) {
     let dst = PathBuf::from(&env::var_os("OUT_DIR").unwrap());
     let mut f = File::create(&dst.join("version.rs")).unwrap();
-    f.write_all(gen_now_fn().as_bytes()).unwrap();
-    f.write_all(gen_short_now_fn().as_bytes()).unwrap();
-    f.write_all(gen_short_sha_fn().as_bytes()).unwrap();
-    f.write_all(gen_sha_fn().as_bytes()).unwrap();
-    f.write_all(gen_commit_date_fn().as_bytes()).unwrap();
-    f.write_all(gen_target_fn().as_bytes()).unwrap();
-    f.write_all(gen_semver_fn().as_bytes()).unwrap();
+
+    if flags.contains(NOW) {
+        f.write_all(gen_now_fn().as_bytes()).unwrap();
+    }
+
+    if flags.contains(SHORT_NOW) {
+        f.write_all(gen_short_now_fn().as_bytes()).unwrap();
+    }
+
+    if flags.contains(SHA) {
+        f.write_all(gen_sha_fn().as_bytes()).unwrap();
+    }
+
+    if flags.contains(SHORT_SHA) {
+        f.write_all(gen_short_sha_fn().as_bytes()).unwrap();
+    }
+
+    if flags.contains(COMMIT_DATE) {
+        f.write_all(gen_commit_date_fn().as_bytes()).unwrap();
+    }
+
+    if flags.contains(TARGET) {
+        f.write_all(gen_target_fn().as_bytes()).unwrap();
+    }
+
+    if flags.contains(SEMVER) {
+        f.write_all(gen_semver_fn().as_bytes()).unwrap();
+    }
 }
