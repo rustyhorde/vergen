@@ -153,7 +153,7 @@ fn gen_commit_date_fn() -> String {
             if po.trim().is_empty() {
                 commit_date_fn.push_str("");
             } else {
-                commit_date_fn.push_str(po.trim());
+                commit_date_fn.push_str(po.trim().trim_matches('\''));
             }
             commit_date_fn.push_str("\"\n");
             commit_date_fn.push_str("}\n\n");
