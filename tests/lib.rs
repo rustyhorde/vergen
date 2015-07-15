@@ -1,7 +1,7 @@
-#![feature(path_ext)]
 extern crate vergen;
 
 use std::env;
+use std::fs::File;
 use std::io::prelude::*;
 use vergen::*;
 
@@ -13,5 +13,13 @@ fn test_vergen() {
     let mut flags = Flags::all();
     flags.toggle(NOW);
     vergen(flags);
-    assert!(&tmp.join("version.rs").exists());
+    match File::open(&tmp.join("version.rs")) {
+        Ok(ref mut f) => {
+            match f.metadata() {
+                Ok(meta) => assert!(meta.is_file()),
+                Err(_)   => assert!(false),
+            }
+        },
+        Err(_) => assert!(false),
+    }
 }
