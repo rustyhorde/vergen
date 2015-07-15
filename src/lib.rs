@@ -144,18 +144,18 @@ fn gen_commit_date_fn() -> String {
     let mut commit_date_fn = "pub fn commit_date() -> &'static str {\n".to_string();
 
     let mut log_cmd = Command::new("git");
-    log_cmd.args(&["log", "--pretty=format:\"%ad\"", "-n1", "--date=short"]);
+    log_cmd.args(&["log", "--pretty=format:'%ad'", "-n1", "--date=short"]);
 
     match log_cmd.output() {
         Ok(o) => {
             let po = String::from_utf8_lossy(&o.stdout[..]);
-            commit_date_fn.push_str("    ");
+            commit_date_fn.push_str("    \"");
             if po.trim().is_empty() {
-                commit_date_fn.push_str("\"\"");
+                commit_date_fn.push_str("");
             } else {
                 commit_date_fn.push_str(po.trim());
             }
-            commit_date_fn.push_str("\n");
+            commit_date_fn.push_str("\"\n");
             commit_date_fn.push_str("}\n\n");
         },
         Err(e) => panic!("failed to execute process: {}", e),
