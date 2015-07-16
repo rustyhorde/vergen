@@ -61,47 +61,39 @@ bitflags!(
 );
 
 fn gen_now_fn() -> String {
-    let mut now_fn = "pub fn now() -> &'static str {\n".to_string();
+    let mut now_fn = String::from("pub fn now() -> &'static str {\n");
 
-    let mut now = Command::new("date");
-    now.arg("--rfc-3339=ns");
+    let now = time::now_utc();
+    let now_str = format!("{}", now.rfc3339());
 
-    match now.output() {
-        Ok(o) => {
-            let po = String::from_utf8_lossy(&o.stdout[..]);
-            now_fn.push_str("    \"");
-            now_fn.push_str(po.trim());
-            now_fn.push_str("\"\n");
-            now_fn.push_str("}\n\n");
-        },
-        Err(e) => panic!("failed to execute process: {}", e),
-    }
+    now_fn.push_str("    \"");
+    now_fn.push_str(&now_str[..]);
+    now_fn.push_str("\"\n");
+    now_fn.push_str("}\n\n");
 
     now_fn
 }
 
 fn gen_short_now_fn() -> String {
-    let mut now_fn = "pub fn short_now() -> &'static str {\n".to_string();
+    let mut now_fn = String::from("pub fn short_now() -> &'static str {\n");
 
-    let mut now = Command::new("date");
-    now.arg("--rfc-3339=date");
+    let now = time::now_utc();
+    let now_str = match time::strftime("%F", &now) {
+        Ok(n)  => n,
+        Err(e) => format!("{:?}", e),
+    };
 
-    match now.output() {
-        Ok(o) => {
-            let po = String::from_utf8_lossy(&o.stdout[..]);
-            now_fn.push_str("    \"");
-            now_fn.push_str(po.trim());
-            now_fn.push_str("\"\n");
-            now_fn.push_str("}\n\n");
-        },
-        Err(e) => panic!("failed to execute process: {}", e),
-    }
+    now_fn.push_str("    \"");
+    now_fn.push_str(&now_str[..]);
+    now_fn.push_str("\"\n");
+    now_fn.push_str("}\n\n");
 
     now_fn
 }
 
 fn gen_sha_fn() -> String {
-    let mut sha_fn = "pub fn sha() -> &'static str {\n".to_string();
+    let mut sha_fn = String::from("pub fn sha() -> &'static str {\n");
+    sha_fn.push_str("    \"");
 
     let mut sha_cmd = Command::new("git");
     sha_cmd.args(&["rev-parse", "HEAD"]);
@@ -109,19 +101,22 @@ fn gen_sha_fn() -> String {
     match sha_cmd.output() {
         Ok(o) => {
             let po = String::from_utf8_lossy(&o.stdout[..]);
-            sha_fn.push_str("    \"");
             sha_fn.push_str(po.trim());
-            sha_fn.push_str("\"\n");
-            sha_fn.push_str("}\n\n");
         },
-        Err(e) => panic!("failed to execute process: {}", e),
+        Err(_) => {
+            sha_fn.push_str("UNKNOWN");
+        },
     };
+
+    sha_fn.push_str("\"\n");
+    sha_fn.push_str("}\n\n");
 
     sha_fn
 }
 
 fn gen_short_sha_fn() -> String {
-    let mut sha_fn = "pub fn short_sha() -> &'static str {\n".to_string();
+    let mut sha_fn = String::from("pub fn short_sha() -> &'static str {\n");
+    sha_fn.push_str("    \"");
 
     let mut sha_cmd = Command::new("git");
     sha_cmd.args(&["rev-parse", "--short", "HEAD"]);
@@ -129,19 +124,22 @@ fn gen_short_sha_fn() -> String {
     match sha_cmd.output() {
         Ok(o) => {
             let po = String::from_utf8_lossy(&o.stdout[..]);
-            sha_fn.push_str("    \"");
             sha_fn.push_str(po.trim());
-            sha_fn.push_str("\"\n");
-            sha_fn.push_str("}\n\n");
         },
-        Err(e) => panic!("failed to execute process: {}", e),
-    };
+        Err(_) => {
+            sha_fn.push_str("UNKNOWN");
+        },
+    }
+
+    sha_fn.push_str("\"\n");
+    sha_fn.push_str("}\n\n");
 
     sha_fn
 }
 
 fn gen_commit_date_fn() -> String {
-    let mut commit_date_fn = "pub fn commit_date() -> &'static str {\n".to_string();
+    let mut commit_date_fn = String::from("pub fn commit_date() -> &'static str {\n");
+    commit_date_fn.push_str("    \"");
 
     let mut log_cmd = Command::new("git");
     log_cmd.args(&["log", "--pretty=format:'%ad'", "-n1", "--date=short"]);
@@ -149,23 +147,26 @@ fn gen_commit_date_fn() -> String {
     match log_cmd.output() {
         Ok(o) => {
             let po = String::from_utf8_lossy(&o.stdout[..]);
-            commit_date_fn.push_str("    \"");
+
             if po.trim().is_empty() {
                 commit_date_fn.push_str("");
             } else {
                 commit_date_fn.push_str(po.trim().trim_matches('\''));
             }
-            commit_date_fn.push_str("\"\n");
-            commit_date_fn.push_str("}\n\n");
         },
-        Err(e) => panic!("failed to execute process: {}", e),
-    };
+        Err(_) => {
+            commit_date_fn.push_str("UNKNOWN");
+        },
+    }
+
+    commit_date_fn.push_str("\"\n");
+    commit_date_fn.push_str("}\n\n");
 
     commit_date_fn
 }
 
 fn gen_target_fn() -> String {
-    let mut target_fn = "pub fn target() -> &'static str {\n".to_string();
+    let mut target_fn = String::from("pub fn target() -> &'static str {\n");
 
     target_fn.push_str("    \"");
     target_fn.push_str(&env::var("TARGET").unwrap()[..]);
@@ -176,7 +177,8 @@ fn gen_target_fn() -> String {
 }
 
 fn gen_semver_fn() -> String {
-    let mut semver_fn = "pub fn semver() -> &'static str {\n".to_string();
+    let mut semver_fn = String::from("pub fn semver() -> &'static str {\n");
+    semver_fn.push_str("    \"");
 
     let mut branch_cmd = Command::new("git");
     branch_cmd.args(&["describe"]);
@@ -184,13 +186,15 @@ fn gen_semver_fn() -> String {
     match branch_cmd.output() {
         Ok(o) => {
             let po = String::from_utf8_lossy(&o.stdout[..]);
-            semver_fn.push_str("    \"");
             semver_fn.push_str(po.trim());
-            semver_fn.push_str("\"\n");
-            semver_fn.push_str("}\n");
         },
-        Err(e) => panic!("failed to execute process: {}", e),
-    };
+        Err(_) => {
+            semver_fn.push_str("UNKNOWN");
+        },
+    }
+
+    semver_fn.push_str("\"\n");
+    semver_fn.push_str("}\n");
 
     semver_fn
 }
