@@ -2,7 +2,7 @@
 ## Version
 [![Crates.io](https://img.shields.io/crates/v/vergen.svg)](https://crates.io/crates/vergen)
 [![Build
-Status](https://travis-ci.org/rustyhorde/vergen.svg?branch=0.1.0)](https://travis-ci.org/rustyhorde/vergen)
+Status](https://travis-ci.org/rustyhorde/vergen.svg?branch=master)](https://travis-ci.org/rustyhorde/vergen)
 
 ## Basic Usage
 The following code is optionally generated in the Cargo OUT_DIR in version.rs.
