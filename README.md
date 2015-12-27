@@ -5,11 +5,11 @@ Note:  This currently only works for projects using git building on Linux or msy
 
 ```rust
 pub fn now() -> &'static str {
-   // Output of 'date --rc-3339=ns'
+   // RFC3339 formatted string representing now (UTC)
 }
 
 pub fn short_now() -> &'static str {
-   // Output of 'date --rc-3339=date'
+   // Short string representing now (UTC)
 }
 
 pub fn sha() -> &'static str {
@@ -46,14 +46,16 @@ pub fn semver() -> &'static str {
 build = "build.rs"
 #
 [build-dependencies]
-vergen = "*"
+vergen = "~0.0.16"
 ```
 #### build.rs
 ```rust
 use vergen::vergen;
 
 fn main() {
-    vergen();
+    let mut flags = OutputFns::all();
+    flags.toggle(NOW);
+    assert!(vergen(flags).is_ok());
 }
 ```
 #### lib.rs/main.rs

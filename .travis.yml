@@ -1,1 +1,16 @@
 language: rust
+rust:
+  - stable
+  - beta
+  - nightly
+os:
+  - linux
+matrix:
+  allow_failures:
+    - rust: nightly
+script:
+  - cargo build --verbose
+  - cargo test --verbose
+  - cargo doc --verbose
+after_success:
+  - ./scripts/travis-doc-upload.sh
