@@ -1,8 +1,11 @@
 # vergen
-Includes 3 functions for use in version strings in ```lib.rs/main.rs``` at compile time via a custom cargo build script.
+## Version
+[![Crates.io](https://img.shields.io/crates/v/vergen.svg)](https://crates.io/crates/vergen)
+[![Build
+Status](https://travis-ci.org/rustyhorde/vergen.svg?branch=0.1.0)](https://travis-ci.org/rustyhorde/vergen)
 
-Note:  This currently only works for projects using git building on Linux or msys2.  I haven't tested on Mac OS/X, but it will work if the date command exists.  I plan to expand the functionality to additional platforms eventually.
-
+## Basic Usage
+The following code is optionally generated in the Cargo OUT_DIR.
 ```rust
 pub fn now() -> &'static str {
    // RFC3339 formatted string representing now (UTC)
@@ -35,10 +38,6 @@ pub fn semver() -> &'static str {
 }
 ```
 
-## Status
-[![Build Status](https://travis-ci.org/rustyhorde/vergen.svg?branch=master)](https://travis-ci.org/rustyhorde/vergen)
-
-## Basic Usage
 #### Cargo.toml
 ```toml
 [package]
@@ -46,15 +45,18 @@ pub fn semver() -> &'static str {
 build = "build.rs"
 #
 [build-dependencies]
-vergen = "~0.0.16"
+vergen = "~0.1.0"
 ```
 #### build.rs
 ```rust
 use vergen::vergen;
 
 fn main() {
+    // Turn on all flags to start.
     let mut flags = OutputFns::all();
+    // Toggle output fns you don't want generated.
     flags.toggle(NOW);
+    // Generate the version.rs file in the Cargo OUT_DIR.
     assert!(vergen(flags).is_ok());
 }
 ```
