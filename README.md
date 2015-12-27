@@ -5,7 +5,7 @@
 Status](https://travis-ci.org/rustyhorde/vergen.svg?branch=0.1.0)](https://travis-ci.org/rustyhorde/vergen)
 
 ## Basic Usage
-The following code is optionally generated in the Cargo OUT_DIR.
+The following code is optionally generated in the Cargo OUT_DIR in version.rs.
 ```rust
 pub fn now() -> &'static str {
    // RFC3339 formatted string representing now (UTC)
