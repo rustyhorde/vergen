@@ -47,7 +47,8 @@
 #![cfg_attr(feature="clippy", deny(clippy, clippy_pedantic))]
 #![deny(missing_docs)]
 extern crate time;
-#[macro_use] extern crate bitflags;
+#[macro_use]
+extern crate blastfig;
 
 use std::env;
 use std::fmt;
@@ -116,7 +117,7 @@ impl From<std::io::Error> for VergenError {
 
 fn gen_now_fn() -> String {
     let mut now_fn = String::from("/// Generate a timestamp representing now (UTC) in RFC3339 \
-    format.\n");
+                                   format.\n");
     now_fn.push_str("pub fn now() -> &'static str {\n");
 
     let now = time::now_utc();
@@ -136,7 +137,7 @@ fn gen_short_now_fn() -> String {
 
     let now = time::now_utc();
     let now_str = match time::strftime("%F", &now) {
-        Ok(n)  => n,
+        Ok(n) => n,
         Err(e) => format!("{:?}", e),
     };
 
@@ -160,10 +161,10 @@ fn gen_sha_fn() -> String {
         Ok(o) => {
             let po = String::from_utf8_lossy(&o.stdout[..]);
             sha_fn.push_str(po.trim());
-        },
+        }
         Err(_) => {
             sha_fn.push_str("UNKNOWN");
-        },
+        }
     };
 
     sha_fn.push_str("\"\n");
@@ -184,10 +185,10 @@ fn gen_short_sha_fn() -> String {
         Ok(o) => {
             let po = String::from_utf8_lossy(&o.stdout[..]);
             sha_fn.push_str(po.trim());
-        },
+        }
         Err(_) => {
             sha_fn.push_str("UNKNOWN");
-        },
+        }
     }
 
     sha_fn.push_str("\"\n");
@@ -213,10 +214,10 @@ fn gen_commit_date_fn() -> String {
             } else {
                 commit_date_fn.push_str(po.trim().trim_matches('\''));
             }
-        },
+        }
         Err(_) => {
             commit_date_fn.push_str("UNKNOWN");
-        },
+        }
     }
 
     commit_date_fn.push_str("\"\n");
@@ -251,10 +252,10 @@ fn gen_semver_fn() -> String {
         Ok(o) => {
             let po = String::from_utf8_lossy(&o.stdout[..]);
             semver_fn.push_str(po.trim());
-        },
+        }
         Err(_) => {
             semver_fn.push_str("UNKNOWN");
-        },
+        }
     }
 
     semver_fn.push_str("\"\n");

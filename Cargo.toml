@@ -11,6 +11,6 @@ license = "MIT"
 keywords = ["rust","rustyhorde","vergen"]
 
 [dependencies]
-bitflags = { git = "https://github.com/rustyhorde/bitflags.git" }
+blastfig = "~0.3.3"
 clippy = { version = "~0.0.30", optional = true }
 time = "~0.1.34"
