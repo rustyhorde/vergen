@@ -7,7 +7,7 @@ documentation = "http://rustyhorde.github.io/vergen/vergen/vergen/index.html"
 homepage = "http://rustyhorde.github.io/vergen"
 repository = "https://github.com/rustyhorde/vergen"
 readme = "README.md"
-license = "MIT"
+license = "MIT/Apache-2.0"
 keywords = ["rust","rustyhorde","vergen"]
 
 [dependencies]
