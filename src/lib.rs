@@ -10,7 +10,7 @@
 //!
 //! `vergen` when used in conjunction with the
 //! [build script support](http://doc.crates.io/build-script.html) from
-//! cargo, generates a file in OUT_DIR (defined by cargo) with three functions
+//! cargo, generates a file in `OUT_DIR` (defined by cargo) with three functions
 //! defined (now, sha, and semver).  This file can then be use with include!
 //! to pull the functions into your source for use.
 //!
@@ -56,7 +56,7 @@
 #![deny(missing_docs)]
 extern crate time;
 #[macro_use]
-extern crate blastfig;
+extern crate bitflags;
 
 use std::env;
 use std::fmt;
@@ -66,21 +66,21 @@ use std::path::PathBuf;
 use std::process::Command;
 
 bitflags!(
-    /// Output Functions Bitflags
-    flags OutputFns: u32 {
-        /// Generate the now fn.
+/// Output Functions Bitflags
+    pub flags OutputFns: u32 {
+/// Generate the now fn.
         const NOW         = 0x00000001,
-        /// Generate the short_now fn.
+/// Generate the short_now fn.
         const SHORT_NOW   = 0x00000010,
-        /// Generate the sha fn.
+/// Generate the sha fn.
         const SHA         = 0x00000100,
-        /// Generate the short_sha fn.
+/// Generate the short_sha fn.
         const SHORT_SHA   = 0x00001000,
-        /// Generate the commit_date fn.
+/// Generate the commit_date fn.
         const COMMIT_DATE = 0x00010000,
-        /// Generate the target fn.
+/// Generate the target fn.
         const TARGET      = 0x00100000,
-        /// Generate the semver fn.
+/// Generate the semver fn.
         const SEMVER      = 0x01000000,
     }
 );
@@ -102,11 +102,11 @@ impl fmt::Display for VergenError {
 impl VergenError {
     /// Create a VergenError struct from the given description and detail.
     pub fn new<T>(desc: &str, detail: T) -> VergenError
-        where T: fmt::Debug
+        where T: fmt::Display
     {
         VergenError {
             desc: desc.to_owned(),
-            detail: format!("{:?}", detail),
+            detail: format!("{}", detail),
         }
     }
 }
@@ -146,7 +146,7 @@ fn gen_short_now_fn() -> String {
     let now = time::now_utc();
     let now_str = match time::strftime("%F", &now) {
         Ok(n) => n,
-        Err(e) => format!("{:?}", e),
+        Err(e) => format!("{}", e),
     };
 
     now_fn.push_str("    \"");
@@ -165,15 +165,12 @@ fn gen_sha_fn() -> String {
     let mut sha_cmd = Command::new("git");
     sha_cmd.args(&["rev-parse", "HEAD"]);
 
-    match sha_cmd.output() {
-        Ok(o) => {
-            let po = String::from_utf8_lossy(&o.stdout[..]);
-            sha_fn.push_str(po.trim());
-        }
-        Err(_) => {
-            sha_fn.push_str("UNKNOWN");
-        }
-    };
+    if let Ok(o) = sha_cmd.output() {
+        let po = String::from_utf8_lossy(&o.stdout[..]);
+        sha_fn.push_str(po.trim());
+    } else {
+        sha_fn.push_str("UNKNOWN");
+    }
 
     sha_fn.push_str("\"\n");
     sha_fn.push_str("}\n\n");
@@ -189,14 +186,11 @@ fn gen_short_sha_fn() -> String {
     let mut sha_cmd = Command::new("git");
     sha_cmd.args(&["rev-parse", "--short", "HEAD"]);
 
-    match sha_cmd.output() {
-        Ok(o) => {
-            let po = String::from_utf8_lossy(&o.stdout[..]);
-            sha_fn.push_str(po.trim());
-        }
-        Err(_) => {
-            sha_fn.push_str("UNKNOWN");
-        }
+    if let Ok(o) = sha_cmd.output() {
+        let po = String::from_utf8_lossy(&o.stdout[..]);
+        sha_fn.push_str(po.trim());
+    } else {
+        sha_fn.push_str("UNKNOWN");
     }
 
     sha_fn.push_str("\"\n");
@@ -213,19 +207,16 @@ fn gen_commit_date_fn() -> String {
     let mut log_cmd = Command::new("git");
     log_cmd.args(&["log", "--pretty=format:'%ad'", "-n1", "--date=short"]);
 
-    match log_cmd.output() {
-        Ok(o) => {
-            let po = String::from_utf8_lossy(&o.stdout[..]);
+    if let Ok(o) = log_cmd.output() {
+        let po = String::from_utf8_lossy(&o.stdout[..]);
 
-            if po.trim().is_empty() {
-                commit_date_fn.push_str("");
-            } else {
-                commit_date_fn.push_str(po.trim().trim_matches('\''));
-            }
+        if po.trim().is_empty() {
+            commit_date_fn.push_str("");
+        } else {
+            commit_date_fn.push_str(po.trim().trim_matches('\''));
         }
-        Err(_) => {
-            commit_date_fn.push_str("UNKNOWN");
-        }
+    } else {
+        commit_date_fn.push_str("UNKNOWN");
     }
 
     commit_date_fn.push_str("\"\n");
@@ -256,14 +247,11 @@ fn gen_semver_fn() -> String {
     let mut branch_cmd = Command::new("git");
     branch_cmd.args(&["describe"]);
 
-    match branch_cmd.output() {
-        Ok(o) => {
-            let po = String::from_utf8_lossy(&o.stdout[..]);
-            semver_fn.push_str(po.trim());
-        }
-        Err(_) => {
-            semver_fn.push_str("UNKNOWN");
-        }
+    if let Ok(o) = branch_cmd.output() {
+        let po = String::from_utf8_lossy(&o.stdout[..]);
+        semver_fn.push_str(po.trim());
+    } else {
+        semver_fn.push_str("UNKNOWN");
     }
 
     semver_fn.push_str("\"\n");
@@ -272,7 +260,7 @@ fn gen_semver_fn() -> String {
     semver_fn
 }
 
-/// Create the `version.rs` file in OUT_DIR, and write three functions into it.
+/// Create the `version.rs` file in `OUT_DIR`, and write three functions into it.
 ///
 /// # now
 /// ```rust
