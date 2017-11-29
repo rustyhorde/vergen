@@ -245,7 +245,7 @@ fn gen_semver_fn() -> String {
     semver_fn.push_str("    \"");
 
     let mut branch_cmd = Command::new("git");
-    branch_cmd.args(&["describe"]);
+    branch_cmd.args(&["describe", "--tags"]);
 
     if let Ok(o) = branch_cmd.output() {
         let po = String::from_utf8_lossy(&o.stdout[..]);
