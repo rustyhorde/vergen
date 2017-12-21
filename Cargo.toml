@@ -8,7 +8,7 @@ license = "MIT/Apache-2.0"
 name = "vergen"
 readme = "README.md"
 repository = "https://github.com/rustyhorde/vergen"
-version = "0.1.2-pre.0"
+version = "0.1.2.0"
 
 [dependencies]
 bitflags = "0.7.0"
