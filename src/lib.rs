@@ -82,6 +82,10 @@ bitflags!(
         const TARGET      = 0x00100000,
 /// Generate the semver fn.
         const SEMVER      = 0x01000000,
+/// Generate the semver light fn.
+        const SEMVER_LIGHT = 0x02000000,
+/// Generate the anyver fn.
+        const ANYVER_LIGHT = 0x04000000,
     }
 );
 
@@ -260,6 +264,27 @@ fn gen_semver_fn() -> String {
     semver_fn
 }
 
+fn gen_semver_light_fn() -> String {
+    let mut semver_fn = String::from("/// Generate a semver string\n");
+    semver_fn.push_str("pub fn semver() -> &'static str {\n");
+    semver_fn.push_str("    \"");
+
+    let mut branch_cmd = Command::new("git");
+    branch_cmd.args(&["describe", "--tags"]);
+
+    if let Ok(o) = branch_cmd.output() {
+        let po = String::from_utf8_lossy(&o.stdout[..]);
+        semver_fn.push_str(po.trim());
+    } else {
+        semver_fn.push_str("UNKNOWN");
+    }
+
+    semver_fn.push_str("\"\n");
+    semver_fn.push_str("}\n");
+
+    semver_fn
+}
+
 /// Create the `version.rs` file in `OUT_DIR`, and write three functions into it.
 ///
 /// # now
@@ -352,6 +377,10 @@ pub fn vergen(flags: OutputFns) -> Result<(), VergenError> {
 
     if flags.contains(SEMVER) {
         try!(f.write_all(gen_semver_fn().as_bytes()));
+    }
+
+    if flags.contains(SEMVER_LIGHT) {
+        try!(f.write_all(gen_semver_light_fn().as_bytes()));
     }
 
     Ok(())
