@@ -10,7 +10,7 @@ fn test_vergen() {
     env::set_var("OUT_DIR", &tmp);
     env::set_var("TARGET", "x86_64-unknown-linux-gnu");
     let mut flags = OutputFns::all();
-    flags.toggle(NOW);
+    flags.toggle(OutputFns::NOW);
     assert!(vergen(flags).is_ok());
     match File::open(&tmp.join("version.rs")) {
         Ok(ref mut f) => {

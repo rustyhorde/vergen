@@ -11,8 +11,8 @@ repository = "https://github.com/rustyhorde/vergen"
 version = "0.1.2-pre.0"
 
 [dependencies]
-bitflags = "0.7.0"
-time = "~0.1.34"
+bitflags = "1.0"
+time = "0.1.40"
 
 [dependencies.clippy]
 optional = true
