@@ -4,6 +4,9 @@
 [![Build
 Status](https://travis-ci.org/rustyhorde/vergen.svg?branch=master)](https://travis-ci.org/rustyhorde/vergen)
 
+**NOTE**: Version 1.0.0 is a breaking change from the 0.1.0 series.  This crate no longer generates functions
+to display the build time information, but rather generates constants.  See below for more detail.
+
 ## Basic Usage
 The following code is optionally generated in the Cargo `OUT_DIR` in `version.rs`.
 ```rust
@@ -27,6 +30,9 @@ pub const TARGET_TRIPLE: &str = "x86_64-unknown-linux-gnu";
 
 /// Semver
 pub const SEMVER: &str = "v0.1.0-pre.0";
+
+/// Semver (Lightweight)
+pub const SEMVER_LIGHTWEIGHT: &str = "v0.1.0-pre.0";
 ```
 
 #### Cargo.toml

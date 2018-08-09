@@ -66,6 +66,9 @@
 //!
 //! /// Semver
 //! const SEMVER: &str = "v0.1.0-pre.0";
+//!
+//! /// Semver (Lightweight)
+//! const SEMVER_LIGHTWEIGHT: &str = "v0.1.0-pre.0";
 //! ```
 //!
 //! # Include the constants in your code
@@ -124,7 +127,8 @@ bitflags!(
     ///   COMPILE_TIME_SHORT &
     ///   SHA &
     ///   TARGET_TRIPLE &
-    ///   SEMVER
+    ///   SEMVER &
+    ///   SEMVER_LIGHTWEIGHT
     /// )
     /// # }
     /// ```
@@ -160,6 +164,13 @@ bitflags!(
         ///
         /// "v0.1.0-pre.0"
         const SEMVER             = 0x0100_0000;
+        /// Generate the semver constant, including lightweight tags.
+        ///
+        /// This defaults to the output of `git describe`.  If that output is
+        /// empty, the the `CARGO_PKG_VERSION` environment variable is used.
+        ///
+        /// "v0.1.0-pre.0"
+        const SEMVER_LIGHTWEIGHT = 0x0200_0000;
     }
 );
 
@@ -179,6 +190,8 @@ const TARGET_TRIPLE_NAME: &str = "TARGET_TRIPLE";
 const TARGET_TRIPLE_COMMENT: &str = "/// Target Triple";
 const SEMVER_NAME: &str = "SEMVER";
 const SEMVER_COMMENT: &str = "/// Semver";
+const SEMVER_TAGS_NAME: &str = "SEMVER_LIGHTWEIGHT";
+const SEMVER_TAGS_COMMENT: &str = "/// Semver (Lightweight)";
 
 fn gen_const(f: &mut File, comment: &str, name: &str, value: &str) -> Result<()> {
     writeln!(
@@ -256,6 +269,16 @@ fn gen_semver(f: &mut File) -> Result<()> {
     gen_const(f, SEMVER_COMMENT, SEMVER_NAME, &semver)
 }
 
+fn gen_semver_tags(f: &mut File) -> Result<()> {
+    let describe = run_command(Command::new("git").args(&["describe", "--tags"]));
+
+    let semver = if describe.is_empty() {
+        env::var("CARGO_PKG_VERSION")?
+    } else {
+        describe
+    };
+    gen_const(f, SEMVER_TAGS_COMMENT, SEMVER_TAGS_NAME, &semver)
+}
 /// Create a `version.rs` file in `OUT_DIR`, and write up to 7 constants into
 /// it.
 ///
@@ -296,6 +319,9 @@ fn gen_semver(f: &mut File) -> Result<()> {
 ///
 /// /// Semver
 /// const SEMVER: &str = "v0.1.0-pre.0";
+///
+/// /// Semver (Lightweight)
+/// pub const SEMVER_LIGHTWEIGHT: &str = "v0.1.0-pre.0";
 /// ```
 pub fn vergen(flags: ConstantsFlags) -> Result<()> {
     let dst = PathBuf::from(env::var("OUT_DIR")?);
@@ -353,6 +379,13 @@ pub fn vergen(flags: ConstantsFlags) -> Result<()> {
             writeln!(f);
         }
         gen_semver(&mut f)?;
+    }
+
+    if flags.contains(SEMVER_LIGHTWEIGHT) {
+        if !first {
+            writeln!(f);
+        }
+        gen_semver_tags(&mut f)?;
     }
 
     Ok(())
