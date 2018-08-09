@@ -12,5 +12,3 @@ script:
   - cargo build --verbose
   - cargo test --verbose
   - cargo doc --verbose
-after_success:
-  - ./scripts/travis-doc-upload.sh
