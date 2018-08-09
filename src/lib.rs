@@ -8,10 +8,13 @@
 
 //! Defines the `vergen` function.
 //!
-//! `vergen`, when used in conjunction with the
-//! [Build Scripts] support in
-//! cargo, generates a file in `OUT_DIR` (defined by cargo) with up to 7 build
-//! time constants.  This file can then be use with `include!` to pull the
+//! `vergen`, when used in conjunction with the [Build Scripts] support in
+//! cargo, can either
+//!
+//! 1. Generate environment variables to use with the `env!` macro.  See the
+//! documentation for `VergenKey` for the environment variables names.
+//! 2. Generate a file in `OUT_DIR` (defined by cargo) with up to 8 build time
+//! constants.  This file can then be used with the `include!` macro to pull the
 //! constants into your source for use.
 //!
 //! [Build Scripts]: https://doc.rust-lang.org/cargo/reference/build-scripts.html
@@ -26,10 +29,32 @@
 //! #..
 //!
 //! [build-dependencies]
-//! vergen = "1"
+//! vergen = "2"
 //! ```
 //!
-//! # Example `build.rs`
+//! # Example `build.rs` (Version 2.x.x)
+//!
+//! ```
+//! extern crate vergen;
+//!
+//! use vergen::{ConstantsFlags, Result, Vergen};
+//!
+//! fn main() {
+//!     gen_constants().expect("Unable to generate vergen constants!");
+//! }
+//!
+//! fn gen_constants() -> Result<()> {
+//!     let vergen = Vergen::new(ConstantsFlags::all())?;
+//!
+//!     for (k, v) in vergen.build_info() {
+//!         println!("cargo:rustc-env={}={}", k.name(), v);
+//!     }
+//!
+//!     Ok(())
+//! }
+//! ```
+//!
+//! # Example `build.rs` (Version 1.x.x)
 //! ```
 //! extern crate vergen;
 //!
@@ -39,39 +64,39 @@
 //! fn main() {
 //! #   env::set_var("OUT_DIR", "target");
 //!     let mut flags = ConstantsFlags::all();
-//!     flags.toggle(ConstantsFlags::COMPILE_TIME);
+//!     flags.toggle(ConstantsFlags::BUILD_TIMESTAMP);
 //!     vergen(flags).expect("Unable to generate constants!");
 //! }
 //! ```
 //!
-//! # Example `version.rs` (All Flags Enabled)
+//! # Example `version.rs` (Version 1.x.x only)
 //! ```
 //! /// Compile Time (UTC)
-//! const COMPILE_TIME: &str = "2018-08-09T15:15:57.282334589+00:00";
+//! pub const VERGEN_BUILD_TIMESTAMP: &str = "2018-08-09T15:15:57.282334589+00:00";
 //!
 //! /// Compile Time - Short (UTC)
-//! const COMPILE_TIME_SHORT: &str = "2018-08-09";
+//! pub const VERGEN_BUILD_DATE: &str = "2018-08-09";
 //!
 //! /// Commit SHA
-//! const SHA: &str = "75b390dc6c05a6a4aa2791cc7b3934591803bc22";
+//! pub const VERGEN_SHA: &str = "75b390dc6c05a6a4aa2791cc7b3934591803bc22";
 //!
 //! /// Commit SHA - Short
-//! const SHA_SHORT: &str = "75b390d";
+//! pub const VERGEN_SHA_SHORT: &str = "75b390d";
 //!
 //! /// Commit Date
-//! const COMMIT_DATE: &str = "'2018-08-08'";
+//! pub const VERGEN_COMMIT_DATE: &str = "'2018-08-08'";
 //!
 //! /// Target Triple
-//! const TARGET_TRIPLE: &str = "x86_64-unknown-linux-gnu";
+//! pub const VERGEN_TARGET_TRIPLE: &str = "x86_64-unknown-linux-gnu";
 //!
 //! /// Semver
-//! const SEMVER: &str = "v0.1.0-pre.0";
+//! pub const VERGEN_SEMVER: &str = "v0.1.0-pre.0";
 //!
 //! /// Semver (Lightweight)
-//! const SEMVER_LIGHTWEIGHT: &str = "v0.1.0-pre.0";
+//! pub const VERGEN_SEMVER_LIGHTWEIGHT: &str = "v0.1.0-pre.0";
 //! ```
 //!
-//! # Include the constants in your code
+//! # Include the constants in your code (Version 1.x.x only)
 //! ```ignore
 //! include!(concat!(env!("OUT_DIR"), "/version.rs"));
 //!
@@ -92,6 +117,8 @@
 extern crate bitflags;
 #[macro_use]
 extern crate error_chain;
+#[macro_use]
+extern crate getset;
 
 extern crate chrono;
 
@@ -99,7 +126,8 @@ mod error;
 
 pub use error::Result;
 
-use chrono::{DateTime, Utc};
+use chrono::Utc;
+use std::collections::HashMap;
 use std::env;
 use std::fs::File;
 use std::io::Write;
@@ -123,8 +151,8 @@ bitflags!(
     ///
     /// assert_eq!(
     ///   flags,
-    ///   ConstantsFlags::COMPILE_TIME &
-    ///   ConstantsFlags::COMPILE_TIME_SHORT &
+    ///   ConstantsFlags::BUILD_TIMESTAMP &
+    ///   ConstantsFlags::BUILD_DATE &
     ///   ConstantsFlags::SHA &
     ///   ConstantsFlags::TARGET_TRIPLE &
     ///   ConstantsFlags::SEMVER &
@@ -133,14 +161,14 @@ bitflags!(
     /// # }
     /// ```
     pub struct ConstantsFlags: u32 {
-        /// Generate the compile time constant.
+        /// Generate the build timestamp constant.
         ///
         /// "2018-08-09T15:15:57.282334589+00:00"
-        const COMPILE_TIME       = 0x0000_0001;
-        /// Generate the compile date constant.
+        const BUILD_TIMESTAMP    = 0x0000_0001;
+        /// Generate the build date constant.
         ///
         /// "2018-08-09"
-        const COMPILE_TIME_SHORT = 0x0000_0010;
+        const BUILD_DATE         = 0x0000_0010;
         /// Generate the SHA constant.
         ///
         /// "75b390dc6c05a6a4aa2791cc7b3934591803bc22"
@@ -176,24 +204,173 @@ bitflags!(
 
 const CONST_PREFIX: &str = "pub const ";
 const CONST_TYPE: &str = ": &str = ";
-const COMPILE_TIME_NAME: &str = "COMPILE_TIME";
-const COMPILE_TIME_COMMENT: &str = "/// Compile Time (UTC)";
-const COMPILE_TIME_SHORT_NAME: &str = "COMPILE_TIME_SHORT";
-const COMPILE_TIME_SHORT_COMMENT: &str = "/// Compile Time - Short (UTC)";
-const SHA_NAME: &str = "SHA";
+const BUILD_TIMESTAMP_NAME: &str = "VERGEN_BUILD_TIMESTAMP";
+const BUILD_TIMESTAMP_COMMENT: &str = "/// Build Timestamp (UTC)";
+const BUILD_DATE_NAME: &str = "VERGEN_BUILD_DATE";
+const BUILD_DATE_COMMENT: &str = "/// Compile Time - Short (UTC)";
+const SHA_NAME: &str = "VERGEN_SHA";
 const SHA_COMMENT: &str = "/// Commit SHA";
-const SHA_SHORT_NAME: &str = "SHA_SHORT";
+const SHA_SHORT_NAME: &str = "VERGEN_SHA_SHORT";
 const SHA_SHORT_COMMENT: &str = "/// Commit SHA - Short";
-const COMMIT_DATE_NAME: &str = "COMMIT_DATE";
+const COMMIT_DATE_NAME: &str = "VERGEN_COMMIT_DATE";
 const COMMIT_DATE_COMMENT: &str = "/// Commit Date";
-const TARGET_TRIPLE_NAME: &str = "TARGET_TRIPLE";
+const TARGET_TRIPLE_NAME: &str = "VERGEN_TARGET_TRIPLE";
 const TARGET_TRIPLE_COMMENT: &str = "/// Target Triple";
-const SEMVER_NAME: &str = "SEMVER";
+const SEMVER_NAME: &str = "VERGEN_SEMVER";
 const SEMVER_COMMENT: &str = "/// Semver";
-const SEMVER_TAGS_NAME: &str = "SEMVER_LIGHTWEIGHT";
+const SEMVER_TAGS_NAME: &str = "VERGEN_SEMVER_LIGHTWEIGHT";
 const SEMVER_TAGS_COMMENT: &str = "/// Semver (Lightweight)";
 
-fn gen_const(f: &mut File, comment: &str, name: &str, value: &str) -> Result<()> {
+/// `vergen` build information keys.
+#[derive(Clone, Copy, Debug, Hash, Eq, PartialEq)]
+pub enum VergenKey {
+    /// The build timestamp. (VERGEN_BUILD_TIMESTAMP)
+    BuildTimestamp,
+    /// The build date. (VERGEN_BUILD_DATE)
+    BuildDate,
+    /// The latest commit SHA. (VERGEN_SHA)
+    Sha,
+    /// The latest commit short SHA. (VERGEN_SHA_SHORT)
+    ShortSha,
+    /// The commit date. (VERGEN_COMMIT_DATE).
+    CommitDate,
+    /// The target triple. (VERGEN_TARGET_TRIPLE)
+    TargetTriple,
+    /// The semver version from the last git tag. (VERGEN_SEMVER)
+    Semver,
+    /// The semver version from the last git tag, including lightweight.
+    /// (VERGEN_SEMVER_LIGHTWEIGHT)
+    SemverLightweight,
+}
+
+impl VergenKey {
+    /// Get the comment string for the given key.
+    pub fn comment(self) -> &'static str {
+        match self {
+            VergenKey::BuildTimestamp => BUILD_TIMESTAMP_COMMENT,
+            VergenKey::BuildDate => BUILD_DATE_COMMENT,
+            VergenKey::Sha => SHA_COMMENT,
+            VergenKey::ShortSha => SHA_SHORT_COMMENT,
+            VergenKey::CommitDate => COMMIT_DATE_COMMENT,
+            VergenKey::TargetTriple => TARGET_TRIPLE_COMMENT,
+            VergenKey::Semver => SEMVER_COMMENT,
+            VergenKey::SemverLightweight => SEMVER_TAGS_COMMENT,
+        }
+    }
+
+    /// Get the name for the given key.
+    pub fn name(self) -> &'static str {
+        match self {
+            VergenKey::BuildTimestamp => BUILD_TIMESTAMP_NAME,
+            VergenKey::BuildDate => BUILD_DATE_NAME,
+            VergenKey::Sha => SHA_NAME,
+            VergenKey::ShortSha => SHA_SHORT_NAME,
+            VergenKey::CommitDate => COMMIT_DATE_NAME,
+            VergenKey::TargetTriple => TARGET_TRIPLE_NAME,
+            VergenKey::Semver => SEMVER_NAME,
+            VergenKey::SemverLightweight => SEMVER_TAGS_NAME,
+        }
+    }
+}
+
+/// Build time information struct.
+///
+/// # Example `build.rs`
+///
+/// ```
+/// extern crate vergen;
+///
+/// use vergen::{ConstantsFlags, Result, Vergen};
+///
+/// fn main() {
+///     gen_constants().expect("Unable to generate vergen constants!");
+/// }
+///
+/// fn gen_constants() -> Result<()> {
+///     let vergen = Vergen::new(ConstantsFlags::all())?;
+///
+///     for (k, v) in vergen.build_info() {
+///         println!("cargo:rustc-env={}={}", k.name(), v);
+///     }
+///
+///     Ok(())
+/// }
+/// ```
+#[derive(Clone, Debug, Default, Getters, Eq, PartialEq)]
+pub struct Vergen {
+    /// The build information map.
+    #[get = "pub"]
+    build_info: HashMap<VergenKey, String>,
+}
+
+impl Vergen {
+    /// Create a `Vergen` stuct to use in `build.rs`.
+    pub fn new(flags: ConstantsFlags) -> Result<Self> {
+        let mut vergen = Self::default();
+        let mut build_info = HashMap::new();
+        let now = Utc::now();
+
+        if flags.contains(ConstantsFlags::BUILD_TIMESTAMP) {
+            build_info.insert(VergenKey::BuildTimestamp, now.to_rfc3339());
+        }
+
+        if flags.contains(ConstantsFlags::BUILD_DATE) {
+            build_info.insert(VergenKey::BuildDate, now.format("%Y-%m-%d").to_string());
+        }
+
+        if flags.contains(ConstantsFlags::SHA) {
+            let sha = run_command(Command::new("git").args(&["rev-parse", "HEAD"]));
+            build_info.insert(VergenKey::Sha, sha);
+        }
+
+        if flags.contains(ConstantsFlags::SHA_SHORT) {
+            let sha = run_command(Command::new("git").args(&["rev-parse", "--short", "HEAD"]));
+            build_info.insert(VergenKey::ShortSha, sha);
+        }
+
+        if flags.contains(ConstantsFlags::COMMIT_DATE) {
+            let commit_date = run_command(Command::new("git").args(&[
+                "log",
+                "--pretty=format:'%ad'",
+                "-n1",
+                "--date=short",
+            ]));
+            build_info.insert(VergenKey::CommitDate, commit_date);
+        }
+
+        if flags.contains(ConstantsFlags::TARGET_TRIPLE) {
+            let target_triple = env::var("TARGET").unwrap_or_else(|_| "UNKNOWN".to_string());
+            build_info.insert(VergenKey::TargetTriple, target_triple);
+        }
+
+        if flags.contains(ConstantsFlags::SEMVER) {
+            let describe = run_command(Command::new("git").args(&["describe"]));
+
+            let semver = if describe.is_empty() {
+                env::var("CARGO_PKG_VERSION")?
+            } else {
+                describe
+            };
+            build_info.insert(VergenKey::Semver, semver);
+        }
+
+        if flags.contains(ConstantsFlags::SEMVER_LIGHTWEIGHT) {
+            let describe = run_command(Command::new("git").args(&["describe", "--tags"]));
+
+            let semver = if describe.is_empty() {
+                env::var("CARGO_PKG_VERSION")?
+            } else {
+                describe
+            };
+            build_info.insert(VergenKey::SemverLightweight, semver);
+        }
+
+        vergen.build_info = build_info;
+        Ok(vergen)
+    }
+}
+
+fn gen_const<W: Write>(f: &mut W, comment: &str, name: &str, value: &str) -> Result<()> {
     writeln!(
         f,
         "{}\n{}{}{}\"{}\";",
@@ -211,74 +388,6 @@ fn run_command(command: &mut Command) -> String {
     raw_output.trim().to_string()
 }
 
-fn gen_compile_time(f: &mut File, now: DateTime<Utc>) -> Result<()> {
-    gen_const(
-        f,
-        COMPILE_TIME_COMMENT,
-        COMPILE_TIME_NAME,
-        &now.to_rfc3339().to_string(),
-    )
-}
-
-fn gen_compile_time_short(f: &mut File, now: DateTime<Utc>) -> Result<()> {
-    gen_const(
-        f,
-        COMPILE_TIME_SHORT_COMMENT,
-        COMPILE_TIME_SHORT_NAME,
-        &now.format("%Y-%m-%d").to_string(),
-    )
-}
-
-fn gen_sha(f: &mut File) -> Result<()> {
-    let sha = run_command(Command::new("git").args(&["rev-parse", "HEAD"]));
-    gen_const(f, SHA_COMMENT, SHA_NAME, &sha)
-}
-
-fn gen_short_sha(f: &mut File) -> Result<()> {
-    let sha = run_command(Command::new("git").args(&["rev-parse", "--short", "HEAD"]));
-    gen_const(f, SHA_SHORT_COMMENT, SHA_SHORT_NAME, &sha)
-}
-
-fn gen_commit_date(f: &mut File) -> Result<()> {
-    let commit_date = run_command(Command::new("git").args(&[
-        "log",
-        "--pretty=format:'%ad'",
-        "-n1",
-        "--date=short",
-    ]));
-    gen_const(f, COMMIT_DATE_COMMENT, COMMIT_DATE_NAME, &commit_date)
-}
-
-fn gen_target(f: &mut File) -> Result<()> {
-    gen_const(
-        f,
-        TARGET_TRIPLE_COMMENT,
-        TARGET_TRIPLE_NAME,
-        &env::var("TARGET").unwrap_or_else(|_| "UNKNOWN".to_string()),
-    )
-}
-
-fn gen_semver(f: &mut File) -> Result<()> {
-    let describe = run_command(Command::new("git").args(&["describe"]));
-
-    let semver = if describe.is_empty() {
-        env::var("CARGO_PKG_VERSION")?
-    } else {
-        describe
-    };
-    gen_const(f, SEMVER_COMMENT, SEMVER_NAME, &semver)
-}
-
-fn gen_semver_tags(f: &mut File) -> Result<()> {
-    let describe = run_command(Command::new("git").args(&["describe", "--tags"]));
-
-    let semver = if describe.is_empty() {
-        env::var("CARGO_PKG_VERSION")?
-    } else {
-        describe
-    };
-    gen_const(f, SEMVER_TAGS_COMMENT, SEMVER_TAGS_NAME, &semver)
-}
 /// Create a `version.rs` file in `OUT_DIR`, and write up to 7 constants into
 /// it.
 ///
@@ -292,100 +401,45 @@ fn gen_semver_tags(f: &mut File) -> Result<()> {
 /// fn main() {
 /// #   env::set_var("OUT_DIR", "target");
 ///     let mut flags = ConstantsFlags::all();
-///     flags.toggle(ConstantsFlags::COMPILE_TIME);
+///     flags.toggle(ConstantsFlags::BUILD_TIMESTAMP);
 ///     vergen(flags).expect("Unable to generate constants!");
 /// }
 /// ```
 ///
 /// # Example Output (All Flags Enabled)
 /// ```
-/// /// Compile Time (UTC)
-/// const COMPILE_TIME: &str = "2018-08-09T15:15:57.282334589+00:00";
+/// /// Build Timestamp (UTC)
+/// pub const VERGEN_BUILD_TIMESTAMP: &str = "2018-08-09T15:15:57.282334589+00:00";
 ///
-/// /// Compile Time - Short (UTC)
-/// const COMPILE_TIME_SHORT: &str = "2018-08-09";
+/// /// Build Date - Short (UTC)
+/// pub const VERGEN_BUILD_DATE: &str = "2018-08-09";
 ///
 /// /// Commit SHA
-/// const SHA: &str = "75b390dc6c05a6a4aa2791cc7b3934591803bc22";
+/// pub const VERGEN_SHA: &str = "75b390dc6c05a6a4aa2791cc7b3934591803bc22";
 ///
 /// /// Commit SHA - Short
-/// const SHA_SHORT: &str = "75b390d";
+/// pub const VERGEN_SHA_SHORT: &str = "75b390d";
 ///
 /// /// Commit Date
-/// const COMMIT_DATE: &str = "'2018-08-08'";
+/// pub const VERGEN_COMMIT_DATE: &str = "'2018-08-08'";
 ///
 /// /// Target Triple
-/// const TARGET_TRIPLE: &str = "x86_64-unknown-linux-gnu";
+/// pub const VERGEN_TARGET_TRIPLE: &str = "x86_64-unknown-linux-gnu";
 ///
 /// /// Semver
-/// const SEMVER: &str = "v0.1.0-pre.0";
+/// pub const VERGEN_SEMVER: &str = "v0.1.0-pre.0";
 ///
 /// /// Semver (Lightweight)
-/// pub const SEMVER_LIGHTWEIGHT: &str = "v0.1.0-pre.0";
+/// pub const VERGEN_SEMVER_LIGHTWEIGHT: &str = "v0.1.0-pre.0";
 /// ```
 pub fn vergen(flags: ConstantsFlags) -> Result<()> {
     let dst = PathBuf::from(env::var("OUT_DIR")?);
     let mut f = File::create(&dst.join("version.rs"))?;
-    let now = Utc::now();
-    let mut first = true;
+    let vergen = Vergen::new(flags)?;
 
-    if flags.contains(ConstantsFlags::COMPILE_TIME) {
-        gen_compile_time(&mut f, now)?;
-        first = false
-    }
-
-    if flags.contains(ConstantsFlags::COMPILE_TIME_SHORT) {
-        if !first {
-            writeln!(f);
-        }
-        gen_compile_time_short(&mut f, now)?;
-        first = false;
-    }
-
-    if flags.contains(ConstantsFlags::SHA) {
-        if !first {
-            writeln!(f);
-        }
-        gen_sha(&mut f)?;
-        first = false;
-    }
-
-    if flags.contains(ConstantsFlags::SHA_SHORT) {
-        if !first {
-            writeln!(f);
-        }
-        gen_short_sha(&mut f)?;
-        first = false;
-    }
-
-    if flags.contains(ConstantsFlags::COMMIT_DATE) {
-        if !first {
-            writeln!(f);
-        }
-        gen_commit_date(&mut f)?;
-        first = false;
-    }
-
-    if flags.contains(ConstantsFlags::TARGET_TRIPLE) {
-        if !first {
-            writeln!(f);
-        }
-        gen_target(&mut f)?;
-        first = false;
-    }
-
-    if flags.contains(ConstantsFlags::SEMVER) {
-        if !first {
-            writeln!(f);
-        }
-        gen_semver(&mut f)?;
-    }
-
-    if flags.contains(ConstantsFlags::SEMVER_LIGHTWEIGHT) {
-        if !first {
-            writeln!(f);
-        }
-        gen_semver_tags(&mut f)?;
+    for (k, v) in vergen.build_info() {
+        gen_const(&mut f, k.comment(), k.name(), v)?;
+        writeln!(f)?;
     }
 
     Ok(())

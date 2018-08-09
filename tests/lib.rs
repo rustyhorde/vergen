@@ -11,7 +11,7 @@ extern crate vergen;
 
 use std::env;
 use std::fs::File;
-use vergen::{vergen, ConstantsFlags};
+use vergen::{vergen, ConstantsFlags, Vergen, VergenKey};
 
 #[test]
 fn test_vergen() {
@@ -19,7 +19,7 @@ fn test_vergen() {
     env::set_var("OUT_DIR", &tmp);
     env::set_var("TARGET", "x86_64-unknown-linux-gnu");
     let mut flags = ConstantsFlags::all();
-    flags.toggle(ConstantsFlags::COMPILE_TIME);
+    flags.toggle(ConstantsFlags::BUILD_TIMESTAMP);
     match vergen(flags) {
         Ok(_) => assert!(true),
         Err(e) => assert!(false, format!("{}", e)),
@@ -31,4 +31,54 @@ fn test_vergen() {
         },
         Err(_) => assert!(false),
     }
+}
+
+#[test]
+fn test_build_info_all() {
+    let flags = ConstantsFlags::all();
+    let vergen = Vergen::new(flags).expect("Unable to create Vergen!");
+    let build_info = vergen.build_info();
+
+    assert!(build_info.contains_key(&VergenKey::BuildTimestamp));
+    assert!(build_info.contains_key(&VergenKey::BuildDate));
+    assert!(build_info.contains_key(&VergenKey::Sha));
+    assert!(build_info.contains_key(&VergenKey::ShortSha));
+    assert!(build_info.contains_key(&VergenKey::CommitDate));
+    assert!(build_info.contains_key(&VergenKey::TargetTriple));
+    assert!(build_info.contains_key(&VergenKey::Semver));
+    assert!(build_info.contains_key(&VergenKey::SemverLightweight));
+}
+
+#[test]
+fn test_build_info_some() {
+    let mut flags = ConstantsFlags::all();
+    flags.toggle(ConstantsFlags::COMMIT_DATE);
+    flags.toggle(ConstantsFlags::SEMVER_LIGHTWEIGHT);
+    let vergen = Vergen::new(flags).expect("Unable to create Vergen!");
+    let build_info = vergen.build_info();
+
+    assert!(build_info.contains_key(&VergenKey::BuildTimestamp));
+    assert!(build_info.contains_key(&VergenKey::BuildDate));
+    assert!(build_info.contains_key(&VergenKey::Sha));
+    assert!(build_info.contains_key(&VergenKey::ShortSha));
+    assert!(!build_info.contains_key(&VergenKey::CommitDate));
+    assert!(build_info.contains_key(&VergenKey::TargetTriple));
+    assert!(build_info.contains_key(&VergenKey::Semver));
+    assert!(!build_info.contains_key(&VergenKey::SemverLightweight));
+}
+
+#[test]
+fn test_build_info_none() {
+    let flags = ConstantsFlags::empty();
+    let vergen = Vergen::new(flags).expect("Unable to create Vergen!");
+    let build_info = vergen.build_info();
+
+    assert!(!build_info.contains_key(&VergenKey::BuildTimestamp));
+    assert!(!build_info.contains_key(&VergenKey::BuildDate));
+    assert!(!build_info.contains_key(&VergenKey::Sha));
+    assert!(!build_info.contains_key(&VergenKey::ShortSha));
+    assert!(!build_info.contains_key(&VergenKey::CommitDate));
+    assert!(!build_info.contains_key(&VergenKey::TargetTriple));
+    assert!(!build_info.contains_key(&VergenKey::Semver));
+    assert!(!build_info.contains_key(&VergenKey::SemverLightweight));
 }
