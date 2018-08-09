@@ -1,9 +1,9 @@
 [package]
 authors = ["Jason Ozias <jason.g.ozias@gmail.com>"]
 description = "Generate version related functions"
-documentation = "http://rustyhorde.github.io/vergen/vergen/vergen/index.html"
-homepage = "http://rustyhorde.github.io/vergen"
-keywords = ["rust", "rustyhorde", "vergen"]
+documentation = "http://docs.rs/vergen"
+homepage = "http://github.com/rustyhorde/vergen"
+keywords = ["version", "generation"]
 license = "MIT/Apache-2.0"
 name = "vergen"
 readme = "README.md"
@@ -11,12 +11,6 @@ repository = "https://github.com/rustyhorde/vergen"
 version = "0.1.2-pre.0"
 
 [dependencies]
-bitflags = "0.7.0"
-time = "~0.1.34"
-
-[dependencies.clippy]
-optional = true
-version = "~0.0.30"
-
-[features]
-lint = ["clippy"]
+bitflags = "0"
+chrono = "0"
+error-chain = "0"
