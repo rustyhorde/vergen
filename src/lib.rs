@@ -8,39 +8,67 @@
 
 //! Defines the `vergen` function.
 //!
-//! `vergen` when used in conjunction with the
-//! [build script support](http://doc.crates.io/build-script.html) from
+//! `vergen`, when used in conjunction with the
+//! [Build Scripts] support in
 //! cargo, generates a file in `OUT_DIR` (defined by cargo) with up to 7 build
 //! time constants.  This file can then be use with `include!` to pull the
 //! constants into your source for use.
 //!
+//! [Build Scripts]: https://doc.rust-lang.org/cargo/reference/build-scripts.html
+//!
 //! # Example Cargo.toml
 //! ```toml
 //! [package]
+//! #..
 //! build = "build.rs"
+//!
+//! [dependencies]
+//! #..
 //!
 //! [build-dependencies]
 //! vergen = "0"
 //! ```
 //!
-//! # Example build.rs
-//! ```ignore
+//! # Example `build.rs`
+//! ```
 //! extern crate vergen;
 //!
+//! # use std::env;
 //! use vergen::{ConstantsFlags, COMPILE_TIME, Result, vergen};
 //!
 //! fn main() {
-//!     gen_consts().expect("Unable to generate constants!");
-//! }
-//!
-//! fn gen_consts() -> Result<()> {
+//! #   env::set_var("OUT_DIR", "target");
 //!     let mut flags = ConstantsFlags::all();
 //!     flags.toggle(COMPILE_TIME);
-//!     vergen(flags)
+//!     vergen(flags).expect("Unable to generate constants!");
 //! }
 //! ```
 //!
-//! # Example Usage
+//! # Example `version.rs` (All Flags Enabled)
+//! ```
+//! /// Compile Time (UTC)
+//! const COMPILE_TIME: &str = "2018-08-09T15:15:57.282334589+00:00";
+//!
+//! /// Compile Time - Short (UTC)
+//! const COMPILE_TIME_SHORT: &str = "2018-08-09";
+//!
+//! /// Commit SHA
+//! const SHA: &str = "75b390dc6c05a6a4aa2791cc7b3934591803bc22";
+//!
+//! /// Commit SHA - Short
+//! const SHA_SHORT: &str = "75b390d";
+//!
+//! /// Commit Date
+//! const COMMIT_DATE: &str = "'2018-08-08'";
+//!
+//! /// Target Triple
+//! const TARGET_TRIPLE: &str = "x86_64-unknown-linux-gnu";
+//!
+//! /// Semver
+//! const SEMVER: &str = "v0.1.0-pre.0";
+//! ```
+//!
+//! # Include the constants in your code
 //! ```ignore
 //! include!(concat!(env!("OUT_DIR"), "/version.rs"));
 //!
@@ -81,11 +109,25 @@ bitflags!(
     /// Use these to toggle off the generation of constants you won't use.
     ///
     /// ```
+    /// # extern crate vergen;
+    /// #
+    /// # use vergen::*;
+    /// #
+    /// # fn foo() {
     /// let mut flags = ConstantsFlags::all();
     /// flags.toggle(SHA_SHORT);
     /// flags.toggle(COMMIT_DATE);
     ///
-    /// assert_eq!(flags, ConstantsFlags)
+    /// assert_eq!(
+    ///   flags,
+    ///   COMPILE_TIME &
+    ///   COMPILE_TIME_SHORT &
+    ///   SHA &
+    ///   TARGET_TRIPLE &
+    ///   SEMVER
+    /// )
+    /// # }
+    /// ```
     pub struct ConstantsFlags: u32 {
         /// Generate the compile time constant.
         ///
@@ -214,10 +256,25 @@ fn gen_semver(f: &mut File) -> Result<()> {
     gen_const(f, SEMVER_COMMENT, SEMVER_NAME, &semver)
 }
 
-/// Create the `version.rs` file in `OUT_DIR`, and write up to 7 constants into
+/// Create a `version.rs` file in `OUT_DIR`, and write up to 7 constants into
 /// it.
 ///
-/// # Example Output
+/// # Example build.rs
+/// ```
+/// # extern crate vergen;
+/// #
+/// # use std::env;
+/// # use vergen::{ConstantsFlags, COMPILE_TIME, Result, vergen};
+/// #
+/// fn main() {
+/// #   env::set_var("OUT_DIR", "target");
+///     let mut flags = ConstantsFlags::all();
+///     flags.toggle(COMPILE_TIME);
+///     vergen(flags).expect("Unable to generate constants!");
+/// }
+/// ```
+///
+/// # Example Output (All Flags Enabled)
 /// ```
 /// /// Compile Time (UTC)
 /// const COMPILE_TIME: &str = "2018-08-09T15:15:57.282334589+00:00";
