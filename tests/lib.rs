@@ -11,7 +11,7 @@ extern crate vergen;
 
 use std::env;
 use std::fs::File;
-use vergen::{vergen, ConstantsFlags, COMPILE_TIME};
+use vergen::{vergen, ConstantsFlags};
 
 #[test]
 fn test_vergen() {
@@ -19,7 +19,7 @@ fn test_vergen() {
     env::set_var("OUT_DIR", &tmp);
     env::set_var("TARGET", "x86_64-unknown-linux-gnu");
     let mut flags = ConstantsFlags::all();
-    flags.toggle(COMPILE_TIME);
+    flags.toggle(ConstantsFlags::COMPILE_TIME);
     match vergen(flags) {
         Ok(_) => assert!(true),
         Err(e) => assert!(false, format!("{}", e)),

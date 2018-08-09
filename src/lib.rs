@@ -34,12 +34,12 @@
 //! extern crate vergen;
 //!
 //! # use std::env;
-//! use vergen::{ConstantsFlags, COMPILE_TIME, Result, vergen};
+//! use vergen::{ConstantsFlags, Result, vergen};
 //!
 //! fn main() {
 //! #   env::set_var("OUT_DIR", "target");
 //!     let mut flags = ConstantsFlags::all();
-//!     flags.toggle(COMPILE_TIME);
+//!     flags.toggle(ConstantsFlags::COMPILE_TIME);
 //!     vergen(flags).expect("Unable to generate constants!");
 //! }
 //! ```
@@ -114,21 +114,21 @@ bitflags!(
     /// ```
     /// # extern crate vergen;
     /// #
-    /// # use vergen::*;
+    /// # use vergen::ConstantsFlags;
     /// #
     /// # fn foo() {
     /// let mut flags = ConstantsFlags::all();
-    /// flags.toggle(SHA_SHORT);
-    /// flags.toggle(COMMIT_DATE);
+    /// flags.toggle(ConstantsFlags::SHA_SHORT);
+    /// flags.toggle(ConstantsFlags::COMMIT_DATE);
     ///
     /// assert_eq!(
     ///   flags,
-    ///   COMPILE_TIME &
-    ///   COMPILE_TIME_SHORT &
-    ///   SHA &
-    ///   TARGET_TRIPLE &
-    ///   SEMVER &
-    ///   SEMVER_LIGHTWEIGHT
+    ///   ConstantsFlags::COMPILE_TIME &
+    ///   ConstantsFlags::COMPILE_TIME_SHORT &
+    ///   ConstantsFlags::SHA &
+    ///   ConstantsFlags::TARGET_TRIPLE &
+    ///   ConstantsFlags::SEMVER &
+    ///   ConstantsFlags::SEMVER_LIGHTWEIGHT
     /// )
     /// # }
     /// ```
@@ -287,12 +287,12 @@ fn gen_semver_tags(f: &mut File) -> Result<()> {
 /// # extern crate vergen;
 /// #
 /// # use std::env;
-/// # use vergen::{ConstantsFlags, COMPILE_TIME, Result, vergen};
+/// # use vergen::{ConstantsFlags, Result, vergen};
 /// #
 /// fn main() {
 /// #   env::set_var("OUT_DIR", "target");
 ///     let mut flags = ConstantsFlags::all();
-///     flags.toggle(COMPILE_TIME);
+///     flags.toggle(ConstantsFlags::COMPILE_TIME);
 ///     vergen(flags).expect("Unable to generate constants!");
 /// }
 /// ```
@@ -329,12 +329,12 @@ pub fn vergen(flags: ConstantsFlags) -> Result<()> {
     let now = Utc::now();
     let mut first = true;
 
-    if flags.contains(COMPILE_TIME) {
+    if flags.contains(ConstantsFlags::COMPILE_TIME) {
         gen_compile_time(&mut f, now)?;
         first = false
     }
 
-    if flags.contains(COMPILE_TIME_SHORT) {
+    if flags.contains(ConstantsFlags::COMPILE_TIME_SHORT) {
         if !first {
             writeln!(f);
         }
@@ -342,7 +342,7 @@ pub fn vergen(flags: ConstantsFlags) -> Result<()> {
         first = false;
     }
 
-    if flags.contains(SHA) {
+    if flags.contains(ConstantsFlags::SHA) {
         if !first {
             writeln!(f);
         }
@@ -350,7 +350,7 @@ pub fn vergen(flags: ConstantsFlags) -> Result<()> {
         first = false;
     }
 
-    if flags.contains(SHA_SHORT) {
+    if flags.contains(ConstantsFlags::SHA_SHORT) {
         if !first {
             writeln!(f);
         }
@@ -358,7 +358,7 @@ pub fn vergen(flags: ConstantsFlags) -> Result<()> {
         first = false;
     }
 
-    if flags.contains(COMMIT_DATE) {
+    if flags.contains(ConstantsFlags::COMMIT_DATE) {
         if !first {
             writeln!(f);
         }
@@ -366,7 +366,7 @@ pub fn vergen(flags: ConstantsFlags) -> Result<()> {
         first = false;
     }
 
-    if flags.contains(TARGET_TRIPLE) {
+    if flags.contains(ConstantsFlags::TARGET_TRIPLE) {
         if !first {
             writeln!(f);
         }
@@ -374,14 +374,14 @@ pub fn vergen(flags: ConstantsFlags) -> Result<()> {
         first = false;
     }
 
-    if flags.contains(SEMVER) {
+    if flags.contains(ConstantsFlags::SEMVER) {
         if !first {
             writeln!(f);
         }
         gen_semver(&mut f)?;
     }
 
-    if flags.contains(SEMVER_LIGHTWEIGHT) {
+    if flags.contains(ConstantsFlags::SEMVER_LIGHTWEIGHT) {
         if !first {
             writeln!(f);
         }
