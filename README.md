@@ -35,7 +35,7 @@ pub const SEMVER: &str = "v0.1.0-pre.0";
 build = "build.rs"
 
 [build-dependencies]
-vergen = "0.2"
+vergen = "1"
 ```
 #### build.rs
 ```rust

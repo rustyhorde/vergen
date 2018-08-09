@@ -26,7 +26,7 @@
 //! #..
 //!
 //! [build-dependencies]
-//! vergen = "0"
+//! vergen = "1"
 //! ```
 //!
 //! # Example `build.rs`
