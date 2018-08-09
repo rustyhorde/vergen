@@ -51,7 +51,7 @@ use vergen::{vergen, ConstantsFlags, COMPILE_TIME};
 
 fn main() {
     // Turn on all flags to start.
-    let mut flags = OutputFns::all();
+    let mut flags = ConstantsFlags::all();
     // Toggle the flags for the constants you don't want generated.
     flags.toggle(COMPILE_TIME);
     // Generate the version.rs file in the Cargo OUT_DIR.
