@@ -78,7 +78,14 @@ use std::process::Command;
 bitflags!(
     /// Constants Flags
     ///
-    /// Use this to toggle off the generation of constants you won't use.
+    /// Use these to toggle off the generation of constants you won't use.
+    ///
+    /// ```
+    /// let mut flags = ConstantsFlags::all();
+    /// flags.toggle(SHA_SHORT);
+    /// flags.toggle(COMMIT_DATE);
+    ///
+    /// assert_eq!(flags, ConstantsFlags)
     pub struct ConstantsFlags: u32 {
         /// Generate the compile time constant.
         ///
