@@ -1,14 +1,17 @@
 language: rust
 rust:
-  - stable
-  - beta
-  - nightly
+- stable
+- beta
+- nightly
 os:
-  - linux
+- linux
 matrix:
   allow_failures:
-    - rust: nightly
+  - rust: nightly
 script:
-  - cargo build --verbose
-  - cargo test --verbose
-  - cargo doc --verbose
+- cargo build --verbose
+- cargo test --verbose
+- cargo doc --verbose
+notifications:
+  slack:
+    secure: U1MJyiODZHG6wZYEZOaUx6yh/l4yiXzzEG+3ysilbGmeRK+vKq9tktBwqPDDYUdwwgdPCi55Yet1jpxpN+AQgEx0ihxjpzCSIWwv0bl72rd4y2fMxLddMAF6aKaqdMSPtPcldZwPOKTDYtvaOYwba0q9D4TUhqXm/9D7Zfk4IGs=
