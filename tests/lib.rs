@@ -34,6 +34,3 @@ fn test_vergen() {
         Err(_) => assert!(false),
     }
 }
-
-#[test]
-fn build_rs() {}

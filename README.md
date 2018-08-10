@@ -10,6 +10,9 @@ constants without having to use the `include!` macro.
 **NOTE**: Version 1.x.x is a breaking change from the 0.1.0 series.  This crate no longer generates functions
 to display the build time information, but rather generates constants.  See below for more detail.
 
+## Documentation
+[Documentation](https://docs.rs/vergen)
+
 ## Basic Usage
 `vergen`, when used in conjunction with the [Build Scripts] support in
 cargo, can either

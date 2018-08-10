@@ -21,16 +21,16 @@ bitflags!(
     /// # fn foo() {
     /// let mut flags = ConstantsFlags::all();
     /// flags.toggle(ConstantsFlags::SHA_SHORT);
-    /// flags.toggle(ConstantsFlags::COMMIT_DATE);
+    /// flags.toggle(ConstantsFlags::BUILD_DATE);
+    /// flags.toggle(ConstantsFlags::SEMVER_LIGHTWEIGHT);
     ///
     /// assert_eq!(
     ///   flags,
     ///   ConstantsFlags::BUILD_TIMESTAMP &
-    ///   ConstantsFlags::BUILD_DATE &
     ///   ConstantsFlags::SHA &
+    ///   ConstantsFlags::COMMIT_DATE &
     ///   ConstantsFlags::TARGET_TRIPLE &
-    ///   ConstantsFlags::SEMVER &
-    ///   ConstantsFlags::SEMVER_LIGHTWEIGHT
+    ///   ConstantsFlags::SEMVER
     /// )
     /// # }
     /// ```
@@ -72,7 +72,7 @@ bitflags!(
         /// empty, the the `CARGO_PKG_VERSION` environment variable is used.
         ///
         /// "v0.1.0-pre.0"
-        const SEMVER_LIGHTWEIGHT = 0x0200_0000;
+        const SEMVER_LIGHTWEIGHT = 0x1000_0000;
     }
 );
 
@@ -97,3 +97,38 @@ pub const SEMVER_NAME: &str = "VERGEN_SEMVER";
 pub const SEMVER_COMMENT: &str = "/// Semver";
 pub const SEMVER_TAGS_NAME: &str = "VERGEN_SEMVER_LIGHTWEIGHT";
 pub const SEMVER_TAGS_COMMENT: &str = "/// Semver (Lightweight)";
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn constants_dont_change() {
+        assert_eq!(ConstantsFlags::BUILD_TIMESTAMP.bits(), 0x0000_0001);
+        assert_eq!(ConstantsFlags::BUILD_DATE.bits(), 0x0000_0010);
+        assert_eq!(ConstantsFlags::SHA.bits(), 0x0000_0100);
+        assert_eq!(ConstantsFlags::SHA_SHORT.bits(), 0x0000_1000);
+        assert_eq!(ConstantsFlags::COMMIT_DATE.bits(), 0x0001_0000);
+        assert_eq!(ConstantsFlags::TARGET_TRIPLE.bits(), 0x0010_0000);
+        assert_eq!(ConstantsFlags::SEMVER.bits(), 0x0100_0000);
+        assert_eq!(ConstantsFlags::SEMVER_LIGHTWEIGHT.bits(), 0x1000_0000);
+        assert_eq!(CONST_PREFIX, "pub const ");
+        assert_eq!(CONST_TYPE, ": &str = ");
+        assert_eq!(BUILD_TIMESTAMP_NAME, "VERGEN_BUILD_TIMESTAMP");
+        assert_eq!(BUILD_TIMESTAMP_COMMENT, "/// Build Timestamp (UTC)");
+        assert_eq!(BUILD_DATE_NAME, "VERGEN_BUILD_DATE");
+        assert_eq!(BUILD_DATE_COMMENT, "/// Compile Time - Short (UTC)");
+        assert_eq!(SHA_NAME, "VERGEN_SHA");
+        assert_eq!(SHA_COMMENT, "/// Commit SHA");
+        assert_eq!(SHA_SHORT_NAME, "VERGEN_SHA_SHORT");
+        assert_eq!(SHA_SHORT_COMMENT, "/// Commit SHA - Short");
+        assert_eq!(COMMIT_DATE_NAME, "VERGEN_COMMIT_DATE");
+        assert_eq!(COMMIT_DATE_COMMENT, "/// Commit Date");
+        assert_eq!(TARGET_TRIPLE_NAME, "VERGEN_TARGET_TRIPLE");
+        assert_eq!(TARGET_TRIPLE_COMMENT, "/// Target Triple");
+        assert_eq!(SEMVER_NAME, "VERGEN_SEMVER");
+        assert_eq!(SEMVER_COMMENT, "/// Semver");
+        assert_eq!(SEMVER_TAGS_NAME, "VERGEN_SEMVER_LIGHTWEIGHT");
+        assert_eq!(SEMVER_TAGS_COMMENT, "/// Semver (Lightweight)");
+    }
+}

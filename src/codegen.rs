@@ -6,8 +6,8 @@
 // option. All files in the project carrying such notice may not be copied,
 // modified, or distributed except according to those terms.
 
-//! The implementation related to generating code to use with `include!`
-//! within your project.
+//! The build information implementation related to generating code to use with
+//! the `include!` macro within your project.
 use constants::{ConstantsFlags, CONST_PREFIX, CONST_TYPE};
 use envvar::Vergen;
 use error::Result;
@@ -25,8 +25,8 @@ fn gen_const<W: Write>(f: &mut W, comment: &str, name: &str, value: &str) -> Res
     Ok(())
 }
 
-/// Create a `version.rs` file in `OUT_DIR`, and write up to 7 constants into
-/// it.
+/// Create a `version.rs` file in `OUT_DIR` and write the toggled on constants
+/// to the file.
 ///
 /// # Example build.rs
 /// ```
@@ -107,7 +107,6 @@ mod test {
             gen_const(&mut cursor, k.comment(), k.name(), v)
                 .expect("Unable to generate const string");
             let const_str = String::from_utf8_lossy(&cursor.get_ref());
-            println!("{}", const_str);
             assert!(CONST_RE.is_match(&const_str));
         }
     }

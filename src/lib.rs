@@ -19,7 +19,8 @@
 //!
 //! [Build Scripts]: https://doc.rust-lang.org/cargo/reference/build-scripts.html
 //!
-//! # Example Cargo.toml
+//! # 2.x.x
+//! ## Example Cargo.toml
 //! ```toml
 //! [package]
 //! #..
@@ -32,7 +33,7 @@
 //! vergen = "2"
 //! ```
 //!
-//! # Example `build.rs` (Version 2.x.x)
+//! ## Example `build.rs`
 //!
 //! ```
 //! extern crate vergen;
@@ -54,7 +55,7 @@
 //! }
 //! ```
 //!
-//! # Use constants in your code
+//! ## Use constants in your code
 //!
 //! ```
 //! fn my_fn() {
@@ -62,7 +63,8 @@
 //! }
 //! ```
 //!
-//! # Example `build.rs` (Version 1.x.x)
+//! # 1.x.x
+//! ## Example `build.rs`
 //! ```
 //! extern crate vergen;
 //!
@@ -77,7 +79,7 @@
 //! }
 //! ```
 //!
-//! # Example `version.rs` (Version 1.x.x only)
+//! ## Example `version.rs`
 //! ```
 //! /// Compile Time (UTC)
 //! pub const VERGEN_BUILD_TIMESTAMP: &str = "2018-08-09T15:15:57.282334589+00:00";
@@ -104,12 +106,11 @@
 //! pub const VERGEN_SEMVER_LIGHTWEIGHT: &str = "v0.1.0-pre.0";
 //! ```
 //!
-//! # Include the constants in your code (Version 1.x.x only)
+//! ## Include the constants in your code (Version 1.x.x only)
 //! ```ignore
 //! include!(concat!(env!("OUT_DIR"), "/version.rs"));
 //!
 //! format!("{} {} blah {}", VERGEN_BUILD_TIMESTAMP, VERGEN_SHA, VERGEN_SEMVER)
-//! # }
 //! ```
 #![deny(
     missing_docs,
