@@ -4,69 +4,109 @@
 [![Build
 Status](https://travis-ci.org/rustyhorde/vergen.svg?branch=master)](https://travis-ci.org/rustyhorde/vergen)
 
+**NOTE**: Version 2.x.x is compatible with Version 1.x.x, but introduces a completely new way to use the
+constants without having to use the `include!` macro.
+
 **NOTE**: Version 1.x.x is a breaking change from the 0.1.0 series.  This crate no longer generates functions
 to display the build time information, but rather generates constants.  See below for more detail.
 
 ## Basic Usage
-The following code is optionally generated in the Cargo `OUT_DIR` in `version.rs`.
-```rust
-/// Compile Time (UTC)
-pub const COMPILE_TIME: &str = "2018-08-09T15:18:02.918056182+00:00";
+`vergen`, when used in conjunction with the [Build Scripts] support in
+cargo, can either
 
-/// Compile Time - Short (UTC)
-pub const COMPILE_TIME_SHORT: &str = "2018-08-09";
+1. Generate environment variables to use with the `env!` macro.  See the
+documentation for `VergenKey` for the environment variables names.
+2. Generate a file in `OUT_DIR` (defined by cargo) with up to 8 build time
+constants.  This file can then be used with the `include!` macro to pull the
+constants into your source for use.
 
-/// Commit SHA
-pub const SHA: &str = "75b390dc6c05a6a4aa2791cc7b3934591803bc22";
-
-/// Commit SHA - Short
-pub const SHA_SHORT: &str = "75b390d";
-
-/// Commit Date
-pub const COMMIT_DATE: &str = "'2018-08-08'";
-
-/// Target Triple
-pub const TARGET_TRIPLE: &str = "x86_64-unknown-linux-gnu";
-
-/// Semver
-pub const SEMVER: &str = "v0.1.0-pre.0";
-
-/// Semver (Lightweight)
-pub const SEMVER_LIGHTWEIGHT: &str = "v0.1.0-pre.0";
-```
-
-#### Cargo.toml
+# Example Cargo.toml
 ```toml
 [package]
+#..
 build = "build.rs"
 
+[dependencies]
+#..
+
 [build-dependencies]
-vergen = "1"
+vergen = "2"
 ```
-#### build.rs
+
+# Example `build.rs` (Version 2.x.x)
+
 ```rust
 extern crate vergen;
 
-use vergen::{vergen, ConstantsFlags, COMPILE_TIME};
+use vergen::{ConstantsFlags, Result, Vergen};
 
 fn main() {
-    // Turn on all flags to start.
-    let mut flags = OutputFns::all();
-    // Toggle the flags for the constants you don't want generated.
-    flags.toggle(COMPILE_TIME);
-    // Generate the version.rs file in the Cargo OUT_DIR.
-    assert!(vergen(flags).is_ok());
+    gen_constants().expect("Unable to generate vergen constants!");
+}
+
+fn gen_constants() -> Result<()> {
+    let vergen = Vergen::new(ConstantsFlags::all())?;
+
+    for (k, v) in vergen.build_info() {
+        println!("cargo:rustc-env={}={}", k.name(), v);
+    }
+
+    Ok(())
 }
 ```
-#### lib.rs/main.rs
+
+# Use constants in your code
+```rust
+fn my_fn() {
+    println!("Build Timestamp: {}", env!("VERGEN_BUILD_TIMESTAMP"));
+}
+```
+
+# Example `build.rs` (Version 1.x.x)
+```rust
+extern crate vergen;
+
+use vergen::{ConstantsFlags, Result, vergen};
+
+fn main() {
+    let mut flags = ConstantsFlags::all();
+    flags.toggle(ConstantsFlags::BUILD_TIMESTAMP);
+    vergen(flags).expect("Unable to generate constants!");
+}
+```
+
+# Example `version.rs` (Version 1.x.x only)
+```rust
+/// Compile Time (UTC)
+pub const VERGEN_BUILD_TIMESTAMP: &str = "2018-08-09T15:15:57.282334589+00:00";
+
+/// Compile Time - Short (UTC)
+pub const VERGEN_BUILD_DATE: &str = "2018-08-09";
+
+/// Commit SHA
+pub const VERGEN_SHA: &str = "75b390dc6c05a6a4aa2791cc7b3934591803bc22";
+
+/// Commit SHA - Short
+pub const VERGEN_SHA_SHORT: &str = "75b390d";
+
+/// Commit Date
+pub const VERGEN_COMMIT_DATE: &str = "'2018-08-08'";
+
+/// Target Triple
+pub const VERGEN_TARGET_TRIPLE: &str = "x86_64-unknown-linux-gnu";
+
+/// Semver
+pub const VERGEN_SEMVER: &str = "v0.1.0-pre.0";
+
+/// Semver (Lightweight)
+pub const VERGEN_SEMVER_LIGHTWEIGHT: &str = "v0.1.0-pre.0";
+```
+
+# Include the constants in your code (Version 1.x.x only)
 ```rust
 include!(concat!(env!("OUT_DIR"), "/version.rs"));
 
-// The following is an exmaple.  You could use now(), sha(), and semver() however you want.
-fn version() -> String {
-    format!("{} {} {}", COMPILE_TIME, SHA, SEMVER)
-    // 2015-02-11 15:35:30.991638113-05:00 b8acdc17bbf0d9928f08b15cba6d3b659770a624 rh v0.0.1-pre-21-gb8acdc1
-}
+format!("{} {} blah {}", COMMIT_TIME, SHA, SEMVER)
 ```
 
 ## License

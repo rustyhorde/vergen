@@ -7,8 +7,10 @@
 // modified, or distributed except according to those terms.
 
 //! Defines the `vergen` tests.
+extern crate regex;
 extern crate vergen;
 
+use regex::Regex;
 use std::env;
 use std::fs::File;
 use vergen::{vergen, ConstantsFlags, Vergen, VergenKey};
@@ -81,4 +83,19 @@ fn test_build_info_none() {
     assert!(!build_info.contains_key(&VergenKey::TargetTriple));
     assert!(!build_info.contains_key(&VergenKey::Semver));
     assert!(!build_info.contains_key(&VergenKey::SemverLightweight));
+}
+
+#[test]
+fn test_build_info_commit_date() {
+    let mut flags = ConstantsFlags::empty();
+    flags.toggle(ConstantsFlags::COMMIT_DATE);
+    let vergen = Vergen::new(flags).expect("Unable to create Vergen!");
+    let build_info = vergen.build_info();
+
+    let re = Regex::new(r"^\d{4}-\d{2}-\d{2}$").expect("Unable to create date regex!");
+    if let Some(commit_date) = build_info.get(&VergenKey::CommitDate) {
+        assert!(re.is_match(commit_date));
+    } else {
+        assert!(false, "The commit date wasn't set properly");
+    }
 }

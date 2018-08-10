@@ -54,6 +54,14 @@
 //! }
 //! ```
 //!
+//! # Use constants in your code
+//!
+//! ```ignore
+//! fn my_fn() {
+//!     println!("Build Timestamp: {}", env!("VERGEN_BUILD_TIMESTAMP"));
+//! }
+//! ```
+//!
 //! # Example `build.rs` (Version 1.x.x)
 //! ```
 //! extern crate vergen;
@@ -84,7 +92,7 @@
 //! pub const VERGEN_SHA_SHORT: &str = "75b390d";
 //!
 //! /// Commit Date
-//! pub const VERGEN_COMMIT_DATE: &str = "'2018-08-08'";
+//! pub const VERGEN_COMMIT_DATE: &str = "2018-08-08";
 //!
 //! /// Target Triple
 //! pub const VERGEN_TARGET_TRIPLE: &str = "x86_64-unknown-linux-gnu";
@@ -100,7 +108,7 @@
 //! ```ignore
 //! include!(concat!(env!("OUT_DIR"), "/version.rs"));
 //!
-//! format!("{} {} blah {}", COMMIT_TIME, SHA, SEMVER)
+//! format!("{} {} blah {}", VERGEN_BUILD_TIMESTAMP, VERGEN_SHA, VERGEN_SEMVER)
 //! # }
 //! ```
 #![deny(
@@ -335,7 +343,10 @@ impl Vergen {
                 "-n1",
                 "--date=short",
             ]));
-            build_info.insert(VergenKey::CommitDate, commit_date);
+            build_info.insert(
+                VergenKey::CommitDate,
+                commit_date.trim_matches('\'').to_string(),
+            );
         }
 
         if flags.contains(ConstantsFlags::TARGET_TRIPLE) {
