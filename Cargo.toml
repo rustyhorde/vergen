@@ -17,4 +17,8 @@ error-chain = "0"
 getset = "0"
 
 [dev-dependencies]
+lazy_static = "1"
 regex = "1"
+
+[build-dependencies]
+vergen = "2"

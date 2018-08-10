@@ -108,7 +108,7 @@ pub const VERGEN_SEMVER_LIGHTWEIGHT: &str = "v0.1.0-pre.0";
 ```rust
 include!(concat!(env!("OUT_DIR"), "/version.rs"));
 
-format!("{} {} blah {}", COMMIT_TIME, SHA, SEMVER)
+format!("{} {} blah {}", VERGEN_COMMIT_DATE, VERGEN_SHA, VERGEN_SEMVER)
 ```
 
 ## License
