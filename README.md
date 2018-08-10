@@ -20,7 +20,7 @@ documentation for `VergenKey` for the environment variables names.
 constants.  This file can then be used with the `include!` macro to pull the
 constants into your source for use.
 
-# Example Cargo.toml
+### Example Cargo.toml
 ```toml
 [package]
 #..
@@ -33,7 +33,7 @@ build = "build.rs"
 vergen = "2"
 ```
 
-# Example `build.rs` (Version 2.x.x)
+### Example `build.rs` (Version 2.x.x)
 
 ```rust
 extern crate vergen;
@@ -55,14 +55,14 @@ fn gen_constants() -> Result<()> {
 }
 ```
 
-# Use constants in your code
+### Use constants in your code
 ```rust
 fn my_fn() {
     println!("Build Timestamp: {}", env!("VERGEN_BUILD_TIMESTAMP"));
 }
 ```
 
-# Example `build.rs` (Version 1.x.x)
+### Example `build.rs` (Version 1.x.x)
 ```rust
 extern crate vergen;
 
@@ -75,7 +75,7 @@ fn main() {
 }
 ```
 
-# Example `version.rs` (Version 1.x.x only)
+### Example `version.rs` (Version 1.x.x only)
 ```rust
 /// Compile Time (UTC)
 pub const VERGEN_BUILD_TIMESTAMP: &str = "2018-08-09T15:15:57.282334589+00:00";
@@ -102,7 +102,7 @@ pub const VERGEN_SEMVER: &str = "v0.1.0-pre.0";
 pub const VERGEN_SEMVER_LIGHTWEIGHT: &str = "v0.1.0-pre.0";
 ```
 
-# Include the constants in your code (Version 1.x.x only)
+### Include the constants in your code (Version 1.x.x only)
 ```rust
 include!(concat!(env!("OUT_DIR"), "/version.rs"));
 
