@@ -14,6 +14,8 @@ to display the build time information, but rather generates constants.  See belo
 `vergen`, when used in conjunction with the [Build Scripts] support in
 cargo, can either
 
+[Build Scripts]: https://doc.rust-lang.org/cargo/reference/build-scripts.html
+
 1. Generate environment variables to use with the `env!` macro.  See the
 documentation for `VergenKey` for the environment variables names.
 2. Generate a file in `OUT_DIR` (defined by cargo) with up to 8 build time
