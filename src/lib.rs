@@ -57,7 +57,7 @@
 //!
 //! ## Use constants in your code
 //!
-//! ```
+//! ```ignore
 //! fn my_fn() {
 //!     println!("Build Timestamp: {}", env!("VERGEN_BUILD_TIMESTAMP"));
 //! }
