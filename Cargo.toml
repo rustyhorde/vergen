@@ -21,4 +21,4 @@ lazy_static = "1"
 regex = "1"
 
 [build-dependencies]
-vergen = "=2.0.0"
+vergen = "2"
