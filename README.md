@@ -27,7 +27,7 @@ to display the build time information, but rather generates constants.  See belo
 ## Documentation
 [Documentation](https://docs.rs/vergen)
 
-## Generate Build Time Information
+## Generate Compile Time Information
 `vergen`, when used in conjunction with cargo [build scripts], will
 generate environment variables to use with the `env!` macro.  Below
 is a list of the supported variables.
