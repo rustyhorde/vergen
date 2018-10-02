@@ -7,7 +7,8 @@ Status](https://travis-ci.org/rustyhorde/vergen.svg?branch=master)](https://trav
 ## Breaking Changes
 ### Version 3.x.x
 Introduces `generate_cargo_keys()` and support for rebuild when `.git/HEAD` changes.
-Internally converted to use `failure` so `Result` is no longer exported.
+Internally converted to use `failure` so `Result` is no longer exported and changed to the Rust 2018
+edition.
 
 ### Version 2.x.x
 Compatible with Version 1.x.x, but introduces a completely new way to use the constants without having to
