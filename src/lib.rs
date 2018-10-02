@@ -6,21 +6,44 @@
 // option. All files in the project carrying such notice may not be copied,
 // modified, or distributed except according to those terms.
 
-//! Generate build time information for use within a project.
+//! # Generate Build Time Information
+//! `vergen`, when used in conjunection with cargo [build scripts], will
+//! generate environment variables to use with the `env!` macro.  Below
+//! is a list of the supported variables.
 //!
-//! `vergen`, when used in conjunction with the [Build Scripts] support in
-//! cargo, can either
+//! Key                       | Sample Value
+//! --------------------------|----------------------------------------
+//! VERGEN_BUILD_TIMESTAMP    |2018-08-09T15:15:57.282334589+00:000
+//! VERGEN_BUILD_DATE         |2018-08-09
+//! VERGEN_SHA                |75b390dc6c05a6a4aa2791cc7b3934591803bc22
+//! VERGEN_SHA_SHORT          |75b390d
+//! VERGEN_COMMIT_DATE        |2018-08-08
+//! VERGEN_TARGET_TRIPLE      |x86_64-unknown-linux-gnu
+//! VERGEN_SEMVER             |v0.1.0
+//! VERGEN_SEMVER_LIGHTWEIGHT |v0.1.0
 //!
-//! 1. Generate environment variables to use with the `env!` macro.  See the
-//! documentation for `VergenKey` for the environment variables names.
-//! 2. Generate a file in `OUT_DIR` (defined by cargo) with up to 8 build time
-//! constants.  This file can then be used with the `include!` macro to pull the
-//! constants into your source for use.
+//! The variable generation can be toggled on or off at an individual level
+//! via [ConstantsFlags](crate::constants::ConstantsFlags)
 //!
-//! [Build Scripts]: https://doc.rust-lang.org/cargo/reference/build-scripts.html
+//! ### Note on `SEMVER`
+//! `VERGEN_SEMVER` can be generated via `git describe` or by
+//! `env::var("CARGO_PKG_VERSION")`.
 //!
-//! # 2.x.x
-//! ## Example Cargo.toml
+//! By default, `SEMVER` uses `git describe` if possible, and falls back to `CARGO_PKG_VERSION`.
+//!
+//! If you wish to force `CARGO_PKG_VERSION`, toggle off `SEMVER` and toggle
+//! on `SEMVER_FROM_CARGO_PKG`.
+//!
+//! # Re-build On Changed HEAD
+//! `vergen` can also be configured to re-run `build.rs` when either `.git/HEAD` or
+//! the file that `.git/HEAD` points at changes.
+//!
+//! This can behavior can be toggled on or of with the [REBUILD_ON_HEAD_CHANGE] flag.
+//!
+//! [REBUILD_ON_HEAD_CHANGE]: crate::constants::ConstantsFlags::REBUILD_ON_HEAD_CHANGE
+//! [build scripts]: https://doc.rust-lang.org/cargo/reference/build-scripts.html
+//!
+//! ## 'cargo:' Key Build Script Output
 //! ```toml
 //! [package]
 //! #..
@@ -33,29 +56,24 @@
 //! vergen = "2"
 //! ```
 //!
-//! ## Example `build.rs`
+//! ### Example 'build.rs'
 //!
 //! ```
 //! extern crate vergen;
 //!
-//! use vergen::{ConstantsFlags, Result, Vergen};
+//! use vergen::{ConstantsFlags, generate_cargo_keys};
 //!
 //! fn main() {
-//!     gen_constants().expect("Unable to generate vergen constants!");
-//! }
+//!     // Setup the flags, toggling off the 'SEMVER_FROM_CARGO_PKG' flag
+//!     let mut flags = ConstantsFlags::all();
+//!     flags.toggle(ConstantsFlags::SEMVER_FROM_CARGO_PKG);
 //!
-//! fn gen_constants() -> Result<()> {
-//!     let vergen = Vergen::new(ConstantsFlags::all())?;
-//!
-//!     for (k, v) in vergen.build_info() {
-//!         println!("cargo:rustc-env={}={}", k.name(), v);
-//!     }
-//!
-//!     Ok(())
+//!     // Generate the 'cargo:' key output
+//!     generate_cargo_keys(ConstantsFlags::all()).expect("Unable to generate the cargo keys!");
 //! }
 //! ```
 //!
-//! ## Use constants in your code
+//! ### Use the constants in your code
 //!
 //! ```ignore
 //! fn my_fn() {
@@ -63,55 +81,14 @@
 //! }
 //! ```
 //!
-//! # 1.x.x
-//! ## Example `build.rs`
-//! ```
-//! extern crate vergen;
+//! ## **DEPRECATED** - `version.rs` File Build Script Output
+//! Generate a `version.rs` file in `OUT_DIR` (defined by cargo) with up to 8 build time
+//! constants.  This file can then be used with the `include!` macro to pull the
+//! constants into your source for use.
 //!
-//! # use std::env;
-//! use vergen::{ConstantsFlags, Result, vergen};
-//!
-//! fn main() {
-//! #   env::set_var("OUT_DIR", "target");
-//!     let mut flags = ConstantsFlags::all();
-//!     flags.toggle(ConstantsFlags::BUILD_TIMESTAMP);
-//!     vergen(flags).expect("Unable to generate constants!");
-//! }
-//! ```
-//!
-//! ## Example `version.rs`
-//! ```
-//! /// Compile Time (UTC)
-//! pub const VERGEN_BUILD_TIMESTAMP: &str = "2018-08-09T15:15:57.282334589+00:00";
-//!
-//! /// Compile Time - Short (UTC)
-//! pub const VERGEN_BUILD_DATE: &str = "2018-08-09";
-//!
-//! /// Commit SHA
-//! pub const VERGEN_SHA: &str = "75b390dc6c05a6a4aa2791cc7b3934591803bc22";
-//!
-//! /// Commit SHA - Short
-//! pub const VERGEN_SHA_SHORT: &str = "75b390d";
-//!
-//! /// Commit Date
-//! pub const VERGEN_COMMIT_DATE: &str = "2018-08-08";
-//!
-//! /// Target Triple
-//! pub const VERGEN_TARGET_TRIPLE: &str = "x86_64-unknown-linux-gnu";
-//!
-//! /// Semver
-//! pub const VERGEN_SEMVER: &str = "v0.1.0-pre.0";
-//!
-//! /// Semver (Lightweight)
-//! pub const VERGEN_SEMVER_LIGHTWEIGHT: &str = "v0.1.0-pre.0";
-//! ```
-//!
-//! ## Include the constants in your code (Version 1.x.x only)
-//! ```ignore
-//! include!(concat!(env!("OUT_DIR"), "/version.rs"));
-//!
-//! format!("{} {} blah {}", VERGEN_BUILD_TIMESTAMP, VERGEN_SHA, VERGEN_SEMVER)
-//! ```
+//! See the [generate_version_rs](crate::output::codegen::generate_version_rs) documentation
+//! if you wish to use this method.
+#![feature(crate_visibility_modifier)]
 #![deny(
     missing_docs,
     missing_debug_implementations,
@@ -124,24 +101,13 @@
 )]
 #[macro_use]
 extern crate bitflags;
-#[macro_use]
-extern crate error_chain;
-#[macro_use]
-extern crate getset;
 #[cfg(test)]
 #[macro_use]
 extern crate lazy_static;
 
-extern crate chrono;
-#[cfg(test)]
-extern crate regex;
-
-mod codegen;
 mod constants;
-mod envvar;
-mod error;
+mod output;
 
-pub use codegen::vergen;
-pub use constants::ConstantsFlags;
-pub use envvar::{Vergen, VergenKey};
-pub use error::Result;
+pub use crate::constants::ConstantsFlags;
+pub use crate::output::codegen::generate_version_rs;
+pub use crate::output::envvar::generate_cargo_keys;

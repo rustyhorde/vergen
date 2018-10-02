@@ -6,17 +6,17 @@
 // option. All files in the project carrying such notice may not be copied,
 // modified, or distributed except according to those terms.
 
-//! The build information implementation related to generating code to use with
+//! Geneer
 //! the `include!` macro within your project.
-use constants::{ConstantsFlags, CONST_PREFIX, CONST_TYPE};
-use envvar::Vergen;
-use error::Result;
+use crate::constants::{ConstantsFlags, CONST_PREFIX, CONST_TYPE};
+use crate::output::generate_build_info;
+use failure::Error;
 use std::env;
 use std::fs::File;
 use std::io::Write;
 use std::path::PathBuf;
 
-fn gen_const<W: Write>(f: &mut W, comment: &str, name: &str, value: &str) -> Result<()> {
+fn gen_const<W: Write>(f: &mut W, comment: &str, name: &str, value: &str) -> Result<(), Error> {
     writeln!(
         f,
         "{}\n{}{}{}\"{}\";",
@@ -33,13 +33,13 @@ fn gen_const<W: Write>(f: &mut W, comment: &str, name: &str, value: &str) -> Res
 /// # extern crate vergen;
 /// #
 /// # use std::env;
-/// # use vergen::{ConstantsFlags, Result, vergen};
+/// # use vergen::{ConstantsFlags, generate_version_rs};
 /// #
 /// fn main() {
 /// #   env::set_var("OUT_DIR", "target");
 ///     let mut flags = ConstantsFlags::all();
 ///     flags.toggle(ConstantsFlags::BUILD_TIMESTAMP);
-///     vergen(flags).expect("Unable to generate constants!");
+///     generate_version_rs(flags).expect("Unable to generate constants!");
 /// }
 /// ```
 ///
@@ -69,13 +69,24 @@ fn gen_const<W: Write>(f: &mut W, comment: &str, name: &str, value: &str) -> Res
 /// /// Semver (Lightweight)
 /// pub const VERGEN_SEMVER_LIGHTWEIGHT: &str = "v0.1.0-pre.0";
 /// ```
-pub fn vergen(flags: ConstantsFlags) -> Result<()> {
+///
+/// ## Include the constants in your code (Version 1.x.x only)
+/// ```ignore
+/// include!(concat!(env!("OUT_DIR"), "/version.rs"));
+///
+/// format!("{} {} blah {}", VERGEN_BUILD_TIMESTAMP, VERGEN_SHA, VERGEN_SEMVER)
+/// ```
+#[deprecated(
+    since = "2.0.0",
+    note = "Please use `generate_cargo_keys` instead"
+)]
+pub fn generate_version_rs(flags: ConstantsFlags) -> Result<(), Error> {
     let dst = PathBuf::from(env::var("OUT_DIR")?);
     let mut f = File::create(&dst.join("version.rs"))?;
-    let vergen = Vergen::new(flags)?;
+    let build_info = generate_build_info(flags)?;
 
-    for (k, v) in vergen.build_info() {
-        gen_const(&mut f, k.comment(), k.name(), v)?;
+    for (k, v) in build_info {
+        gen_const(&mut f, k.comment(), k.name(), &v)?;
         writeln!(f)?;
     }
 
@@ -85,8 +96,8 @@ pub fn vergen(flags: ConstantsFlags) -> Result<()> {
 #[cfg(test)]
 mod test {
     use super::gen_const;
-    use constants::ConstantsFlags;
-    use envvar::Vergen;
+    use crate::constants::ConstantsFlags;
+    use crate::output::generate_build_info;
     use regex::Regex;
     use std::io::Cursor;
 
@@ -99,12 +110,12 @@ mod test {
     #[test]
     fn gen_const_output() {
         let flags = ConstantsFlags::all();
-        let vergen = Vergen::new(flags).expect("Unable to generate build information map");
+        let build_info = generate_build_info(flags).expect("Unable to generate build_info map!");
 
-        for (k, v) in vergen.build_info() {
+        for (k, v) in build_info {
             let buffer = Vec::new();
             let mut cursor = Cursor::new(buffer);
-            gen_const(&mut cursor, k.comment(), k.name(), v)
+            gen_const(&mut cursor, k.comment(), k.name(), &v)
                 .expect("Unable to generate const string");
             let const_str = String::from_utf8_lossy(&cursor.get_ref());
             assert!(CONST_RE.is_match(&const_str));

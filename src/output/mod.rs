@@ -1,0 +1,149 @@
+// Copyright (c) 2016, 2018 vergen developers
+//
+// Licensed under the Apache License, Version 2.0
+// <LICENSE-APACHE or http://www.apache.org/licenses/LICENSE-2.0> or the MIT
+// license <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
+// option. All files in the project carrying such notice may not be copied,
+// modified, or distributed except according to those terms.
+
+//! Output types
+use chrono::Utc;
+use crate::constants::*;
+use failure::Fallible;
+use std::collections::HashMap;
+use std::env;
+use std::process::Command;
+
+crate mod codegen;
+crate mod envvar;
+
+crate fn generate_build_info(flags: ConstantsFlags) -> Fallible<HashMap<VergenKey, String>> {
+    let mut build_info = HashMap::new();
+    let now = Utc::now();
+
+    if flags.contains(ConstantsFlags::BUILD_TIMESTAMP) {
+        build_info.insert(VergenKey::BuildTimestamp, now.to_rfc3339());
+    }
+
+    if flags.contains(ConstantsFlags::BUILD_DATE) {
+        build_info.insert(VergenKey::BuildDate, now.format("%Y-%m-%d").to_string());
+    }
+
+    if flags.contains(ConstantsFlags::SHA) {
+        let sha = run_command(Command::new("git").args(&["rev-parse", "HEAD"]));
+        build_info.insert(VergenKey::Sha, sha);
+    }
+
+    if flags.contains(ConstantsFlags::SHA_SHORT) {
+        let sha = run_command(Command::new("git").args(&["rev-parse", "--short", "HEAD"]));
+        build_info.insert(VergenKey::ShortSha, sha);
+    }
+
+    if flags.contains(ConstantsFlags::COMMIT_DATE) {
+        let commit_date = run_command(Command::new("git").args(&[
+            "log",
+            "--pretty=format:'%ad'",
+            "-n1",
+            "--date=short",
+        ]));
+        build_info.insert(
+            VergenKey::CommitDate,
+            commit_date.trim_matches('\'').to_string(),
+        );
+    }
+
+    if flags.contains(ConstantsFlags::TARGET_TRIPLE) {
+        let target_triple = env::var("TARGET").unwrap_or_else(|_| "UNKNOWN".to_string());
+        build_info.insert(VergenKey::TargetTriple, target_triple);
+    }
+
+    if flags.contains(ConstantsFlags::SEMVER) {
+        let describe = run_command(Command::new("git").args(&["describe"]));
+
+        let semver = if describe.is_empty() {
+            env::var("CARGO_PKG_VERSION")?
+        } else {
+            describe
+        };
+        build_info.insert(VergenKey::Semver, semver);
+    } else if flags.contains(ConstantsFlags::SEMVER_FROM_CARGO_PKG) {
+        build_info.insert(VergenKey::Semver, env::var("CARGO_PKG_VERSION")?);
+    }
+
+    if flags.contains(ConstantsFlags::SEMVER_LIGHTWEIGHT) {
+        let describe = run_command(Command::new("git").args(&["describe", "--tags"]));
+
+        let semver = if describe.is_empty() {
+            env::var("CARGO_PKG_VERSION")?
+        } else {
+            describe
+        };
+        build_info.insert(VergenKey::SemverLightweight, semver);
+    }
+
+    Ok(build_info)
+}
+
+fn run_command(command: &mut Command) -> String {
+    let raw_output = if let Ok(o) = command.output() {
+        String::from_utf8_lossy(&o.stdout).into_owned()
+    } else {
+        "UNKNOWN".to_string()
+    };
+    raw_output.trim().to_string()
+}
+
+/// Build information keys.
+#[derive(Clone, Copy, Debug, Hash, Eq, PartialEq)]
+crate enum VergenKey {
+    /// The build timestamp. (VERGEN_BUILD_TIMESTAMP)
+    BuildTimestamp,
+    /// The build date. (VERGEN_BUILD_DATE)
+    BuildDate,
+    /// The latest commit SHA. (VERGEN_SHA)
+    Sha,
+    /// The latest commit short SHA. (VERGEN_SHA_SHORT)
+    ShortSha,
+    /// The commit date. (VERGEN_COMMIT_DATE).
+    CommitDate,
+    /// The target triple. (VERGEN_TARGET_TRIPLE)
+    TargetTriple,
+    /// The semver version from the last git tag. (VERGEN_SEMVER)
+    Semver,
+    /// The semver version from the last git tag, including lightweight.
+    /// (VERGEN_SEMVER_LIGHTWEIGHT)
+    SemverLightweight,
+}
+
+impl VergenKey {
+    /// Get the comment string for the given key.
+    crate fn comment(self) -> &'static str {
+        match self {
+            VergenKey::BuildTimestamp => BUILD_TIMESTAMP_COMMENT,
+            VergenKey::BuildDate => BUILD_DATE_COMMENT,
+            VergenKey::Sha => SHA_COMMENT,
+            VergenKey::ShortSha => SHA_SHORT_COMMENT,
+            VergenKey::CommitDate => COMMIT_DATE_COMMENT,
+            VergenKey::TargetTriple => TARGET_TRIPLE_COMMENT,
+            VergenKey::Semver => SEMVER_COMMENT,
+            VergenKey::SemverLightweight => SEMVER_TAGS_COMMENT,
+        }
+    }
+
+    /// Get the name for the given key.
+    crate fn name(self) -> &'static str {
+        match self {
+            VergenKey::BuildTimestamp => BUILD_TIMESTAMP_NAME,
+            VergenKey::BuildDate => BUILD_DATE_NAME,
+            VergenKey::Sha => SHA_NAME,
+            VergenKey::ShortSha => SHA_SHORT_NAME,
+            VergenKey::CommitDate => COMMIT_DATE_NAME,
+            VergenKey::TargetTriple => TARGET_TRIPLE_NAME,
+            VergenKey::Semver => SEMVER_NAME,
+            VergenKey::SemverLightweight => SEMVER_TAGS_NAME,
+        }
+    }
+}
+
+#[cfg(test)]
+mod test {}

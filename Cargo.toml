@@ -2,6 +2,7 @@
 authors = ["Jason Ozias <jason.g.ozias@gmail.com>"]
 description = "Generate version related functions"
 documentation = "http://docs.rs/vergen"
+edition = "2018"
 homepage = "http://github.com/rustyhorde/vergen"
 keywords = ["version", "generation"]
 license = "MIT/Apache-2.0"
@@ -13,8 +14,7 @@ version = "2.0.4"
 [dependencies]
 bitflags = "1"
 chrono = "0"
-error-chain = "0"
-getset = "0"
+failure = "0"
 
 [dev-dependencies]
 lazy_static = "1"
