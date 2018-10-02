@@ -1,11 +1,13 @@
 # vergen
-## Version
+## Current Release
 [![Crates.io](https://img.shields.io/crates/v/vergen.svg)](https://crates.io/crates/vergen)
+[![Crates.io](https://img.shields.io/crates/l/vergen.svg)](https://crates.io/crates/vergen)
+[![Crates.io](https://img.shields.io/crates/d/vergen.svg)](https://crates.io/crates/vergen)
+
+## Version 3.x.x
 [![Build
 Status](https://travis-ci.org/rustyhorde/vergen.svg?branch=master)](https://travis-ci.org/rustyhorde/vergen)
 
-## Breaking Changes
-### Version 3.x.x
 Introduces `generate_cargo_keys()` and support for rebuild when `.git/HEAD` changes.
 Internally converted to use `failure` so `Result` is no longer exported and changed to the Rust 2018
 edition.
@@ -13,16 +15,16 @@ edition.
 **This means the 3.x.x version will only work in the beta and nightly channels until Rust 2018
 hits stable (12/06/18)**
 
-### Version 2.1.x
+## Version 2.1.x
+[![Build Status](https://travis-ci.org/rustyhorde/vergen.svg?branch=v2.1.0)](https://travis-ci.org/rustyhorde/vergen)
+
 Backport of the 3.x.x changes to work on stable until Rust 2018 hits stable.
 
-### Version 2.0.x
+## Version 2.0.x
+[![Build Status](https://travis-ci.org/rustyhorde/vergen.svg?branch=v2.0.4)](https://travis-ci.org/rustyhorde/vergen)
+
 Compatible with Version 1.x.x, but introduces a completely new way to use the constants without having to
 use the `include!` macro.
-
-### Version 1.x.x
-A breaking change from the 0.1.0 series.  This crate no longer only generates functions
-to display the build time information, but rather generates constants.  See below for more detail.
 
 ## Documentation
 [Documentation](https://docs.rs/vergen)
