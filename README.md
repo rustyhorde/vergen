@@ -4,29 +4,60 @@
 [![Build
 Status](https://travis-ci.org/rustyhorde/vergen.svg?branch=master)](https://travis-ci.org/rustyhorde/vergen)
 
-**NOTE**: Version 2.x.x is compatible with Version 1.x.x, but introduces a completely new way to use the
-constants without having to use the `include!` macro.
+## Breaking Changes
+### Version 3.x.x
+Introduces `generate_cargo_keys()` and support for rebuild when `.git/HEAD` changes.
+Internally converted to use `failure` so `Result` is no longer exported.
 
-**NOTE**: Version 1.x.x is a breaking change from the 0.1.0 series.  This crate no longer generates functions
+### Version 2.x.x
+Compatible with Version 1.x.x, but introduces a completely new way to use the constants without having to
+use the `include!` macro.
+
+### Version 1.x.x
+A breaking change from the 0.1.0 series.  This crate no longer only generates functions
 to display the build time information, but rather generates constants.  See below for more detail.
 
 ## Documentation
 [Documentation](https://docs.rs/vergen)
 
-## Basic Usage
-`vergen`, when used in conjunction with the [Build Scripts] support in
-cargo, can either
+## Generate Build Time Information
+`vergen`, when used in conjunection with cargo [build scripts], will
+generate environment variables to use with the `env!` macro.  Below
+is a list of the supported variables.
 
-[Build Scripts]: https://doc.rust-lang.org/cargo/reference/build-scripts.html
+Key                       | Sample Value
+--------------------------|----------------------------------------
+VERGEN_BUILD_TIMESTAMP    |2018-08-09T15:15:57.282334589+00:000
+VERGEN_BUILD_DATE         |2018-08-09
+VERGEN_SHA                |75b390dc6c05a6a4aa2791cc7b3934591803bc22
+VERGEN_SHA_SHORT          |75b390d
+VERGEN_COMMIT_DATE        |2018-08-08
+VERGEN_TARGET_TRIPLE      |x86_64-unknown-linux-gnu
+VERGEN_SEMVER             |v3.0.0
+VERGEN_SEMVER_LIGHTWEIGHT |v3.0.0
 
-1. Generate environment variables to use with the `env!` macro.  See the
-documentation for `VergenKey` for the environment variables names.
-2. Generate a file in `OUT_DIR` (defined by cargo) with up to 8 build time
-constants.  This file can then be used with the `include!` macro to pull the
-constants into your source for use.
+The variable generation can be toggled on or off at an individual level
+via [ConstantsFlags](crate::constants::ConstantsFlags)
 
-## 2.x.x
-### Example Cargo.toml
+### Note on `SEMVER`
+`VERGEN_SEMVER` can be generated via `git describe` or by
+`env::var("CARGO_PKG_VERSION")`.
+
+By default, `SEMVER` uses `git describe` if possible, and falls back to `CARGO_PKG_VERSION`.
+
+If you wish to force `CARGO_PKG_VERSION`, toggle off `SEMVER` and toggle
+on `SEMVER_FROM_CARGO_PKG`.
+
+## Re-build On Changed HEAD
+`vergen` can also be configured to re-run `build.rs` when either `.git/HEAD` or
+the file that `.git/HEAD` points at changes.
+
+This can behavior can be toggled on or of with the [REBUILD_ON_HEAD_CHANGE] flag.
+
+[REBUILD_ON_HEAD_CHANGE]: crate::constants::ConstantsFlags::REBUILD_ON_HEAD_CHANGE
+[build scripts]: https://doc.rust-lang.org/cargo/reference/build-scripts.html
+
+## 'cargo:' Key Build Script Output
 ```toml
 [package]
 #..
@@ -36,83 +67,32 @@ build = "build.rs"
 #..
 
 [build-dependencies]
-vergen = "2"
+vergen = "3"
 ```
 
-### Example `build.rs`
+### Example 'build.rs'
+
 ```rust
 extern crate vergen;
 
-use vergen::{ConstantsFlags, Result, Vergen};
+use vergen::{ConstantsFlags, generate_cargo_keys};
 
 fn main() {
-    gen_constants().expect("Unable to generate vergen constants!");
-}
+    // Setup the flags, toggling off the 'SEMVER_FROM_CARGO_PKG' flag
+    let mut flags = ConstantsFlags::all();
+    flags.toggle(ConstantsFlags::SEMVER_FROM_CARGO_PKG);
 
-fn gen_constants() -> Result<()> {
-    let vergen = Vergen::new(ConstantsFlags::all())?;
-
-    for (k, v) in vergen.build_info() {
-        println!("cargo:rustc-env={}={}", k.name(), v);
-    }
-
-    Ok(())
+    // Generate the 'cargo:' key output
+    generate_cargo_keys(ConstantsFlags::all()).expect("Unable to generate the cargo keys!");
 }
 ```
 
-### Use constants in your code
+### Use the constants in your code
+
 ```rust
 fn my_fn() {
     println!("Build Timestamp: {}", env!("VERGEN_BUILD_TIMESTAMP"));
 }
-```
-
-## 1.x.x
-### Example `build.rs`
-```rust
-extern crate vergen;
-
-use vergen::{ConstantsFlags, Result, vergen};
-
-fn main() {
-    let mut flags = ConstantsFlags::all();
-    flags.toggle(ConstantsFlags::BUILD_TIMESTAMP);
-    vergen(flags).expect("Unable to generate constants!");
-}
-```
-
-### Example `version.rs`
-```rust
-/// Compile Time (UTC)
-pub const VERGEN_BUILD_TIMESTAMP: &str = "2018-08-09T15:15:57.282334589+00:00";
-
-/// Compile Time - Short (UTC)
-pub const VERGEN_BUILD_DATE: &str = "2018-08-09";
-
-/// Commit SHA
-pub const VERGEN_SHA: &str = "75b390dc6c05a6a4aa2791cc7b3934591803bc22";
-
-/// Commit SHA - Short
-pub const VERGEN_SHA_SHORT: &str = "75b390d";
-
-/// Commit Date
-pub const VERGEN_COMMIT_DATE: &str = "'2018-08-08'";
-
-/// Target Triple
-pub const VERGEN_TARGET_TRIPLE: &str = "x86_64-unknown-linux-gnu";
-
-/// Semver
-pub const VERGEN_SEMVER: &str = "v0.1.0-pre.0";
-
-/// Semver (Lightweight)
-pub const VERGEN_SEMVER_LIGHTWEIGHT: &str = "v0.1.0-pre.0";
-```
-
-### Include the constants in your code (Version 1.x.x only)
-```rust
-include!(concat!(env!("OUT_DIR"), "/version.rs"));
-
-format!("{} {} blah {}", VERGEN_COMMIT_DATE, VERGEN_SHA, VERGEN_SEMVER)
 ```
 
 ## License
