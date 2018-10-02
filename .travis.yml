@@ -7,7 +7,8 @@ os:
 - linux
 matrix:
   allow_failures:
-  - rust: nightly
+  # TODO: Remove this when Rust 2018 gets to stable.
+  - rust: stable
 script:
 - cargo build --verbose
 - cargo test --verbose

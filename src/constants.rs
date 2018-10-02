@@ -86,26 +86,26 @@ bitflags!(
 );
 
 /// const prefix for codegen
-crate const CONST_PREFIX: &str = "pub const ";
+pub const CONST_PREFIX: &str = "pub const ";
 /// const type for codegen
-crate const CONST_TYPE: &str = ": &str = ";
+pub const CONST_TYPE: &str = ": &str = ";
 
-crate const BUILD_TIMESTAMP_NAME: &str = "VERGEN_BUILD_TIMESTAMP";
-crate const BUILD_TIMESTAMP_COMMENT: &str = "/// Build Timestamp (UTC)";
-crate const BUILD_DATE_NAME: &str = "VERGEN_BUILD_DATE";
-crate const BUILD_DATE_COMMENT: &str = "/// Compile Time - Short (UTC)";
-crate const SHA_NAME: &str = "VERGEN_SHA";
-crate const SHA_COMMENT: &str = "/// Commit SHA";
-crate const SHA_SHORT_NAME: &str = "VERGEN_SHA_SHORT";
-crate const SHA_SHORT_COMMENT: &str = "/// Commit SHA - Short";
-crate const COMMIT_DATE_NAME: &str = "VERGEN_COMMIT_DATE";
-crate const COMMIT_DATE_COMMENT: &str = "/// Commit Date";
-crate const TARGET_TRIPLE_NAME: &str = "VERGEN_TARGET_TRIPLE";
-crate const TARGET_TRIPLE_COMMENT: &str = "/// Target Triple";
-crate const SEMVER_NAME: &str = "VERGEN_SEMVER";
-crate const SEMVER_COMMENT: &str = "/// Semver";
-crate const SEMVER_TAGS_NAME: &str = "VERGEN_SEMVER_LIGHTWEIGHT";
-crate const SEMVER_TAGS_COMMENT: &str = "/// Semver (Lightweight)";
+pub const BUILD_TIMESTAMP_NAME: &str = "VERGEN_BUILD_TIMESTAMP";
+pub const BUILD_TIMESTAMP_COMMENT: &str = "/// Build Timestamp (UTC)";
+pub const BUILD_DATE_NAME: &str = "VERGEN_BUILD_DATE";
+pub const BUILD_DATE_COMMENT: &str = "/// Compile Time - Short (UTC)";
+pub const SHA_NAME: &str = "VERGEN_SHA";
+pub const SHA_COMMENT: &str = "/// Commit SHA";
+pub const SHA_SHORT_NAME: &str = "VERGEN_SHA_SHORT";
+pub const SHA_SHORT_COMMENT: &str = "/// Commit SHA - Short";
+pub const COMMIT_DATE_NAME: &str = "VERGEN_COMMIT_DATE";
+pub const COMMIT_DATE_COMMENT: &str = "/// Commit Date";
+pub const TARGET_TRIPLE_NAME: &str = "VERGEN_TARGET_TRIPLE";
+pub const TARGET_TRIPLE_COMMENT: &str = "/// Target Triple";
+pub const SEMVER_NAME: &str = "VERGEN_SEMVER";
+pub const SEMVER_COMMENT: &str = "/// Semver";
+pub const SEMVER_TAGS_NAME: &str = "VERGEN_SEMVER_LIGHTWEIGHT";
+pub const SEMVER_TAGS_COMMENT: &str = "/// Semver (Lightweight)";
 
 #[cfg(test)]
 mod test {

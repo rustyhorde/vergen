@@ -88,7 +88,6 @@
 //!
 //! See the [generate_version_rs](crate::output::codegen::generate_version_rs) documentation
 //! if you wish to use this method.
-#![feature(crate_visibility_modifier)]
 #![deny(
     missing_docs,
     missing_debug_implementations,

@@ -14,10 +14,10 @@ use std::collections::HashMap;
 use std::env;
 use std::process::Command;
 
-crate mod codegen;
-crate mod envvar;
+pub mod codegen;
+pub mod envvar;
 
-crate fn generate_build_info(flags: ConstantsFlags) -> Fallible<HashMap<VergenKey, String>> {
+pub fn generate_build_info(flags: ConstantsFlags) -> Fallible<HashMap<VergenKey, String>> {
     let mut build_info = HashMap::new();
     let now = Utc::now();
 
@@ -95,7 +95,7 @@ fn run_command(command: &mut Command) -> String {
 
 /// Build information keys.
 #[derive(Clone, Copy, Debug, Hash, Eq, PartialEq)]
-crate enum VergenKey {
+pub enum VergenKey {
     /// The build timestamp. (VERGEN_BUILD_TIMESTAMP)
     BuildTimestamp,
     /// The build date. (VERGEN_BUILD_DATE)
@@ -117,7 +117,7 @@ crate enum VergenKey {
 
 impl VergenKey {
     /// Get the comment string for the given key.
-    crate fn comment(self) -> &'static str {
+    pub fn comment(self) -> &'static str {
         match self {
             VergenKey::BuildTimestamp => BUILD_TIMESTAMP_COMMENT,
             VergenKey::BuildDate => BUILD_DATE_COMMENT,
@@ -131,7 +131,7 @@ impl VergenKey {
     }
 
     /// Get the name for the given key.
-    crate fn name(self) -> &'static str {
+    pub fn name(self) -> &'static str {
         match self {
             VergenKey::BuildTimestamp => BUILD_TIMESTAMP_NAME,
             VergenKey::BuildDate => BUILD_DATE_NAME,
