@@ -25,7 +25,7 @@
 //! The variable generation can be toggled on or off at an individual level
 //! via [ConstantsFlags](crate::constants::ConstantsFlags)
 //!
-//! ### Note on `SEMVER`
+//! ### Note on SEMVER
 //! `VERGEN_SEMVER` can be generated via `git describe` or by
 //! `env::var("CARGO_PKG_VERSION")`.
 //!
