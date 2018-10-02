@@ -112,7 +112,7 @@ mod test {
     use super::*;
 
     #[test]
-    fn constants_dont_change() {
+    fn bitflags_dont_change() {
         assert_eq!(ConstantsFlags::BUILD_TIMESTAMP.bits(), 0b0000_0001);
         assert_eq!(ConstantsFlags::BUILD_DATE.bits(), 0b0000_0010);
         assert_eq!(ConstantsFlags::SHA.bits(), 0b0000_0100);
@@ -125,6 +125,14 @@ mod test {
             ConstantsFlags::REBUILD_ON_HEAD_CHANGE.bits(),
             0b0001_0000_0000
         );
+        assert_eq!(
+            ConstantsFlags::SEMVER_FROM_CARGO_PKG.bits(),
+            0b0010_0000_0000
+        );
+    }
+
+    #[test]
+    fn constants_dont_change() {
         assert_eq!(CONST_PREFIX, "pub const ");
         assert_eq!(CONST_TYPE, ": &str = ");
         assert_eq!(BUILD_TIMESTAMP_NAME, "VERGEN_BUILD_TIMESTAMP");
