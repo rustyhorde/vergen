@@ -11,7 +11,7 @@ Internally converted to use `failure` so `Result` is no longer exported and chan
 edition.
 
 **This means the 3.x.x version will only work in the beta and nightly channels until Rust 2018
-hits stable**
+hits stable (12/06/18)**
 
 ### Version 2.1.x
 Backport of the 3.x.x changes to work on stable until Rust 2018 hits stable.
