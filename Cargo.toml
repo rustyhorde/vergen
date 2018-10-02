@@ -19,3 +19,6 @@ failure = "0"
 [dev-dependencies]
 lazy_static = "1"
 regex = "1"
+
+[build-dependencies]
+chrono = "0"

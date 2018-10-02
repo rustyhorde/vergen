@@ -57,7 +57,6 @@
 //! ```
 //!
 //! ### Example 'build.rs'
-//!
 //! ```
 //! extern crate vergen;
 //!
@@ -74,8 +73,7 @@
 //! ```
 //!
 //! ### Use the constants in your code
-//!
-//! ```ignore
+//! ```
 //! fn my_fn() {
 //!     println!("Build Timestamp: {}", env!("VERGEN_BUILD_TIMESTAMP"));
 //! }
