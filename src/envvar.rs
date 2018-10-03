@@ -12,6 +12,9 @@ use constants::*;
 use error::Result;
 use std::collections::HashMap;
 use std::env;
+use std::fs::File;
+use std::io::Read;
+use std::path::PathBuf;
 use std::process::Command;
 
 /// Build time information struct.
@@ -96,6 +99,8 @@ impl Vergen {
                 describe
             };
             build_info.insert(VergenKey::Semver, semver);
+        } else if flags.contains(ConstantsFlags::SEMVER_FROM_CARGO_PKG) {
+            build_info.insert(VergenKey::Semver, env::var("CARGO_PKG_VERSION")?);
         }
 
         if flags.contains(ConstantsFlags::SEMVER_LIGHTWEIGHT) {
@@ -110,6 +115,21 @@ impl Vergen {
         }
 
         vergen.build_info = build_info;
+
+        if flags.contains(ConstantsFlags::REBUILD_ON_HEAD_CHANGE) {
+            println!("cargo:rerun-if-changed=.git/HEAD");
+            let git_head_path = PathBuf::from(".git").join("HEAD");
+            let mut f = File::open(&git_head_path)?;
+            let mut git_head_contents = String::new();
+            let _ = f.read_to_string(&mut git_head_contents)?;
+            let ref_vec: Vec<&str> = git_head_contents.split(": ").collect();
+
+            if ref_vec.len() == 2 {
+                let current_head_file = ref_vec[1];
+                println!("cargo:rerun-if-changed={}", current_head_file);
+            }
+        }
+
         Ok(vergen)
     }
 }
@@ -265,9 +285,9 @@ mod test {
         assert!(!build_info.contains_key(&VergenKey::SemverLightweight));
     }
 
-    fn assert_on_data(build_info: &HashMap<VergenKey, String>, key: &VergenKey, desc: &str) {
-        if let Some(regex) = REGEX_MAP.get(key) {
-            if let Some(info) = build_info.get(key) {
+    fn assert_on_data(build_info: &HashMap<VergenKey, String>, key: VergenKey, desc: &str) {
+        if let Some(regex) = REGEX_MAP.get(&key) {
+            if let Some(info) = build_info.get(&key) {
                 assert!(regex.is_match(info), format!("{} did not match!", info));
             } else {
                 assert!(false, format!("The {} wasn't properly set", desc));
@@ -284,16 +304,16 @@ mod test {
         let vergen = Vergen::new(flags).expect("Unable to create Vergen!");
         let build_info = vergen.build_info();
 
-        assert_on_data(&build_info, &VergenKey::BuildTimestamp, "build timestamp");
-        assert_on_data(&build_info, &VergenKey::BuildDate, "build date");
-        assert_on_data(&build_info, &VergenKey::Sha, "SHA");
-        assert_on_data(&build_info, &VergenKey::ShortSha, "short SHA");
-        assert_on_data(&build_info, &VergenKey::CommitDate, "commit date");
-        assert_on_data(&build_info, &VergenKey::TargetTriple, "target triple");
-        assert_on_data(&build_info, &VergenKey::Semver, "semver");
+        assert_on_data(&build_info, VergenKey::BuildTimestamp, "build timestamp");
+        assert_on_data(&build_info, VergenKey::BuildDate, "build date");
+        assert_on_data(&build_info, VergenKey::Sha, "SHA");
+        assert_on_data(&build_info, VergenKey::ShortSha, "short SHA");
+        assert_on_data(&build_info, VergenKey::CommitDate, "commit date");
+        assert_on_data(&build_info, VergenKey::TargetTriple, "target triple");
+        assert_on_data(&build_info, VergenKey::Semver, "semver");
         assert_on_data(
             &build_info,
-            &VergenKey::SemverLightweight,
+            VergenKey::SemverLightweight,
             "lightweight semver",
         );
     }

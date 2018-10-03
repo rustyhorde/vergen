@@ -38,41 +38,49 @@ bitflags!(
         /// Generate the build timestamp constant.
         ///
         /// "2018-08-09T15:15:57.282334589+00:00"
-        const BUILD_TIMESTAMP    = 0x0000_0001;
+        const BUILD_TIMESTAMP        = 0b0000_0000_0001;
         /// Generate the build date constant.
         ///
         /// "2018-08-09"
-        const BUILD_DATE         = 0x0000_0010;
+        const BUILD_DATE             = 0b0000_0000_0010;
         /// Generate the SHA constant.
         ///
         /// "75b390dc6c05a6a4aa2791cc7b3934591803bc22"
-        const SHA                = 0x0000_0100;
+        const SHA                    = 0b0000_0000_0100;
         /// Generate the short SHA constant.
         ///
         /// "75b390d"
-        const SHA_SHORT          = 0x0000_1000;
+        const SHA_SHORT              = 0b0000_0000_1000;
         /// Generate the commit date constant.
         ///
         /// "2018-08-08"
-        const COMMIT_DATE        = 0x0001_0000;
+        const COMMIT_DATE            = 0b0000_0001_0000;
         /// Generate the target triple constant.
         ///
         /// "x86_64-unknown-linux-gnu"
-        const TARGET_TRIPLE      = 0x0010_0000;
+        const TARGET_TRIPLE          = 0b0000_0010_0000;
         /// Generate the semver constant.
         ///
         /// This defaults to the output of `git describe`.  If that output is
         /// empty, the the `CARGO_PKG_VERSION` environment variable is used.
         ///
         /// "v0.1.0-pre.0"
-        const SEMVER             = 0x0100_0000;
+        const SEMVER                 = 0b0000_0100_0000;
         /// Generate the semver constant, including lightweight tags.
         ///
         /// This defaults to the output of `git describe`.  If that output is
         /// empty, the the `CARGO_PKG_VERSION` environment variable is used.
         ///
         /// "v0.1.0-pre.0"
-        const SEMVER_LIGHTWEIGHT = 0x1000_0000;
+        const SEMVER_LIGHTWEIGHT     = 0b0000_1000_0000;
+        /// Generate the `cargo:rebuild-if-changed=.git/HEAD` and the
+        /// `cargo:rebuild-if-changed=.git/<ref>` cargo build output.
+        const REBUILD_ON_HEAD_CHANGE = 0b0000_0001_0000_0000;
+        /// Generate the semver constant from `CARGO_PKG_VERSION`.  This is
+        /// mutually exclusive with the `SEMVER` flag.
+        ///
+        /// `0.1.0`
+        const SEMVER_FROM_CARGO_PKG  = 0b0000_0010_0000_0000;
     }
 );
 
@@ -103,15 +111,27 @@ mod test {
     use super::*;
 
     #[test]
+    fn bitflags_dont_change() {
+        assert_eq!(ConstantsFlags::BUILD_TIMESTAMP.bits(), 0b0000_0000_0001);
+        assert_eq!(ConstantsFlags::BUILD_DATE.bits(), 0b0000_0000_0010);
+        assert_eq!(ConstantsFlags::SHA.bits(), 0b0000_0000_0100);
+        assert_eq!(ConstantsFlags::SHA_SHORT.bits(), 0b0000_0000_1000);
+        assert_eq!(ConstantsFlags::COMMIT_DATE.bits(), 0b0000_0001_0000);
+        assert_eq!(ConstantsFlags::TARGET_TRIPLE.bits(), 0b0000_0010_0000);
+        assert_eq!(ConstantsFlags::SEMVER.bits(), 0b0000_0100_0000);
+        assert_eq!(ConstantsFlags::SEMVER_LIGHTWEIGHT.bits(), 0b0000_1000_0000);
+        assert_eq!(
+            ConstantsFlags::REBUILD_ON_HEAD_CHANGE.bits(),
+            0b0001_0000_0000
+        );
+        assert_eq!(
+            ConstantsFlags::SEMVER_FROM_CARGO_PKG.bits(),
+            0b0010_0000_0000
+        );
+    }
+
+    #[test]
     fn constants_dont_change() {
-        assert_eq!(ConstantsFlags::BUILD_TIMESTAMP.bits(), 0x0000_0001);
-        assert_eq!(ConstantsFlags::BUILD_DATE.bits(), 0x0000_0010);
-        assert_eq!(ConstantsFlags::SHA.bits(), 0x0000_0100);
-        assert_eq!(ConstantsFlags::SHA_SHORT.bits(), 0x0000_1000);
-        assert_eq!(ConstantsFlags::COMMIT_DATE.bits(), 0x0001_0000);
-        assert_eq!(ConstantsFlags::TARGET_TRIPLE.bits(), 0x0010_0000);
-        assert_eq!(ConstantsFlags::SEMVER.bits(), 0x0100_0000);
-        assert_eq!(ConstantsFlags::SEMVER_LIGHTWEIGHT.bits(), 0x1000_0000);
         assert_eq!(CONST_PREFIX, "pub const ");
         assert_eq!(CONST_TYPE, ": &str = ");
         assert_eq!(BUILD_TIMESTAMP_NAME, "VERGEN_BUILD_TIMESTAMP");
