@@ -17,7 +17,7 @@ nightly:
   script:
     - rustc --version
     - cargo --version
-    - cargo test --verbose --features serde,unstable
+    - cargo test --verbose
 
 # TODO: Uncomment this when editions hit stable
 # stable:
