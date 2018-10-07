@@ -50,7 +50,8 @@ pub fn generate_cargo_keys(flags: ConstantsFlags) -> Fallible<()> {
 
     if ref_vec.len() == 2 {
         let current_head_file = ref_vec[1];
-        println!("cargo:rerun-if-changed={}", current_head_file);
+        let git_refs_path = PathBuf::from(".git").join(current_head_file);
+        println!("cargo:rerun-if-changed={}", git_refs_path.display());
     }
 
     Ok(())
