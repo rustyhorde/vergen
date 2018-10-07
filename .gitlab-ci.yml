@@ -1,0 +1,35 @@
+stages:
+  - nightly
+  # - stable
+  - build
+
+variables:
+  CARGO_HOME: $CI_PROJECT_DIR/cargo
+  APT_CACHE_DIR: $CI_PROJECT_DIR/apt
+
+before_script:
+  - apt-get update -yq
+  # - apt-get install -o dir::cache::archives="$APT_CACHE_DIR" -y {{ DEPENDENCIES }}
+
+nightly:
+  image: 'rustlang/rust:nightly'
+  stage: nightly
+  script:
+    - rustc --version
+    - cargo --version
+    - cargo test --verbose --features serde,unstable
+
+# TODO: Uncomment this when editions hit stable
+# stable:
+#   image: 'rust:latest'
+#   stage: stable
+#   script:
+#     - rustc --version
+#     - cargo --version
+#     - cargo test --verbose --features serde
+
+cache:
+  paths:
+    - apt/
+    - cargo/
+    - target/
