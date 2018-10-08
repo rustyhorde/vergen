@@ -10,7 +10,7 @@
 use crate::constants::ConstantsFlags;
 use crate::output::generate_build_info;
 use failure::Fallible;
-use std::fs::File;
+use std::fs::{self, File};
 use std::io::Read;
 use std::path::PathBuf;
 
@@ -41,9 +41,25 @@ pub fn generate_cargo_keys(flags: ConstantsFlags) -> Fallible<()> {
         println!("cargo:rustc-env={}={}", k.name(), v);
     }
 
-    println!("cargo:rerun-if-changed=.git/HEAD");
-    let git_head_path = PathBuf::from(".git").join("HEAD");
-    let mut f = File::open(&git_head_path)?;
+    let git_dir_or_file = PathBuf::from(".git");
+    let metadata = fs::metadata(&git_dir_or_file)?;
+
+    let mut f = if metadata.is_dir() {
+        let git_head_path = git_dir_or_file.join("HEAD");
+        println!("cargo:rerun-if-changed={}", git_head_path.display());
+        File::open(&git_head_path)?
+    } else if metadata.is_file() {
+        let mut git_file = File::open(&git_dir_or_file)?;
+        let mut git_contents = String::new();
+        let _ = git_file.read_to_string(&mut git_contents)?;
+        let dir_vec: Vec<&str> = git_contents.split(": ").collect();
+        let git_head_path = PathBuf::from(dir_vec[1].trim()).join("HEAD");
+        println!("cargo:rerun-if-changed={}", git_head_path.display());
+        File::open(&git_head_path)?
+    } else {
+        return Err(failure::err_msg("Invalid .git format"));
+    };
+
     let mut git_head_contents = String::new();
     let _ = f.read_to_string(&mut git_head_contents)?;
     let ref_vec: Vec<&str> = git_head_contents.split(": ").collect();
