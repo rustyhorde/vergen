@@ -61,7 +61,7 @@ pub fn generate_cargo_keys(flags: ConstantsFlags) -> Fallible<()> {
             let git_refs_path = PathBuf::from(".git").join(current_head_file);
             println!("cargo:rerun-if-changed={}", git_refs_path.display());
         } else {
-            return Err(failure::err_msg("Invalid HEAD file"));
+            eprintln!("You are most likely in a detached HEAD state");
         }
     } else if metadata.is_file() {
         // We are in a worktree, so find out where the actual worktrees/<name>/HEAD file is.
@@ -93,10 +93,12 @@ pub fn generate_cargo_keys(flags: ConstantsFlags) -> Fallible<()> {
             let git_refs_path = actual_git_dir.join(current_head_file);
             println!("cargo:rerun-if-changed={}", git_refs_path.display());
         } else {
-            return Err(failure::err_msg("Invalid HEAD file"));
+            eprintln!("You are most likely in a detached HEAD state");
         }
     } else {
-        return Err(failure::err_msg("Invalid .git format"));
+        return Err(failure::err_msg(
+            "Invalid .git format (Not a directory or a file)",
+        ));
     };
 
     Ok(())
