@@ -53,6 +53,7 @@ pub fn generate_cargo_keys(flags: ConstantsFlags) -> Fallible<()> {
         let mut f = File::open(&git_head_path)?;
         let mut git_head_contents = String::new();
         let _ = f.read_to_string(&mut git_head_contents)?;
+        eprintln!("HEAD contents: {}", git_head_contents);
         let ref_vec: Vec<&str> = git_head_contents.split(": ").collect();
 
         if ref_vec.len() == 2 {
@@ -68,6 +69,7 @@ pub fn generate_cargo_keys(flags: ConstantsFlags) -> Fallible<()> {
         let mut git_contents = String::new();
         let _ = git_file.read_to_string(&mut git_contents)?;
         let dir_vec: Vec<&str> = git_contents.split(": ").collect();
+        eprintln!(".git contents: {}", git_contents);
         let git_path = dir_vec[1].trim();
 
         // Echo the HEAD psth
@@ -83,6 +85,7 @@ pub fn generate_cargo_keys(flags: ConstantsFlags) -> Fallible<()> {
         let mut f = File::open(&git_head_path)?;
         let mut git_head_contents = String::new();
         let _ = f.read_to_string(&mut git_head_contents)?;
+        eprintln!("HEAD contents: {}", git_head_contents);
         let ref_vec: Vec<&str> = git_head_contents.split(": ").collect();
 
         if ref_vec.len() == 2 {
