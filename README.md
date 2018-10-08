@@ -4,10 +4,17 @@
 [![Crates.io](https://img.shields.io/crates/l/vergen.svg)](https://crates.io/crates/vergen)
 [![Crates.io](https://img.shields.io/crates/d/vergen.svg)](https://crates.io/crates/vergen)
 
-## Version 3.x.x
-[![Build
-Status](https://travis-ci.org/rustyhorde/vergen.svg?branch=master)](https://travis-ci.org/rustyhorde/vergen)
+## Build Status
+|              |                                                                                   |
+---------------|-----------------------------------------------------------------------------------|
+| Travis       | [![Build Status](https://travis-ci.org/rustyhorde/vergen.svg?branch=master)](https://travis-ci.org/rustyhorde/vergen)|
+| GitLab CI/CD | [![pipeline status](https://gitlab.com/rustyhorde/vergen/badges/master/pipeline.svg)](https://gitlab.com/rustyhorde/vergen/commits/master)|
+| Appveyor     | [![Build status](https://ci.appveyor.com/api/projects/status/rcdjlx0sxvk3wnww/branch/master?svg=true)](https://ci.appveyor.com/project/CraZySacX/vergen/branch/master)|
 
+## Code Coverage
+[![codecov](https://codecov.io/gh/rustyhorde/vergen/branch/master/graph/badge.svg)](https://codecov.io/gh/rustyhorde/vergen)
+
+## Version 3.x.x
 Introduces `generate_cargo_keys()` and support for rebuild when `.git/HEAD` changes.
 Internally converted to use `failure` so `Result` is no longer exported and changed to the Rust 2018
 edition.
@@ -16,7 +23,7 @@ edition.
 hits stable (12/06/18)**
 
 ## Version 2.1.x
-[![Build Status](https://travis-ci.org/rustyhorde/vergen.svg?branch=v2.1.0)](https://travis-ci.org/rustyhorde/vergen)
+[![Build Status](https://travis-ci.org/rustyhorde/vergen.svg?branch=v2.1.1)](https://travis-ci.org/rustyhorde/vergen)
 
 Backport of the 3.x.x changes to work on stable until Rust 2018 hits stable.
 
