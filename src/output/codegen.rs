@@ -76,10 +76,7 @@ fn gen_const<W: Write>(f: &mut W, comment: &str, name: &str, value: &str) -> Res
 ///
 /// format!("{} {} blah {}", VERGEN_BUILD_TIMESTAMP, VERGEN_SHA, VERGEN_SEMVER)
 /// ```
-#[deprecated(
-    since = "2.0.0",
-    note = "Please use `generate_cargo_keys` instead"
-)]
+#[deprecated(since = "2.0.0", note = "Please use `generate_cargo_keys` instead")]
 pub fn generate_version_rs(flags: ConstantsFlags) -> Result<(), Error> {
     let dst = PathBuf::from(env::var("OUT_DIR")?);
     let mut f = File::create(&dst.join("version.rs"))?;
