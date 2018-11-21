@@ -7,8 +7,8 @@
 // modified, or distributed except according to those terms.
 
 //! Output types
-use chrono::Utc;
 use crate::constants::*;
+use chrono::Utc;
 use failure::Fallible;
 use std::collections::HashMap;
 use std::env;
