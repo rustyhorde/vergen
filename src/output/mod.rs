@@ -85,12 +85,12 @@ pub fn generate_build_info(flags: ConstantsFlags) -> Fallible<HashMap<VergenKey,
 }
 
 fn run_command(command: &mut Command) -> String {
-    let raw_output = if let Ok(o) = command.output() {
-        String::from_utf8_lossy(&o.stdout).into_owned()
-    } else {
-        "UNKNOWN".to_string()
-    };
-    raw_output.trim().to_string()
+    if let Ok(o) = command.output() {
+        if o.status.success() {
+            return String::from_utf8_lossy(&o.stdout).trim().to_owned();
+        }
+    }
+    return "UNKNOWN".to_owned();
 }
 
 /// Build information keys.
