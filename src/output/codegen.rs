@@ -10,13 +10,14 @@
 //! the `include!` macro within your project.
 use crate::constants::{ConstantsFlags, CONST_PREFIX, CONST_TYPE};
 use crate::output::generate_build_info;
-use failure::Error;
 use std::env;
 use std::fs::File;
 use std::io::Write;
 use std::path::PathBuf;
 
-fn gen_const<W: Write>(f: &mut W, comment: &str, name: &str, value: &str) -> Result<(), Error> {
+use super::Result;
+
+fn gen_const<W: Write>(f: &mut W, comment: &str, name: &str, value: &str) -> Result<()> {
     writeln!(
         f,
         "{}\n{}{}{}\"{}\";",
@@ -77,7 +78,7 @@ fn gen_const<W: Write>(f: &mut W, comment: &str, name: &str, value: &str) -> Res
 /// format!("{} {} blah {}", VERGEN_BUILD_TIMESTAMP, VERGEN_SHA, VERGEN_SEMVER)
 /// ```
 #[deprecated(since = "2.0.0", note = "Please use `generate_cargo_keys` instead")]
-pub fn generate_version_rs(flags: ConstantsFlags) -> Result<(), Error> {
+pub fn generate_version_rs(flags: ConstantsFlags) -> Result<()> {
     let dst = PathBuf::from(env::var("OUT_DIR")?);
     let mut f = File::create(&dst.join("version.rs"))?;
     let build_info = generate_build_info(flags)?;

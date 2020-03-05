@@ -9,7 +9,6 @@
 //! Output types
 use crate::constants::*;
 use chrono::Utc;
-use failure::Fallible;
 use std::collections::HashMap;
 use std::env;
 use std::process::Command;
@@ -17,7 +16,9 @@ use std::process::Command;
 pub mod codegen;
 pub mod envvar;
 
-pub fn generate_build_info(flags: ConstantsFlags) -> Fallible<HashMap<VergenKey, String>> {
+type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
+
+pub fn generate_build_info(flags: ConstantsFlags) -> Result<HashMap<VergenKey, String>> {
     let mut build_info = HashMap::new();
     let now = Utc::now();
 
