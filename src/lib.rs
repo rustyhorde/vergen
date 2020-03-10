@@ -106,5 +106,6 @@ mod constants;
 mod output;
 
 pub use crate::constants::ConstantsFlags;
+#[allow(deprecated)]
 pub use crate::output::codegen::generate_version_rs;
 pub use crate::output::envvar::generate_cargo_keys;
