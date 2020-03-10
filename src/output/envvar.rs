@@ -9,10 +9,11 @@
 //! Build time information.
 use crate::constants::ConstantsFlags;
 use crate::output::generate_build_info;
-use failure::Fallible;
 use std::fs::{self, File};
 use std::io::Read;
 use std::path::PathBuf;
+
+use super::Result;
 
 /// Generate the `cargo:` key output
 ///
@@ -32,7 +33,7 @@ use std::path::PathBuf;
 ///     generate_cargo_keys(ConstantsFlags::all()).expect("Unable to generate cargo keys!");
 /// }
 /// ```
-pub fn generate_cargo_keys(flags: ConstantsFlags) -> Fallible<()> {
+pub fn generate_cargo_keys(flags: ConstantsFlags) -> Result<()> {
     // Generate the build info map.
     let build_info = generate_build_info(flags)?;
 
@@ -95,9 +96,7 @@ pub fn generate_cargo_keys(flags: ConstantsFlags) -> Fallible<()> {
                 eprintln!("You are most likely in a detached HEAD state");
             }
         } else {
-            return Err(failure::err_msg(
-                "Invalid .git format (Not a directory or a file)",
-            ));
+            return Err("Invalid .git format (Not a directory or a file)".into());
         };
     } else {
         eprintln!("Unable to generate 'cargo:rerun-if-changed'");
