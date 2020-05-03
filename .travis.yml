@@ -23,7 +23,14 @@ addons:
       - binutils-dev
       - libiberty-dev
 
-script: "./scripts/run-tests.sh"
+before_script:
+  - if [ "$TRAVIS_RUST_VERSION" = 'stable' ]; then rustup component add rustfmt; fi
+  - if [ "$TRAVIS_RUST_VERSION" = 'stable' ]; then rustup component add clippy; fi
+
+script:
+  - ./scripts/run-tests.sh
+  - if [ "$TRAVIS_RUST_VERSION" = 'stable' ]; then cargo fmt --all -- --check; fi
+  - if [ "$TRAVIS_RUST_VERSION" = 'stable' ]; then cargo clippy --all -- -D warnings; fi
 
 after_success: |
   wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz &&
