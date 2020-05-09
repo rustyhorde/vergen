@@ -51,6 +51,9 @@ VERGEN_COMMIT_DATE        |2018-08-08
 VERGEN_TARGET_TRIPLE      |x86_64-unknown-linux-gnu
 VERGEN_SEMVER             |v3.0.0
 VERGEN_SEMVER_LIGHTWEIGHT |v3.0.0
+VERGEN_RUSTC_SEMVER       |1.4.3
+VERGEN_RUSTC_CHANNEL      |stable
+VERGEN_HOST_TRIPLE        |x86_64-unknown-linux-gnu
 
 The variable generation can be toggled on or off at an individual level
 via [ConstantsFlags](crate::constants::ConstantsFlags)
