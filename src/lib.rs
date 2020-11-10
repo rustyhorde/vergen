@@ -21,6 +21,7 @@
 //! VERGEN_TARGET_TRIPLE      |x86_64-unknown-linux-gnu
 //! VERGEN_SEMVER             |v0.1.0
 //! VERGEN_SEMVER_LIGHTWEIGHT |v0.1.0
+//! VERGEN_BRANCH             |master
 //!
 //! The variable generation can be toggled on or off at an individual level
 //! via [ConstantsFlags](crate::constants::ConstantsFlags)

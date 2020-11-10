@@ -30,7 +30,8 @@ bitflags!(
     ///     ConstantsFlags::COMMIT_DATE |
     ///     ConstantsFlags::TARGET_TRIPLE |
     ///     ConstantsFlags::SEMVER |
-    ///     ConstantsFlags::REBUILD_ON_HEAD_CHANGE;
+    ///     ConstantsFlags::REBUILD_ON_HEAD_CHANGE |
+    ///     ConstantsFlags::BRANCH;
     ///
     /// assert_eq!(actual_flags, expected_flags)
     /// # }
@@ -82,6 +83,10 @@ bitflags!(
         ///
         /// `0.1.0`
         const SEMVER_FROM_CARGO_PKG  = 0b0010_0000_0000;
+        /// Generate the branch name constant.
+        ///
+        /// `master`
+        const BRANCH = 0b0100_0000_0000;
     }
 );
 
@@ -106,6 +111,8 @@ pub const SEMVER_NAME: &str = "VERGEN_SEMVER";
 pub const SEMVER_COMMENT: &str = "/// Semver";
 pub const SEMVER_TAGS_NAME: &str = "VERGEN_SEMVER_LIGHTWEIGHT";
 pub const SEMVER_TAGS_COMMENT: &str = "/// Semver (Lightweight)";
+pub const BRANCH_NAME: &str = "VERGEN_BRANCH";
+pub const BRANCH_COMMENT: &str = "/// Branch name";
 
 #[cfg(test)]
 mod test {
@@ -129,6 +136,7 @@ mod test {
             ConstantsFlags::SEMVER_FROM_CARGO_PKG.bits(),
             0b0010_0000_0000
         );
+        assert_eq!(ConstantsFlags::BRANCH.bits(), 0b0100_0000_0000);
     }
 
     #[test]
@@ -151,5 +159,7 @@ mod test {
         assert_eq!(SEMVER_COMMENT, "/// Semver");
         assert_eq!(SEMVER_TAGS_NAME, "VERGEN_SEMVER_LIGHTWEIGHT");
         assert_eq!(SEMVER_TAGS_COMMENT, "/// Semver (Lightweight)");
+        assert_eq!(BRANCH_NAME, "VERGEN_BRANCH");
+        assert_eq!(BRANCH_COMMENT, "/// Branch name");
     }
 }

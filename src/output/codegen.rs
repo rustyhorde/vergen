@@ -69,6 +69,9 @@ fn gen_const<W: Write>(f: &mut W, comment: &str, name: &str, value: &str) -> Res
 ///
 /// /// Semver (Lightweight)
 /// pub const VERGEN_SEMVER_LIGHTWEIGHT: &str = "v0.1.0-pre.0";
+///
+/// /// Branch
+/// pub const VERGEN_BRANCH: &str ="master";
 /// ```
 ///
 /// ## Include the constants in your code (Version 1.x.x only)

@@ -82,6 +82,11 @@ pub fn generate_build_info(flags: ConstantsFlags) -> Result<HashMap<VergenKey, S
         build_info.insert(VergenKey::SemverLightweight, semver);
     }
 
+    if flags.contains(ConstantsFlags::BRANCH) {
+        let branch = run_command(Command::new("git").args(&["rev-parse", "--abbrev-ref", "HEAD"]));
+        build_info.insert(VergenKey::Branch, branch);
+    }
+
     Ok(build_info)
 }
 
@@ -114,6 +119,8 @@ pub enum VergenKey {
     /// The semver version from the last git tag, including lightweight.
     /// (VERGEN_SEMVER_LIGHTWEIGHT)
     SemverLightweight,
+    /// The current working branch name (VERGEN_BRANCH)
+    Branch,
 }
 
 impl VergenKey {
@@ -128,6 +135,7 @@ impl VergenKey {
             VergenKey::TargetTriple => TARGET_TRIPLE_COMMENT,
             VergenKey::Semver => SEMVER_COMMENT,
             VergenKey::SemverLightweight => SEMVER_TAGS_COMMENT,
+            VergenKey::Branch => BRANCH_COMMENT,
         }
     }
 
@@ -142,6 +150,7 @@ impl VergenKey {
             VergenKey::TargetTriple => TARGET_TRIPLE_NAME,
             VergenKey::Semver => SEMVER_NAME,
             VergenKey::SemverLightweight => SEMVER_TAGS_NAME,
+            VergenKey::Branch => BRANCH_NAME,
         }
     }
 }
