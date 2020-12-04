@@ -57,7 +57,7 @@ pub fn generate_cargo_keys(flags: ConstantsFlags) -> Result<()> {
             let ref_vec: Vec<&str> = git_head_contents.split(": ").collect();
 
             if ref_vec.len() == 2 {
-                let current_head_file = ref_vec[1];
+                let current_head_file = ref_vec[1].trim();
                 let git_refs_path = PathBuf::from(".git").join(current_head_file);
                 println!("cargo:rerun-if-changed={}", git_refs_path.display());
             } else {
@@ -89,7 +89,7 @@ pub fn generate_cargo_keys(flags: ConstantsFlags) -> Result<()> {
             let ref_vec: Vec<&str> = git_head_contents.split(": ").collect();
 
             if ref_vec.len() == 2 {
-                let current_head_file = ref_vec[1];
+                let current_head_file = ref_vec[1].trim();
                 let git_refs_path = actual_git_dir.join(current_head_file);
                 println!("cargo:rerun-if-changed={}", git_refs_path.display());
             } else {
