@@ -1,18 +1,10 @@
-dist: trusty
+dist: bionic
 language: rust
-sudo: true
-
 addons:
-  apt:
-    packages:
-      - libcurl4-openssl-dev
-      - libelf-dev
-      - libdw-dev
-      - cmake
-      - gcc
-      - binutils-dev
-      - libiberty-dev
-
+    apt:
+        packages:
+            - libssl-dev
+cache: cargo
 rust:
   - stable
   - beta
@@ -21,8 +13,10 @@ rust:
 os:
   - linux
 
-before_script:
-  - cargo install cargo-tarpaulin
+before_script: |
+  if [[ "$TRAVIS_RUST_VERSION" == stable ]]; then
+    cargo install cargo-tarpaulin
+  fi
 
 script: "./scripts/run-tests.sh"
 
