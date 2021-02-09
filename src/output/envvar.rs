@@ -212,4 +212,21 @@ mod test {
         )
         .is_err());
     }
+
+    #[test]
+    fn invalid_file() {
+        let mut buf_stdout = Vec::new();
+        let mut buf_stderr = Vec::new();
+
+        assert!(gen_cargo_keys(
+            &ConstantsFlags::all(),
+            "xxxxzzzyyy",
+            &mut buf_stdout,
+            &mut buf_stderr,
+        )
+        .is_ok());
+
+        let stderr = String::from_utf8_lossy(&buf_stderr);
+        assert!(stderr.contains("Unable to generate 'cargo:rerun-if-changed'"));
+    }
 }
