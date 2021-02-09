@@ -29,6 +29,10 @@ fn gen_const<W: Write>(f: &mut W, comment: &str, name: &str, value: &str) -> Res
 /// Create a `version.rs` file in `OUT_DIR` and write the toggled on constants
 /// to the file.
 ///
+/// # Errors
+/// * File related problems can throw errors
+/// * Can throw the other errors from `generate_build_info`
+///
 /// # Example build.rs
 /// ```
 /// # extern crate vergen;
@@ -99,6 +103,7 @@ mod test {
     use super::gen_const;
     use crate::constants::ConstantsFlags;
     use crate::output::generate_build_info;
+    use lazy_static::lazy_static;
     use regex::Regex;
     use std::io::Cursor;
 

@@ -8,6 +8,8 @@
 
 //! Flags used to control the build script output.
 
+use bitflags::bitflags;
+
 bitflags!(
     /// Constants Flags
     ///
@@ -106,34 +108,34 @@ bitflags!(
 );
 
 /// const prefix for codegen
-pub const CONST_PREFIX: &str = "pub const ";
+pub(crate) const CONST_PREFIX: &str = "pub const ";
 /// const type for codegen
-pub const CONST_TYPE: &str = ": &str = ";
+pub(crate) const CONST_TYPE: &str = ": &str = ";
 
-pub const BUILD_TIMESTAMP_NAME: &str = "VERGEN_BUILD_TIMESTAMP";
-pub const BUILD_TIMESTAMP_COMMENT: &str = "/// Build Timestamp (UTC)";
-pub const BUILD_DATE_NAME: &str = "VERGEN_BUILD_DATE";
-pub const BUILD_DATE_COMMENT: &str = "/// Compile Time - Short (UTC)";
-pub const SHA_NAME: &str = "VERGEN_SHA";
-pub const SHA_COMMENT: &str = "/// Commit SHA";
-pub const SHA_SHORT_NAME: &str = "VERGEN_SHA_SHORT";
-pub const SHA_SHORT_COMMENT: &str = "/// Commit SHA - Short";
-pub const COMMIT_DATE_NAME: &str = "VERGEN_COMMIT_DATE";
-pub const COMMIT_DATE_COMMENT: &str = "/// Commit Date";
-pub const TARGET_TRIPLE_NAME: &str = "VERGEN_TARGET_TRIPLE";
-pub const TARGET_TRIPLE_COMMENT: &str = "/// Target Triple";
-pub const SEMVER_NAME: &str = "VERGEN_SEMVER";
-pub const SEMVER_COMMENT: &str = "/// Semver";
-pub const SEMVER_TAGS_NAME: &str = "VERGEN_SEMVER_LIGHTWEIGHT";
-pub const SEMVER_TAGS_COMMENT: &str = "/// Semver (Lightweight)";
-pub const RUSTC_SEMVER_NAME: &str = "VERGEN_RUSTC_SEMVER";
-pub const RUSTC_SEMVER_COMMENT: &str = "/// Rustc Version";
-pub const RUSTC_CHANNEL_NAME: &str = "VERGEN_RUSTC_CHANNEL";
-pub const RUSTC_CHANNEL_COMMENT: &str = "/// Rustc Release Channel";
-pub const HOST_TRIPLE_NAME: &str = "VERGEN_HOST_TRIPLE";
-pub const HOST_TRIPLE_COMMENT: &str = "/// Host Triple";
-pub const BRANCH_NAME: &str = "VERGEN_BRANCH";
-pub const BRANCH_COMMENT: &str = "/// Branch name";
+pub(crate) const BUILD_TIMESTAMP_NAME: &str = "VERGEN_BUILD_TIMESTAMP";
+pub(crate) const BUILD_TIMESTAMP_COMMENT: &str = "/// Build Timestamp (UTC)";
+pub(crate) const BUILD_DATE_NAME: &str = "VERGEN_BUILD_DATE";
+pub(crate) const BUILD_DATE_COMMENT: &str = "/// Compile Time - Short (UTC)";
+pub(crate) const SHA_NAME: &str = "VERGEN_SHA";
+pub(crate) const SHA_COMMENT: &str = "/// Commit SHA";
+pub(crate) const SHA_SHORT_NAME: &str = "VERGEN_SHA_SHORT";
+pub(crate) const SHA_SHORT_COMMENT: &str = "/// Commit SHA - Short";
+pub(crate) const COMMIT_DATE_NAME: &str = "VERGEN_COMMIT_DATE";
+pub(crate) const COMMIT_DATE_COMMENT: &str = "/// Commit Date";
+pub(crate) const TARGET_TRIPLE_NAME: &str = "VERGEN_TARGET_TRIPLE";
+pub(crate) const TARGET_TRIPLE_COMMENT: &str = "/// Target Triple";
+pub(crate) const SEMVER_NAME: &str = "VERGEN_SEMVER";
+pub(crate) const SEMVER_COMMENT: &str = "/// Semver";
+pub(crate) const SEMVER_TAGS_NAME: &str = "VERGEN_SEMVER_LIGHTWEIGHT";
+pub(crate) const SEMVER_TAGS_COMMENT: &str = "/// Semver (Lightweight)";
+pub(crate) const RUSTC_SEMVER_NAME: &str = "VERGEN_RUSTC_SEMVER";
+pub(crate) const RUSTC_SEMVER_COMMENT: &str = "/// Rustc Version";
+pub(crate) const RUSTC_CHANNEL_NAME: &str = "VERGEN_RUSTC_CHANNEL";
+pub(crate) const RUSTC_CHANNEL_COMMENT: &str = "/// Rustc Release Channel";
+pub(crate) const HOST_TRIPLE_NAME: &str = "VERGEN_HOST_TRIPLE";
+pub(crate) const HOST_TRIPLE_COMMENT: &str = "/// Host Triple";
+pub(crate) const BRANCH_NAME: &str = "VERGEN_BRANCH";
+pub(crate) const BRANCH_COMMENT: &str = "/// Branch name";
 
 #[cfg(test)]
 mod test {
