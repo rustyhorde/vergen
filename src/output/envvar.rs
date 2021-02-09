@@ -11,7 +11,7 @@ use crate::constants::ConstantsFlags;
 use crate::output::generate_build_info;
 use std::fs::{self, File};
 use std::io::Read;
-use std::path::PathBuf;
+use std::{path::PathBuf, process::Command};
 
 use super::Result;
 
@@ -46,7 +46,10 @@ pub fn generate_cargo_keys(flags: ConstantsFlags) -> Result<()> {
         println!("cargo:rustc-env={}={}", k.name(), v);
     }
 
-    let git_dir_or_file = PathBuf::from(".git");
+    let base = super::run_command(Command::new("git").args(&["rev-parse", "--show-toplevel"]));
+    let mut git_dir_or_file = PathBuf::from(base);
+    git_dir_or_file.push(".git");
+
     if let Ok(metadata) = fs::metadata(&git_dir_or_file) {
         if metadata.is_dir() {
             // Echo the HEAD path

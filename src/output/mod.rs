@@ -17,9 +17,7 @@ use crate::constants::{
 };
 use chrono::Utc;
 use rustc_version::Channel;
-use std::collections::HashMap;
-use std::env;
-use std::process::Command;
+use std::{collections::HashMap, env, process::Command};
 
 pub(crate) mod codegen;
 pub(crate) mod envvar;
@@ -124,7 +122,7 @@ pub(crate) fn generate_build_info(flags: ConstantsFlags) -> Result<HashMap<Verge
     Ok(build_info)
 }
 
-fn run_command(command: &mut Command) -> String {
+pub(crate) fn run_command(command: &mut Command) -> String {
     if let Ok(o) = command.output() {
         if o.status.success() {
             return String::from_utf8_lossy(&o.stdout).trim().to_owned();
