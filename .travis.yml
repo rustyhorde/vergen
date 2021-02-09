@@ -1,12 +1,6 @@
+dist: trusty
 language: rust
-
-rust:
-- stable
-- beta
-- nightly
-
-os:
-- linux
+sudo: true
 
 addons:
   apt:
@@ -19,19 +13,23 @@ addons:
       - binutils-dev
       - libiberty-dev
 
-script: "./scripts/run-tests.sh"
+rust:
+  - stable
+  - beta
+  - nightly
 
-after_success: |
-  wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz &&
-  tar xzf master.tar.gz &&
-  cd kcov-master &&
-  mkdir build &&
-  cd build &&
-  cmake .. &&
-  make &&
-  make install DESTDIR=../../kcov-build &&
-  cd ../.. &&
-  rm -rf kcov-master &&
-  for file in target/debug/build/vergen-*[^\.d]; do mkdir -p "target/cov/$(basename $file)"; ./kcov-build/usr/local/bin/kcov --exclude-pattern=/.cargo,/usr/lib --verify "target/cov/$(basename $file)" "$file"; done &&
-  bash <(curl -s https://codecov.io/bash) &&
-  echo "Uploaded code coverage"
+os:
+  - linux
+
+install:
+  - rustc -Vv
+  - cargo -Vv
+
+  # Install kcov.
+  - mkdir -p ~/.cargo/bin
+  - sh src/install_kcov.sh
+  - export PATH=$HOME/.local/bin:$HOME/.cargo/bin:$HOME/Library/Python/2.7/bin:$PATH
+  - export RUSTFLAGS="-C link-dead-code"
+  - kcov --version
+
+script: "./scripts/run-tests.sh"
