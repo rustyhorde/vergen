@@ -33,7 +33,8 @@ bitflags!(
     ///     ConstantsFlags::SEMVER |
     ///     ConstantsFlags::RUSTC_SEMVER |
     ///     ConstantsFlags::RUSTC_CHANNEL |
-    ///     ConstantsFlags::REBUILD_ON_HEAD_CHANGE;
+    ///     ConstantsFlags::REBUILD_ON_HEAD_CHANGE |
+    ///     ConstantsFlags::BRANCH;
     ///
     /// assert_eq!(actual_flags, expected_flags)
     /// # }
@@ -97,6 +98,10 @@ bitflags!(
         ///
         /// `x86_64-unknown-linux-gnu`
         const HOST_TRIPLE            = 0b0001_0000_0000_0000;
+        /// Generate the branch name constant.
+        ///
+        /// `master`
+        const BRANCH = 0b0100_0000_0000;
     }
 );
 
@@ -127,6 +132,8 @@ pub const RUSTC_CHANNEL_NAME: &str = "VERGEN_RUSTC_CHANNEL";
 pub const RUSTC_CHANNEL_COMMENT: &str = "/// Rustc Release Channel";
 pub const HOST_TRIPLE_NAME: &str = "VERGEN_HOST_TRIPLE";
 pub const HOST_TRIPLE_COMMENT: &str = "/// Host Triple";
+pub const BRANCH_NAME: &str = "VERGEN_BRANCH";
+pub const BRANCH_COMMENT: &str = "/// Branch name";
 
 #[cfg(test)]
 mod test {
@@ -153,6 +160,7 @@ mod test {
         assert_eq!(ConstantsFlags::RUSTC_SEMVER.bits(), 0b0100_0000_0000);
         assert_eq!(ConstantsFlags::RUSTC_CHANNEL.bits(), 0b1000_0000_0000);
         assert_eq!(ConstantsFlags::HOST_TRIPLE.bits(), 0b0001_0000_0000_0000);
+        assert_eq!(ConstantsFlags::BRANCH.bits(), 0b0100_0000_0000);
     }
 
     #[test]
@@ -181,5 +189,7 @@ mod test {
         assert_eq!(RUSTC_CHANNEL_COMMENT, "/// Rustc Release Channel");
         assert_eq!(HOST_TRIPLE_NAME, "VERGEN_HOST_TRIPLE");
         assert_eq!(HOST_TRIPLE_COMMENT, "/// Host Triple");
+        assert_eq!(BRANCH_NAME, "VERGEN_BRANCH");
+        assert_eq!(BRANCH_COMMENT, "/// Branch name");
     }
 }

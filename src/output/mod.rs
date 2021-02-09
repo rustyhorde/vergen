@@ -83,8 +83,10 @@ pub fn generate_build_info(flags: ConstantsFlags) -> Result<HashMap<VergenKey, S
         build_info.insert(VergenKey::SemverLightweight, semver);
     }
 
-    if flags.intersects(ConstantsFlags::RUSTC_SEMVER | ConstantsFlags::RUSTC_CHANNEL | ConstantsFlags::HOST_TRIPLE) {
-    let rustc = rustc_version::version_meta().unwrap();
+    if flags.intersects(
+        ConstantsFlags::RUSTC_SEMVER | ConstantsFlags::RUSTC_CHANNEL | ConstantsFlags::HOST_TRIPLE,
+    ) {
+        let rustc = rustc_version::version_meta().unwrap();
 
         if flags.contains(ConstantsFlags::RUSTC_SEMVER) {
             build_info.insert(VergenKey::RustcSemver, format!("{}", rustc.semver));
@@ -96,7 +98,8 @@ pub fn generate_build_info(flags: ConstantsFlags) -> Result<HashMap<VergenKey, S
                 Channel::Nightly => "nightly",
                 Channel::Beta => "beta",
                 Channel::Stable => "stable",
-            }.to_string();
+            }
+            .to_string();
 
             build_info.insert(VergenKey::RustcChannel, channel);
         }
@@ -104,6 +107,11 @@ pub fn generate_build_info(flags: ConstantsFlags) -> Result<HashMap<VergenKey, S
         if flags.contains(ConstantsFlags::HOST_TRIPLE) {
             build_info.insert(VergenKey::HostTriple, rustc.host);
         }
+    }
+
+    if flags.contains(ConstantsFlags::BRANCH) {
+        let branch = run_command(Command::new("git").args(&["rev-parse", "--abbrev-ref", "HEAD"]));
+        build_info.insert(VergenKey::Branch, branch);
     }
 
     Ok(build_info)
@@ -144,6 +152,8 @@ pub enum VergenKey {
     RustcChannel,
     /// The host triple. (VERGEN_HOST_TRIPLE)
     HostTriple,
+    /// The current working branch name (VERGEN_BRANCH)
+    Branch,
 }
 
 impl VergenKey {
@@ -161,6 +171,7 @@ impl VergenKey {
             VergenKey::RustcSemver => RUSTC_SEMVER_COMMENT,
             VergenKey::RustcChannel => RUSTC_CHANNEL_COMMENT,
             VergenKey::HostTriple => HOST_TRIPLE_COMMENT,
+            VergenKey::Branch => BRANCH_COMMENT,
         }
     }
 
@@ -178,6 +189,7 @@ impl VergenKey {
             VergenKey::RustcSemver => RUSTC_SEMVER_NAME,
             VergenKey::RustcChannel => RUSTC_CHANNEL_NAME,
             VergenKey::HostTriple => HOST_TRIPLE_NAME,
+            VergenKey::Branch => BRANCH_NAME,
         }
     }
 }
