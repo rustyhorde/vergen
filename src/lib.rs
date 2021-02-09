@@ -76,7 +76,7 @@
 //!     generate_cargo_keys(flags).expect("Unable to generate the cargo keys!");
 //! # }
 //! ```
-//! ### Example 'build.rs' with SEMVER from CARGO_PKG_VERSION
+//! ### Example 'build.rs' with SEMVER from `CARGO_PKG_VERSION`
 //! ```
 //! # use vergen::{ConstantsFlags, generate_cargo_keys};
 //! #

@@ -25,7 +25,7 @@ pub(crate) mod envvar;
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
-pub(crate) fn generate_build_info(flags: &ConstantsFlags) -> Result<HashMap<VergenKey, String>> {
+pub(crate) fn generate_build_info(flags: ConstantsFlags) -> Result<HashMap<VergenKey, String>> {
     let mut build_info = HashMap::new();
     let now = Utc::now();
 
@@ -39,13 +39,13 @@ pub(crate) fn generate_build_info(flags: &ConstantsFlags) -> Result<HashMap<Verg
 
     if flags.contains(ConstantsFlags::SHA) {
         let mut sha = run_command(Command::new("git").args(&["rev-parse", "HEAD"]));
-        let _ = tag_dirty(&mut sha, &flags);
+        tag_dirty(&mut sha, flags)?;
         let _ = build_info.insert(VergenKey::Sha, sha);
     }
 
     if flags.contains(ConstantsFlags::SHA_SHORT) {
         let mut sha = run_command(Command::new("git").args(&["rev-parse", "--short", "HEAD"]));
-        let _ = tag_dirty(&mut sha, &flags);
+        tag_dirty(&mut sha, flags)?;
         let _ = build_info.insert(VergenKey::ShortSha, sha);
     }
 
@@ -125,7 +125,7 @@ pub(crate) fn generate_build_info(flags: &ConstantsFlags) -> Result<HashMap<Verg
     Ok(build_info)
 }
 
-fn tag_dirty(sha: &mut String, flags: &ConstantsFlags) -> Result<()> {
+fn tag_dirty(sha: &mut String, flags: ConstantsFlags) -> Result<()> {
     if flags.contains(ConstantsFlags::TAG_DIRTY) {
         let status_proc = Command::new("git")
             .args(&["status"])
@@ -247,7 +247,7 @@ mod test {
         let mut flags = ConstantsFlags::all();
         flags.toggle(ConstantsFlags::SEMVER_FROM_CARGO_PKG);
 
-        let build_info = generate_build_info(&flags)?;
+        let build_info = generate_build_info(flags)?;
         check_build_info(&build_info);
         Ok(())
     }
@@ -257,7 +257,7 @@ mod test {
         let mut flags = ConstantsFlags::all();
         flags.toggle(ConstantsFlags::SEMVER);
 
-        let build_info = generate_build_info(&flags)?;
+        let build_info = generate_build_info(flags)?;
         check_build_info(&build_info);
         Ok(())
     }
@@ -271,7 +271,7 @@ mod test {
             .open("blah")?;
         let mut flags = ConstantsFlags::all();
         flags.toggle(ConstantsFlags::SEMVER_FROM_CARGO_PKG);
-        let mut build_info = generate_build_info(&flags)?;
+        let mut build_info = generate_build_info(flags)?;
 
         let _ = Command::new("rm").args(&["blah"]).spawn();
 
