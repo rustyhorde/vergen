@@ -21,16 +21,13 @@ rust:
 os:
   - linux
 
-install:
-  - rustc -Vv
-  - cargo -Vv
-
-  # Install kcov.
-  - ls -al
-  - mkdir -p ~/.cargo/bin
-  - sh scripts/install-kcov.sh
-  - export PATH=$HOME/.local/bin:$HOME/.cargo/bin:$HOME/Library/Python/2.7/bin:$PATH
-  - export RUSTFLAGS="-C link-dead-code"
-  - kcov --version
+before_script:
+  - cargo install cargo-tarpaulin
 
 script: "./scripts/run-tests.sh"
+
+after_success: |
+  if [[ "$TRAVIS_RUST_VERSION" == stable ]]; then
+    # Uncomment the following line for coveralls.io
+    cargo tarpaulin --ciserver travis-ci --coveralls $TRAVIS_JOB_ID
+  fi
