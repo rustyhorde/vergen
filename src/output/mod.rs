@@ -39,12 +39,14 @@ pub(crate) fn generate_build_info(flags: ConstantsFlags) -> Result<HashMap<Verge
     }
 
     if flags.contains(ConstantsFlags::SHA) {
-        let sha = run_command(Command::new("git").args(&["rev-parse", "HEAD"]));
+        let mut sha = run_command(Command::new("git").args(&["rev-parse", "HEAD"]));
+        tag_dirty(&mut sha, &flags);
         let _ = build_info.insert(VergenKey::Sha, sha);
     }
 
     if flags.contains(ConstantsFlags::SHA_SHORT) {
-        let sha = run_command(Command::new("git").args(&["rev-parse", "--short", "HEAD"]));
+        let mut sha = run_command(Command::new("git").args(&["rev-parse", "--short", "HEAD"]));
+        tag_dirty(&mut sha, &flags);
         let _ = build_info.insert(VergenKey::ShortSha, sha);
     }
 
@@ -122,6 +124,15 @@ pub(crate) fn generate_build_info(flags: ConstantsFlags) -> Result<HashMap<Verge
     }
 
     Ok(build_info)
+}
+
+fn tag_dirty(sha: &mut String, flags: &ConstantsFlags) {
+    if flags.contains(ConstantsFlags::TAG_DIRTY) {
+        let diff = run_command(Command::new("git").args(&["diff"]));
+        if !diff.is_empty() {
+            sha.push_str("-dirty");
+        }
+    }
 }
 
 fn run_command(command: &mut Command) -> String {
@@ -202,4 +213,12 @@ impl VergenKey {
 }
 
 #[cfg(test)]
-mod test {}
+mod test {
+    use super::run_command;
+    use std::process::Command;
+
+    #[test]
+    fn bad_command_generates_unknown() {
+        assert_eq!(run_command(&mut Command::new("zzzyyyxxx")), "UNKNOWN");
+    }
+}

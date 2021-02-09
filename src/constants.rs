@@ -36,7 +36,8 @@ bitflags!(
     ///     ConstantsFlags::RUSTC_SEMVER |
     ///     ConstantsFlags::RUSTC_CHANNEL |
     ///     ConstantsFlags::REBUILD_ON_HEAD_CHANGE |
-    ///     ConstantsFlags::BRANCH;
+    ///     ConstantsFlags::BRANCH |
+    ///     ConstantsFlags::TAG_DIRTY;
     ///
     /// assert_eq!(actual_flags, expected_flags)
     /// # }
@@ -104,6 +105,10 @@ bitflags!(
         ///
         /// `master`
         const BRANCH                 = 0b0010_0000_0000_0000;
+        /// Include 'dirty' indicator on the SHAs when built on directory with changes
+        ///
+        /// `75b390d-dirty`
+        const TAG_DIRTY              = 0b0100_0000_0000_0000;
     }
 );
 
@@ -163,6 +168,7 @@ mod test {
         assert_eq!(ConstantsFlags::RUSTC_CHANNEL.bits(), 0b1000_0000_0000);
         assert_eq!(ConstantsFlags::HOST_TRIPLE.bits(), 0b0001_0000_0000_0000);
         assert_eq!(ConstantsFlags::BRANCH.bits(), 0b0010_0000_0000_0000);
+        assert_eq!(ConstantsFlags::TAG_DIRTY.bits(), 0b0100_0000_0000_0000);
     }
 
     #[test]
