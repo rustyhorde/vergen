@@ -190,9 +190,30 @@ impl VergenKey {
 
 #[cfg(test)]
 mod test {
-    use super::{generate_build_info, run_command};
+    use super::{
+        generate_build_info, run_command, Result,
+        VergenKey::{
+            self, Branch, BuildDate, BuildTimestamp, CommitDate, HostTriple, RustcChannel,
+            RustcSemver, Semver, SemverLightweight, Sha, ShortSha, TargetTriple,
+        },
+    };
     use crate::constants::ConstantsFlags;
-    use std::process::Command;
+    use std::{collections::HashMap, process::Command};
+
+    fn check_build_info(build_info: &HashMap<VergenKey, String>) {
+        assert!(build_info.get(&Branch).is_some());
+        assert!(build_info.get(&BuildDate).is_some());
+        assert!(build_info.get(&BuildTimestamp).is_some());
+        assert!(build_info.get(&CommitDate).is_some());
+        assert!(build_info.get(&HostTriple).is_some());
+        assert!(build_info.get(&RustcChannel).is_some());
+        assert!(build_info.get(&RustcSemver).is_some());
+        assert!(build_info.get(&Semver).is_some());
+        assert!(build_info.get(&SemverLightweight).is_some());
+        assert!(build_info.get(&Sha).is_some());
+        assert!(build_info.get(&ShortSha).is_some());
+        assert!(build_info.get(&TargetTriple).is_some());
+    }
 
     #[test]
     fn bad_command_generates_unknown() {
@@ -200,8 +221,39 @@ mod test {
     }
 
     #[test]
-    fn build_info_all() {
-        let blah = generate_build_info(ConstantsFlags::all());
-        assert!(blah.is_ok());
+    fn build_info_semver() -> Result<()> {
+        let mut flags = ConstantsFlags::all();
+        flags.toggle(ConstantsFlags::SEMVER_FROM_CARGO_PKG);
+
+        let build_info = generate_build_info(flags)?;
+        check_build_info(&build_info);
+        Ok(())
+    }
+
+    #[test]
+    fn build_info_cargo_pkg() -> Result<()> {
+        let mut flags = ConstantsFlags::all();
+        flags.toggle(ConstantsFlags::SEMVER);
+
+        let build_info = generate_build_info(flags)?;
+        check_build_info(&build_info);
+        Ok(())
+    }
+
+    #[test]
+    fn dirty_semver() -> Result<()> {
+        let _ = Command::new("touch").args(&["blah"]).spawn()?;
+        let mut flags = ConstantsFlags::all();
+        flags.toggle(ConstantsFlags::SEMVER_FROM_CARGO_PKG);
+        let build_info = generate_build_info(flags)?;
+
+        if let Some(sha) = build_info.get(&Sha) {
+            assert!(sha.ends_with("-dirty"));
+            let _ = Command::new("rm").args(&["blah"]).spawn();
+            Ok(())
+        } else {
+            let _ = Command::new("rm").args(&["blah"]).spawn();
+            Err("sha is not in build info".into())
+        }
     }
 }
