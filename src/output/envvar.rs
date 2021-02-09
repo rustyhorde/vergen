@@ -22,6 +22,10 @@ use super::Result;
 /// * `cargo:rustc-rerun-if-changed=.git/HEAD`
 /// * `cargo:rustc-rerun-if-changed=<file .git/HEAD points to>`
 ///
+/// # Errors
+/// * rustc may throw errors
+/// * git commands may throw errors
+///
 /// # Example `build.rs`
 ///
 /// ```
@@ -78,8 +82,8 @@ pub fn generate_cargo_keys(flags: ConstantsFlags) -> Result<()> {
 
             // Find out what the full path to the .git dir is.
             let mut actual_git_dir = PathBuf::from(git_path);
-            actual_git_dir.pop();
-            actual_git_dir.pop();
+            let _ = actual_git_dir.pop();
+            let _ = actual_git_dir.pop();
 
             // Determine where HEAD points and echo that path also.
             let mut f = File::open(&git_head_path)?;
