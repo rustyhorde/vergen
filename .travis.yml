@@ -13,14 +13,8 @@ rust:
 os:
   - linux
 
-before_script: |
-  if [[ "$TRAVIS_RUST_VERSION" == stable ]]; then
-    cargo install cargo-tarpaulin
-  fi
+before_script: cargo install cargo-tarpaulin
 
 script: "./scripts/run-tests.sh"
 
-after_success: |
-  if [[ "$TRAVIS_RUST_VERSION" == stable ]]; then
-    cargo tarpaulin --ciserver travis-ci --coveralls $TRAVIS_JOB_ID
-  fi
+after_success: cargo tarpaulin --ciserver travis-ci --coveralls $TRAVIS_JOB_ID
