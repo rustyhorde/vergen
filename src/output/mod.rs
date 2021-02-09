@@ -263,7 +263,6 @@ mod test {
     }
 
     #[test]
-    #[cfg(not(tarpaulin))]
     fn dirty_semver() -> Result<()> {
         let _file = OpenOptions::new()
             .read(true)
@@ -272,15 +271,12 @@ mod test {
             .open("blah")?;
         let mut flags = ConstantsFlags::all();
         flags.toggle(ConstantsFlags::SEMVER_FROM_CARGO_PKG);
-        let build_info = generate_build_info(&flags)?;
+        let mut build_info = generate_build_info(&flags)?;
 
         let _ = Command::new("rm").args(&["blah"]).spawn();
 
-        if let Some(sha) = build_info.get(&Sha) {
-            assert!(sha.ends_with("-dirty"));
-            Ok(())
-        } else {
-            Err("sha is not in build info".into())
-        }
+        let sha = build_info.entry(Sha).or_insert_with(String::new);
+        assert!(sha.ends_with("-dirty"));
+        Ok(())
     }
 }
