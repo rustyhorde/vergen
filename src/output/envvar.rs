@@ -146,20 +146,34 @@ mod test {
     }
 
     #[test]
+    fn gitdir() {
+        let mut buf_stdout = Vec::new();
+        let mut buf_stderr = Vec::new();
+
+        assert!(gen_cargo_keys(
+            &ConstantsFlags::all(),
+            "testdata/gitdir",
+            &mut buf_stdout,
+            &mut buf_stderr,
+        )
+        .is_ok());
+    }
+
+    #[test]
     fn worktree() {
         let mut buf_stdout = Vec::new();
         let mut buf_stderr = Vec::new();
 
         assert!(gen_cargo_keys(
             &ConstantsFlags::all(),
-            "fakeworktree/blahgit",
+            "testdata/blahgit",
             &mut buf_stdout,
             &mut buf_stderr,
         )
         .is_ok());
 
         let stdout = String::from_utf8_lossy(&buf_stdout);
-        assert!(stdout.contains("cargo:rerun-if-changed=fakeworktree/blah/worktrees/vergen-1/HEAD"));
-        assert!(stdout.contains("cargo:rerun-if-changed=fakeworktree/blah/refs/heads/vergen-1"));
+        assert!(stdout.contains("cargo:rerun-if-changed=testdata/blah/worktrees/vergen-1/HEAD"));
+        assert!(stdout.contains("cargo:rerun-if-changed=testdata/blah/refs/heads/vergen-1"));
     }
 }
