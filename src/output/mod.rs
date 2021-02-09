@@ -8,18 +8,14 @@
 
 //! Output types
 use crate::constants::{
-    ConstantsFlags, BRANCH_COMMENT, BRANCH_NAME, BUILD_DATE_COMMENT, BUILD_DATE_NAME,
-    BUILD_TIMESTAMP_COMMENT, BUILD_TIMESTAMP_NAME, COMMIT_DATE_COMMENT, COMMIT_DATE_NAME,
-    HOST_TRIPLE_COMMENT, HOST_TRIPLE_NAME, RUSTC_CHANNEL_COMMENT, RUSTC_CHANNEL_NAME,
-    RUSTC_SEMVER_COMMENT, RUSTC_SEMVER_NAME, SEMVER_COMMENT, SEMVER_NAME, SEMVER_TAGS_COMMENT,
-    SEMVER_TAGS_NAME, SHA_COMMENT, SHA_NAME, SHA_SHORT_COMMENT, SHA_SHORT_NAME,
-    TARGET_TRIPLE_COMMENT, TARGET_TRIPLE_NAME,
+    ConstantsFlags, BRANCH_NAME, BUILD_DATE_NAME, BUILD_TIMESTAMP_NAME, COMMIT_DATE_NAME,
+    HOST_TRIPLE_NAME, RUSTC_CHANNEL_NAME, RUSTC_SEMVER_NAME, SEMVER_NAME, SEMVER_TAGS_NAME,
+    SHA_NAME, SHA_SHORT_NAME, TARGET_TRIPLE_NAME,
 };
 use chrono::Utc;
 use rustc_version::Channel;
 use std::{collections::HashMap, env, process::Command};
 
-pub(crate) mod codegen;
 pub(crate) mod envvar;
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
@@ -173,24 +169,6 @@ pub(crate) enum VergenKey {
 }
 
 impl VergenKey {
-    /// Get the comment string for the given key.
-    pub(crate) fn comment(self) -> &'static str {
-        match self {
-            VergenKey::BuildTimestamp => BUILD_TIMESTAMP_COMMENT,
-            VergenKey::BuildDate => BUILD_DATE_COMMENT,
-            VergenKey::Sha => SHA_COMMENT,
-            VergenKey::ShortSha => SHA_SHORT_COMMENT,
-            VergenKey::CommitDate => COMMIT_DATE_COMMENT,
-            VergenKey::TargetTriple => TARGET_TRIPLE_COMMENT,
-            VergenKey::Semver => SEMVER_COMMENT,
-            VergenKey::SemverLightweight => SEMVER_TAGS_COMMENT,
-            VergenKey::RustcSemver => RUSTC_SEMVER_COMMENT,
-            VergenKey::RustcChannel => RUSTC_CHANNEL_COMMENT,
-            VergenKey::HostTriple => HOST_TRIPLE_COMMENT,
-            VergenKey::Branch => BRANCH_COMMENT,
-        }
-    }
-
     /// Get the name for the given key.
     pub(crate) fn name(self) -> &'static str {
         match self {
