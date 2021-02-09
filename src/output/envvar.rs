@@ -9,10 +9,13 @@
 //! Build time information.
 use crate::constants::ConstantsFlags;
 use crate::output::generate_build_info;
-use std::io::{self, Read};
 use std::{
     fs::{self, File},
     io::Write,
+};
+use std::{
+    io::{self, Read},
+    path::Path,
 };
 use std::{path::PathBuf, process::Command};
 
@@ -32,8 +35,6 @@ use super::Result;
 /// # Example `build.rs`
 ///
 /// ```
-/// extern crate vergen;
-///
 /// use vergen::{ConstantsFlags, generate_cargo_keys};
 ///
 /// fn main() {
@@ -41,11 +42,25 @@ use super::Result;
 /// }
 /// ```
 pub fn generate_cargo_keys(flags: ConstantsFlags) -> Result<()> {
-    gen_cargo_keys(&flags, &mut io::stdout(), &mut io::stderr())
+    let base = super::run_command(Command::new("git").args(&["rev-parse", "--show-toplevel"]));
+    let mut git_dir_or_file = PathBuf::from(base);
+    git_dir_or_file.push(".git");
+    gen_cargo_keys(
+        &flags,
+        git_dir_or_file,
+        &mut io::stdout(),
+        &mut io::stderr(),
+    )
 }
 
-fn gen_cargo_keys<T, E>(flags: &ConstantsFlags, stdout: &mut T, stderr: &mut E) -> Result<()>
+fn gen_cargo_keys<P, T, E>(
+    flags: &ConstantsFlags,
+    git_path: P,
+    stdout: &mut T,
+    stderr: &mut E,
+) -> Result<()>
 where
+    P: AsRef<Path>,
     T: Write,
     E: Write,
 {
@@ -57,14 +72,11 @@ where
         writeln!(stdout, "cargo:rustc-env={}={}", k.name(), v)?;
     }
 
-    let base = super::run_command(Command::new("git").args(&["rev-parse", "--show-toplevel"]));
-    let mut git_dir_or_file = PathBuf::from(base);
-    git_dir_or_file.push(".git");
-
-    if let Ok(metadata) = fs::metadata(&git_dir_or_file) {
+    if let Ok(metadata) = fs::metadata(&git_path) {
         if metadata.is_dir() {
             // Echo the HEAD path
-            let git_head_path = git_dir_or_file.join("HEAD");
+            let git_path = git_path.as_ref().to_path_buf();
+            let git_head_path = git_path.join("HEAD");
             writeln!(stdout, "cargo:rerun-if-changed={}", git_head_path.display())?;
 
             // Determine where HEAD points and echo that path also.
@@ -83,14 +95,14 @@ where
             }
         } else if metadata.is_file() {
             // We are in a worktree, so find out where the actual worktrees/<name>/HEAD file is.
-            let mut git_file = File::open(&git_dir_or_file)?;
+            let mut git_file = File::open(&git_path)?;
             let mut git_contents = String::new();
             let _ = git_file.read_to_string(&mut git_contents)?;
             let dir_vec: Vec<&str> = git_contents.split(": ").collect();
             writeln!(stderr, ".git contents: {}", git_contents)?;
             let git_path = dir_vec[1].trim();
 
-            // Echo the HEAD psth
+            // Echo the HEAD path
             let git_head_path = PathBuf::from(git_path).join("HEAD");
             writeln!(stdout, "cargo:rerun-if-changed={}", git_head_path.display())?;
 
@@ -125,11 +137,29 @@ where
 
 #[cfg(test)]
 mod test {
-    use super::generate_cargo_keys;
+    use super::{gen_cargo_keys, generate_cargo_keys};
     use crate::constants::ConstantsFlags;
 
     #[test]
     fn all_keys() {
         assert!(generate_cargo_keys(ConstantsFlags::all()).is_ok());
+    }
+
+    #[test]
+    fn worktree() {
+        let mut buf_stdout = Vec::new();
+        let mut buf_stderr = Vec::new();
+
+        assert!(gen_cargo_keys(
+            &ConstantsFlags::all(),
+            "fakeworktree/.git",
+            &mut buf_stdout,
+            &mut buf_stderr,
+        )
+        .is_ok());
+
+        let stdout = String::from_utf8_lossy(&buf_stdout);
+        assert!(stdout.contains("cargo:rerun-if-changed=fakeworktree/blah/worktrees/vergen-1/HEAD"));
+        assert!(stdout.contains("cargo:rerun-if-changed=fakeworktree/blah/refs/heads/vergen-1"));
     }
 }
