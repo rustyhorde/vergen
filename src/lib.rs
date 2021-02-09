@@ -38,6 +38,9 @@
 //! If you wish to force `CARGO_PKG_VERSION`, toggle off `SEMVER` and toggle
 //! on `SEMVER_FROM_CARGO_PKG`.
 //!
+//! `VERGEN_SEMVER` will also include a dirty tag if the build happend in a directory with
+//! changes, i.e. `75b390d-dirty`.  This behavior can be toggled off via `TAG_DIRTY`.
+//!
 //! # Re-build On Changed HEAD
 //! `vergen` can also be configured to re-run `build.rs` when either `.git/HEAD` or
 //! the file that `.git/HEAD` points at changes.
@@ -62,25 +65,36 @@
 //!
 //! ### Example 'build.rs'
 //! ```
-//! extern crate vergen;
-//!
-//! use vergen::{ConstantsFlags, generate_cargo_keys};
-//!
-//! fn main() {
+//! # use vergen::{ConstantsFlags, generate_cargo_keys};
+//! #
+//! # fn main() {
 //!     // Setup the flags, toggling off the 'SEMVER_FROM_CARGO_PKG' flag
 //!     let mut flags = ConstantsFlags::all();
 //!     flags.toggle(ConstantsFlags::SEMVER_FROM_CARGO_PKG);
 //!
 //!     // Generate the 'cargo:' key output
 //!     generate_cargo_keys(flags).expect("Unable to generate the cargo keys!");
-//! }
+//! # }
+//! ```
+//! ### Example 'build.rs' with SEMVER from CARGO_PKG_VERSION
+//! ```
+//! # use vergen::{ConstantsFlags, generate_cargo_keys};
+//! #
+//! # fn other() {
+//!     // Setup the flags, toggling off the 'SEMVER' flag to use `CARGO_PKG_VERSION`
+//!     let mut flags = ConstantsFlags::all();
+//!     flags.toggle(ConstantsFlags::SEMVER);
+//!
+//!     // Generate the 'cargo:' key output
+//!     generate_cargo_keys(flags).expect("Unable to generate the cargo keys!");
+//! # }
 //! ```
 //!
 //! ### Use the constants in your code
 //! ```
-//! fn my_fn() {
+//! # fn my_fn() {
 //!     println!("Build Timestamp: {}", env!("VERGEN_BUILD_TIMESTAMP"));
-//! }
+//! # }
 //! ```
 //!
 //! ## **DEPRECATED** - `version.rs` File Build Script Output
