@@ -35,26 +35,26 @@ use super::Result;
 /// # Example `build.rs`
 ///
 /// ```
-/// use vergen::{ConstantsFlags, generate_cargo_keys};
+/// # use vergen::{ConstantsFlags, generate_cargo_keys};
+/// #
+/// # fn main() {
+///     // Setup the flags, toggling off the 'SEMVER_FROM_CARGO_PKG' flag
+///     let mut flags = ConstantsFlags::all();
+///     flags.toggle(ConstantsFlags::SEMVER_FROM_CARGO_PKG);
 ///
-/// fn main() {
-///     generate_cargo_keys(ConstantsFlags::all()).expect("Unable to generate cargo keys!");
-/// }
+///     // Generate the 'cargo:' key output
+///     generate_cargo_keys(flags).expect("Unable to generate the cargo keys!");
+/// # }
 /// ```
 pub fn generate_cargo_keys(flags: ConstantsFlags) -> Result<()> {
     let base = super::run_command(Command::new("git").args(&["rev-parse", "--show-toplevel"]));
     let mut git_dir_or_file = PathBuf::from(base);
     git_dir_or_file.push(".git");
-    gen_cargo_keys(
-        &flags,
-        git_dir_or_file,
-        &mut io::stdout(),
-        &mut io::stderr(),
-    )
+    gen_cargo_keys(flags, git_dir_or_file, &mut io::stdout(), &mut io::stderr())
 }
 
 fn gen_cargo_keys<P, T, E>(
-    flags: &ConstantsFlags,
+    flags: ConstantsFlags,
     git_path: P,
     stdout: &mut T,
     stderr: &mut E,
@@ -100,14 +100,14 @@ where
             let _ = git_file.read_to_string(&mut git_contents)?;
             let dir_vec: Vec<&str> = git_contents.split(": ").collect();
             writeln!(stderr, ".git contents: {}", git_contents)?;
-            let git_path = dir_vec[1].trim();
+            let wt_git_path = dir_vec[1].trim();
 
             // Echo the HEAD path
-            let git_head_path = PathBuf::from(git_path).join("HEAD");
+            let git_head_path = PathBuf::from(wt_git_path).join("HEAD");
             writeln!(stdout, "cargo:rerun-if-changed={}", git_head_path.display())?;
 
             // Find out what the full path to the .git dir is.
-            let mut actual_git_dir = PathBuf::from(git_path);
+            let mut actual_git_dir = PathBuf::from(wt_git_path);
             let _ = actual_git_dir.pop();
             let _ = actual_git_dir.pop();
 
@@ -151,7 +151,7 @@ mod test {
         let mut buf_stderr = Vec::new();
 
         assert!(gen_cargo_keys(
-            &ConstantsFlags::all(),
+            ConstantsFlags::all(),
             "testdata/gitdir",
             &mut buf_stdout,
             &mut buf_stderr,
@@ -168,7 +168,7 @@ mod test {
         let mut buf_stderr = Vec::new();
 
         assert!(gen_cargo_keys(
-            &ConstantsFlags::all(),
+            ConstantsFlags::all(),
             "testdata/gitdir2",
             &mut buf_stdout,
             &mut buf_stderr,
@@ -186,7 +186,7 @@ mod test {
         let mut buf_stderr = Vec::new();
 
         assert!(gen_cargo_keys(
-            &ConstantsFlags::all(),
+            ConstantsFlags::all(),
             "testdata/blahgit",
             &mut buf_stdout,
             &mut buf_stderr,
@@ -204,7 +204,7 @@ mod test {
         let mut buf_stderr = Vec::new();
 
         assert!(gen_cargo_keys(
-            &ConstantsFlags::all(),
+            ConstantsFlags::all(),
             "testdata/blahgit2",
             &mut buf_stdout,
             &mut buf_stderr,
@@ -223,7 +223,7 @@ mod test {
         let mut buf_stderr = Vec::new();
 
         assert!(gen_cargo_keys(
-            &ConstantsFlags::all(),
+            ConstantsFlags::all(),
             "testdata/badgit",
             &mut buf_stdout,
             &mut buf_stderr,
@@ -237,7 +237,7 @@ mod test {
         let mut buf_stderr = Vec::new();
 
         assert!(gen_cargo_keys(
-            &ConstantsFlags::all(),
+            ConstantsFlags::all(),
             "xxxxzzzyyy",
             &mut buf_stdout,
             &mut buf_stderr,
