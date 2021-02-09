@@ -82,14 +82,6 @@
 //!     println!("Build Timestamp: {}", env!("VERGEN_BUILD_TIMESTAMP"));
 //! }
 //! ```
-//!
-//! ## **DEPRECATED** - `version.rs` File Build Script Output
-//! Generate a `version.rs` file in `OUT_DIR` (defined by cargo) with up to 8 build time
-//! constants.  This file can then be used with the `include!` macro to pull the
-//! constants into your source for use.
-//!
-//! See the [`generate_version_rs`](crate::output::codegen::generate_version_rs) documentation
-//! if you wish to use this method.
 #![deny(
     absolute_paths_not_starting_with_crate,
     anonymous_parameters,
@@ -203,6 +195,4 @@ mod constants;
 mod output;
 
 pub use crate::constants::ConstantsFlags;
-#[allow(deprecated)]
-pub use crate::output::codegen::generate_version_rs;
 pub use crate::output::envvar::generate_cargo_keys;

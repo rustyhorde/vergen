@@ -17,9 +17,5 @@ bitflags = "1"
 chrono = "0"
 rustc_version = "0"
 
-[dev-dependencies]
-lazy_static = "1"
-regex = "1"
-
 [build-dependencies]
 chrono = "0"
