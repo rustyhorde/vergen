@@ -9,6 +9,7 @@
 //! Output types
 use crate::constants::*;
 use chrono::Utc;
+use rustc_version::Channel;
 use std::collections::HashMap;
 use std::env;
 use std::process::Command;
@@ -82,6 +83,29 @@ pub fn generate_build_info(flags: ConstantsFlags) -> Result<HashMap<VergenKey, S
         build_info.insert(VergenKey::SemverLightweight, semver);
     }
 
+    if flags.intersects(ConstantsFlags::RUSTC_SEMVER | ConstantsFlags::RUSTC_CHANNEL | ConstantsFlags::HOST_TRIPLE) {
+    let rustc = rustc_version::version_meta().unwrap();
+
+        if flags.contains(ConstantsFlags::RUSTC_SEMVER) {
+            build_info.insert(VergenKey::RustcSemver, format!("{}", rustc.semver));
+        }
+
+        if flags.contains(ConstantsFlags::RUSTC_CHANNEL) {
+            let channel = match rustc.channel {
+                Channel::Dev => "dev",
+                Channel::Nightly => "nightly",
+                Channel::Beta => "beta",
+                Channel::Stable => "stable",
+            }.to_string();
+
+            build_info.insert(VergenKey::RustcChannel, channel);
+        }
+
+        if flags.contains(ConstantsFlags::HOST_TRIPLE) {
+            build_info.insert(VergenKey::HostTriple, rustc.host);
+        }
+    }
+
     Ok(build_info)
 }
 
@@ -114,6 +138,12 @@ pub enum VergenKey {
     /// The semver version from the last git tag, including lightweight.
     /// (VERGEN_SEMVER_LIGHTWEIGHT)
     SemverLightweight,
+    /// The version information of the rust compiler. (VERGEN_RUSTC_SEMVER)
+    RustcSemver,
+    /// The release channel of the rust compiler. (VERGEN_RUSTC_CHANNEL)
+    RustcChannel,
+    /// The host triple. (VERGEN_HOST_TRIPLE)
+    HostTriple,
 }
 
 impl VergenKey {
@@ -128,6 +158,9 @@ impl VergenKey {
             VergenKey::TargetTriple => TARGET_TRIPLE_COMMENT,
             VergenKey::Semver => SEMVER_COMMENT,
             VergenKey::SemverLightweight => SEMVER_TAGS_COMMENT,
+            VergenKey::RustcSemver => RUSTC_SEMVER_COMMENT,
+            VergenKey::RustcChannel => RUSTC_CHANNEL_COMMENT,
+            VergenKey::HostTriple => HOST_TRIPLE_COMMENT,
         }
     }
 
@@ -142,6 +175,9 @@ impl VergenKey {
             VergenKey::TargetTriple => TARGET_TRIPLE_NAME,
             VergenKey::Semver => SEMVER_NAME,
             VergenKey::SemverLightweight => SEMVER_TAGS_NAME,
+            VergenKey::RustcSemver => RUSTC_SEMVER_NAME,
+            VergenKey::RustcChannel => RUSTC_CHANNEL_NAME,
+            VergenKey::HostTriple => HOST_TRIPLE_NAME,
         }
     }
 }
