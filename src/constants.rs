@@ -101,7 +101,7 @@ bitflags!(
         /// Generate the branch name constant.
         ///
         /// `master`
-        const BRANCH = 0b0100_0000_0000;
+        const BRANCH                 = 0b0010_0000_0000_0000;
     }
 );
 
@@ -160,7 +160,7 @@ mod test {
         assert_eq!(ConstantsFlags::RUSTC_SEMVER.bits(), 0b0100_0000_0000);
         assert_eq!(ConstantsFlags::RUSTC_CHANNEL.bits(), 0b1000_0000_0000);
         assert_eq!(ConstantsFlags::HOST_TRIPLE.bits(), 0b0001_0000_0000_0000);
-        assert_eq!(ConstantsFlags::BRANCH.bits(), 0b0100_0000_0000);
+        assert_eq!(ConstantsFlags::BRANCH.bits(), 0b0010_0000_0000_0000);
     }
 
     #[test]
