@@ -141,7 +141,7 @@ mod test {
     use crate::constants::ConstantsFlags;
 
     #[test]
-    fn all_keys() {
+    fn pub_api() {
         assert!(generate_cargo_keys(ConstantsFlags::all()).is_ok());
     }
 
@@ -158,10 +158,26 @@ mod test {
         )
         .is_ok());
         let stdout = String::from_utf8_lossy(&buf_stdout);
-        use std::io::Write;
-        let _ = writeln!(std::io::stdout(), "{}", stdout);
         assert!(stdout.contains("cargo:rerun-if-changed=testdata/gitdir/HEAD"));
         assert!(stdout.contains("cargo:rerun-if-changed=testdata/gitdir/kcov"));
+    }
+
+    #[test]
+    fn detached_gitdir() {
+        let mut buf_stdout = Vec::new();
+        let mut buf_stderr = Vec::new();
+
+        assert!(gen_cargo_keys(
+            &ConstantsFlags::all(),
+            "testdata/gitdir2",
+            &mut buf_stdout,
+            &mut buf_stderr,
+        )
+        .is_ok());
+        let stdout = String::from_utf8_lossy(&buf_stdout);
+        let stderr = String::from_utf8_lossy(&buf_stderr);
+        assert!(stdout.contains("cargo:rerun-if-changed=testdata/gitdir2/HEAD"));
+        assert!(stderr.contains("You are most likely in a detached HEAD state"));
     }
 
     #[test]
@@ -196,7 +212,9 @@ mod test {
         .is_ok());
 
         let stdout = String::from_utf8_lossy(&buf_stdout);
+        let stderr = String::from_utf8_lossy(&buf_stderr);
         assert!(stdout.contains("cargo:rerun-if-changed=testdata/blah2/worktrees/vergen-1/HEAD"));
+        assert!(stderr.contains("You are most likely in a detached HEAD state"));
     }
 
     #[test]
