@@ -25,7 +25,7 @@ pub(crate) mod envvar;
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
-pub(crate) fn generate_build_info(flags: ConstantsFlags) -> Result<HashMap<VergenKey, String>> {
+pub(crate) fn generate_build_info(flags: &ConstantsFlags) -> Result<HashMap<VergenKey, String>> {
     let mut build_info = HashMap::new();
     let now = Utc::now();
 
@@ -248,7 +248,7 @@ mod test {
         let mut flags = ConstantsFlags::all();
         flags.toggle(ConstantsFlags::SEMVER_FROM_CARGO_PKG);
 
-        let build_info = generate_build_info(flags)?;
+        let build_info = generate_build_info(&flags)?;
         check_build_info(&build_info);
         Ok(())
     }
@@ -258,7 +258,7 @@ mod test {
         let mut flags = ConstantsFlags::all();
         flags.toggle(ConstantsFlags::SEMVER);
 
-        let build_info = generate_build_info(flags)?;
+        let build_info = generate_build_info(&flags)?;
         check_build_info(&build_info);
         Ok(())
     }
@@ -272,7 +272,7 @@ mod test {
             .open("blah")?;
         let mut flags = ConstantsFlags::all();
         flags.toggle(ConstantsFlags::SEMVER_FROM_CARGO_PKG);
-        let build_info = generate_build_info(flags)?;
+        let build_info = generate_build_info(&flags)?;
 
         let _ = Command::new("rm").args(&["blah"]).spawn();
 

@@ -9,8 +9,11 @@
 //! Build time information.
 use crate::constants::ConstantsFlags;
 use crate::output::generate_build_info;
-use std::fs::{self, File};
-use std::io::Read;
+use std::io::{self, Read};
+use std::{
+    fs::{self, File},
+    io::Write,
+};
 use std::{path::PathBuf, process::Command};
 
 use super::Result;
@@ -38,12 +41,20 @@ use super::Result;
 /// }
 /// ```
 pub fn generate_cargo_keys(flags: ConstantsFlags) -> Result<()> {
+    gen_cargo_keys(&flags, &mut io::stdout(), &mut io::stderr())
+}
+
+fn gen_cargo_keys<T, E>(flags: &ConstantsFlags, stdout: &mut T, stderr: &mut E) -> Result<()>
+where
+    T: Write,
+    E: Write,
+{
     // Generate the build info map.
     let build_info = generate_build_info(flags)?;
 
     // Generate the 'cargo:' key output
     for (k, v) in build_info {
-        println!("cargo:rustc-env={}={}", k.name(), v);
+        writeln!(stdout, "cargo:rustc-env={}={}", k.name(), v)?;
     }
 
     let base = super::run_command(Command::new("git").args(&["rev-parse", "--show-toplevel"]));
@@ -54,21 +65,21 @@ pub fn generate_cargo_keys(flags: ConstantsFlags) -> Result<()> {
         if metadata.is_dir() {
             // Echo the HEAD path
             let git_head_path = git_dir_or_file.join("HEAD");
-            println!("cargo:rerun-if-changed={}", git_head_path.display());
+            writeln!(stdout, "cargo:rerun-if-changed={}", git_head_path.display())?;
 
             // Determine where HEAD points and echo that path also.
             let mut f = File::open(&git_head_path)?;
             let mut git_head_contents = String::new();
             let _ = f.read_to_string(&mut git_head_contents)?;
-            eprintln!("HEAD contents: {}", git_head_contents);
+            writeln!(stderr, "HEAD contents: {}", git_head_contents)?;
             let ref_vec: Vec<&str> = git_head_contents.split(": ").collect();
 
             if ref_vec.len() == 2 {
                 let current_head_file = ref_vec[1].trim();
                 let git_refs_path = PathBuf::from(".git").join(current_head_file);
-                println!("cargo:rerun-if-changed={}", git_refs_path.display());
+                writeln!(stdout, "cargo:rerun-if-changed={}", git_refs_path.display())?;
             } else {
-                eprintln!("You are most likely in a detached HEAD state");
+                writeln!(stderr, "You are most likely in a detached HEAD state")?;
             }
         } else if metadata.is_file() {
             // We are in a worktree, so find out where the actual worktrees/<name>/HEAD file is.
@@ -76,12 +87,12 @@ pub fn generate_cargo_keys(flags: ConstantsFlags) -> Result<()> {
             let mut git_contents = String::new();
             let _ = git_file.read_to_string(&mut git_contents)?;
             let dir_vec: Vec<&str> = git_contents.split(": ").collect();
-            eprintln!(".git contents: {}", git_contents);
+            writeln!(stderr, ".git contents: {}", git_contents)?;
             let git_path = dir_vec[1].trim();
 
             // Echo the HEAD psth
             let git_head_path = PathBuf::from(git_path).join("HEAD");
-            println!("cargo:rerun-if-changed={}", git_head_path.display());
+            writeln!(stdout, "cargo:rerun-if-changed={}", git_head_path.display())?;
 
             // Find out what the full path to the .git dir is.
             let mut actual_git_dir = PathBuf::from(git_path);
@@ -92,22 +103,33 @@ pub fn generate_cargo_keys(flags: ConstantsFlags) -> Result<()> {
             let mut f = File::open(&git_head_path)?;
             let mut git_head_contents = String::new();
             let _ = f.read_to_string(&mut git_head_contents)?;
-            eprintln!("HEAD contents: {}", git_head_contents);
+            writeln!(stderr, "HEAD contents: {}", git_head_contents)?;
             let ref_vec: Vec<&str> = git_head_contents.split(": ").collect();
 
             if ref_vec.len() == 2 {
                 let current_head_file = ref_vec[1].trim();
                 let git_refs_path = actual_git_dir.join(current_head_file);
-                println!("cargo:rerun-if-changed={}", git_refs_path.display());
+                writeln!(stdout, "cargo:rerun-if-changed={}", git_refs_path.display())?;
             } else {
-                eprintln!("You are most likely in a detached HEAD state");
+                writeln!(stderr, "You are most likely in a detached HEAD state")?;
             }
         } else {
             return Err("Invalid .git format (Not a directory or a file)".into());
         };
     } else {
-        eprintln!("Unable to generate 'cargo:rerun-if-changed'");
+        writeln!(stderr, "Unable to generate 'cargo:rerun-if-changed'")?;
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod test {
+    use super::generate_cargo_keys;
+    use crate::constants::ConstantsFlags;
+
+    #[test]
+    fn all_keys() {
+        assert!(generate_cargo_keys(ConstantsFlags::all()).is_ok());
+    }
 }
