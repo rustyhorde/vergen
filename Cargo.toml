@@ -1,6 +1,6 @@
 [package]
 authors = ["Jason Ozias <jason.g.ozias@gmail.com>"]
-categories = ["build"]
+categories = ["development-tools", "development-tools::build-utils"]
 description = "Generate version related functions"
 documentation = "http://docs.rs/vergen"
 edition = "2018"
