@@ -154,7 +154,7 @@ mod test {
 
         assert!(gen_cargo_keys(
             &ConstantsFlags::all(),
-            "fakeworktree/.git",
+            "fakeworktree/blahgit",
             &mut buf_stdout,
             &mut buf_stderr,
         )
