@@ -14,7 +14,12 @@ use crate::constants::{
 };
 use chrono::Utc;
 use rustc_version::Channel;
-use std::{collections::HashMap, env, process::Command};
+use std::{
+    collections::HashMap,
+    env,
+    io::{Read, Write},
+    process::{Command, Stdio},
+};
 
 pub(crate) mod envvar;
 
@@ -34,13 +39,13 @@ pub(crate) fn generate_build_info(flags: ConstantsFlags) -> Result<HashMap<Verge
 
     if flags.contains(ConstantsFlags::SHA) {
         let mut sha = run_command(Command::new("git").args(&["rev-parse", "HEAD"]));
-        tag_dirty(&mut sha, &flags);
+        let _ = tag_dirty(&mut sha, &flags);
         let _ = build_info.insert(VergenKey::Sha, sha);
     }
 
     if flags.contains(ConstantsFlags::SHA_SHORT) {
         let mut sha = run_command(Command::new("git").args(&["rev-parse", "--short", "HEAD"]));
-        tag_dirty(&mut sha, &flags);
+        let _ = tag_dirty(&mut sha, &flags);
         let _ = build_info.insert(VergenKey::ShortSha, sha);
     }
 
@@ -120,13 +125,31 @@ pub(crate) fn generate_build_info(flags: ConstantsFlags) -> Result<HashMap<Verge
     Ok(build_info)
 }
 
-fn tag_dirty(sha: &mut String, flags: &ConstantsFlags) {
+fn tag_dirty(sha: &mut String, flags: &ConstantsFlags) -> Result<()> {
     if flags.contains(ConstantsFlags::TAG_DIRTY) {
-        let diff = run_command(Command::new("git").args(&["diff"]));
-        if !diff.is_empty() {
+        let status_proc = Command::new("git")
+            .args(&["status"])
+            .stdout(Stdio::piped())
+            .spawn()?;
+        let mut buf = String::new();
+        let _ = status_proc.stdout.unwrap().read_to_string(&mut buf)?;
+
+        let grep = Command::new("grep")
+            .args(&["Changes not staged\\|Untracked"])
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .spawn()?;
+        grep.stdin.unwrap().write_all(buf.as_bytes())?;
+        let mut buf2 = String::new();
+        let _ = grep.stdout.unwrap().read_to_string(&mut buf2)?;
+
+        eprintln!("BLAH: {}", buf2);
+        if !buf2.is_empty() {
             sha.push_str("-dirty");
         }
     }
+
+    Ok(())
 }
 
 pub(crate) fn run_command(command: &mut Command) -> String {
@@ -198,7 +221,7 @@ mod test {
         },
     };
     use crate::constants::ConstantsFlags;
-    use std::{collections::HashMap, process::Command};
+    use std::{collections::HashMap, fs::OpenOptions, process::Command};
 
     fn check_build_info(build_info: &HashMap<VergenKey, String>) {
         assert!(build_info.get(&Branch).is_some());
@@ -242,17 +265,21 @@ mod test {
 
     #[test]
     fn dirty_semver() -> Result<()> {
-        let _ = Command::new("touch").args(&["blah"]).spawn()?;
+        let _file = OpenOptions::new()
+            .read(true)
+            .write(true)
+            .create(true)
+            .open("blah")?;
         let mut flags = ConstantsFlags::all();
         flags.toggle(ConstantsFlags::SEMVER_FROM_CARGO_PKG);
         let build_info = generate_build_info(flags)?;
 
+        let _ = Command::new("rm").args(&["blah"]).spawn();
+
         if let Some(sha) = build_info.get(&Sha) {
             assert!(sha.ends_with("-dirty"));
-            let _ = Command::new("rm").args(&["blah"]).spawn();
             Ok(())
         } else {
-            let _ = Command::new("rm").args(&["blah"]).spawn();
             Err("sha is not in build info".into())
         }
     }
