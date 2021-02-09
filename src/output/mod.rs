@@ -213,4 +213,12 @@ impl VergenKey {
 }
 
 #[cfg(test)]
-mod test {}
+mod test {
+    use super::run_command;
+    use std::process::Command;
+
+    #[test]
+    fn bad_command_generates_unknown() {
+        assert_eq!(run_command(&mut Command::new("zzzyyyxxx")), "UNKNOWN");
+    }
+}
