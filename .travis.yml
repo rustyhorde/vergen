@@ -27,7 +27,7 @@ install:
 
   # Install kcov.
   - mkdir -p ~/.cargo/bin
-  - sh src/install_kcov.sh
+  - sh scripts/install_kcov.sh
   - export PATH=$HOME/.local/bin:$HOME/.cargo/bin:$HOME/Library/Python/2.7/bin:$PATH
   - export RUSTFLAGS="-C link-dead-code"
   - kcov --version
