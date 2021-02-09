@@ -1,5 +1,7 @@
 #!/bin/bash
 set -ev
+ls -al
+pwd
 
 if [ "${TRAVIS_RUST_VERSION}" = "stable" ]; then
     cargo build

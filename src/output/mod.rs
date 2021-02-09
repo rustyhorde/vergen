@@ -143,7 +143,6 @@ fn tag_dirty(sha: &mut String, flags: &ConstantsFlags) -> Result<()> {
         let mut buf2 = String::new();
         let _ = grep.stdout.unwrap().read_to_string(&mut buf2)?;
 
-        eprintln!("BLAH: {}", buf2);
         if !buf2.is_empty() {
             sha.push_str("-dirty");
         }
