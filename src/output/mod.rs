@@ -190,11 +190,18 @@ impl VergenKey {
 
 #[cfg(test)]
 mod test {
-    use super::run_command;
+    use super::{generate_build_info, run_command};
+    use crate::constants::ConstantsFlags;
     use std::process::Command;
 
     #[test]
     fn bad_command_generates_unknown() {
         assert_eq!(run_command(&mut Command::new("zzzyyyxxx")), "UNKNOWN");
+    }
+
+    #[test]
+    fn build_info_all() {
+        let blah = generate_build_info(ConstantsFlags::all());
+        assert!(blah.is_ok());
     }
 }
