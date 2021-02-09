@@ -8,10 +8,6 @@ rust:
 os:
 - linux
 
-matrix:
-  allow_failures:
-  - rust: stable
-
 addons:
   apt:
     packages:
@@ -36,10 +32,6 @@ after_success: |
   make install DESTDIR=../../kcov-build &&
   cd ../.. &&
   rm -rf kcov-master &&
-  for file in target/debug/vergen-*[^\.d]; do mkdir -p "target/cov/$(basename $file)"; ./kcov-build/usr/local/bin/kcov --exclude-pattern=/.cargo,/usr/lib --verify "target/cov/$(basename $file)" "$file"; done &&
+  for file in target/debug/build/vergen-*[^\.d]; do mkdir -p "target/cov/$(basename $file)"; ./kcov-build/usr/local/bin/kcov --exclude-pattern=/.cargo,/usr/lib --verify "target/cov/$(basename $file)" "$file"; done &&
   bash <(curl -s https://codecov.io/bash) &&
   echo "Uploaded code coverage"
-
-notifications:
-  slack:
-    secure: YvvzRPEQN2VzjYR+7MpqH+cZ23vqzMV0U3Py59O5LbaVNWtmveWXWlthmy8CFUhv0MboWY3CjdiMhCEFAsW0xB4kBlldK0FekJNurVpfmsjqfNW7ekTwQzDOQT+XLpjE4Q/zDQmjzUhZ8JYjsKUgsxTZ9xeOHKjp2Ae472pbEAwzPYjIwNACD7EpJBapuTU/sfgSa+gR3BDeKwQMytyjXNEFyob+9ijWjLYjTH5fIvcvOyYFU1D6g6fhn+LBP0IGfCdDEhx3w1dzCCs4xRmfYzE3UU3+pd3oJEE0HNFiixh0x1b3TqTbE11p1JIaJk0ylZPcVA2idp+1xeSgtPnM4bSXxcvwa8XuEt+v3AkiIY+GygTG93KHwYuqPTRF0PkUaJIj0R4rRfAm3oxTdiNW/ru7a1YDRimMjKONnf0HoxzFgYbskJOwrfMSsSbv8QB1wD302Ca4hoKHzp0IFxld9VtoQAkTtx1yGHq2t5DGUDsQGHDkygtY2jJklYK8lGSXKN9/6jrQUHo2ArdiyhcFZXLWM6SyTMvtdNd9CKv0sXg2sGOT5UgJK7NSW97Q1pDmtHAfoCK+Q9zHbbg4VhbezrXVMR9nE7VzlNUnj8927zyQWKJVyMqIaLuQGs5VMbmfYtD0bzL7/yrKEEwmjIYydjk/opkiQ27rTnko5WbwqrY=
