@@ -263,6 +263,7 @@ mod test {
     }
 
     #[test]
+    #[cfg(not(tarpaulin))]
     fn dirty_semver() -> Result<()> {
         let _file = OpenOptions::new()
             .read(true)
