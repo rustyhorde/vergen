@@ -72,11 +72,11 @@ where
         writeln!(stdout, "cargo:rustc-env={}={}", k.name(), v)?;
     }
 
-    if let Ok(metadata) = fs::metadata(&git_path) {
+    if let Ok(metadata) = fs::symlink_metadata(&git_path) {
         if metadata.is_dir() {
             // Echo the HEAD path
-            let git_path = git_path.as_ref().to_path_buf();
-            let git_head_path = git_path.join("HEAD");
+            let gp = git_path.as_ref().to_path_buf();
+            let git_head_path = gp.join("HEAD");
             writeln!(stdout, "cargo:rerun-if-changed={}", git_head_path.display())?;
 
             // Determine where HEAD points and echo that path also.
@@ -88,7 +88,7 @@ where
 
             if ref_vec.len() == 2 {
                 let current_head_file = ref_vec[1].trim();
-                let git_refs_path = PathBuf::from(".git").join(current_head_file);
+                let git_refs_path = gp.join(current_head_file);
                 writeln!(stdout, "cargo:rerun-if-changed={}", git_refs_path.display())?;
             } else {
                 writeln!(stderr, "You are most likely in a detached HEAD state")?;
@@ -157,6 +157,11 @@ mod test {
             &mut buf_stderr,
         )
         .is_ok());
+        let stdout = String::from_utf8_lossy(&buf_stdout);
+        use std::io::Write;
+        let _ = writeln!(std::io::stdout(), "{}", stdout);
+        assert!(stdout.contains("cargo:rerun-if-changed=testdata/gitdir/HEAD"));
+        assert!(stdout.contains("cargo:rerun-if-changed=testdata/gitdir/kcov"));
     }
 
     #[test]
@@ -175,5 +180,36 @@ mod test {
         let stdout = String::from_utf8_lossy(&buf_stdout);
         assert!(stdout.contains("cargo:rerun-if-changed=testdata/blah/worktrees/vergen-1/HEAD"));
         assert!(stdout.contains("cargo:rerun-if-changed=testdata/blah/refs/heads/vergen-1"));
+    }
+
+    #[test]
+    fn detached_worktree() {
+        let mut buf_stdout = Vec::new();
+        let mut buf_stderr = Vec::new();
+
+        assert!(gen_cargo_keys(
+            &ConstantsFlags::all(),
+            "testdata/blahgit2",
+            &mut buf_stdout,
+            &mut buf_stderr,
+        )
+        .is_ok());
+
+        let stdout = String::from_utf8_lossy(&buf_stdout);
+        assert!(stdout.contains("cargo:rerun-if-changed=testdata/blah2/worktrees/vergen-1/HEAD"));
+    }
+
+    #[test]
+    fn error_on_symlink() {
+        let mut buf_stdout = Vec::new();
+        let mut buf_stderr = Vec::new();
+
+        assert!(gen_cargo_keys(
+            &ConstantsFlags::all(),
+            "testdata/badgit",
+            &mut buf_stdout,
+            &mut buf_stderr,
+        )
+        .is_err());
     }
 }
