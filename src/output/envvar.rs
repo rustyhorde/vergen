@@ -139,6 +139,7 @@ where
 mod test {
     use super::{gen_cargo_keys, generate_cargo_keys};
     use crate::constants::ConstantsFlags;
+    use std::path::PathBuf;
 
     #[test]
     fn pub_api() {
@@ -150,16 +151,25 @@ mod test {
         let mut buf_stdout = Vec::new();
         let mut buf_stderr = Vec::new();
 
+        let mut git_path = PathBuf::from("testdata");
+        git_path.push("gitdir");
+
         assert!(gen_cargo_keys(
             ConstantsFlags::all(),
-            "testdata/gitdir",
+            git_path,
             &mut buf_stdout,
             &mut buf_stderr,
         )
         .is_ok());
         let stdout = String::from_utf8_lossy(&buf_stdout);
+        #[cfg(target_family = "unix")]
         assert!(stdout.contains("cargo:rerun-if-changed=testdata/gitdir/HEAD"));
+        #[cfg(target_family = "windows")]
+        assert!(stdout.contains(r"cargo:rerun-if-changed=testdata\gitdir\HEAD"));
+        #[cfg(target_family = "unix")]
         assert!(stdout.contains("cargo:rerun-if-changed=testdata/gitdir/kcov"));
+        #[cfg(target_family = "windows")]
+        assert!(stdout.contains(r"cargo:rerun-if-changed=testdata\gitdir\kcov"));
     }
 
     #[test]
@@ -167,16 +177,22 @@ mod test {
         let mut buf_stdout = Vec::new();
         let mut buf_stderr = Vec::new();
 
+        let mut git_path = PathBuf::from("testdata");
+        git_path.push("gitdir2");
+
         assert!(gen_cargo_keys(
             ConstantsFlags::all(),
-            "testdata/gitdir2",
+            git_path,
             &mut buf_stdout,
             &mut buf_stderr,
         )
         .is_ok());
         let stdout = String::from_utf8_lossy(&buf_stdout);
         let stderr = String::from_utf8_lossy(&buf_stderr);
+        #[cfg(target_family = "unix")]
         assert!(stdout.contains("cargo:rerun-if-changed=testdata/gitdir2/HEAD"));
+        #[cfg(target_family = "windows")]
+        assert!(stdout.contains(r"cargo:rerun-if-changed=testdata\gitdir2\HEAD"));
         assert!(stderr.contains("You are most likely in a detached HEAD state"));
     }
 
@@ -185,17 +201,26 @@ mod test {
         let mut buf_stdout = Vec::new();
         let mut buf_stderr = Vec::new();
 
+        let mut git_path = PathBuf::from("testdata");
+        git_path.push("blahgit");
+
         assert!(gen_cargo_keys(
             ConstantsFlags::all(),
-            "testdata/blahgit",
+            git_path,
             &mut buf_stdout,
             &mut buf_stderr,
         )
         .is_ok());
 
         let stdout = String::from_utf8_lossy(&buf_stdout);
+        #[cfg(target_family = "unix")]
         assert!(stdout.contains("cargo:rerun-if-changed=testdata/blah/worktrees/vergen-1/HEAD"));
+        #[cfg(target_family = "windows")]
+        assert!(stdout.contains(r"cargo:rerun-if-changed=testdata/blah/worktrees/vergen-1\HEAD"));
+        #[cfg(target_family = "unix")]
         assert!(stdout.contains("cargo:rerun-if-changed=testdata/blah/refs/heads/vergen-1"));
+        #[cfg(target_family = "windows")]
+        assert!(stdout.contains(r"cargo:rerun-if-changed=testdata/blah\refs/heads/vergen-1"));
     }
 
     #[test]
@@ -203,9 +228,12 @@ mod test {
         let mut buf_stdout = Vec::new();
         let mut buf_stderr = Vec::new();
 
+        let mut git_path = PathBuf::from("testdata");
+        git_path.push("blahgit2");
+
         assert!(gen_cargo_keys(
             ConstantsFlags::all(),
-            "testdata/blahgit2",
+            git_path,
             &mut buf_stdout,
             &mut buf_stderr,
         )
@@ -213,18 +241,26 @@ mod test {
 
         let stdout = String::from_utf8_lossy(&buf_stdout);
         let stderr = String::from_utf8_lossy(&buf_stderr);
+        println!("STDOUT: {}", stdout);
+        #[cfg(target_family = "unix")]
         assert!(stdout.contains("cargo:rerun-if-changed=testdata/blah2/worktrees/vergen-1/HEAD"));
+        #[cfg(target_family = "windows")]
+        assert!(stdout.contains(r"cargo:rerun-if-changed=testdata/blah2/worktrees/vergen-1\HEAD"));
         assert!(stderr.contains("You are most likely in a detached HEAD state"));
     }
 
     #[test]
+    #[cfg(target_family = "unix")]
     fn error_on_symlink() {
         let mut buf_stdout = Vec::new();
         let mut buf_stderr = Vec::new();
 
+        let mut git_path = PathBuf::from("testdata");
+        git_path.push("badgit");
+
         assert!(gen_cargo_keys(
             ConstantsFlags::all(),
-            "testdata/badgit",
+            git_path,
             &mut buf_stdout,
             &mut buf_stderr,
         )
