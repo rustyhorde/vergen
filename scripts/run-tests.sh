@@ -1,6 +1,8 @@
 #!/bin/bash
 set -ev
 
+cargo clean
+
 if [ "${TRAVIS_RUST_VERSION}" = "stable" ]; then
     cargo build
     cargo test
