@@ -19,7 +19,3 @@ rustc_version = "0"
 
 [build-dependencies]
 chrono = "0"
-
-[features]
-beta = []
-nightly = []

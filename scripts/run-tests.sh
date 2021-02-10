@@ -5,11 +5,11 @@ cargo clean
 
 if [ "${TRAVIS_RUST_VERSION}" = "stable" ]; then
     cargo build
-    cargo test  --all-features
+    cargo test
 elif [ "${TRAVIS_RUST_VERSION}" = "beta" ]; then
-    cargo build --features beta
+    cargo build
     cargo test
 else
-    cargo build --features nightly
+    cargo build
     cargo test
 fi
