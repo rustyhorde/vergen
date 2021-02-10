@@ -1,6 +1,6 @@
 stages:
   - nightly
-  # - stable
+  - stable
   - build
 
 variables:
@@ -9,7 +9,6 @@ variables:
 
 before_script:
   - apt-get update -yq
-  # - apt-get install -o dir::cache::archives="$APT_CACHE_DIR" -y {{ DEPENDENCIES }}
 
 nightly:
   image: 'rustlang/rust:nightly'
@@ -19,14 +18,13 @@ nightly:
     - cargo --version
     - cargo test --verbose
 
-# TODO: Uncomment this when editions hit stable
-# stable:
-#   image: 'rust:latest'
-#   stage: stable
-#   script:
-#     - rustc --version
-#     - cargo --version
-#     - cargo test --verbose --features serde
+stable:
+  image: 'rust:latest'
+  stage: stable
+  script:
+    - rustc --version
+    - cargo --version
+    - cargo test --verbose
 
 cache:
   paths:
