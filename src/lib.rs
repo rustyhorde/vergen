@@ -150,7 +150,6 @@
     non_snake_case,
     non_upper_case_globals,
     nontrivial_structural_match,
-    overlapping_range_endpoints,
     path_statements,
     pointer_structural_match,
     // private_doc_tests,
@@ -203,6 +202,8 @@
     where_clauses_object_safety,
     while_true,
 )]
+#![cfg(any(feature = "nightly", feature = "beta"))]
+#![deny(overlapping_range_endpoints)]
 #![allow(clippy::clippy::multiple_crate_versions)]
 
 mod constants;
