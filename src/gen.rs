@@ -8,10 +8,10 @@
 
 //! `vergen` cargo flag generation
 
-use crate::{config::Config, constants::ConstantsFlags, error::Result, output::VergenKey};
-#[cfg(feature = "git")]
-use git2::Repository;
+use crate::{config::Config, constants::ConstantsFlags, error::Result};
 use std::io::{self, Write};
+#[cfg(feature = "git")]
+use {crate::output::VergenKey, git2::Repository};
 
 /// Some Docs
 ///
