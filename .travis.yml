@@ -15,6 +15,7 @@ os:
 
 before_script:
   - cd testdata/notagsrepo && git checkout master && cd ../..
+  - cd testdata/tagsrepo && git checkout master && cd ../..
   - cargo install cargo-tarpaulin
   - if [ "$TRAVIS_RUST_VERSION" = 'stable' ]; then rustup component add rustfmt; fi
   - if [ "$TRAVIS_RUST_VERSION" = 'beta' ]; then rustup component add rustfmt; fi

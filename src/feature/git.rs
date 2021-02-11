@@ -185,6 +185,15 @@ mod test {
         check_git_keys(config.cfg_map());
         Ok(())
     }
+
+    #[test]
+    fn git_describe_works() -> Result<()> {
+        let repo = Repository::discover("testdata/tagsrepo")?;
+        let mut config = Config::default();
+        add_git_config(ConstantsFlags::all(), &repo, &mut config)?;
+        check_git_keys(config.cfg_map());
+        Ok(())
+    }
 }
 
 #[cfg(all(test, not(feature = "git")))]
