@@ -1,0 +1,3 @@
+[submodule "testdata/notagsrepo"]
+	path = testdata/notagsrepo
+	url = jozias@jasonozias.com:repos/notagsrepo.git

@@ -208,7 +208,7 @@ where
 
 #[cfg(all(test, feature = "git"))]
 mod test {
-    use super::{add_git_config, gen};
+    use super::{add_git_config, gen, gen_cargo_instructions};
     use crate::{config::Config, constants::ConstantsFlags, error::Result, output::VergenKey};
     use git2::Repository;
     use std::collections::HashMap;
@@ -244,6 +244,20 @@ mod test {
     #[test]
     fn gen_works() -> Result<()> {
         assert!(gen(ConstantsFlags::all()).is_ok());
+        Ok(())
+    }
+
+    #[test]
+    fn describe_falls_back() -> Result<()> {
+        use std::io;
+        let repo = Repository::open("testdata/notagsrepo")?;
+        assert!(gen_cargo_instructions(
+            ConstantsFlags::all(),
+            &repo,
+            &mut io::stdout(),
+            &mut io::stderr(),
+        )
+        .is_ok());
         Ok(())
     }
 }
