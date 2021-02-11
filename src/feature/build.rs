@@ -99,7 +99,7 @@ mod test {
     #[test]
     fn add_build_config_works() -> Result<()> {
         let mut config = Config::default();
-        add_build_config(ConstantsFlags::all(), &mut config)?;
+        add_build_config(ConstantsFlags::all(), &mut config);
         check_build_keys(config.cfg_map());
         Ok(())
     }

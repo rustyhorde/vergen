@@ -28,7 +28,7 @@ impl Config {
     pub(crate) fn build(flags: ConstantsFlags) -> Result<Config> {
         let mut config = Config::default();
 
-        add_build_config(flags, &mut config)?;
+        add_build_config(flags, &mut config);
         add_rustc_config(flags, &mut config)?;
 
         Ok(config)
