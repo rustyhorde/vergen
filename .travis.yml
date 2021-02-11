@@ -29,3 +29,6 @@ script:
 
 after_success:
   - cargo tarpaulin --ciserver travis-ci --coveralls $TRAVIS_JOB_ID
+  - cargo tarpaulin --no-default-features --features rustc --ciserver travis-ci --coveralls $TRAVIS_JOB_ID
+  - cargo tarpaulin --no-default-features --features rustc,build --ciserver travis-ci --coveralls $TRAVIS_JOB_ID
+  - cargo tarpaulin --no-default-features --features rustc,git --ciserver travis-ci --coveralls $TRAVIS_JOB_ID
