@@ -20,6 +20,7 @@ git2 = { version = "0", optional = true }
 rustc_version = { version = "0", optional = true }
 serde = "1"
 serde_derive = "1"
+enum-iterator = "0.6.0"
 
 [build-dependencies]
 chrono = "0"

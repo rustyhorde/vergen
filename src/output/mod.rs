@@ -13,6 +13,7 @@ use crate::constants::{
     SHA_NAME, SHA_SHORT_NAME, TARGET_TRIPLE_NAME,
 };
 use chrono::Utc;
+use enum_iterator::IntoEnumIterator;
 use rustc_version::Channel;
 use std::{
     collections::HashMap,
@@ -163,7 +164,7 @@ pub(crate) fn run_command(command: &mut Command) -> String {
 }
 
 /// Build information keys.
-#[derive(Clone, Copy, Debug, Hash, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, IntoEnumIterator, Hash, Eq, PartialEq)]
 pub(crate) enum VergenKey {
     /// The build timestamp. (VERGEN_BUILD_TIMESTAMP)
     BuildTimestamp,
@@ -209,25 +210,6 @@ impl VergenKey {
             VergenKey::HostTriple => RUSTC_HOST_TRIPLE_NAME,
             VergenKey::Branch => BRANCH_NAME,
         }
-    }
-
-    pub(crate) fn iterator() -> impl Iterator<Item = Self> {
-        [
-            Self::BuildTimestamp,
-            Self::BuildDate,
-            Self::Sha,
-            Self::ShortSha,
-            Self::CommitDate,
-            Self::TargetTriple,
-            Self::Semver,
-            Self::SemverLightweight,
-            Self::RustcSemver,
-            Self::RustcChannel,
-            Self::HostTriple,
-            Self::Branch,
-        ]
-        .iter()
-        .copied()
     }
 }
 

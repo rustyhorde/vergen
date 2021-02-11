@@ -9,6 +9,7 @@
 //! `vergen` configuration
 
 use crate::output::VergenKey;
+use enum_iterator::IntoEnumIterator;
 use getset::{Getters, MutGetters};
 use std::collections::HashMap;
 
@@ -22,7 +23,7 @@ pub(crate) struct Config {
 impl Default for Config {
     fn default() -> Config {
         Self {
-            cfg_map: VergenKey::iterator().map(|x| (x, None)).collect(),
+            cfg_map: VergenKey::into_enum_iter().map(|x| (x, None)).collect(),
         }
     }
 }
