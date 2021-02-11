@@ -8,7 +8,7 @@
 
 //! `vergen` build feature implementation
 
-use crate::{config::Config, constants::ConstantsFlags, error::Result};
+use crate::{config::Config, constants::ConstantsFlags};
 #[cfg(feature = "build")]
 use {
     crate::{feature::add_entry, output::VergenKey},
@@ -17,7 +17,7 @@ use {
 };
 
 #[cfg(feature = "build")]
-pub(crate) fn add_build_config(flags: ConstantsFlags, config: &mut Config) -> Result<()> {
+pub(crate) fn add_build_config(flags: ConstantsFlags, config: &mut Config) {
     // Setup datetime information
     let now = Utc::now();
     if flags.contains(ConstantsFlags::BUILD_TIMESTAMP) {
@@ -43,18 +43,15 @@ pub(crate) fn add_build_config(flags: ConstantsFlags, config: &mut Config) -> Re
             env::var("CARGO_PKG_VERSION").ok(),
         );
     }
-    Ok(())
 }
 
 #[cfg(not(feature = "build"))]
-pub(crate) fn add_build_config(_flags: ConstantsFlags, _config: &mut Config) -> Result<()> {
-    Ok(())
-}
+pub(crate) fn add_build_config(_flags: ConstantsFlags, _config: &mut Config) {}
 
 #[cfg(all(test, feature = "build"))]
 mod test {
     use super::add_build_config;
-    use crate::{config::Config, constants::ConstantsFlags, error::Result, output::VergenKey};
+    use crate::{config::Config, constants::ConstantsFlags, output::VergenKey};
     use std::collections::HashMap;
 
     fn check_build_keys(cfg_map: &HashMap<VergenKey, Option<String>>) {
@@ -72,11 +69,10 @@ mod test {
     }
 
     #[test]
-    fn add_build_config_works() -> Result<()> {
+    fn add_build_config_works() {
         let mut config = Config::default();
-        add_build_config(ConstantsFlags::all(), &mut config)?;
+        add_build_config(ConstantsFlags::all(), &mut config);
         check_build_keys(config.cfg_map());
-        Ok(())
     }
 }
 

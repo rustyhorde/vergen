@@ -42,6 +42,7 @@ impl fmt::Display for ErrCode {
     }
 }
 
+#[allow(clippy::from_over_into)]
 impl Into<&str> for ErrCode {
     #[must_use]
     fn into(self) -> &'static str {
@@ -55,6 +56,7 @@ impl Into<&str> for ErrCode {
     }
 }
 
+#[allow(clippy::from_over_into)]
 impl Into<String> for ErrCode {
     #[must_use]
     fn into(self) -> String {

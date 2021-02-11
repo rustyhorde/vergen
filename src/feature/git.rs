@@ -38,7 +38,7 @@ impl Config {
     pub(crate) fn build(flags: ConstantsFlags, repo: &Repository) -> Result<Config> {
         let mut config = Config::default();
 
-        add_build_config(flags, &mut config)?;
+        add_build_config(flags, &mut config);
         add_git_config(flags, repo, &mut config)?;
         add_rustc_config(flags, &mut config)?;
 
@@ -74,14 +74,14 @@ fn add_git_config(flags: ConstantsFlags, repo: &Repository, config: &mut Config)
         }
 
         if flags.contains(ConstantsFlags::SEMVER) {
-            add_semver(&repo, &DescribeOptions::new(), false, config)?;
+            add_semver(&repo, &DescribeOptions::new(), false, config);
         }
 
         if flags.contains(ConstantsFlags::SEMVER_LIGHTWEIGHT) {
             let mut opts = DescribeOptions::new();
             let _ = opts.describe_tags();
 
-            add_semver(&repo, &opts, true, config)?;
+            add_semver(&repo, &opts, true, config);
         }
 
         if flags.contains(ConstantsFlags::SHA) {
@@ -130,12 +130,7 @@ fn add_branch_name(repo: &Repository, config: &mut Config) -> Result<()> {
 }
 
 #[cfg(feature = "git")]
-fn add_semver(
-    repo: &Repository,
-    opts: &DescribeOptions,
-    lw: bool,
-    config: &mut Config,
-) -> Result<()> {
+fn add_semver(repo: &Repository, opts: &DescribeOptions, lw: bool, config: &mut Config) {
     let key = if lw {
         VergenKey::SemverLightweight
     } else {
@@ -153,21 +148,26 @@ fn add_semver(
             );
         }
     }
-    Ok(())
 }
 
 /// Some Docs
+///
+/// # Errors
+///
 #[cfg(feature = "git")]
 pub fn gen(flags: ConstantsFlags) -> Result<()> {
     gen_cargo_instructions(
         flags,
-        Repository::discover(".")?,
+        &Repository::discover(".")?,
         &mut io::stdout(),
         &mut io::stderr(),
     )
 }
 
 /// Some Docs
+///
+/// # Errors
+///
 #[cfg(not(feature = "git"))]
 pub fn gen(flags: ConstantsFlags) -> Result<()> {
     gen_cargo_instructions(flags, &mut io::stdout(), &mut io::stderr())
@@ -176,21 +176,25 @@ pub fn gen(flags: ConstantsFlags) -> Result<()> {
 #[cfg(feature = "git")]
 fn gen_cargo_instructions<T, U>(
     flags: ConstantsFlags,
-    repo: Repository,
-    _stdout: T,
-    _stderr: U,
+    repo: &Repository,
+    _stdout: &mut T,
+    _stderr: &mut U,
 ) -> Result<()>
 where
     T: Write,
     U: Write,
 {
-    let _config = Config::build(flags, &repo)?;
+    let _config = Config::build(flags, repo)?;
 
     Ok(())
 }
 
 #[cfg(not(feature = "git"))]
-fn gen_cargo_instructions<T, U>(flags: ConstantsFlags, _stdout: T, _stderr: U) -> Result<()>
+fn gen_cargo_instructions<T, U>(
+    flags: ConstantsFlags,
+    _stdout: &mut T,
+    _stderr: &mut U,
+) -> Result<()>
 where
     T: Write,
     U: Write,
