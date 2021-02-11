@@ -209,7 +209,7 @@ mod test {
                 | VergenKey::SemverLightweight
                 | VergenKey::Sha
                 | VergenKey::ShortSha => {
-                    assert!(v.is_some());
+                    assert!(v.is_some(), format!("value wasn't some for key '{}'", *k));
                     count += 1;
                 }
                 _ => {}
