@@ -221,7 +221,7 @@ mod test {
                 | VergenKey::SemverLightweight
                 | VergenKey::Sha
                 | VergenKey::ShortSha => {
-                    assert!(v.is_some(), format!("value is None for key '{:?}'", *k));
+                    assert!(v.is_some());
                     count += 1;
                 }
                 _ => {}

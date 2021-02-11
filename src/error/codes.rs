@@ -12,7 +12,7 @@ use serde_derive::{Deserialize, Serialize};
 use std::fmt;
 
 /// Error Codes
-#[derive(Copy, Clone, Debug, Deserialize, Serialize)]
+#[derive(Copy, Clone, Debug, Eq, Deserialize, PartialEq, Serialize)]
 pub(crate) enum ErrCode {
     /// An environmental error
     Env,
@@ -70,5 +70,60 @@ impl From<&str> for ErrCode {
             "protocol" => Self::Protocol,
             _ => Self::Unknown,
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::ErrCode;
+    use crate::error::Result;
+    use std::io::Write;
+
+    #[test]
+    fn display_works() -> Result<()> {
+        let mut buf = vec![];
+        write!(buf, "{}", ErrCode::Env)?;
+        assert_eq!("env", String::from_utf8_lossy(&buf));
+        buf.clear();
+        write!(buf, "{}", ErrCode::Io)?;
+        assert_eq!("io", String::from_utf8_lossy(&buf));
+        buf.clear();
+        write!(buf, "{}", ErrCode::Parse)?;
+        assert_eq!("parse", String::from_utf8_lossy(&buf));
+        buf.clear();
+        write!(buf, "{}", ErrCode::Protocol)?;
+        assert_eq!("protocol", String::from_utf8_lossy(&buf));
+        buf.clear();
+        write!(buf, "{}", ErrCode::Unknown)?;
+        assert_eq!("unknown", String::from_utf8_lossy(&buf));
+        buf.clear();
+        Ok(())
+    }
+
+    #[test]
+    fn from_str_works() {
+        assert_eq!(ErrCode::Env, "env".into());
+        assert_eq!(ErrCode::Io, "io".into());
+        assert_eq!(ErrCode::Parse, "parse".into());
+        assert_eq!(ErrCode::Protocol, "protocol".into());
+        assert_eq!(ErrCode::Unknown, "unknown".into());
+    }
+
+    #[test]
+    fn from_err_code_to_str_works() {
+        assert_eq!(<&str>::from(ErrCode::Env), "env");
+        assert_eq!(<&str>::from(ErrCode::Io), "io");
+        assert_eq!(<&str>::from(ErrCode::Parse), "parse");
+        assert_eq!(<&str>::from(ErrCode::Protocol), "protocol");
+        assert_eq!(<&str>::from(ErrCode::Unknown), "unknown");
+    }
+
+    #[test]
+    fn from_err_code_to_string_works() {
+        assert_eq!(String::from(ErrCode::Env), "env".to_string());
+        assert_eq!(String::from(ErrCode::Io), "io".to_string());
+        assert_eq!(String::from(ErrCode::Parse), "parse".to_string());
+        assert_eq!(String::from(ErrCode::Protocol), "protocol".to_string());
+        assert_eq!(String::from(ErrCode::Unknown), "unknown".to_string());
     }
 }
