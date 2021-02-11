@@ -58,6 +58,7 @@ where
     Ok(())
 }
 
+#[cfg(feature = "git")]
 fn some_vals<'a>(tuple: (&'a VergenKey, &'a Option<String>)) -> Option<(&VergenKey, &String)> {
     if tuple.1.is_some() {
         Some((tuple.0, tuple.1.as_ref().unwrap()))
