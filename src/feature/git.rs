@@ -106,15 +106,23 @@ fn add_git_config(flags: ConstantsFlags, repo: &Repository, config: &mut Config)
 
 #[cfg(feature = "git")]
 fn add_branch_name(repo: &Repository, config: &mut Config) -> Result<()> {
-    let locals = repo.branches(Some(BranchType::Local))?;
-    for (local, _bt) in locals.filter_map(std::result::Result::ok) {
-        if local.is_head() {
-            if let Some(name) = local.name()? {
-                add_entry(
-                    config.cfg_map_mut(),
-                    VergenKey::Branch,
-                    Some(name.to_string()),
-                );
+    if repo.head_detached()? {
+        add_entry(
+            config.cfg_map_mut(),
+            VergenKey::Branch,
+            Some("detached HEAD".to_string()),
+        );
+    } else {
+        let locals = repo.branches(Some(BranchType::Local))?;
+        for (local, _bt) in locals.filter_map(std::result::Result::ok) {
+            if local.is_head() {
+                if let Some(name) = local.name()? {
+                    add_entry(
+                        config.cfg_map_mut(),
+                        VergenKey::Branch,
+                        Some(name.to_string()),
+                    );
+                }
             }
         }
     }
@@ -209,7 +217,7 @@ mod test {
                 | VergenKey::SemverLightweight
                 | VergenKey::Sha
                 | VergenKey::ShortSha => {
-                    assert!(v.is_some(), format!("value wasn't some for key '{}'", *k));
+                    assert!(v.is_some(), format!("value is None for key '{:?}'", *k));
                     count += 1;
                 }
                 _ => {}
