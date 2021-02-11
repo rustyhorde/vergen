@@ -61,11 +61,12 @@ impl Error {
 
 impl std::error::Error for Error {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        self.err_source.as_ref().map(|x| {
-            let y: &(dyn std::error::Error + 'static) = x;
-            y
-        })
+        self.err_source.as_ref().map(convert_err)
     }
+}
+
+fn convert_err(e: &ErrSource) -> &(dyn std::error::Error + 'static) {
+    e
 }
 
 impl fmt::Display for Error {
