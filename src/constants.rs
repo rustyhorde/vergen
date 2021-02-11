@@ -1,4 +1,4 @@
-// Copyright (c) 2016, 2018 vergen developers
+// Copyright (c) 2016, 2018, 2021 vergen developers
 //
 // Licensed under the Apache License, Version 2.0
 // <LICENSE-APACHE or http://www.apache.org/licenses/LICENSE-2.0> or the MIT
@@ -31,7 +31,7 @@ bitflags!(
     ///     ConstantsFlags::SHA |
     ///     ConstantsFlags::COMMIT_DATE |
     ///     ConstantsFlags::TARGET_TRIPLE |
-    ///     ConstantsFlags::HOST_TRIPLE |
+    ///     ConstantsFlags::RUSTC_HOST_TRIPLE |
     ///     ConstantsFlags::SEMVER |
     ///     ConstantsFlags::RUSTC_SEMVER |
     ///     ConstantsFlags::RUSTC_CHANNEL |
@@ -100,7 +100,7 @@ bitflags!(
         /// Generate the host triple constant.
         ///
         /// `x86_64-unknown-linux-gnu`
-        const HOST_TRIPLE            = 0b0001_0000_0000_0000;
+        const RUSTC_HOST_TRIPLE      = 0b0001_0000_0000_0000;
         /// Generate the branch name constant.
         ///
         /// `master`
@@ -122,7 +122,7 @@ pub(crate) const SEMVER_NAME: &str = "VERGEN_SEMVER";
 pub(crate) const SEMVER_TAGS_NAME: &str = "VERGEN_SEMVER_LIGHTWEIGHT";
 pub(crate) const RUSTC_SEMVER_NAME: &str = "VERGEN_RUSTC_SEMVER";
 pub(crate) const RUSTC_CHANNEL_NAME: &str = "VERGEN_RUSTC_CHANNEL";
-pub(crate) const HOST_TRIPLE_NAME: &str = "VERGEN_HOST_TRIPLE";
+pub(crate) const RUSTC_HOST_TRIPLE_NAME: &str = "VERGEN_HOST_TRIPLE";
 pub(crate) const BRANCH_NAME: &str = "VERGEN_BRANCH";
 
 #[cfg(test)]
@@ -149,7 +149,10 @@ mod test {
         );
         assert_eq!(ConstantsFlags::RUSTC_SEMVER.bits(), 0b0100_0000_0000);
         assert_eq!(ConstantsFlags::RUSTC_CHANNEL.bits(), 0b1000_0000_0000);
-        assert_eq!(ConstantsFlags::HOST_TRIPLE.bits(), 0b0001_0000_0000_0000);
+        assert_eq!(
+            ConstantsFlags::RUSTC_HOST_TRIPLE.bits(),
+            0b0001_0000_0000_0000
+        );
         assert_eq!(ConstantsFlags::BRANCH.bits(), 0b0010_0000_0000_0000);
         assert_eq!(ConstantsFlags::TAG_DIRTY.bits(), 0b0100_0000_0000_0000);
     }
@@ -166,7 +169,7 @@ mod test {
         assert_eq!(SEMVER_TAGS_NAME, "VERGEN_SEMVER_LIGHTWEIGHT");
         assert_eq!(RUSTC_SEMVER_NAME, "VERGEN_RUSTC_SEMVER");
         assert_eq!(RUSTC_CHANNEL_NAME, "VERGEN_RUSTC_CHANNEL");
-        assert_eq!(HOST_TRIPLE_NAME, "VERGEN_HOST_TRIPLE");
+        assert_eq!(RUSTC_HOST_TRIPLE_NAME, "VERGEN_HOST_TRIPLE");
         assert_eq!(BRANCH_NAME, "VERGEN_BRANCH");
     }
 }

@@ -1,4 +1,4 @@
-// Copyright (c) 2016, 2018 vergen developers
+// Copyright (c) 2016, 2018, 2021 vergen developers
 //
 // Licensed under the Apache License, Version 2.0
 // <LICENSE-APACHE or http://www.apache.org/licenses/LICENSE-2.0> or the MIT
@@ -9,7 +9,7 @@
 //! Output types
 use crate::constants::{
     ConstantsFlags, BRANCH_NAME, BUILD_DATE_NAME, BUILD_TIMESTAMP_NAME, COMMIT_DATE_NAME,
-    HOST_TRIPLE_NAME, RUSTC_CHANNEL_NAME, RUSTC_SEMVER_NAME, SEMVER_NAME, SEMVER_TAGS_NAME,
+    RUSTC_CHANNEL_NAME, RUSTC_HOST_TRIPLE_NAME, RUSTC_SEMVER_NAME, SEMVER_NAME, SEMVER_TAGS_NAME,
     SHA_NAME, SHA_SHORT_NAME, TARGET_TRIPLE_NAME,
 };
 use chrono::Utc;
@@ -92,7 +92,9 @@ pub(crate) fn generate_build_info(flags: ConstantsFlags) -> Result<HashMap<Verge
     }
 
     if flags.intersects(
-        ConstantsFlags::RUSTC_SEMVER | ConstantsFlags::RUSTC_CHANNEL | ConstantsFlags::HOST_TRIPLE,
+        ConstantsFlags::RUSTC_SEMVER
+            | ConstantsFlags::RUSTC_CHANNEL
+            | ConstantsFlags::RUSTC_HOST_TRIPLE,
     ) {
         let rustc = rustc_version::version_meta()?;
 
@@ -112,7 +114,7 @@ pub(crate) fn generate_build_info(flags: ConstantsFlags) -> Result<HashMap<Verge
             let _ = build_info.insert(VergenKey::RustcChannel, channel);
         }
 
-        if flags.contains(ConstantsFlags::HOST_TRIPLE) {
+        if flags.contains(ConstantsFlags::RUSTC_HOST_TRIPLE) {
             let _ = build_info.insert(VergenKey::HostTriple, rustc.host);
         }
     }
@@ -204,9 +206,28 @@ impl VergenKey {
             VergenKey::SemverLightweight => SEMVER_TAGS_NAME,
             VergenKey::RustcSemver => RUSTC_SEMVER_NAME,
             VergenKey::RustcChannel => RUSTC_CHANNEL_NAME,
-            VergenKey::HostTriple => HOST_TRIPLE_NAME,
+            VergenKey::HostTriple => RUSTC_HOST_TRIPLE_NAME,
             VergenKey::Branch => BRANCH_NAME,
         }
+    }
+
+    pub(crate) fn iterator() -> impl Iterator<Item = Self> {
+        [
+            Self::BuildTimestamp,
+            Self::BuildDate,
+            Self::Sha,
+            Self::ShortSha,
+            Self::CommitDate,
+            Self::TargetTriple,
+            Self::Semver,
+            Self::SemverLightweight,
+            Self::RustcSemver,
+            Self::RustcChannel,
+            Self::HostTriple,
+            Self::Branch,
+        ]
+        .iter()
+        .copied()
     }
 }
 

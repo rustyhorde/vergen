@@ -15,7 +15,17 @@ version = "3.2.0"
 [dependencies]
 bitflags = "1"
 chrono = "0"
-rustc_version = "0"
+getset = "0"
+git2 = { version = "0", optional = true }
+rustc_version = { version = "0", optional = true }
+serde = "1"
+serde_derive = "1"
 
 [build-dependencies]
 chrono = "0"
+
+[features]
+default = ["build", "git", "rustc"]
+build = []
+git = ["git2"]
+rustc = ["rustc_version"]
