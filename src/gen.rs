@@ -8,7 +8,7 @@
 
 //! `vergen` cargo flag generation
 
-use crate::{config::Config, constants::ConstantsFlags, error::Result};
+use crate::{config::Config, constants::ConstantsFlags, error::Result, output::VergenKey};
 #[cfg(feature = "git")]
 use git2::Repository;
 use std::io::{self, Write};
@@ -40,16 +40,30 @@ pub fn gen(flags: ConstantsFlags) -> Result<()> {
 fn gen_cargo_instructions<T, U>(
     flags: ConstantsFlags,
     repo: &Repository,
-    _stdout: &mut T,
+    stdout: &mut T,
     _stderr: &mut U,
 ) -> Result<()>
 where
     T: Write,
     U: Write,
 {
-    let _config = Config::build(flags, repo)?;
+    // Generate the config to drive 'cargo:' instruction output
+    let config = Config::build(flags, repo)?;
+
+    // Generate the 'cargo:' instruction output
+    for (k, v) in config.cfg_map().iter().filter_map(some_vals) {
+        writeln!(stdout, "cargo:rustc-env={}={}", k.name(), v)?;
+    }
 
     Ok(())
+}
+
+fn some_vals<'a>(tuple: (&'a VergenKey, &'a Option<String>)) -> Option<(&VergenKey, &String)> {
+    if tuple.1.is_some() {
+        Some((tuple.0, tuple.1.as_ref().unwrap()))
+    } else {
+        None
+    }
 }
 
 #[cfg(not(feature = "git"))]

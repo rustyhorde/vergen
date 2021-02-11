@@ -28,29 +28,23 @@ pub(crate) enum ErrCode {
 
 impl fmt::Display for ErrCode {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{}",
-            match self {
-                Self::Env => "env",
-                Self::Io => "io",
-                Self::Parse => "parse",
-                Self::Protocol => "protocol",
-                Self::Unknown => "unknown",
-            }
-        )
+        write!(f, "{}", to_str(*self))
     }
 }
 
 impl From<ErrCode> for &'static str {
     fn from(ec: ErrCode) -> &'static str {
-        match ec {
-            ErrCode::Env => "env",
-            ErrCode::Io => "io",
-            ErrCode::Parse => "parse",
-            ErrCode::Protocol => "protocol",
-            ErrCode::Unknown => "unknown",
-        }
+        to_str(ec)
+    }
+}
+
+fn to_str(ec: ErrCode) -> &'static str {
+    match ec {
+        ErrCode::Env => "env",
+        ErrCode::Io => "io",
+        ErrCode::Parse => "parse",
+        ErrCode::Protocol => "protocol",
+        ErrCode::Unknown => "unknown",
     }
 }
 
