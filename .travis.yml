@@ -14,6 +14,7 @@ os:
   - linux
 
 before_script:
+  - cd testdata/notagrepo && git checkout master && cd ../..
   - cargo install cargo-tarpaulin
   - if [ "$TRAVIS_RUST_VERSION" = 'stable' ]; then rustup component add rustfmt; fi
   - if [ "$TRAVIS_RUST_VERSION" = 'beta' ]; then rustup component add rustfmt; fi
@@ -28,7 +29,4 @@ script:
   - if [ "$TRAVIS_RUST_VERSION" = 'beta' ]; then cargo clippy --all -- -D warnings; fi
 
 after_success:
-  - cargo tarpaulin --ciserver travis-ci --coveralls $TRAVIS_JOB_ID
-  - cargo tarpaulin --no-default-features --features rustc --ciserver travis-ci --coveralls $TRAVIS_JOB_ID
-  - cargo tarpaulin --no-default-features --features rustc,build --ciserver travis-ci --coveralls $TRAVIS_JOB_ID
-  - cargo tarpaulin --no-default-features --features rustc,git --ciserver travis-ci --coveralls $TRAVIS_JOB_ID
+  - cargo tarpaulin --allfea--ciserver travis-ci --coveralls $TRAVIS_JOB_ID
