@@ -31,21 +31,21 @@ pub struct Error {
     reason: String,
     /// the source
     #[serde(skip)]
-    source: Option<ErrSource>,
+    err_source: Option<ErrSource>,
 }
 
 impl PartialEq for Error {
     fn eq(&self, other: &Self) -> bool {
         self.code == other.code
             && self.reason == other.reason
-            && ((self.source.is_some() && other.source.is_some())
-                || (self.source.is_none() && other.source.is_none()))
+            && ((self.err_source.is_some() && other.err_source.is_some())
+                || (self.err_source.is_none() && other.err_source.is_none()))
     }
 }
 
 impl Error {
     /// Create a new error
-    pub(crate) fn new<U>(code: ErrCode, reason: U, source: Option<ErrSource>) -> Self
+    pub(crate) fn new<U>(code: ErrCode, reason: U, err_source: Option<ErrSource>) -> Self
     where
         U: Into<String>,
     {
@@ -54,14 +54,14 @@ impl Error {
         Self {
             code,
             reason,
-            source,
+            err_source,
         }
     }
 }
 
 impl std::error::Error for Error {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        self.source.as_ref().map(|x| {
+        self.err_source.as_ref().map(|x| {
             let y: &(dyn std::error::Error + 'static) = x;
             y
         })
@@ -70,6 +70,7 @@ impl std::error::Error for Error {
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        use std::error::Error;
         write!(f, "{}: {}", self.code, self.reason)?;
         if let Some(source) = self.source() {
             write!(f, " - {}", source)?;
@@ -129,7 +130,7 @@ mod test {
     #[test]
     fn error_source() {
         assert!(Error::new(ErrCode::Protocol, "err", None)
-            .source()
+            .err_source()
             .is_none());
     }
 
