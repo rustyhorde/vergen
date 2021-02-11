@@ -23,8 +23,8 @@ use {
     std::env,
 };
 
+#[cfg(not(feature = "git"))]
 impl Config {
-    #[cfg(not(feature = "git"))]
     pub(crate) fn build(flags: ConstantsFlags) -> Result<Config> {
         let mut config = Config::default();
 
@@ -33,8 +33,10 @@ impl Config {
 
         Ok(config)
     }
+}
 
-    #[cfg(feature = "git")]
+#[cfg(feature = "git")]
+impl Config {
     pub(crate) fn build(flags: ConstantsFlags, repo: &Repository) -> Result<Config> {
         let mut config = Config::default();
 
