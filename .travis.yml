@@ -29,4 +29,4 @@ script:
   - if [ "$TRAVIS_RUST_VERSION" = 'beta' ]; then cargo clippy --all -- -D warnings; fi
 
 after_success:
-  - cargo tarpaulin --allfea--ciserver travis-ci --coveralls $TRAVIS_JOB_ID
+  - cargo tarpaulin --all-features --ciserver travis-ci --coveralls $TRAVIS_JOB_ID
