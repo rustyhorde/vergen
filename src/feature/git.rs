@@ -12,7 +12,7 @@ use crate::{config::Config, constants::ConstantsFlags, error::Result};
 use std::path::Path;
 #[cfg(feature = "git")]
 use {
-    crate::{feature::add_entry, output::VergenKey},
+    crate::{error::Error, feature::add_entry, output::VergenKey},
     chrono::{FixedOffset, TimeZone},
     git2::{BranchType, DescribeOptions, Repository},
     std::env,
@@ -131,18 +131,14 @@ fn add_semver(repo: &Repository, opts: &DescribeOptions, lw: bool, config: &mut 
     } else {
         VergenKey::Semver
     };
-    match repo.describe(opts) {
-        Ok(describe) => {
-            add_entry(config.cfg_map_mut(), key, describe.format(None).ok());
-        }
-        Err(_e) => {
-            add_entry(
-                config.cfg_map_mut(),
-                key,
-                env::var("CARGO_PKG_VERSION").ok(),
-            );
-        }
-    }
+    let semver: Option<String> = repo
+        .describe(opts)
+        .map_or_else(
+            |_| env::var("CARGO_PKG_VERSION").map_err(Error::from),
+            |x| x.format(None).map_err(Error::from),
+        )
+        .ok();
+    add_entry(config.cfg_map_mut(), key, semver);
 }
 
 #[cfg(all(test, feature = "git"))]
