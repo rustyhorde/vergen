@@ -8,10 +8,15 @@
 
 //! `vergen` configuration
 
-use crate::output::VergenKey;
+use crate::{
+    constants::ConstantsFlags,
+    error::Result,
+    feature::{add_build_config, add_git_config, add_rustc_config},
+    output::VergenKey,
+};
 use enum_iterator::IntoEnumIterator;
 use getset::{Getters, MutGetters};
-use std::collections::HashMap;
+use std::{collections::HashMap, path::Path};
 
 #[derive(Clone, Debug, Getters, MutGetters)]
 #[getset(get = "pub(crate)")]
@@ -25,6 +30,21 @@ impl Default for Config {
         Self {
             cfg_map: VergenKey::into_enum_iter().map(|x| (x, None)).collect(),
         }
+    }
+}
+
+impl Config {
+    pub(crate) fn build<T>(flags: ConstantsFlags, repo_path: Option<T>) -> Result<Config>
+    where
+        T: AsRef<Path>,
+    {
+        let mut config = Config::default();
+
+        add_build_config(flags, &mut config);
+        add_git_config(flags, repo_path, &mut config)?;
+        add_rustc_config(flags, &mut config)?;
+
+        Ok(config)
     }
 }
 

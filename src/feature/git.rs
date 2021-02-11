@@ -8,12 +8,8 @@
 
 //! `vergen` git feature implementation
 
-use crate::{
-    config::Config,
-    constants::ConstantsFlags,
-    error::Result,
-    feature::{add_build_config, add_rustc_config},
-};
+use crate::{config::Config, constants::ConstantsFlags, error::Result};
+use std::path::Path;
 #[cfg(feature = "git")]
 use {
     crate::{feature::add_entry, output::VergenKey},
@@ -23,85 +19,83 @@ use {
 };
 
 #[cfg(not(feature = "git"))]
-impl Config {
-    pub(crate) fn build(flags: ConstantsFlags) -> Result<Config> {
-        let mut config = Config::default();
-
-        add_build_config(flags, &mut config);
-        add_rustc_config(flags, &mut config)?;
-
-        Ok(config)
-    }
+pub(crate) fn add_git_config<T>(
+    _flags: ConstantsFlags,
+    _repo: Option<T>,
+    _config: &mut Config,
+) -> Result<()>
+where
+    T: AsRef<Path>,
+{
+    Ok(())
 }
 
 #[cfg(feature = "git")]
-impl Config {
-    pub(crate) fn build(flags: ConstantsFlags, repo: &Repository) -> Result<Config> {
-        let mut config = Config::default();
+pub(crate) fn add_git_config<T>(
+    flags: ConstantsFlags,
+    repo_path_opt: Option<T>,
+    config: &mut Config,
+) -> Result<()>
+where
+    T: AsRef<Path>,
+{
+    if let Some(repo_path) = repo_path_opt {
+        let repo = Repository::discover(repo_path)?;
+        if flags.intersects(
+            ConstantsFlags::BRANCH
+                | ConstantsFlags::COMMIT_DATE
+                | ConstantsFlags::SEMVER
+                | ConstantsFlags::SEMVER_LIGHTWEIGHT
+                | ConstantsFlags::SHA
+                | ConstantsFlags::SHA_SHORT,
+        ) {
+            let ref_head = repo.find_reference("HEAD")?;
+            let commit = ref_head.peel_to_commit()?;
 
-        add_build_config(flags, &mut config);
-        add_git_config(flags, repo, &mut config)?;
-        add_rustc_config(flags, &mut config)?;
+            if flags.contains(ConstantsFlags::BRANCH) {
+                add_branch_name(&repo, config)?;
+            }
 
-        Ok(config)
-    }
-}
+            if flags.contains(ConstantsFlags::COMMIT_DATE) {
+                let offset = FixedOffset::east(commit.time().offset_minutes() * 60)
+                    .timestamp(commit.time().seconds(), 0);
+                add_entry(
+                    config.cfg_map_mut(),
+                    VergenKey::CommitDate,
+                    Some(offset.to_rfc3339()),
+                );
+            }
 
-#[cfg(feature = "git")]
-fn add_git_config(flags: ConstantsFlags, repo: &Repository, config: &mut Config) -> Result<()> {
-    if flags.intersects(
-        ConstantsFlags::BRANCH
-            | ConstantsFlags::COMMIT_DATE
-            | ConstantsFlags::SEMVER
-            | ConstantsFlags::SEMVER_LIGHTWEIGHT
-            | ConstantsFlags::SHA
-            | ConstantsFlags::SHA_SHORT,
-    ) {
-        let ref_head = repo.find_reference("HEAD")?;
-        let commit = ref_head.peel_to_commit()?;
+            if flags.contains(ConstantsFlags::SEMVER) {
+                add_semver(&repo, &DescribeOptions::new(), false, config);
+            }
 
-        if flags.contains(ConstantsFlags::BRANCH) {
-            add_branch_name(&repo, config)?;
-        }
+            if flags.contains(ConstantsFlags::SEMVER_LIGHTWEIGHT) {
+                let mut opts = DescribeOptions::new();
+                let _ = opts.describe_tags();
 
-        if flags.contains(ConstantsFlags::COMMIT_DATE) {
-            let offset = FixedOffset::east(commit.time().offset_minutes() * 60)
-                .timestamp(commit.time().seconds(), 0);
-            add_entry(
-                config.cfg_map_mut(),
-                VergenKey::CommitDate,
-                Some(offset.to_rfc3339()),
-            );
-        }
+                add_semver(&repo, &opts, true, config);
+            }
 
-        if flags.contains(ConstantsFlags::SEMVER) {
-            add_semver(&repo, &DescribeOptions::new(), false, config);
-        }
+            if flags.contains(ConstantsFlags::SHA) {
+                add_entry(
+                    config.cfg_map_mut(),
+                    VergenKey::Sha,
+                    Some(commit.id().to_string()),
+                );
+            }
 
-        if flags.contains(ConstantsFlags::SEMVER_LIGHTWEIGHT) {
-            let mut opts = DescribeOptions::new();
-            let _ = opts.describe_tags();
-
-            add_semver(&repo, &opts, true, config);
-        }
-
-        if flags.contains(ConstantsFlags::SHA) {
-            add_entry(
-                config.cfg_map_mut(),
-                VergenKey::Sha,
-                Some(commit.id().to_string()),
-            );
-        }
-
-        if flags.contains(ConstantsFlags::SHA_SHORT) {
-            let obj = repo.revparse_single("HEAD")?;
-            add_entry(
-                config.cfg_map_mut(),
-                VergenKey::ShortSha,
-                obj.short_id()?.as_str().map(str::to_string),
-            );
+            if flags.contains(ConstantsFlags::SHA_SHORT) {
+                let obj = repo.revparse_single("HEAD")?;
+                add_entry(
+                    config.cfg_map_mut(),
+                    VergenKey::ShortSha,
+                    obj.short_id()?.as_str().map(str::to_string),
+                );
+            }
         }
     }
+
     Ok(())
 }
 
@@ -155,7 +149,6 @@ fn add_semver(repo: &Repository, opts: &DescribeOptions, lw: bool, config: &mut 
 mod test {
     use super::add_git_config;
     use crate::{config::Config, constants::ConstantsFlags, error::Result, output::VergenKey};
-    use git2::Repository;
     use std::collections::HashMap;
 
     fn check_git_keys(cfg_map: &HashMap<VergenKey, Option<String>>) {
@@ -179,18 +172,24 @@ mod test {
 
     #[test]
     fn add_git_config_works() -> Result<()> {
-        let repo = Repository::discover("testdata/notagsrepo")?;
         let mut config = Config::default();
-        add_git_config(ConstantsFlags::all(), &repo, &mut config)?;
+        add_git_config(
+            ConstantsFlags::all(),
+            Some("testdata/notagsrepo"),
+            &mut config,
+        )?;
         check_git_keys(config.cfg_map());
         Ok(())
     }
 
     #[test]
     fn git_describe_works() -> Result<()> {
-        let repo = Repository::discover("testdata/tagsrepo")?;
         let mut config = Config::default();
-        add_git_config(ConstantsFlags::all(), &repo, &mut config)?;
+        add_git_config(
+            ConstantsFlags::all(),
+            Some("testdata/tagsrepo"),
+            &mut config,
+        )?;
         check_git_keys(config.cfg_map());
         Ok(())
     }

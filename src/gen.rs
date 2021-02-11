@@ -8,24 +8,11 @@
 
 //! `vergen` cargo flag generation
 
-use crate::{config::Config, constants::ConstantsFlags, error::Result};
-use std::io::{self, Write};
-#[cfg(feature = "git")]
-use {crate::output::VergenKey, git2::Repository};
-
-/// Some Docs
-///
-/// # Errors
-///
-#[cfg(feature = "git")]
-pub fn gen(flags: ConstantsFlags) -> Result<()> {
-    gen_cargo_instructions(
-        flags,
-        &Repository::discover(".")?,
-        &mut io::stdout(),
-        &mut io::stderr(),
-    )
-}
+use crate::{config::Config, constants::ConstantsFlags, error::Result, output::VergenKey};
+use std::{
+    io::{self, Write},
+    path::Path,
+};
 
 /// Some Docs
 ///
@@ -33,19 +20,29 @@ pub fn gen(flags: ConstantsFlags) -> Result<()> {
 ///
 #[cfg(not(feature = "git"))]
 pub fn gen(flags: ConstantsFlags) -> Result<()> {
-    gen_cargo_instructions(flags, &mut io::stdout(), &mut io::stderr())
+    let no_repo: Option<&'static str> = None;
+    gen_cargo_instructions(flags, no_repo, &mut io::stdout(), &mut io::stderr())
 }
 
+/// Some Docs
+///
+/// # Errors
+///
 #[cfg(feature = "git")]
-fn gen_cargo_instructions<T, U>(
+pub fn gen(flags: ConstantsFlags) -> Result<()> {
+    gen_cargo_instructions(flags, Some("."), &mut io::stdout(), &mut io::stderr())
+}
+
+fn gen_cargo_instructions<T, U, V>(
     flags: ConstantsFlags,
-    repo: &Repository,
+    repo: Option<V>,
     stdout: &mut T,
     _stderr: &mut U,
 ) -> Result<()>
 where
     T: Write,
     U: Write,
+    V: AsRef<Path>,
 {
     // Generate the config to drive 'cargo:' instruction output
     let config = Config::build(flags, repo)?;
@@ -58,7 +55,6 @@ where
     Ok(())
 }
 
-#[cfg(feature = "git")]
 fn some_vals<'a>(tuple: (&'a VergenKey, &'a Option<String>)) -> Option<(&VergenKey, &String)> {
     if tuple.1.is_some() {
         Some((tuple.0, tuple.1.as_ref().unwrap()))
@@ -67,26 +63,11 @@ fn some_vals<'a>(tuple: (&'a VergenKey, &'a Option<String>)) -> Option<(&VergenK
     }
 }
 
-#[cfg(not(feature = "git"))]
-fn gen_cargo_instructions<T, U>(
-    flags: ConstantsFlags,
-    _stdout: &mut T,
-    _stderr: &mut U,
-) -> Result<()>
-where
-    T: Write,
-    U: Write,
-{
-    let _config = Config::build(flags)?;
-
-    Ok(())
-}
-
-#[cfg(all(test, feature = "git"))]
+#[cfg(test)]
 mod test {
     use super::{gen, gen_cargo_instructions};
     use crate::{constants::ConstantsFlags, error::Result};
-    use git2::Repository;
+    use std::io;
 
     #[test]
     fn gen_works() -> Result<()> {
@@ -96,27 +77,13 @@ mod test {
 
     #[test]
     fn describe_falls_back() -> Result<()> {
-        use std::io;
-        let repo = Repository::open("testdata/notagsrepo")?;
         assert!(gen_cargo_instructions(
             ConstantsFlags::all(),
-            &repo,
+            Some("testdata/notagsrepo"),
             &mut io::stdout(),
             &mut io::stderr(),
         )
         .is_ok());
-        Ok(())
-    }
-}
-
-#[cfg(all(test, not(feature = "git")))]
-mod test {
-    use super::gen;
-    use crate::{constants::ConstantsFlags, error::Result};
-
-    #[test]
-    fn gen_works() -> Result<()> {
-        assert!(gen(ConstantsFlags::all()).is_ok());
         Ok(())
     }
 }
