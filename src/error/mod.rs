@@ -34,6 +34,15 @@ pub struct Error {
     source: Option<ErrSource>,
 }
 
+impl PartialEq for Error {
+    fn eq(&self, other: &Self) -> bool {
+        self.code == other.code
+            && self.reason == other.reason
+            && ((self.source.is_some() && other.source.is_some())
+                || (self.source.is_none() && other.source.is_none()))
+    }
+}
+
 impl Error {
     /// Create a new error
     pub(crate) fn new<U>(code: ErrCode, reason: U, source: Option<ErrSource>) -> Self
@@ -90,5 +99,41 @@ impl From<String> for Error {
         let code = vec.get(0).unwrap_or(&"");
         let reason = vec.get(1).unwrap_or(&"");
         Self::new((*code).into(), *reason, None)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::{ErrCode, Error};
+
+    #[test]
+    fn from_string_works() {
+        assert_eq!(
+            Error::from("protocol:err".to_string()),
+            Error::new("protocol".into(), "err", None)
+        )
+    }
+
+    #[test]
+    fn from_str_works() {
+        assert_eq!(
+            Error::from("protocol:err"),
+            Error::new("protocol".into(), "err", None)
+        )
+    }
+
+    #[test]
+    fn error_source() {
+        assert!(Error::new(ErrCode::Protocol, "err", None)
+            .source()
+            .is_none());
+    }
+
+    #[test]
+    fn display() {
+        assert_eq!(
+            format!("{}", Error::new(ErrCode::Protocol, "err", None)),
+            "protocol: err"
+        );
     }
 }
