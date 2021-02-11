@@ -119,3 +119,59 @@ impl fmt::Display for ErrSource {
         }
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::Error;
+    use std::{
+        convert::TryFrom,
+        io::{self, ErrorKind},
+        path::Path,
+    };
+
+    #[test]
+    fn io_error() {
+        let err: Error = io::Error::new(ErrorKind::Other, "testing").into();
+        assert_eq!(
+            "io: There was an error processing your request - testing",
+            format!("{}", err)
+        );
+    }
+
+    #[test]
+    fn parse_int_error() {
+        match "a".parse::<u32>().map_err(|e| Error::from(e)) {
+            Err(e) => assert_eq!(
+                "parse: There was an error trying to convert to an integer - invalid digit found in string",
+                format!("{}", e)
+            ),
+            Ok(_) => panic!("invalid error"),
+        }
+    }
+
+    #[test]
+    fn strip_prefix_errr() {
+        let path = Path::new("/test/haha/foo.txt");
+        match path.strip_prefix("test").map_err(|e| Error::from(e)) {
+            Err(e) => assert_eq!(
+                "parse: There was an error trying to strip a prefix from a path - prefix not found",
+                format!("{}", e)
+            ),
+            Ok(_) => panic!("invalid error"),
+        }
+    }
+
+    #[test]
+    fn try_from_int_error() {
+        match u8::try_from(257).map_err(|e| Error::from(e)) {
+            Err(e) => assert_eq!("parse: There was an error trying to convert an integer - out of range integral type conversion attempted", format!("{}", e)),
+            Ok(_) => panic!("blah"),
+        }
+    }
+
+    #[test]
+    fn unit_error() {
+        let err: Error = ().into();
+        assert_eq!("protocol: There was an error - unit", format!("{}", err));
+    }
+}

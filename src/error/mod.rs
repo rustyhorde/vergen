@@ -70,7 +70,11 @@ impl std::error::Error for Error {
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}: {}", self.code, self.reason)
+        write!(f, "{}: {}", self.code, self.reason)?;
+        if let Some(source) = self.source() {
+            write!(f, " - {}", source)?;
+        }
+        Ok(())
         // let err: &(dyn std::error::Error) = self;
         // let mut iter = err.chain();
         // let _skip_me = iter.next();
