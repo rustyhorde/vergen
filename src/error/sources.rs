@@ -50,7 +50,7 @@ dep_error!(
     std::array::TryFromSliceError,
     ErrSource::TryFromSlice,
     ErrCode::Protocol,
-    "There was an error converting bytes to isize"
+    "There was an error converting a slice to an array"
 );
 dep_error!(
     std::path::StripPrefixError,
@@ -123,11 +123,26 @@ impl fmt::Display for ErrSource {
 #[cfg(test)]
 mod test {
     use super::Error;
+    use crate::error::Result;
+    #[cfg(feature = "git")]
+    use git2::Repository;
+    #[cfg(feature = "rustc")]
+    use rustc_version::version_meta_for;
     use std::{
-        convert::TryFrom,
+        convert::{TryFrom, TryInto},
+        env,
         io::{self, ErrorKind},
         path::Path,
     };
+
+    #[cfg(feature = "git")]
+    #[test]
+    fn git2_error() {
+        let res = Repository::open("blah").map_err(|e| Error::from(e));
+        assert!(res.is_err());
+        let err = res.err().unwrap();
+        assert_eq!("protocol: There was an error from the git2 library - failed to resolve path \'blah\': No such file or directory; class=Os (2); code=NotFound (-3)", format!("{}", err));
+    }
 
     #[test]
     fn io_error() {
@@ -140,38 +155,73 @@ mod test {
 
     #[test]
     fn parse_int_error() {
-        match "a".parse::<u32>().map_err(|e| Error::from(e)) {
-            Err(e) => assert_eq!(
-                "parse: There was an error trying to convert to an integer - invalid digit found in string",
-                format!("{}", e)
-            ),
-            Ok(_) => panic!("invalid error"),
-        }
+        let res = "a".parse::<u32>().map_err(|e| Error::from(e));
+        assert!(res.is_err());
+        let err = res.err().unwrap();
+        assert_eq!(
+            "parse: There was an error trying to convert to an integer - invalid digit found in string",
+            format!("{}", err)
+        );
+    }
+
+    #[cfg(feature = "rustc")]
+    #[test]
+    fn rustc_version_error() {
+        let res = version_meta_for("yoda").map_err(|e| Error::from(e));
+        assert!(res.is_err());
+        let err = res.err().unwrap();
+        assert_eq!("protocol: There was an error from the rustc_version library - unexpected `rustc -vV` format", format!("{}", err));
     }
 
     #[test]
-    fn strip_prefix_errr() {
+    fn strip_prefix_error() {
         let path = Path::new("/test/haha/foo.txt");
-        match path.strip_prefix("test").map_err(|e| Error::from(e)) {
-            Err(e) => assert_eq!(
-                "parse: There was an error trying to strip a prefix from a path - prefix not found",
-                format!("{}", e)
-            ),
-            Ok(_) => panic!("invalid error"),
-        }
+        let res = path.strip_prefix("test").map_err(|e| Error::from(e));
+        assert!(res.is_err());
+        let err = res.err().unwrap();
+        assert_eq!(
+            "parse: There was an error trying to strip a prefix from a path - prefix not found",
+            format!("{}", err)
+        );
     }
 
     #[test]
     fn try_from_int_error() {
-        match u8::try_from(257).map_err(|e| Error::from(e)) {
-            Err(e) => assert_eq!("parse: There was an error trying to convert an integer - out of range integral type conversion attempted", format!("{}", e)),
-            Ok(_) => panic!("blah"),
-        }
+        let res = u8::try_from(257).map_err(|e| Error::from(e));
+        assert!(res.is_err());
+        let err = res.err().unwrap();
+        assert_eq!("parse: There was an error trying to convert an integer - out of range integral type conversion attempted", format!("{}", err));
+    }
+
+    #[test]
+    fn try_from_slice_error() {
+        let res: Result<[u8; 3]> = "blah"
+            .as_bytes()
+            .iter()
+            .copied()
+            .collect::<Vec<u8>>()
+            .as_slice()
+            .try_into()
+            .map_err(|e| Error::from(e));
+        assert!(res.is_err());
+        let err = res.err().unwrap();
+        assert_eq!("protocol: There was an error converting a slice to an array - could not convert slice to array", format!("{}", err));
     }
 
     #[test]
     fn unit_error() {
         let err: Error = ().into();
         assert_eq!("protocol: There was an error - unit", format!("{}", err));
+    }
+
+    #[test]
+    fn var_error() {
+        let res = env::var("yoda").map_err(|e| Error::from(e));
+        assert!(res.is_err());
+        let err = res.err().unwrap();
+        assert_eq!(
+            "env: There was an error processing your enviroment - environment variable not found",
+            format!("{}", err)
+        );
     }
 }
