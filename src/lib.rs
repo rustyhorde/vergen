@@ -209,9 +209,10 @@ mod config;
 mod constants;
 mod error;
 mod feature;
+mod gen;
 mod output;
 
 pub use crate::constants::ConstantsFlags;
 pub use crate::error::Error;
-pub use crate::feature::gen;
+pub use crate::gen::gen;
 pub use crate::output::envvar::generate_cargo_keys;

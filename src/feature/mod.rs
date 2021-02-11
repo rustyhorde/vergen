@@ -16,7 +16,6 @@ mod git;
 mod rustc;
 
 pub(crate) use build::add_build_config;
-pub use git::gen;
 pub(crate) use rustc::add_rustc_config;
 
 pub(crate) fn add_entry(

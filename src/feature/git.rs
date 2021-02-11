@@ -14,7 +14,6 @@ use crate::{
     error::Result,
     feature::{add_build_config, add_rustc_config},
 };
-use std::io::{self, Write};
 #[cfg(feature = "git")]
 use {
     crate::{feature::add_entry, output::VergenKey},
@@ -152,63 +151,9 @@ fn add_semver(repo: &Repository, opts: &DescribeOptions, lw: bool, config: &mut 
     }
 }
 
-/// Some Docs
-///
-/// # Errors
-///
-#[cfg(feature = "git")]
-pub fn gen(flags: ConstantsFlags) -> Result<()> {
-    gen_cargo_instructions(
-        flags,
-        &Repository::discover(".")?,
-        &mut io::stdout(),
-        &mut io::stderr(),
-    )
-}
-
-/// Some Docs
-///
-/// # Errors
-///
-#[cfg(not(feature = "git"))]
-pub fn gen(flags: ConstantsFlags) -> Result<()> {
-    gen_cargo_instructions(flags, &mut io::stdout(), &mut io::stderr())
-}
-
-#[cfg(feature = "git")]
-fn gen_cargo_instructions<T, U>(
-    flags: ConstantsFlags,
-    repo: &Repository,
-    _stdout: &mut T,
-    _stderr: &mut U,
-) -> Result<()>
-where
-    T: Write,
-    U: Write,
-{
-    let _config = Config::build(flags, repo)?;
-
-    Ok(())
-}
-
-#[cfg(not(feature = "git"))]
-fn gen_cargo_instructions<T, U>(
-    flags: ConstantsFlags,
-    _stdout: &mut T,
-    _stderr: &mut U,
-) -> Result<()>
-where
-    T: Write,
-    U: Write,
-{
-    let _config = Config::build(flags)?;
-
-    Ok(())
-}
-
 #[cfg(all(test, feature = "git"))]
 mod test {
-    use super::{add_git_config, gen, gen_cargo_instructions};
+    use super::add_git_config;
     use crate::{config::Config, constants::ConstantsFlags, error::Result, output::VergenKey};
     use git2::Repository;
     use std::collections::HashMap;
@@ -234,42 +179,13 @@ mod test {
 
     #[test]
     fn add_git_config_works() -> Result<()> {
-        let repo = Repository::discover(".")?;
+        let repo = Repository::discover("testdata/notagsrepo")?;
         let mut config = Config::default();
         add_git_config(ConstantsFlags::all(), &repo, &mut config)?;
         check_git_keys(config.cfg_map());
         Ok(())
     }
-
-    #[test]
-    fn gen_works() -> Result<()> {
-        assert!(gen(ConstantsFlags::all()).is_ok());
-        Ok(())
-    }
-
-    #[test]
-    fn describe_falls_back() -> Result<()> {
-        use std::io;
-        let repo = Repository::open("testdata/notagsrepo")?;
-        assert!(gen_cargo_instructions(
-            ConstantsFlags::all(),
-            &repo,
-            &mut io::stdout(),
-            &mut io::stderr(),
-        )
-        .is_ok());
-        Ok(())
-    }
 }
 
 #[cfg(all(test, not(feature = "git")))]
-mod test {
-    use super::gen;
-    use crate::{constants::ConstantsFlags, error::Result};
-
-    #[test]
-    fn gen_works() -> Result<()> {
-        assert!(gen(ConstantsFlags::all()).is_ok());
-        Ok(())
-    }
-}
+mod test {}
