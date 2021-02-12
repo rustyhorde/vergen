@@ -21,9 +21,27 @@ jobs:
         - os: macos-latest
           rust: stable
           other: x86_64-apple-ios
+        - os: macos-latest
+          rust: beta
+          other: x86_64-apple-ios
+        - os: macos-latest
+          rust: nightly
+          other: x86_64-apple-ios
         - os: windows-latest
           rust: stable-msvc
           other: i686-pc-windows-msvc
+        - os: windows-latest
+          rust: beta-msvc
+          other: i686-pc-windows-msvc
+        - os: windows-latest
+          rust: nightly-msvc
+          other: i686-pc-windows-msvc
+        - os: windows-latest
+          rust: stable-gnu
+          other: i686-pc-windows-gnu
+        - os: windows-latest
+          rust: beta-gnu
+          other: i686-pc-windows-gnu
         - os: windows-latest
           rust: nightly-gnu
           other: i686-pc-windows-gnu
@@ -31,6 +49,7 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: recursive
+        if: matrix.os == 'ubuntu-latest'
       - uses: actions-rs/install@v0.1
         with:
           crate: cargo-tarpaulin
@@ -43,4 +62,5 @@ jobs:
       - run: rustup component add rustfmt || echo "rustfmt not available"
       - run: cargo test
       - run: cargo test --no-default-features
+        if: matrix.os == 'ubuntu-latest'
       - run: cargo tarpaulin --coveralls ${{ github.token }}
