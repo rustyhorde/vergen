@@ -16,8 +16,6 @@ bitflags!(
     /// Use these to toggle off the generation of constants you won't use.
     ///
     /// ```
-    /// # extern crate vergen;
-    /// #
     /// # use vergen::ConstantsFlags;
     /// #
     /// # fn main() {
