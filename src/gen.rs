@@ -35,7 +35,7 @@ pub fn gen(flags: ConstantsFlags) -> Result<()> {
 ///
 /// # Errors
 ///
-/// Any generated errors will be wrapped in [vergen::Error](crate::error::Error)
+/// Any generated errors will be wrapped in [`vergen::Error`](crate::error::Error)
 ///
 /// # Usage
 ///

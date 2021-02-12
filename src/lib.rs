@@ -18,7 +18,7 @@
 //! | Feature | Enables |
 //! | ------- | ------- |
 //! |  build  | `VERGEN_BUILD_*` instructions |
-//! |   git   | `VERGEN_GIT_*` instructions, the `cargo:rerun-if-changed` instructions, and the [REBUILD_ON_HEAD_CHANGE] flag  |
+//! |   git   | `VERGEN_GIT_*` instructions, the `cargo:rerun-if-changed` instructions, and the [`REBUILD_ON_HEAD_CHANGE`] flag  |
 //! |  rustc  | `VERGEN_RUSTC_*` instructions |
 //!
 //! **NOTE** - All three features are enabled by default.
@@ -80,25 +80,25 @@
 //! println!("git semver: {}", env!("VERGEN_GIT_SEMVER"));
 //! ```
 //!
-//! ### Note on VERGEN_SEMVER and VERGEN_SEMVER_LIGHTWEIGHT
+//! ### Note on `VERGEN_SEMVER` and `VERGEN_SEMVER_LIGHTWEIGHT`
 //! `VERGEN_SEMVER` and `VERGEN_SEMVER_LIGHTWEIGHT` can be generated via two methods
-//! 1. [git2::Repository::describe]
-//! 2. [CARGO_PKG_VERSION]
+//! 1. [`git2::Repository::describe`]
+//! 2. [`CARGO_PKG_VERSION`]
 //!
 //! By default, if the `git` feature is enabled semver generation will use the first method.  If the `git` feature is disabled or method one errors, generation falls back to the second method.
 //!
-//! If you wish to force method two even if the `git` feature is enabled you may toggle off [SEMVER] and toggle on [SEMVER_FROM_CARGO_PKG].
+//! If you wish to force method two even if the `git` feature is enabled you may toggle off [`SEMVER`] and toggle on [`SEMVER_FROM_CARGO_PKG`].
 //!
-//! ### Note on REBUILD_ON_HEAD_CHANGE
+//! ### Note on `REBUILD_ON_HEAD_CHANGE`
 //! `vergen` can also be configured to instruct `cargo` to re-run the build script when either `<gitpath>/HEAD` or the file that `<gitpath>/HEAD` points at changes.
 //!
-//! This can behavior can be toggled on or off with the [REBUILD_ON_HEAD_CHANGE] flag.
+//! This can behavior can be toggled on or off with the [`REBUILD_ON_HEAD_CHANGE`] flag.
 //!
-//! [SEMVER]: crate::constants::ConstantsFlags::SEMVER
-//! [SEMVER_FROM_CARGO_PKG]: crate::constants::ConstantsFlags::SEMVER_FROM_CARGO_PKG
-//! [REBUILD_ON_HEAD_CHANGE]: crate::constants::ConstantsFlags::REBUILD_ON_HEAD_CHANGE
+//! [`SEMVER`]: crate::constants::ConstantsFlags::SEMVER
+//! [`SEMVER_FROM_CARGO_PKG`]: crate::constants::ConstantsFlags::SEMVER_FROM_CARGO_PKG
+//! [`REBUILD_ON_HEAD_CHANGE`]: crate::constants::ConstantsFlags::REBUILD_ON_HEAD_CHANGE
 //! [git describe]: git2::Repository::describe
-//! [CARGO_PKG_VERSION]: https://doc.rust-lang.org/cargo/reference/environment-variables.html#environment-variables-cargo-sets-for-crates
+//! [`CARGO_PKG_VERSION`]: https://doc.rust-lang.org/cargo/reference/environment-variables.html#environment-variables-cargo-sets-for-crates
 //! [build scripts]: https://doc.rust-lang.org/cargo/reference/build-scripts.html
 //! [cargo:rustc-env]: https://doc.rust-lang.org/cargo/reference/build-scripts.html#rustc-env
 //! [cargo:rerun-if-changed]: https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed

@@ -141,7 +141,10 @@ mod test {
         let res = Repository::open("blah").map_err(|e| Error::from(e));
         assert!(res.is_err());
         let err = res.err().unwrap();
+        #[cfg(target_family = "unix")]
         assert_eq!("protocol: There was an error from the git2 library - failed to resolve path \'blah\': No such file or directory; class=Os (2); code=NotFound (-3)", format!("{}", err));
+        #[cfg(target_family = "windows")]
+        assert_eq!("protocol: There was an error from the git2 library - failed to resolve path \'blah\': The system cannot find the file specified.\r\n; class=Os (2); code=NotFound (-3)", format!("{}", err));
     }
 
     #[test]
