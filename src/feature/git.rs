@@ -242,6 +242,8 @@ mod test {
         check_git_instructions(config.cfg_map());
         assert!(config.ref_path().is_some());
         assert!(config.head_path().is_some());
+        // Remove a key an check
+        let _ = config.cfg_map_mut().remove(&VergenKey::BuildDate);
         assert!(get_map_value(VergenKey::BuildDate, config.cfg_map()).is_empty());
         Ok(())
     }
@@ -262,6 +264,8 @@ mod test {
         check_git_instructions(config.cfg_map());
         assert!(config.ref_path().is_some());
         assert!(config.head_path().is_some());
+        // Remove a key an check
+        let _ = config.cfg_map_mut().remove(&VergenKey::BuildDate);
         assert!(get_map_value(VergenKey::BuildDate, config.cfg_map()).is_empty());
         Ok(())
     }
