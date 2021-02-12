@@ -76,6 +76,7 @@ jobs:
           crate: cargo-tarpaulin
           version: latest
           use-tool-cache: true
+        continue-on-error: true
       - name: 🔼📅 Update (rustup) 🔼📅
         run: rustup update --no-self-update ${{ matrix.rust }} && rustup default ${{ matrix.rust }}
       - name: ➕ Add (rustfmt) ➕
