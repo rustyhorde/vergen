@@ -7,6 +7,7 @@
 ## Build Status
 |              |                                                                                   |
 ---------------|-----------------------------------------------------------------------------------|
+| Github       | ![CI](https://github.com/rustyhorde/vergen/workflows/CI/badge.svg) |
 | Travis       | [![Build Status](https://travis-ci.com/rustyhorde/vergen.svg?branch=master)](https://travis-ci.com/rustyhorde/vergen)|
 | GitLab CI/CD | [![pipeline status](https://gitlab.com/rustyhorde/vergen/badges/master/pipeline.svg)](https://gitlab.com/rustyhorde/vergen/commits/master)|
 | Appveyor     | [![Build status](https://ci.appveyor.com/api/projects/status/fjliwvxqayyecl1j?svg=true)](https://ci.appveyor.com/project/CraZySacX/vergen)|
