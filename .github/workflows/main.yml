@@ -46,11 +46,13 @@ jobs:
           rust: nightly-gnu
           other: i686-pc-windows-gnu
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v2
         with:
           submodules: recursive
+      - name: Install 'cargo-tarpaulin'
+        uses: actions-rs/install@v0.1
         if: matrix.os == 'ubuntu-latest'
-      - uses: actions-rs/install@v0.1
         with:
           crate: cargo-tarpaulin
           version: latest
@@ -62,5 +64,6 @@ jobs:
       - run: rustup component add rustfmt || echo "rustfmt not available"
       - run: cargo test
       - run: cargo test --no-default-features
+      - name: Run 'cargo tarpaulin'
         if: matrix.os == 'ubuntu-latest'
-      - run: cargo tarpaulin --coveralls ${{ github.token }}
+        run: cargo tarpaulin --coveralls ${{ github.token }}
