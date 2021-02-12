@@ -15,7 +15,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/rustyhorde/vergen/badge.svg?branch=master)](https://coveralls.io/github/rustyhorde/vergen?branch=master)
 
 ## Documentation
-[Documentation](https://docs.rs/vergen)
+[Documentation](https://docs.rs/vergen) can be found on [docs.rs](https://docs.rs/vergen)
 
 ## Example Usage
 See the documentation at [docs.rs](https://docs.rs/vergen/3.2.0/vergen/#cargo-key-build-script-output) for example usage
