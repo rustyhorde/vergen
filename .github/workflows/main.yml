@@ -1,0 +1,35 @@
+on: [push]
+
+name: CI
+
+jobs:
+  test:
+    name: vergen
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+        - os: ubuntu-latest
+          rust: stable
+          other: i686-unknown-linux-gnu
+        - os: ubuntu-latest
+          rust: beta
+          other: i686-unknown-linux-gnu
+        - os: ubuntu-latest
+          rust: nightly
+          other: i686-unknown-linux-gnu
+        - os: macos-latest
+          rust: stable
+          other: x86_64-apple-ios
+        - os: windows-latest
+          rust: stable-msvc
+          other: i686-pc-windows-msvc
+        - os: windows-latest
+          rust: nightly-gnu
+          other: i686-pc-windows-gnu
+    steps:
+      - uses: actions/checkout@v2
+      - run: rustup update --no-self-update ${{ matrix.rust }} && rustup default ${{ matrix.rust }}
+      - run: rustup component add rustfmt || echo "rustfmt not available"
+      - run: cargo test
+      - run: cargo test --no-default-features
