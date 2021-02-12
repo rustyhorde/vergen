@@ -46,7 +46,7 @@ jobs:
           rust: nightly-gnu
           other: i686-pc-windows-gnu
     steps:
-      - name: Checkout
+      - name: ✔️ Checkout ✔️
         uses: actions/checkout@v2
         with:
           submodules: recursive
@@ -57,13 +57,22 @@ jobs:
           crate: cargo-tarpaulin
           version: latest
           use-tool-cache: true
-      - run: cd testdata/notagsrepo && git checkout master && cd ..
-      - run: cd testdata/tagsrepo && git checkout master && cd ..
-      - run: git submodule foreach --recursive 'git fetch --tags'
-      - run: rustup update --no-self-update ${{ matrix.rust }} && rustup default ${{ matrix.rust }}
-      - run: rustup component add rustfmt || echo "rustfmt not available"
-      - run: cargo test
-      - run: cargo test --no-default-features
+      - name: Checkout master in notagsrepo submodule
+        run: cd testdata/notagsrepo && git checkout master && cd ..
+      - name: Checkout master in tagsrepo submodule
+        run: cd testdata/tagsrepo && git checkout master && cd ..
+      - name: Fetch tags in submodules
+        run: git submodule foreach --recursive 'git fetch --tags'
+      - name: Run rustup update
+        run: rustup update --no-self-update ${{ matrix.rust }} && rustup default ${{ matrix.rust }}
+      - name: Add rustfmt
+        run: rustup component add rustfmt || echo "rustfmt not available"
+      - name: Test
+        run: cargo test
+      - name: Test (no-default-features)
+        run: cargo test --no-default-features
+      - name: Test (build only)
+        run: cargo test --no-default-features --features build
       - name: Run 'cargo tarpaulin'
         if: matrix.os == 'ubuntu-latest'
         run: cargo tarpaulin --out Xml
