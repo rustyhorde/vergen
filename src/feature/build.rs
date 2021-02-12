@@ -82,7 +82,7 @@ mod test {
 #[cfg(all(test, not(feature = "build")))]
 mod test {
     use super::add_build_config;
-    use crate::{config::Config, constants::ConstantsFlags, error::Result, output::VergenKey};
+    use crate::{config::{Config, VergenKey}, constants::ConstantsFlags, error::Result};
     use std::collections::HashMap;
 
     fn check_build_keys(cfg_map: &HashMap<VergenKey, Option<String>>) {

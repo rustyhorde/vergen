@@ -100,7 +100,7 @@ mod test {
 #[cfg(all(test, not(feature = "rustc")))]
 mod test {
     use super::add_rustc_config;
-    use crate::{config::Config, constants::ConstantsFlags, error::Result, output::VergenKey};
+    use crate::{config::{Config, VergenKey}, constants::ConstantsFlags, error::Result};
     use std::collections::HashMap;
 
     fn check_rustc_keys(cfg_map: &HashMap<VergenKey, Option<String>>) {

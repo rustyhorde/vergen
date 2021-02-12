@@ -8,8 +8,11 @@
 
 //! `vergen` feature implementations
 
-use crate::config::VergenKey;
-use std::collections::HashMap;
+#[cfg(any(feature = "build", feature = "git", feature = "rustc"))]
+use {
+    crate::config::VergenKey,
+    std::collections::HashMap,
+};
 
 mod build;
 mod git;
@@ -19,6 +22,7 @@ pub(crate) use build::add_build_config;
 pub(crate) use git::add_git_config;
 pub(crate) use rustc::add_rustc_config;
 
+#[cfg(any(feature = "build", feature = "git", feature = "rustc"))]
 pub(crate) fn add_entry(
     map: &mut HashMap<VergenKey, Option<String>>,
     key: VergenKey,
@@ -27,7 +31,7 @@ pub(crate) fn add_entry(
     *map.entry(key).or_insert_with(Option::default) = value;
 }
 
-#[cfg(test)]
+#[cfg(all(test, any(feature = "build", feature = "git", feature = "rustc")))]
 mod test {
     use super::add_entry;
     use crate::config::VergenKey;
