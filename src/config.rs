@@ -11,8 +11,8 @@
 use crate::{
     constants::{
         ConstantsFlags, BRANCH_NAME, BUILD_DATE_NAME, BUILD_TIMESTAMP_NAME, COMMIT_DATE_NAME,
-        RUSTC_CHANNEL_NAME, RUSTC_HOST_TRIPLE_NAME, RUSTC_SEMVER_NAME, SEMVER_NAME,
-        SEMVER_TAGS_NAME, SHA_NAME, SHA_SHORT_NAME, TARGET_TRIPLE_NAME,
+        RUSTC_CHANNEL_NAME, RUSTC_COMMIT_HASH, RUSTC_HOST_TRIPLE_NAME, RUSTC_SEMVER_NAME,
+        SEMVER_NAME, SEMVER_TAGS_NAME, SHA_NAME, SHA_SHORT_NAME,
     },
     error::Result,
     feature::{add_build_config, add_git_config, add_rustc_config},
@@ -37,8 +37,6 @@ pub(crate) enum VergenKey {
     ShortSha,
     /// The commit date. (VERGEN_COMMIT_DATE).
     CommitDate,
-    /// The target triple. (VERGEN_TARGET_TRIPLE)
-    TargetTriple,
     /// The semver version from the last git tag. (VERGEN_SEMVER)
     Semver,
     /// The semver version from the last git tag, including lightweight.
@@ -52,6 +50,8 @@ pub(crate) enum VergenKey {
     HostTriple,
     /// The current working branch name (VERGEN_BRANCH)
     Branch,
+    /// The rustc commit hash. (VERGEN_RUSTC_COMMIT_HASH)
+    RustcCommitHash,
 }
 
 impl VergenKey {
@@ -63,13 +63,13 @@ impl VergenKey {
             VergenKey::Sha => SHA_NAME,
             VergenKey::ShortSha => SHA_SHORT_NAME,
             VergenKey::CommitDate => COMMIT_DATE_NAME,
-            VergenKey::TargetTriple => TARGET_TRIPLE_NAME,
             VergenKey::Semver => SEMVER_NAME,
             VergenKey::SemverLightweight => SEMVER_TAGS_NAME,
             VergenKey::RustcSemver => RUSTC_SEMVER_NAME,
             VergenKey::RustcChannel => RUSTC_CHANNEL_NAME,
             VergenKey::HostTriple => RUSTC_HOST_TRIPLE_NAME,
             VergenKey::Branch => BRANCH_NAME,
+            VergenKey::RustcCommitHash => RUSTC_COMMIT_HASH,
         }
     }
 }

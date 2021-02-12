@@ -20,7 +20,8 @@ pub(crate) fn add_rustc_config(flags: ConstantsFlags, config: &mut Config) -> Re
     if flags.intersects(
         ConstantsFlags::RUSTC_CHANNEL
             | ConstantsFlags::RUSTC_HOST_TRIPLE
-            | ConstantsFlags::RUSTC_SEMVER,
+            | ConstantsFlags::RUSTC_SEMVER
+            | ConstantsFlags::RUSTC_COMMIT_HASH,
     ) {
         let rustc = version_meta()?;
 
@@ -53,6 +54,14 @@ pub(crate) fn add_rustc_config(flags: ConstantsFlags, config: &mut Config) -> Re
                 config.cfg_map_mut(),
                 VergenKey::RustcSemver,
                 Some(format!("{}", rustc.semver)),
+            );
+        }
+
+        if flags.contains(ConstantsFlags::RUSTC_COMMIT_HASH) {
+            add_entry(
+                config.cfg_map_mut(),
+                VergenKey::RustcCommitHash,
+                rustc.commit_hash,
             );
         }
     }

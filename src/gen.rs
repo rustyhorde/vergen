@@ -57,14 +57,16 @@ where
         writeln!(stdout, "cargo:rustc-env={}={}", k.name(), v)?;
     }
 
-    // Add the HEAD path to cargo:rerun-if-changed
-    if let Some(head_path) = config.head_path() {
-        writeln!(stdout, "cargo:rerun-if-changed={}", head_path.display())?;
-    }
+    if flags.contains(ConstantsFlags::REBUILD_ON_HEAD_CHANGE) {
+        // Add the HEAD path to cargo:rerun-if-changed
+        if let Some(head_path) = config.head_path() {
+            writeln!(stdout, "cargo:rerun-if-changed={}", head_path.display())?;
+        }
 
-    // Add the resolved ref path to cargo:rerun-if-changed
-    if let Some(ref_path) = config.ref_path() {
-        writeln!(stdout, "cargo:rerun-if-changed={}", ref_path.display())?;
+        // Add the resolved ref path to cargo:rerun-if-changed
+        if let Some(ref_path) = config.ref_path() {
+            writeln!(stdout, "cargo:rerun-if-changed={}", ref_path.display())?;
+        }
     }
 
     Ok(())
