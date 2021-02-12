@@ -160,7 +160,16 @@ mod test {
         constants::ConstantsFlags,
         error::Result,
     };
-    use std::{collections::BTreeMap, env, path::PathBuf};
+    use lazy_static::lazy_static;
+    use regex::Regex;
+    use std::{collections::BTreeMap, convert::identity, env, path::PathBuf};
+
+    lazy_static! {
+        static ref SHORT_SHA_REGEX: Regex = Regex::new(r"^[0-9a-f]{7}$").unwrap();
+        static ref SHA_REGEX: Regex = Regex::new(r"^[0-9a-f]{40}$").unwrap();
+        static ref SEMVER_REGEX: Regex = Regex::new(r"^(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)(?:-(?P<prerelease>(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+(?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$").unwrap();
+        static ref RFC3339_REGEX: Regex = Regex::new(r"^([0-9]+)-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])[Tt]([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9]|60)(\.[0-9]+)?(([Zz])|([\+|\-]([01][0-9]|2[0-3]):[0-5][0-9]))$").unwrap();
+    }
 
     fn check_git_keys(cfg_map: &BTreeMap<VergenKey, Option<String>>) {
         let mut count = 0;
@@ -181,6 +190,42 @@ mod test {
         assert_eq!(count, 6);
     }
 
+    // cargo:rustc-env=VERGEN_BUILD_DATE=2021-02-12
+    // cargo:rustc-env=VERGEN_BUILD_TIMESTAMP=2021-02-12T18:02:05.827740629+00:00
+    // cargo:rustc-env=VERGEN_GIT_BRANCH=feature/git2
+    // cargo:rustc-env=VERGEN_GIT_COMMIT_DATE=2021-02-12T12:57:25-05:00
+    // cargo:rustc-env=VERGEN_GIT_SEMVER=v3.2.0-92-gd3c3c4a
+    // cargo:rustc-env=VERGEN_GIT_SEMVER_LIGHTWEIGHT=v3.2.0-92-gd3c3c4a
+    // cargo:rustc-env=VERGEN_GIT_SHA=d3c3c4a4ca051cdde5a92da208f52350f583fd18
+    // cargo:rustc-env=VERGEN_GIT_SHA_SHORT=d3c3c4a
+    // cargo:rustc-env=VERGEN_RUSTC_CHANNEL=nightly
+    // cargo:rustc-env=VERGEN_RUSTC_COMMIT_DATE=2021-02-11
+    // cargo:rustc-env=VERGEN_RUSTC_COMMIT_HASH=e9920ef7749d11fc71cc32ca4ba055bcfeaab945
+    // cargo:rustc-env=VERGEN_RUSTC_HOST_TRIPLE=x86_64-unknown-linux-gnu
+    // cargo:rustc-env=VERGEN_RUSTC_LLVM_VERSION=11.0
+    // cargo:rustc-env=VERGEN_RUSTC_SEMVER=1.52.0-nightly
+    // cargo:rerun-if-changed=/home/jozias/projects/rust-lang/vergen/.git/HEAD
+    // cargo:rerun-if-changed=/home/jozias/projects/rust-lang/vergen/.git/refs/heads/feature/git2
+
+    fn get_map_value(key: VergenKey, cfg_map: &BTreeMap<VergenKey, Option<String>>) -> String {
+        cfg_map
+            .get(&key)
+            .unwrap_or_else(|| &None)
+            .clone()
+            .map_or_else(String::default, identity)
+    }
+
+    fn check_git_instructions(cfg_map: &BTreeMap<VergenKey, Option<String>>) {
+        assert!(SHORT_SHA_REGEX.is_match(&get_map_value(VergenKey::ShortSha, cfg_map)));
+        assert!(SHA_REGEX.is_match(&get_map_value(VergenKey::Sha, cfg_map)));
+        assert!(SEMVER_REGEX
+            .is_match(&get_map_value(VergenKey::Semver, cfg_map).trim_start_matches("v")));
+        assert!(SEMVER_REGEX.is_match(
+            &get_map_value(VergenKey::SemverLightweight, cfg_map).trim_start_matches("v")
+        ));
+        assert!(RFC3339_REGEX.is_match(&get_map_value(VergenKey::CommitDate, cfg_map)));
+    }
+
     #[test]
     fn semver_fallback_works() -> Result<()> {
         let mut config = Config::default();
@@ -194,6 +239,9 @@ mod test {
                 .map(|x| x.as_ref().unwrap().to_string()),
             env::var("CARGO_PKG_VERSION").ok()
         );
+        check_git_instructions(config.cfg_map());
+        assert!(config.ref_path().is_some());
+        assert!(config.head_path().is_some());
         Ok(())
     }
 
@@ -210,6 +258,9 @@ mod test {
                 .map(|x| x.as_ref().unwrap().to_string())
                 != env::var("CARGO_PKG_VERSION").ok()
         );
+        check_git_instructions(config.cfg_map());
+        assert!(config.ref_path().is_some());
+        assert!(config.head_path().is_some());
         Ok(())
     }
 }
