@@ -36,7 +36,9 @@ bitflags!(
     ///     ConstantsFlags::RUSTC_CHANNEL |
     ///     ConstantsFlags::REBUILD_ON_HEAD_CHANGE |
     ///     ConstantsFlags::BRANCH |
-    ///     ConstantsFlags::RUSTC_COMMIT_HASH;
+    ///     ConstantsFlags::RUSTC_COMMIT_HASH |
+    ///     ConstantsFlags::RUSTC_COMMIT_DATE |
+    ///     ConstantsFlags::RUSTC_LLVM_VERSION;
     ///
     /// assert_eq!(actual_flags, expected_flags)
     /// # }
@@ -104,6 +106,14 @@ bitflags!(
         ///
         /// `abcdef123`
         const RUSTC_COMMIT_HASH      = 0b0100_0000_0000_0000;
+        /// Generates the rustc commit date
+        ///
+        /// `01/22/21`
+        const RUSTC_COMMIT_DATE      = 0b1000_0000_0000_0000;
+        // Generates the rustc LLVM version
+        ///
+        /// `1.2.3`
+        const RUSTC_LLVM_VERSION     = 0b0001_0000_0000_0000_0000;
     }
 );
 
@@ -124,6 +134,8 @@ pub(crate) const RUSTC_CHANNEL_NAME: &str = "VERGEN_RUSTC_CHANNEL";
 pub(crate) const RUSTC_HOST_TRIPLE_NAME: &str = "VERGEN_HOST_TRIPLE";
 pub(crate) const RUSTC_SEMVER_NAME: &str = "VERGEN_RUSTC_SEMVER";
 pub(crate) const RUSTC_COMMIT_HASH: &str = "VERGEN_RUSTC_COMMIT_HASH";
+pub(crate) const RUSTC_COMMIT_DATE: &str = "VERGEN_RUSTC_COMMIT_DATE";
+pub(crate) const RUSTC_LLVM_VERSION: &str = "VERGEN_RUSTC_LLVM_VERSION";
 
 #[cfg(test)]
 mod test {
@@ -157,6 +169,14 @@ mod test {
             ConstantsFlags::RUSTC_COMMIT_HASH.bits(),
             0b0100_0000_0000_0000
         );
+        assert_eq!(
+            ConstantsFlags::RUSTC_COMMIT_DATE.bits(),
+            0b1000_0000_0000_0000
+        );
+        assert_eq!(
+            ConstantsFlags::RUSTC_LLVM_VERSION.bits(),
+            0b0001_0000_0000_0000_0000
+        );
     }
 
     #[test]
@@ -178,5 +198,7 @@ mod test {
         assert_eq!(RUSTC_CHANNEL_NAME, "VERGEN_RUSTC_CHANNEL");
         assert_eq!(RUSTC_HOST_TRIPLE_NAME, "VERGEN_HOST_TRIPLE");
         assert_eq!(RUSTC_COMMIT_HASH, "VERGEN_RUSTC_COMMIT_HASH");
+        assert_eq!(RUSTC_COMMIT_DATE, "VERGEN_RUSTC_COMMIT_DATE");
+        assert_eq!(RUSTC_LLVM_VERSION, "VERGEN_RUSTC_LLVM_VERSION");
     }
 }

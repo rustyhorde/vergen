@@ -11,8 +11,9 @@
 use crate::{
     constants::{
         ConstantsFlags, BRANCH_NAME, BUILD_DATE_NAME, BUILD_TIMESTAMP_NAME, COMMIT_DATE_NAME,
-        RUSTC_CHANNEL_NAME, RUSTC_COMMIT_HASH, RUSTC_HOST_TRIPLE_NAME, RUSTC_SEMVER_NAME,
-        SEMVER_NAME, SEMVER_TAGS_NAME, SHA_NAME, SHA_SHORT_NAME,
+        RUSTC_CHANNEL_NAME, RUSTC_COMMIT_DATE, RUSTC_COMMIT_HASH, RUSTC_HOST_TRIPLE_NAME,
+        RUSTC_LLVM_VERSION, RUSTC_SEMVER_NAME, SEMVER_NAME, SEMVER_TAGS_NAME, SHA_NAME,
+        SHA_SHORT_NAME,
     },
     error::Result,
     feature::{add_build_config, add_git_config, add_rustc_config},
@@ -52,6 +53,10 @@ pub(crate) enum VergenKey {
     Branch,
     /// The rustc commit hash. (VERGEN_RUSTC_COMMIT_HASH)
     RustcCommitHash,
+    /// The rustc commit date. (VERGEN_RUSTC_COMMIT_DATE)
+    RustcCommitDate,
+    /// The rustc LLVM version. (VERGEN_RUSTC_LLVM_VERSION)
+    RustcLlvmVersion,
 }
 
 impl VergenKey {
@@ -70,6 +75,8 @@ impl VergenKey {
             VergenKey::HostTriple => RUSTC_HOST_TRIPLE_NAME,
             VergenKey::Branch => BRANCH_NAME,
             VergenKey::RustcCommitHash => RUSTC_COMMIT_HASH,
+            VergenKey::RustcCommitDate => RUSTC_COMMIT_DATE,
+            VergenKey::RustcLlvmVersion => RUSTC_LLVM_VERSION,
         }
     }
 }

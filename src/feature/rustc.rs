@@ -21,7 +21,9 @@ pub(crate) fn add_rustc_config(flags: ConstantsFlags, config: &mut Config) -> Re
         ConstantsFlags::RUSTC_CHANNEL
             | ConstantsFlags::RUSTC_HOST_TRIPLE
             | ConstantsFlags::RUSTC_SEMVER
-            | ConstantsFlags::RUSTC_COMMIT_HASH,
+            | ConstantsFlags::RUSTC_COMMIT_HASH
+            | ConstantsFlags::RUSTC_COMMIT_DATE
+            | ConstantsFlags::RUSTC_LLVM_VERSION,
     ) {
         let rustc = version_meta()?;
 
@@ -63,6 +65,24 @@ pub(crate) fn add_rustc_config(flags: ConstantsFlags, config: &mut Config) -> Re
                 VergenKey::RustcCommitHash,
                 rustc.commit_hash,
             );
+        }
+
+        if flags.contains(ConstantsFlags::RUSTC_COMMIT_DATE) {
+            add_entry(
+                config.cfg_map_mut(),
+                VergenKey::RustcCommitDate,
+                rustc.commit_date,
+            );
+        }
+
+        if flags.contains(ConstantsFlags::RUSTC_LLVM_VERSION) {
+            if let Some(llvmver) = rustc.llvm_version {
+                add_entry(
+                    config.cfg_map_mut(),
+                    VergenKey::RustcLlvmVersion,
+                    Some(format!("{}", llvmver)),
+                );
+            }
         }
     }
     Ok(())
