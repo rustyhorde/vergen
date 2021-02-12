@@ -13,6 +13,7 @@
 | Appveyor     | [![Build status](https://ci.appveyor.com/api/projects/status/fjliwvxqayyecl1j?svg=true)](https://ci.appveyor.com/project/CraZySacX/vergen)|
 
 ## Code Coverage
+[![codecov](https://codecov.io/gh/rustyhorde/vergen/branch/master/graph/badge.svg?token=cBXro7o2UN)](https://codecov.io/gh/rustyhorde/vergen)
 [![Coverage Status](https://coveralls.io/repos/github/rustyhorde/vergen/badge.svg?branch=master)](https://coveralls.io/github/rustyhorde/vergen?branch=master)
 
 ## Documentation
