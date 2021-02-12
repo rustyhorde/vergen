@@ -9,7 +9,7 @@
 //! `vergen` feature implementations
 
 #[cfg(any(feature = "build", feature = "git", feature = "rustc"))]
-use {crate::config::VergenKey, std::collections::HashMap};
+use {crate::config::VergenKey, std::collections::BTreeMap};
 
 mod build;
 mod git;
@@ -21,7 +21,7 @@ pub(crate) use rustc::add_rustc_config;
 
 #[cfg(any(feature = "build", feature = "git", feature = "rustc"))]
 pub(crate) fn add_entry(
-    map: &mut HashMap<VergenKey, Option<String>>,
+    map: &mut BTreeMap<VergenKey, Option<String>>,
     key: VergenKey,
     value: Option<String>,
 ) {
@@ -32,11 +32,11 @@ pub(crate) fn add_entry(
 mod test {
     use super::add_entry;
     use crate::config::VergenKey;
-    use std::collections::HashMap;
+    use std::collections::BTreeMap;
 
     #[test]
     fn check_add_entry() {
-        let mut hm = HashMap::new();
+        let mut hm = BTreeMap::new();
         add_entry(&mut hm, VergenKey::BuildTimestamp, Some("".to_string()));
         assert!(hm.get(&VergenKey::BuildTimestamp).is_some());
     }

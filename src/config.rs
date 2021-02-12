@@ -10,10 +10,10 @@
 
 use crate::{
     constants::{
-        ConstantsFlags, BRANCH_NAME, BUILD_DATE_NAME, BUILD_TIMESTAMP_NAME, COMMIT_DATE_NAME,
-        RUSTC_CHANNEL_NAME, RUSTC_COMMIT_DATE, RUSTC_COMMIT_HASH, RUSTC_HOST_TRIPLE_NAME,
-        RUSTC_LLVM_VERSION, RUSTC_SEMVER_NAME, SEMVER_NAME, SEMVER_TAGS_NAME, SHA_NAME,
-        SHA_SHORT_NAME,
+        ConstantsFlags, BUILD_DATE_NAME, BUILD_TIMESTAMP_NAME, GIT_BRANCH_NAME,
+        GIT_COMMIT_DATE_NAME, GIT_SEMVER_NAME, GIT_SEMVER_TAGS_NAME, GIT_SHA_NAME,
+        GIT_SHA_SHORT_NAME, RUSTC_CHANNEL_NAME, RUSTC_COMMIT_DATE, RUSTC_COMMIT_HASH,
+        RUSTC_HOST_TRIPLE_NAME, RUSTC_LLVM_VERSION, RUSTC_SEMVER_NAME,
     },
     error::Result,
     feature::{add_build_config, add_git_config, add_rustc_config},
@@ -21,21 +21,19 @@ use crate::{
 use enum_iterator::IntoEnumIterator;
 use getset::{Getters, MutGetters};
 use std::{
-    collections::HashMap,
+    collections::BTreeMap,
     path::{Path, PathBuf},
 };
 
 /// Build information keys.
-#[derive(Clone, Copy, Debug, IntoEnumIterator, Hash, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, IntoEnumIterator, Hash, Eq, Ord, PartialEq, PartialOrd)]
 pub(crate) enum VergenKey {
-    /// The build timestamp. (VERGEN_BUILD_TIMESTAMP)
-    BuildTimestamp,
     /// The build date. (VERGEN_BUILD_DATE)
     BuildDate,
-    /// The latest commit SHA. (VERGEN_SHA)
-    Sha,
-    /// The latest commit short SHA. (VERGEN_SHA_SHORT)
-    ShortSha,
+    /// The build timestamp. (VERGEN_BUILD_TIMESTAMP)
+    BuildTimestamp,
+    /// The current working branch name (VERGEN_BRANCH)
+    Branch,
     /// The commit date. (VERGEN_COMMIT_DATE).
     CommitDate,
     /// The semver version from the last git tag. (VERGEN_SEMVER)
@@ -43,40 +41,42 @@ pub(crate) enum VergenKey {
     /// The semver version from the last git tag, including lightweight.
     /// (VERGEN_SEMVER_LIGHTWEIGHT)
     SemverLightweight,
-    /// The version information of the rust compiler. (VERGEN_RUSTC_SEMVER)
-    RustcSemver,
+    /// The latest commit SHA. (VERGEN_SHA)
+    Sha,
+    /// The latest commit short SHA. (VERGEN_SHA_SHORT)
+    ShortSha,
     /// The release channel of the rust compiler. (VERGEN_RUSTC_CHANNEL)
     RustcChannel,
-    /// The host triple. (VERGEN_HOST_TRIPLE)
-    HostTriple,
-    /// The current working branch name (VERGEN_BRANCH)
-    Branch,
-    /// The rustc commit hash. (VERGEN_RUSTC_COMMIT_HASH)
-    RustcCommitHash,
     /// The rustc commit date. (VERGEN_RUSTC_COMMIT_DATE)
     RustcCommitDate,
+    /// The rustc commit hash. (VERGEN_RUSTC_COMMIT_HASH)
+    RustcCommitHash,
+    /// The host triple. (VERGEN_HOST_TRIPLE)
+    RustcHostTriple,
     /// The rustc LLVM version. (VERGEN_RUSTC_LLVM_VERSION)
     RustcLlvmVersion,
+    /// The version information of the rust compiler. (VERGEN_RUSTC_SEMVER)
+    RustcSemver,
 }
 
 impl VergenKey {
     /// Get the name for the given key.
     pub(crate) fn name(self) -> &'static str {
         match self {
-            VergenKey::BuildTimestamp => BUILD_TIMESTAMP_NAME,
             VergenKey::BuildDate => BUILD_DATE_NAME,
-            VergenKey::Sha => SHA_NAME,
-            VergenKey::ShortSha => SHA_SHORT_NAME,
-            VergenKey::CommitDate => COMMIT_DATE_NAME,
-            VergenKey::Semver => SEMVER_NAME,
-            VergenKey::SemverLightweight => SEMVER_TAGS_NAME,
-            VergenKey::RustcSemver => RUSTC_SEMVER_NAME,
+            VergenKey::BuildTimestamp => BUILD_TIMESTAMP_NAME,
+            VergenKey::Branch => GIT_BRANCH_NAME,
+            VergenKey::CommitDate => GIT_COMMIT_DATE_NAME,
+            VergenKey::Semver => GIT_SEMVER_NAME,
+            VergenKey::SemverLightweight => GIT_SEMVER_TAGS_NAME,
+            VergenKey::Sha => GIT_SHA_NAME,
+            VergenKey::ShortSha => GIT_SHA_SHORT_NAME,
             VergenKey::RustcChannel => RUSTC_CHANNEL_NAME,
-            VergenKey::HostTriple => RUSTC_HOST_TRIPLE_NAME,
-            VergenKey::Branch => BRANCH_NAME,
-            VergenKey::RustcCommitHash => RUSTC_COMMIT_HASH,
             VergenKey::RustcCommitDate => RUSTC_COMMIT_DATE,
+            VergenKey::RustcCommitHash => RUSTC_COMMIT_HASH,
+            VergenKey::RustcHostTriple => RUSTC_HOST_TRIPLE_NAME,
             VergenKey::RustcLlvmVersion => RUSTC_LLVM_VERSION,
+            VergenKey::RustcSemver => RUSTC_SEMVER_NAME,
         }
     }
 }
@@ -85,7 +85,7 @@ impl VergenKey {
 #[getset(get = "pub(crate)")]
 #[getset(get_mut = "pub(crate)")]
 pub(crate) struct Config {
-    cfg_map: HashMap<VergenKey, Option<String>>,
+    cfg_map: BTreeMap<VergenKey, Option<String>>,
     head_path: Option<PathBuf>,
     ref_path: Option<PathBuf>,
 }

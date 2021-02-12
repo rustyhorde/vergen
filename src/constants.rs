@@ -122,16 +122,16 @@ pub(crate) const BUILD_TIMESTAMP_NAME: &str = "VERGEN_BUILD_TIMESTAMP";
 pub(crate) const BUILD_DATE_NAME: &str = "VERGEN_BUILD_DATE";
 
 // git Constants
-pub(crate) const BRANCH_NAME: &str = "VERGEN_BRANCH";
-pub(crate) const COMMIT_DATE_NAME: &str = "VERGEN_COMMIT_DATE";
-pub(crate) const SEMVER_NAME: &str = "VERGEN_SEMVER";
-pub(crate) const SEMVER_TAGS_NAME: &str = "VERGEN_SEMVER_LIGHTWEIGHT";
-pub(crate) const SHA_NAME: &str = "VERGEN_SHA";
-pub(crate) const SHA_SHORT_NAME: &str = "VERGEN_SHA_SHORT";
+pub(crate) const GIT_BRANCH_NAME: &str = "VERGEN_GIT_BRANCH";
+pub(crate) const GIT_COMMIT_DATE_NAME: &str = "VERGEN_GIT_COMMIT_DATE";
+pub(crate) const GIT_SEMVER_NAME: &str = "VERGEN_GIT_SEMVER";
+pub(crate) const GIT_SEMVER_TAGS_NAME: &str = "VERGEN_GIT_SEMVER_LIGHTWEIGHT";
+pub(crate) const GIT_SHA_NAME: &str = "VERGEN_GIT_SHA";
+pub(crate) const GIT_SHA_SHORT_NAME: &str = "VERGEN_GIT_SHA_SHORT";
 
 // rustc Constants
 pub(crate) const RUSTC_CHANNEL_NAME: &str = "VERGEN_RUSTC_CHANNEL";
-pub(crate) const RUSTC_HOST_TRIPLE_NAME: &str = "VERGEN_HOST_TRIPLE";
+pub(crate) const RUSTC_HOST_TRIPLE_NAME: &str = "VERGEN_RUSTC_HOST_TRIPLE";
 pub(crate) const RUSTC_SEMVER_NAME: &str = "VERGEN_RUSTC_SEMVER";
 pub(crate) const RUSTC_COMMIT_HASH: &str = "VERGEN_RUSTC_COMMIT_HASH";
 pub(crate) const RUSTC_COMMIT_DATE: &str = "VERGEN_RUSTC_COMMIT_DATE";
@@ -186,17 +186,17 @@ mod test {
         assert_eq!(BUILD_DATE_NAME, "VERGEN_BUILD_DATE");
 
         // git Constants
-        assert_eq!(BRANCH_NAME, "VERGEN_BRANCH");
-        assert_eq!(SHA_NAME, "VERGEN_SHA");
-        assert_eq!(SHA_SHORT_NAME, "VERGEN_SHA_SHORT");
-        assert_eq!(COMMIT_DATE_NAME, "VERGEN_COMMIT_DATE");
-        assert_eq!(SEMVER_NAME, "VERGEN_SEMVER");
-        assert_eq!(SEMVER_TAGS_NAME, "VERGEN_SEMVER_LIGHTWEIGHT");
+        assert_eq!(GIT_BRANCH_NAME, "VERGEN_GIT_BRANCH");
+        assert_eq!(GIT_SHA_NAME, "VERGEN_GIT_SHA");
+        assert_eq!(GIT_SHA_SHORT_NAME, "VERGEN_GIT_SHA_SHORT");
+        assert_eq!(GIT_COMMIT_DATE_NAME, "VERGEN_GIT_COMMIT_DATE");
+        assert_eq!(GIT_SEMVER_NAME, "VERGEN_GIT_SEMVER");
+        assert_eq!(GIT_SEMVER_TAGS_NAME, "VERGEN_GIT_SEMVER_LIGHTWEIGHT");
 
         // rustc Constants
         assert_eq!(RUSTC_SEMVER_NAME, "VERGEN_RUSTC_SEMVER");
         assert_eq!(RUSTC_CHANNEL_NAME, "VERGEN_RUSTC_CHANNEL");
-        assert_eq!(RUSTC_HOST_TRIPLE_NAME, "VERGEN_HOST_TRIPLE");
+        assert_eq!(RUSTC_HOST_TRIPLE_NAME, "VERGEN_RUSTC_HOST_TRIPLE");
         assert_eq!(RUSTC_COMMIT_HASH, "VERGEN_RUSTC_COMMIT_HASH");
         assert_eq!(RUSTC_COMMIT_DATE, "VERGEN_RUSTC_COMMIT_DATE");
         assert_eq!(RUSTC_LLVM_VERSION, "VERGEN_RUSTC_LLVM_VERSION");

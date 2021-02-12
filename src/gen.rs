@@ -6,7 +6,7 @@
 // option. All files in the project carrying such notice may not be copied,
 // modified, or distributed except according to those terms.
 
-//! `vergen` cargo flag generation
+//! `vergen` cargo instruction generation
 
 use crate::{
     config::{Config, VergenKey},
@@ -18,9 +18,11 @@ use std::{
     path::Path,
 };
 
-/// Some Docs
+/// Generate the `cargo:` instructions
 ///
 /// # Errors
+///
+/// Any generated errors will be wrapped in [vergen::Error](crate::error::Error)
 ///
 #[cfg(not(feature = "git"))]
 pub fn gen(flags: ConstantsFlags) -> Result<()> {
@@ -29,10 +31,22 @@ pub fn gen(flags: ConstantsFlags) -> Result<()> {
     gen_cargo_instructions(flags, no_repo, &mut io::stdout(), &mut io::stderr())
 }
 
-/// Some Docs
+/// Generate the `cargo:` instructions
 ///
 /// # Errors
 ///
+/// Any generated errors will be wrapped in [vergen::Error](crate::error::Error)
+///
+/// # Usage
+///
+/// ```
+/// # use vergen::{ConstantsFlags, gen};
+/// #
+/// # fn main() {
+/// // Generate the 'cargo:' instruction output
+/// gen(ConstantsFlags::all()).expect("Unable to generate the cargo keys!");
+/// # }
+/// ```
 #[cfg(feature = "git")]
 pub fn gen(flags: ConstantsFlags) -> Result<()> {
     gen_cargo_instructions(flags, Some("."), &mut io::stdout(), &mut io::stderr())

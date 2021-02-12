@@ -160,9 +160,9 @@ mod test {
         constants::ConstantsFlags,
         error::Result,
     };
-    use std::{collections::HashMap, path::PathBuf};
+    use std::{collections::BTreeMap, path::PathBuf};
 
-    fn check_git_keys(cfg_map: &HashMap<VergenKey, Option<String>>) {
+    fn check_git_keys(cfg_map: &BTreeMap<VergenKey, Option<String>>) {
         let mut count = 0;
         for (k, v) in cfg_map {
             match *k {

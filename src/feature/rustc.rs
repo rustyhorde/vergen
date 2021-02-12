@@ -46,7 +46,7 @@ pub(crate) fn add_rustc_config(flags: ConstantsFlags, config: &mut Config) -> Re
         if flags.contains(ConstantsFlags::RUSTC_HOST_TRIPLE) {
             add_entry(
                 config.cfg_map_mut(),
-                VergenKey::HostTriple,
+                VergenKey::RustcHostTriple,
                 Some(rustc.host),
             );
         }
@@ -101,13 +101,13 @@ mod test {
         constants::ConstantsFlags,
         error::Result,
     };
-    use std::collections::HashMap;
+    use std::collections::BTreeMap;
 
-    fn check_rustc_keys(cfg_map: &HashMap<VergenKey, Option<String>>) {
+    fn check_rustc_keys(cfg_map: &BTreeMap<VergenKey, Option<String>>) {
         let mut count = 0;
         for (k, v) in cfg_map {
             match *k {
-                VergenKey::HostTriple | VergenKey::RustcChannel | VergenKey::RustcSemver => {
+                VergenKey::RustcHostTriple | VergenKey::RustcChannel | VergenKey::RustcSemver => {
                     assert!(v.is_some());
                     count += 1;
                 }
