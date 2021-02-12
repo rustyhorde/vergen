@@ -221,3 +221,9 @@ mod gen;
 pub use crate::constants::ConstantsFlags;
 pub use crate::error::Error;
 pub use crate::gen::gen;
+
+#[cfg(all(test, not(feature = "git")))]
+use {
+    lazy_static as _,
+    regex as _,
+};
