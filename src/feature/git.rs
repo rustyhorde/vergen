@@ -160,7 +160,7 @@ mod test {
         constants::ConstantsFlags,
         error::Result,
     };
-    use std::{collections::BTreeMap, path::PathBuf};
+    use std::{collections::BTreeMap, env, path::PathBuf};
 
     fn check_git_keys(cfg_map: &BTreeMap<VergenKey, Option<String>>) {
         let mut count = 0;
@@ -182,11 +182,18 @@ mod test {
     }
 
     #[test]
-    fn add_git_config_works() -> Result<()> {
+    fn semver_fallback_works() -> Result<()> {
         let mut config = Config::default();
         let no_tags_path = PathBuf::from("testdata").join("notagsrepo");
         add_git_config(ConstantsFlags::all(), Some(no_tags_path), &mut config)?;
         check_git_keys(config.cfg_map());
+        assert_eq!(
+            config
+                .cfg_map()
+                .get(&VergenKey::Semver)
+                .map(|x| x.as_ref().unwrap().to_string()),
+            env::var("CARGO_PKG_VERSION").ok()
+        );
         Ok(())
     }
 
@@ -196,6 +203,13 @@ mod test {
         let tags_path = PathBuf::from("testdata").join("tagsrepo");
         add_git_config(ConstantsFlags::all(), Some(tags_path), &mut config)?;
         check_git_keys(config.cfg_map());
+        assert!(
+            config
+                .cfg_map()
+                .get(&VergenKey::Semver)
+                .map(|x| x.as_ref().unwrap().to_string())
+                != env::var("CARGO_PKG_VERSION").ok()
+        );
         Ok(())
     }
 }
