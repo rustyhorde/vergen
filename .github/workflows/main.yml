@@ -89,6 +89,8 @@ jobs:
         run: rustup update --no-self-update ${{ matrix.rust }} && rustup default ${{ matrix.rust }}
       - name: ➕ Add ➕
         run: rustup component add rustfmt || echo "rustfmt not available"
+      - name: ➕ Add ➕
+        run: rustup component add clippy || echo "clippy not available"
       - name: ☢️ Formatting ☢️
         run: cargo fmt --all -- --check
       - name: 🕳️ Lints 🕳️
