@@ -79,7 +79,6 @@ jobs:
         continue-on-error: true
       - name: 💾 Install (cargo-all-features) 💾
         uses: actions-rs/install@v0.1
-        if: matrix.os == 'ubuntu-latest'
         with:
           crate: cargo-all-features
           version: latest
