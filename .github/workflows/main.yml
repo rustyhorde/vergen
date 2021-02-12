@@ -31,9 +31,16 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: recursive
+      - uses: actions-rs/install@v0.1
+        with:
+          crate: cargo-tarpaulin
+          version: latest
+          use-tool-cache: true
       - run: cd testdata/notagsrepo && git checkout master && cd ..
       - run: cd testdata/tagsrepo && git checkout master && cd ..
+      - run: git submodule foreach --recursive 'git fetch --tags'
       - run: rustup update --no-self-update ${{ matrix.rust }} && rustup default ${{ matrix.rust }}
       - run: rustup component add rustfmt || echo "rustfmt not available"
       - run: cargo test
       - run: cargo test --no-default-features
+      - run: cargo tarpaulin --coveralls ${{ github.token }}
