@@ -66,4 +66,9 @@ jobs:
       - run: cargo test --no-default-features
       - name: Run 'cargo tarpaulin'
         if: matrix.os == 'ubuntu-latest'
-        run: cargo tarpaulin --coveralls ${{ github.token }}
+        run: cargo tarpaulin --out Xml
+      - name: Upload to codecov
+        uses: codecov/codecov-action@v1
+        if: matrix.os == 'ubuntu-latest'
+        with:
+          files: ./cobertura.xml
