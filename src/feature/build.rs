@@ -87,9 +87,9 @@ mod test {
         constants::ConstantsFlags,
         error::Result,
     };
-    use std::collections::HashMap;
+    use std::collections::BTreeMap;
 
-    fn check_build_keys(cfg_map: &HashMap<VergenKey, Option<String>>) {
+    fn check_build_keys(cfg_map: &BTreeMap<VergenKey, Option<String>>) {
         let mut count = 0;
         for (k, v) in cfg_map {
             match *k {

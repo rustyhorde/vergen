@@ -134,13 +134,13 @@ mod test {
         constants::ConstantsFlags,
         error::Result,
     };
-    use std::collections::HashMap;
+    use std::collections::BTreeMap;
 
-    fn check_rustc_keys(cfg_map: &HashMap<VergenKey, Option<String>>) {
+    fn check_rustc_keys(cfg_map: &BTreeMap<VergenKey, Option<String>>) {
         let mut count = 0;
         for (k, v) in cfg_map {
             match *k {
-                VergenKey::HostTriple | VergenKey::RustcChannel | VergenKey::RustcSemver => {
+                VergenKey::RustcHostTriple | VergenKey::RustcChannel | VergenKey::RustcSemver => {
                     assert!(v.is_none());
                     count += 1;
                 }
