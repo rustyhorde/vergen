@@ -11,7 +11,7 @@
 use crate::{config::Config, constants::ConstantsFlags, error::Result};
 #[cfg(feature = "rustc")]
 use {
-    crate::{feature::add_entry, output::VergenKey},
+    crate::{config::VergenKey, feature::add_entry},
     rustc_version::{version_meta, Channel},
 };
 
@@ -67,7 +67,11 @@ pub(crate) fn add_rustc_config(_flags: ConstantsFlags, _config: &mut Config) -> 
 #[cfg(all(test, feature = "rustc"))]
 mod test {
     use super::add_rustc_config;
-    use crate::{config::Config, constants::ConstantsFlags, error::Result, output::VergenKey};
+    use crate::{
+        config::{Config, VergenKey},
+        constants::ConstantsFlags,
+        error::Result,
+    };
     use std::collections::HashMap;
 
     fn check_rustc_keys(cfg_map: &HashMap<VergenKey, Option<String>>) {

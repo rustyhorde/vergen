@@ -12,7 +12,7 @@ use crate::{config::Config, constants::ConstantsFlags, error::Result};
 use std::path::Path;
 #[cfg(feature = "git")]
 use {
-    crate::{error::Error, feature::add_entry, output::VergenKey},
+    crate::{config::VergenKey, error::Error, feature::add_entry},
     chrono::{FixedOffset, TimeZone},
     git2::{BranchType, DescribeOptions, Repository},
     std::env,
@@ -40,7 +40,6 @@ where
     T: AsRef<Path>,
 {
     if let Some(repo_path) = repo_path_opt {
-        let repo = Repository::discover(repo_path)?;
         if flags.intersects(
             ConstantsFlags::BRANCH
                 | ConstantsFlags::COMMIT_DATE
@@ -49,21 +48,34 @@ where
                 | ConstantsFlags::SHA
                 | ConstantsFlags::SHA_SHORT,
         ) {
+            let repo = Repository::discover(repo_path)?;
             let ref_head = repo.find_reference("HEAD")?;
-            let commit = ref_head.peel_to_commit()?;
+            let repo_path = repo.path().to_path_buf();
 
             if flags.contains(ConstantsFlags::BRANCH) {
                 add_branch_name(&repo, config)?;
             }
 
-            if flags.contains(ConstantsFlags::COMMIT_DATE) {
-                let offset = FixedOffset::east(commit.time().offset_minutes() * 60)
-                    .timestamp(commit.time().seconds(), 0);
-                add_entry(
-                    config.cfg_map_mut(),
-                    VergenKey::CommitDate,
-                    Some(offset.to_rfc3339()),
-                );
+            if flags.intersects(ConstantsFlags::COMMIT_DATE | ConstantsFlags::SHA) {
+                let commit = ref_head.peel_to_commit()?;
+
+                if flags.contains(ConstantsFlags::COMMIT_DATE) {
+                    let offset = FixedOffset::east(commit.time().offset_minutes() * 60)
+                        .timestamp(commit.time().seconds(), 0);
+                    add_entry(
+                        config.cfg_map_mut(),
+                        VergenKey::CommitDate,
+                        Some(offset.to_rfc3339()),
+                    );
+                }
+
+                if flags.contains(ConstantsFlags::SHA) {
+                    add_entry(
+                        config.cfg_map_mut(),
+                        VergenKey::Sha,
+                        Some(commit.id().to_string()),
+                    );
+                }
             }
 
             if flags.contains(ConstantsFlags::SEMVER) {
@@ -77,14 +89,6 @@ where
                 add_semver(&repo, &opts, true, config);
             }
 
-            if flags.contains(ConstantsFlags::SHA) {
-                add_entry(
-                    config.cfg_map_mut(),
-                    VergenKey::Sha,
-                    Some(commit.id().to_string()),
-                );
-            }
-
             if flags.contains(ConstantsFlags::SHA_SHORT) {
                 let obj = repo.revparse_single("HEAD")?;
                 add_entry(
@@ -93,6 +97,13 @@ where
                     obj.short_id()?.as_str().map(str::to_string),
                 );
             }
+
+            if let Ok(resolved) = ref_head.resolve() {
+                if let Some(name) = resolved.name() {
+                    *config.ref_path_mut() = Some(repo_path.join(name));
+                }
+            }
+            *config.head_path_mut() = Some(repo_path.join("HEAD"));
         }
     }
 
@@ -144,8 +155,12 @@ fn add_semver(repo: &Repository, opts: &DescribeOptions, lw: bool, config: &mut 
 #[cfg(all(test, feature = "git"))]
 mod test {
     use super::add_git_config;
-    use crate::{config::Config, constants::ConstantsFlags, error::Result, output::VergenKey};
-    use std::collections::HashMap;
+    use crate::{
+        config::{Config, VergenKey},
+        constants::ConstantsFlags,
+        error::Result,
+    };
+    use std::{collections::HashMap, path::PathBuf};
 
     fn check_git_keys(cfg_map: &HashMap<VergenKey, Option<String>>) {
         let mut count = 0;
@@ -169,11 +184,8 @@ mod test {
     #[test]
     fn add_git_config_works() -> Result<()> {
         let mut config = Config::default();
-        add_git_config(
-            ConstantsFlags::all(),
-            Some("testdata/notagsrepo"),
-            &mut config,
-        )?;
+        let no_tags_path = PathBuf::from("testdata").join("notagsrepo");
+        add_git_config(ConstantsFlags::all(), Some(no_tags_path), &mut config)?;
         check_git_keys(config.cfg_map());
         Ok(())
     }
@@ -181,11 +193,8 @@ mod test {
     #[test]
     fn git_describe_works() -> Result<()> {
         let mut config = Config::default();
-        add_git_config(
-            ConstantsFlags::all(),
-            Some("testdata/tagsrepo"),
-            &mut config,
-        )?;
+        let tags_path = PathBuf::from("testdata").join("tagsrepo");
+        add_git_config(ConstantsFlags::all(), Some(tags_path), &mut config)?;
         check_git_keys(config.cfg_map());
         Ok(())
     }

@@ -65,7 +65,7 @@
 //!
 //! ### Example 'build.rs'
 //! ```
-//! # use vergen::{ConstantsFlags, generate_cargo_keys};
+//! # use vergen::{ConstantsFlags, gen};
 //! #
 //! # fn main() {
 //!     // Setup the flags, toggling off the 'SEMVER_FROM_CARGO_PKG' flag
@@ -73,12 +73,12 @@
 //!     flags.toggle(ConstantsFlags::SEMVER_FROM_CARGO_PKG);
 //!
 //!     // Generate the 'cargo:' key output
-//!     generate_cargo_keys(flags).expect("Unable to generate the cargo keys!");
+//!     gen(flags).expect("Unable to generate the cargo keys!");
 //! # }
 //! ```
 //! ### Example 'build.rs' with SEMVER from `CARGO_PKG_VERSION`
 //! ```
-//! # use vergen::{ConstantsFlags, generate_cargo_keys};
+//! # use vergen::{ConstantsFlags, gen};
 //! #
 //! # fn other() {
 //!     // Setup the flags, toggling off the 'SEMVER' flag to use `CARGO_PKG_VERSION`
@@ -86,7 +86,7 @@
 //!     flags.toggle(ConstantsFlags::SEMVER);
 //!
 //!     // Generate the 'cargo:' key output
-//!     generate_cargo_keys(flags).expect("Unable to generate the cargo keys!");
+//!     gen(flags).expect("Unable to generate the cargo keys!");
 //! # }
 //! ```
 //!
@@ -210,9 +210,7 @@ mod constants;
 mod error;
 mod feature;
 mod gen;
-mod output;
 
 pub use crate::constants::ConstantsFlags;
 pub use crate::error::Error;
 pub use crate::gen::gen;
-pub use crate::output::envvar::generate_cargo_keys;

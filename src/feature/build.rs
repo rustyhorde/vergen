@@ -11,7 +11,7 @@
 use crate::{config::Config, constants::ConstantsFlags};
 #[cfg(feature = "build")]
 use {
-    crate::{feature::add_entry, output::VergenKey},
+    crate::{config::VergenKey, feature::add_entry},
     chrono::Utc,
     std::env,
 };
@@ -51,7 +51,10 @@ pub(crate) fn add_build_config(_flags: ConstantsFlags, _config: &mut Config) {}
 #[cfg(all(test, feature = "build"))]
 mod test {
     use super::add_build_config;
-    use crate::{config::Config, constants::ConstantsFlags, output::VergenKey};
+    use crate::{
+        config::{Config, VergenKey},
+        constants::ConstantsFlags,
+    };
     use std::collections::HashMap;
 
     fn check_build_keys(cfg_map: &HashMap<VergenKey, Option<String>>) {

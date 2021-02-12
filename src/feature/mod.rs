@@ -8,7 +8,7 @@
 
 //! `vergen` feature implementations
 
-use crate::output::VergenKey;
+use crate::config::VergenKey;
 use std::collections::HashMap;
 
 mod build;
@@ -30,7 +30,7 @@ pub(crate) fn add_entry(
 #[cfg(test)]
 mod test {
     use super::add_entry;
-    use crate::output::VergenKey;
+    use crate::config::VergenKey;
     use std::collections::HashMap;
 
     #[test]

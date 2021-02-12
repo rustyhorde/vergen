@@ -8,7 +8,11 @@
 
 //! `vergen` cargo flag generation
 
-use crate::{config::Config, constants::ConstantsFlags, error::Result, output::VergenKey};
+use crate::{
+    config::{Config, VergenKey},
+    constants::ConstantsFlags,
+    error::Result,
+};
 use std::{
     io::{self, Write},
     path::Path,
@@ -20,6 +24,7 @@ use std::{
 ///
 #[cfg(not(feature = "git"))]
 pub fn gen(flags: ConstantsFlags) -> Result<()> {
+    // This is here to help with type inference
     let no_repo: Option<&'static str> = None;
     gen_cargo_instructions(flags, no_repo, &mut io::stdout(), &mut io::stderr())
 }
@@ -52,6 +57,16 @@ where
         writeln!(stdout, "cargo:rustc-env={}={}", k.name(), v)?;
     }
 
+    // Add the HEAD path to cargo:rerun-if-changed
+    if let Some(head_path) = config.head_path() {
+        writeln!(stdout, "cargo:rerun-if-changed={}", head_path.display())?;
+    }
+
+    // Add the resolved ref path to cargo:rerun-if-changed
+    if let Some(ref_path) = config.ref_path() {
+        writeln!(stdout, "cargo:rerun-if-changed={}", ref_path.display())?;
+    }
+
     Ok(())
 }
 
@@ -67,7 +82,7 @@ fn some_vals<'a>(tuple: (&'a VergenKey, &'a Option<String>)) -> Option<(&VergenK
 mod test {
     use super::{gen, gen_cargo_instructions};
     use crate::{constants::ConstantsFlags, error::Result};
-    use std::io;
+    use std::{io, path::PathBuf};
 
     #[test]
     fn gen_works() -> Result<()> {
@@ -77,9 +92,23 @@ mod test {
 
     #[test]
     fn describe_falls_back() -> Result<()> {
+        let no_tags_path = PathBuf::from("testdata").join("notagsrepo");
         assert!(gen_cargo_instructions(
             ConstantsFlags::all(),
-            Some("testdata/notagsrepo"),
+            Some(no_tags_path),
+            &mut io::stdout(),
+            &mut io::stderr(),
+        )
+        .is_ok());
+        Ok(())
+    }
+
+    #[test]
+    fn describe() -> Result<()> {
+        let no_tags_path = PathBuf::from("testdata").join("tagsrepo");
+        assert!(gen_cargo_instructions(
+            ConstantsFlags::all(),
+            Some(no_tags_path),
             &mut io::stdout(),
             &mut io::stderr(),
         )
