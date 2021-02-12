@@ -9,10 +9,7 @@
 //! `vergen` feature implementations
 
 #[cfg(any(feature = "build", feature = "git", feature = "rustc"))]
-use {
-    crate::config::VergenKey,
-    std::collections::HashMap,
-};
+use {crate::config::VergenKey, std::collections::HashMap};
 
 mod build;
 mod git;
