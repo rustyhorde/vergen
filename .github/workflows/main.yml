@@ -29,6 +29,10 @@ jobs:
           other: i686-pc-windows-gnu
     steps:
       - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - run: cd testdata/notagsrepo && git checkout master && cd ..
+      - run: cd testdata/tagsrepo && git checkout master && cd ..
       - run: rustup update --no-self-update ${{ matrix.rust }} && rustup default ${{ matrix.rust }}
       - run: rustup component add rustfmt || echo "rustfmt not available"
       - run: cargo test
