@@ -61,6 +61,8 @@ jobs:
         run: cd testdata/notagsrepo && git checkout master && cd ..
       - name: Checkout master in tagsrepo submodule
         run: cd testdata/tagsrepo && git checkout master && cd ..
+      - name: Checkout v0.0.1 in detachedhead submodule
+        run: cd testdata/detachedhead && git checkout v0.0.1 && cd ..
       - name: Fetch tags in submodules
         run: git submodule foreach --recursive 'git fetch --tags'
       - name: Run rustup update

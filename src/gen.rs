@@ -131,4 +131,17 @@ mod test {
         .is_ok());
         Ok(())
     }
+
+    #[test]
+    fn detached_head() -> Result<()> {
+        let dh_path = PathBuf::from("testdata").join("detachedhead");
+        assert!(gen_cargo_instructions(
+            ConstantsFlags::all(),
+            Some(dh_path),
+            &mut io::stdout(),
+            &mut io::stderr(),
+        )
+        .is_ok());
+        Ok(())
+    }
 }
