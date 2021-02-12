@@ -67,9 +67,9 @@ jobs:
         run: cd testdata/tagsrepo && git checkout master && cd ..
       - name: ✔️ Checkout (detachedhead v0.0.1) ✔️
         run: cd testdata/detachedhead && git checkout v0.0.1 && cd ..
-      - name: 🐕🦴 Fetch (tags in submodules) 🐕🦴
+      - name: 🐕🦴 Fetch 🐕🦴
         run: git submodule foreach --recursive 'git fetch --tags'
-      - name: 💾 Install (cargo tarpaulin) 💾
+      - name: 💾 Install (cargo-tarpaulin) 💾
         uses: actions-rs/install@v0.1
         if: matrix.os == 'ubuntu-latest'
         with:
@@ -77,20 +77,30 @@ jobs:
           version: latest
           use-tool-cache: true
         continue-on-error: true
-      - name: 🔼📅 Update (rustup) 🔼📅
+      - name: 💾 Install (cargo-all-features) 💾
+        uses: actions-rs/install@v0.1
+        if: matrix.os == 'ubuntu-latest'
+        with:
+          crate: cargo-all-features
+          version: latest
+          use-tool-cache: true
+        continue-on-error: true
+      - name: 🔼📅 Update 🔼📅
         run: rustup update --no-self-update ${{ matrix.rust }} && rustup default ${{ matrix.rust }}
-      - name: ➕ Add (rustfmt) ➕
+      - name: ➕ Add ➕
         run: rustup component add rustfmt || echo "rustfmt not available"
+      - name: ☢️ Formatting ☢️
+        run: cargo fmt --all -- --check
+      - name: 🕳️ Lints 🕳️
+        run: cargo clippy --all -- -D warnings
+      - name: 🏗️ Build 🏗️
+        run: cargo build-all-features
       - name: 🧪 Test 🧪
-        run: cargo test
-      - name: 🧪 Test (no-default-features) 🧪
-        run: cargo test --no-default-features
-      - name: 🧪 Test (build only) 🧪
-        run: cargo test --no-default-features --features build
-      - name: 🙊 Run (code coverage) 🙊
+        run: cargo test-all-features
+      - name: 🙊 Code Coverage 🙊
         if: matrix.os == 'ubuntu-latest'
         run: cargo tarpaulin --out Xml
-      - name: 🔼🙊 Upload (codecov) 🔼🙊
+      - name: 🔼🙊 Upload Code Coverage 🔼🙊
         uses: codecov/codecov-action@v1
         if: matrix.os == 'ubuntu-latest'
         with:

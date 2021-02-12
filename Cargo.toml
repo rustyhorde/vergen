@@ -34,3 +34,6 @@ chrono = "0"
 [dev-dependencies]
 lazy_static = "1"
 regex = "1"
+
+[package.metadata.cargo-all-features]
+skip_optional_dependencies = true
