@@ -5,9 +5,7 @@
 [![Crates.io](https://img.shields.io/crates/d/vergen.svg)](https://crates.io/crates/vergen)
 
 ## Build Status
-|              |                                                                                   |
----------------|-----------------------------------------------------------------------------------|
-| Github       | ![CI](https://github.com/rustyhorde/vergen/workflows/CI/badge.svg) |
+![CI](https://github.com/rustyhorde/vergen/workflows/CI/badge.svg)
 
 ## Code Coverage
 [![codecov](https://codecov.io/gh/rustyhorde/vergen/branch/master/graph/badge.svg?token=cBXro7o2UN)](https://codecov.io/gh/rustyhorde/vergen)
