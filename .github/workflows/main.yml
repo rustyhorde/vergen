@@ -54,11 +54,8 @@ jobs:
         uses: actions/cache@v2
         with:
           path: |
-            ~/.cargo/registry
-            ~/.cargo/git
             ~/.cargo/bin/cargo-tarpaulin*
             ~/.cargo/bin/cargo-*-all-features*
-            target
           key: ${{ runner.os }}-${{ matrix.rust }}-${{ hashFiles('**/Cargo.toml') }}
       - name: ✔️ Checkout (notagsrepo master) ✔️
         run: cd testdata/notagsrepo && git checkout master && cd ..
