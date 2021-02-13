@@ -1,4 +1,4 @@
-// Copyright (c) 2016, 2018 vergen developers
+// Copyright (c) 2016, 2018, 2021 vergen developers
 //
 // Licensed under the Apache License, Version 2.0
 // <LICENSE-APACHE or http://www.apache.org/licenses/LICENSE-2.0> or the MIT
@@ -16,8 +16,6 @@ bitflags!(
     /// Use these to toggle off the generation of constants you won't use.
     ///
     /// ```
-    /// # extern crate vergen;
-    /// #
     /// # use vergen::ConstantsFlags;
     /// #
     /// # fn main() {
@@ -30,14 +28,15 @@ bitflags!(
     /// let expected_flags = ConstantsFlags::BUILD_TIMESTAMP |
     ///     ConstantsFlags::SHA |
     ///     ConstantsFlags::COMMIT_DATE |
-    ///     ConstantsFlags::TARGET_TRIPLE |
-    ///     ConstantsFlags::HOST_TRIPLE |
+    ///     ConstantsFlags::RUSTC_HOST_TRIPLE |
     ///     ConstantsFlags::SEMVER |
     ///     ConstantsFlags::RUSTC_SEMVER |
     ///     ConstantsFlags::RUSTC_CHANNEL |
     ///     ConstantsFlags::REBUILD_ON_HEAD_CHANGE |
     ///     ConstantsFlags::BRANCH |
-    ///     ConstantsFlags::TAG_DIRTY;
+    ///     ConstantsFlags::RUSTC_COMMIT_HASH |
+    ///     ConstantsFlags::RUSTC_COMMIT_DATE |
+    ///     ConstantsFlags::RUSTC_LLVM_VERSION;
     ///
     /// assert_eq!(actual_flags, expected_flags)
     /// # }
@@ -63,10 +62,6 @@ bitflags!(
         ///
         /// `2018-08-08`
         const COMMIT_DATE            = 0b0000_0000_0001_0000;
-        /// Generate the target triple constant.
-        ///
-        /// `x86_64-unknown-linux-gnu`
-        const TARGET_TRIPLE          = 0b0000_0000_0010_0000;
         /// Generate the semver constant.
         ///
         /// This defaults to the output of `git describe`.  If that output is
@@ -100,30 +95,45 @@ bitflags!(
         /// Generate the host triple constant.
         ///
         /// `x86_64-unknown-linux-gnu`
-        const HOST_TRIPLE            = 0b0001_0000_0000_0000;
+        const RUSTC_HOST_TRIPLE      = 0b0001_0000_0000_0000;
         /// Generate the branch name constant.
         ///
         /// `master`
         const BRANCH                 = 0b0010_0000_0000_0000;
-        /// Include 'dirty' indicator on the SHAs when built on directory with changes
+        /// Generates the rustc commit hash
         ///
-        /// `75b390d-dirty`
-        const TAG_DIRTY              = 0b0100_0000_0000_0000;
+        /// `abcdef123`
+        const RUSTC_COMMIT_HASH      = 0b0100_0000_0000_0000;
+        /// Generates the rustc commit date
+        ///
+        /// `01/22/21`
+        const RUSTC_COMMIT_DATE      = 0b1000_0000_0000_0000;
+        // Generates the rustc LLVM version
+        ///
+        /// `1.2.3`
+        const RUSTC_LLVM_VERSION     = 0b0001_0000_0000_0000_0000;
     }
 );
 
+// Build Constants
 pub(crate) const BUILD_TIMESTAMP_NAME: &str = "VERGEN_BUILD_TIMESTAMP";
 pub(crate) const BUILD_DATE_NAME: &str = "VERGEN_BUILD_DATE";
-pub(crate) const SHA_NAME: &str = "VERGEN_SHA";
-pub(crate) const SHA_SHORT_NAME: &str = "VERGEN_SHA_SHORT";
-pub(crate) const COMMIT_DATE_NAME: &str = "VERGEN_COMMIT_DATE";
-pub(crate) const TARGET_TRIPLE_NAME: &str = "VERGEN_TARGET_TRIPLE";
-pub(crate) const SEMVER_NAME: &str = "VERGEN_SEMVER";
-pub(crate) const SEMVER_TAGS_NAME: &str = "VERGEN_SEMVER_LIGHTWEIGHT";
-pub(crate) const RUSTC_SEMVER_NAME: &str = "VERGEN_RUSTC_SEMVER";
+
+// git Constants
+pub(crate) const GIT_BRANCH_NAME: &str = "VERGEN_GIT_BRANCH";
+pub(crate) const GIT_COMMIT_DATE_NAME: &str = "VERGEN_GIT_COMMIT_DATE";
+pub(crate) const GIT_SEMVER_NAME: &str = "VERGEN_GIT_SEMVER";
+pub(crate) const GIT_SEMVER_TAGS_NAME: &str = "VERGEN_GIT_SEMVER_LIGHTWEIGHT";
+pub(crate) const GIT_SHA_NAME: &str = "VERGEN_GIT_SHA";
+pub(crate) const GIT_SHA_SHORT_NAME: &str = "VERGEN_GIT_SHA_SHORT";
+
+// rustc Constants
 pub(crate) const RUSTC_CHANNEL_NAME: &str = "VERGEN_RUSTC_CHANNEL";
-pub(crate) const HOST_TRIPLE_NAME: &str = "VERGEN_HOST_TRIPLE";
-pub(crate) const BRANCH_NAME: &str = "VERGEN_BRANCH";
+pub(crate) const RUSTC_HOST_TRIPLE_NAME: &str = "VERGEN_RUSTC_HOST_TRIPLE";
+pub(crate) const RUSTC_SEMVER_NAME: &str = "VERGEN_RUSTC_SEMVER";
+pub(crate) const RUSTC_COMMIT_HASH: &str = "VERGEN_RUSTC_COMMIT_HASH";
+pub(crate) const RUSTC_COMMIT_DATE: &str = "VERGEN_RUSTC_COMMIT_DATE";
+pub(crate) const RUSTC_LLVM_VERSION: &str = "VERGEN_RUSTC_LLVM_VERSION";
 
 #[cfg(test)]
 mod test {
@@ -136,7 +146,6 @@ mod test {
         assert_eq!(ConstantsFlags::SHA.bits(), 0b0000_0100);
         assert_eq!(ConstantsFlags::SHA_SHORT.bits(), 0b0000_1000);
         assert_eq!(ConstantsFlags::COMMIT_DATE.bits(), 0b0001_0000);
-        assert_eq!(ConstantsFlags::TARGET_TRIPLE.bits(), 0b0010_0000);
         assert_eq!(ConstantsFlags::SEMVER.bits(), 0b0100_0000);
         assert_eq!(ConstantsFlags::SEMVER_LIGHTWEIGHT.bits(), 0b1000_0000);
         assert_eq!(
@@ -149,24 +158,45 @@ mod test {
         );
         assert_eq!(ConstantsFlags::RUSTC_SEMVER.bits(), 0b0100_0000_0000);
         assert_eq!(ConstantsFlags::RUSTC_CHANNEL.bits(), 0b1000_0000_0000);
-        assert_eq!(ConstantsFlags::HOST_TRIPLE.bits(), 0b0001_0000_0000_0000);
+        assert_eq!(
+            ConstantsFlags::RUSTC_HOST_TRIPLE.bits(),
+            0b0001_0000_0000_0000
+        );
         assert_eq!(ConstantsFlags::BRANCH.bits(), 0b0010_0000_0000_0000);
-        assert_eq!(ConstantsFlags::TAG_DIRTY.bits(), 0b0100_0000_0000_0000);
+        assert_eq!(
+            ConstantsFlags::RUSTC_COMMIT_HASH.bits(),
+            0b0100_0000_0000_0000
+        );
+        assert_eq!(
+            ConstantsFlags::RUSTC_COMMIT_DATE.bits(),
+            0b1000_0000_0000_0000
+        );
+        assert_eq!(
+            ConstantsFlags::RUSTC_LLVM_VERSION.bits(),
+            0b0001_0000_0000_0000_0000
+        );
     }
 
     #[test]
     fn constants_dont_change() {
+        // Build Constants
         assert_eq!(BUILD_TIMESTAMP_NAME, "VERGEN_BUILD_TIMESTAMP");
         assert_eq!(BUILD_DATE_NAME, "VERGEN_BUILD_DATE");
-        assert_eq!(SHA_NAME, "VERGEN_SHA");
-        assert_eq!(SHA_SHORT_NAME, "VERGEN_SHA_SHORT");
-        assert_eq!(COMMIT_DATE_NAME, "VERGEN_COMMIT_DATE");
-        assert_eq!(TARGET_TRIPLE_NAME, "VERGEN_TARGET_TRIPLE");
-        assert_eq!(SEMVER_NAME, "VERGEN_SEMVER");
-        assert_eq!(SEMVER_TAGS_NAME, "VERGEN_SEMVER_LIGHTWEIGHT");
+
+        // git Constants
+        assert_eq!(GIT_BRANCH_NAME, "VERGEN_GIT_BRANCH");
+        assert_eq!(GIT_SHA_NAME, "VERGEN_GIT_SHA");
+        assert_eq!(GIT_SHA_SHORT_NAME, "VERGEN_GIT_SHA_SHORT");
+        assert_eq!(GIT_COMMIT_DATE_NAME, "VERGEN_GIT_COMMIT_DATE");
+        assert_eq!(GIT_SEMVER_NAME, "VERGEN_GIT_SEMVER");
+        assert_eq!(GIT_SEMVER_TAGS_NAME, "VERGEN_GIT_SEMVER_LIGHTWEIGHT");
+
+        // rustc Constants
         assert_eq!(RUSTC_SEMVER_NAME, "VERGEN_RUSTC_SEMVER");
         assert_eq!(RUSTC_CHANNEL_NAME, "VERGEN_RUSTC_CHANNEL");
-        assert_eq!(HOST_TRIPLE_NAME, "VERGEN_HOST_TRIPLE");
-        assert_eq!(BRANCH_NAME, "VERGEN_BRANCH");
+        assert_eq!(RUSTC_HOST_TRIPLE_NAME, "VERGEN_RUSTC_HOST_TRIPLE");
+        assert_eq!(RUSTC_COMMIT_HASH, "VERGEN_RUSTC_COMMIT_HASH");
+        assert_eq!(RUSTC_COMMIT_DATE, "VERGEN_RUSTC_COMMIT_DATE");
+        assert_eq!(RUSTC_LLVM_VERSION, "VERGEN_RUSTC_LLVM_VERSION");
     }
 }

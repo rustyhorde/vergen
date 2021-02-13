@@ -12,10 +12,29 @@ readme = "README.md"
 repository = "https://github.com/rustyhorde/vergen"
 version = "3.2.0"
 
+[features]
+default = ["build", "git", "rustc"]
+build = ["chrono"]
+git = ["chrono", "git2"]
+rustc = ["rustc_version"]
+
 [dependencies]
 bitflags = "1"
-chrono = "0"
-rustc_version = "0"
+chrono = { version = "0", optional = true }
+getset = "0"
+git2 = { version = "0", optional = true }
+rustc_version = { version = "0", optional = true }
+serde = "1"
+serde_derive = "1"
+enum-iterator = "0.6.0"
 
 [build-dependencies]
 chrono = "0"
+
+[dev-dependencies]
+lazy_static = "1"
+regex = "1"
+rustversion = "1"
+
+[package.metadata.cargo-all-features]
+skip_optional_dependencies = true
