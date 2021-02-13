@@ -55,7 +55,7 @@ jobs:
             ~/.cargo/bin/cargo-tarpaulin*
             ~/.cargo/bin/cargo-*-all-features*
             target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.toml') }}
       - name: ✔️ Checkout ✔️
         uses: actions/checkout@v2
         with:
