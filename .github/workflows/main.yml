@@ -46,17 +46,16 @@ jobs:
           rust: nightly-gnu
           other: i686-pc-windows-gnu
     steps:
-      - name: 💵 Cache (cargo bin dir) 💵
+      - name: 💵 Cache 💵
         uses: actions/cache@v2
-        env:
-          cache-name: cache-cargo-bin
         with:
-          path: ~/.cargo/bin
-          key: ${{ runner.os }}-build-${{ env.cache-name }}
-          restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.cargo/bin/cargo-tarpaulin*
+            ~/.cargo/bin/cargo-*-all-features*
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       - name: ✔️ Checkout ✔️
         uses: actions/checkout@v2
         with:
