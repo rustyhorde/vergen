@@ -118,6 +118,7 @@ mod test {
         assert!(SEMVER_REGEX.is_match(&get_map_value(VergenKey::RustcSemver, cfg_map)));
     }
 
+    #[rustversion::nightly]
     fn check_rustc_keys(cfg_map: &BTreeMap<VergenKey, Option<String>>) {
         let mut count = 0;
         for (k, v) in cfg_map {
@@ -135,6 +136,25 @@ mod test {
             }
         }
         assert_eq!(count, 6);
+    }
+
+    #[rustversion::any(beta, stable)]
+    fn check_rustc_keys(cfg_map: &BTreeMap<VergenKey, Option<String>>) {
+        let mut count = 0;
+        for (k, v) in cfg_map {
+            match *k {
+                VergenKey::RustcHostTriple
+                | VergenKey::RustcChannel
+                | VergenKey::RustcSemver
+                | VergenKey::RustcCommitDate
+                | VergenKey::RustcCommitHash => {
+                    assert!(v.is_some());
+                    count += 1;
+                }
+                _ => {}
+            }
+        }
+        assert_eq!(count, 5);
     }
 
     #[test]

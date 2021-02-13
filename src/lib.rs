@@ -230,6 +230,9 @@ pub use crate::gen::gen;
 ))]
 use {lazy_static as _, regex as _};
 
+#[cfg(all(test, not(feature = "rustc")))]
+use rustversion as _;
+
 #[cfg(all(test, any(feature = "build", feature = "git", feature = "rustc")))]
 pub(crate) mod test {
     use crate::config::VergenKey;
