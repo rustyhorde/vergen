@@ -222,14 +222,6 @@ pub use crate::constants::ConstantsFlags;
 pub use crate::error::Error;
 pub use crate::gen::gen;
 
-#[cfg(all(
-    test,
-    not(feature = "git"),
-    not(feature = "build"),
-    not(feature = "rustc")
-))]
-use {lazy_static as _, regex as _};
-
 #[cfg(all(test, not(feature = "rustc")))]
 use rustversion as _;
 

@@ -98,7 +98,13 @@ fn some_vals<'a>(tuple: (&'a VergenKey, &'a Option<String>)) -> Option<(&VergenK
 mod test {
     use super::{gen, gen_cargo_instructions};
     use crate::{constants::ConstantsFlags, error::Result};
+    use lazy_static::lazy_static;
+    use regex::Regex;
     use std::{io, path::PathBuf};
+
+    lazy_static! {
+        static ref VBD_REGEX: Regex = Regex::new(r".*VERGEN_BUILD_DATE.*").unwrap();
+    }
 
     #[test]
     fn gen_works() -> Result<()> {
@@ -112,8 +118,8 @@ mod test {
         assert!(gen_cargo_instructions(
             ConstantsFlags::all(),
             Some(no_tags_path),
-            &mut io::stdout(),
-            &mut io::stderr(),
+            &mut io::sink(),
+            &mut io::sink(),
         )
         .is_ok());
         Ok(())
@@ -125,8 +131,8 @@ mod test {
         assert!(gen_cargo_instructions(
             ConstantsFlags::all(),
             Some(no_tags_path),
-            &mut io::stdout(),
-            &mut io::stderr(),
+            &mut io::sink(),
+            &mut io::sink(),
         )
         .is_ok());
         Ok(())
@@ -138,10 +144,25 @@ mod test {
         assert!(gen_cargo_instructions(
             ConstantsFlags::all(),
             Some(dh_path),
-            &mut io::stdout(),
-            &mut io::stderr(),
+            &mut io::sink(),
+            &mut io::sink(),
         )
         .is_ok());
+        Ok(())
+    }
+
+    // TODO: Make this a macro to check all toggles
+    #[test]
+    fn toggle_works() -> Result<()> {
+        let repo_path = PathBuf::from(".");
+        let mut flags = ConstantsFlags::all();
+        flags.toggle(ConstantsFlags::BUILD_DATE);
+
+        let mut stdout_buf = vec![];
+        let mut stderr = vec![];
+        assert!(gen_cargo_instructions(flags, Some(repo_path), &mut stdout_buf, &mut stderr).is_ok());
+        let stdout = String::from_utf8_lossy(&stdout_buf);
+        assert!(!VBD_REGEX.is_match(&stdout));
         Ok(())
     }
 }
