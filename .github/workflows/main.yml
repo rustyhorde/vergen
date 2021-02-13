@@ -46,6 +46,10 @@ jobs:
           rust: nightly-gnu
           other: i686-pc-windows-gnu
     steps:
+      - name: ✔️ Checkout ✔️
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
       - name: 💵 Cache 💵
         uses: actions/cache@v2
         with:
@@ -55,11 +59,7 @@ jobs:
             ~/.cargo/bin/cargo-tarpaulin*
             ~/.cargo/bin/cargo-*-all-features*
             target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.toml') }}
-      - name: ✔️ Checkout ✔️
-        uses: actions/checkout@v2
-        with:
-          submodules: recursive
+          key: ${{ runner.os }}-${{ matrix.rust }}-${{ hashFiles('**/Cargo.toml') }}
       - name: ✔️ Checkout (notagsrepo master) ✔️
         run: cd testdata/notagsrepo && git checkout master && cd ..
       - name: ✔️ Checkout (tagsrepo master) ✔️
