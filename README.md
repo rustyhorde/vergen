@@ -8,11 +8,9 @@
 |              |                                                                                   |
 ---------------|-----------------------------------------------------------------------------------|
 | Github       | ![CI](https://github.com/rustyhorde/vergen/workflows/CI/badge.svg) |
-| Travis       | [![Build Status](https://travis-ci.com/rustyhorde/vergen.svg?branch=master)](https://travis-ci.com/rustyhorde/vergen)|
 
 ## Code Coverage
 [![codecov](https://codecov.io/gh/rustyhorde/vergen/branch/master/graph/badge.svg?token=cBXro7o2UN)](https://codecov.io/gh/rustyhorde/vergen)
-[![Coverage Status](https://coveralls.io/repos/github/rustyhorde/vergen/badge.svg?branch=master)](https://coveralls.io/github/rustyhorde/vergen?branch=master)
 
 ## Documentation
 [Documentation](https://docs.rs/vergen) can be found on [docs.rs](https://docs.rs/vergen)
