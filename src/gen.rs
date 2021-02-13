@@ -160,7 +160,9 @@ mod test {
 
         let mut stdout_buf = vec![];
         let mut stderr = vec![];
-        assert!(gen_cargo_instructions(flags, Some(repo_path), &mut stdout_buf, &mut stderr).is_ok());
+        assert!(
+            gen_cargo_instructions(flags, Some(repo_path), &mut stdout_buf, &mut stderr).is_ok()
+        );
         let stdout = String::from_utf8_lossy(&stdout_buf);
         assert!(!VBD_REGEX.is_match(&stdout));
         Ok(())
