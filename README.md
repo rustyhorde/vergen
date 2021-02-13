@@ -11,7 +11,7 @@
 [![codecov](https://codecov.io/gh/rustyhorde/vergen/branch/master/graph/badge.svg?token=cBXro7o2UN)](https://codecov.io/gh/rustyhorde/vergen)
 
 ## Documentation
-[Documentation](https://docs.rs/vergen) can be found on [docs.rs](https://docs.rs/vergen)
+[![docs.rs](https://docs.rs/vergen/badge.svg)](https://docs.rs/vergen)
 
 ## Example Usage
 See the documentation at [docs.rs](https://docs.rs/vergen/3.2.0/vergen/#cargo-key-build-script-output) for example usage
