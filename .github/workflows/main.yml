@@ -66,7 +66,7 @@ jobs:
         run: cd testdata/tagsrepo && git checkout master && cd ..
       - name: ✔️ Checkout (detachedhead v0.0.1) ✔️
         run: cd testdata/detachedhead && git checkout v0.0.1 && cd ..
-      - name: 🐕🦴 Fetch 🐕🦴
+      - name: 🐕 Fetch 🐕
         run: git submodule foreach --recursive 'git fetch --tags'
       - name: 💾 Install (cargo-tarpaulin) 💾
         uses: actions-rs/install@v0.1
@@ -83,7 +83,7 @@ jobs:
           version: latest
           use-tool-cache: true
         continue-on-error: true
-      - name: 🔼📅 Update 🔼📅
+      - name: 📅 Update 📅
         run: rustup update --no-self-update ${{ matrix.rust }} && rustup default ${{ matrix.rust }}
       - name: ➕ Add ➕
         run: rustup component add rustfmt || echo "rustfmt not available"
@@ -100,7 +100,7 @@ jobs:
       - name: 🙊 Code Coverage 🙊
         if: matrix.os == 'ubuntu-latest'
         run: cargo tarpaulin --out Xml
-      - name: 🔼🙊 Upload Code Coverage 🔼🙊
+      - name: 🙊 Upload Code Coverage 🙊
         uses: codecov/codecov-action@v1
         if: matrix.os == 'ubuntu-latest'
         with:

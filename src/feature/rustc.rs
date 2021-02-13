@@ -100,21 +100,41 @@ mod test {
         config::{Config, VergenKey},
         constants::ConstantsFlags,
         error::Result,
+        test::get_map_value,
     };
+    use lazy_static::lazy_static;
+    use regex::Regex;
     use std::collections::BTreeMap;
+
+    lazy_static! {
+        static ref DATE_REGEX: Regex = Regex::new(r"^\d{4}-\d{2}-\d{2}$").unwrap();
+        static ref SHA_REGEX: Regex = Regex::new(r"^[0-9a-f]{40}$").unwrap();
+        static ref SEMVER_REGEX: Regex = Regex::new(r"^(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)(?:-(?P<prerelease>(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+(?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$").unwrap();
+    }
+
+    fn check_rustc_instructions(cfg_map: &BTreeMap<VergenKey, Option<String>>) {
+        assert!(SHA_REGEX.is_match(&get_map_value(VergenKey::RustcCommitHash, cfg_map)));
+        assert!(DATE_REGEX.is_match(&get_map_value(VergenKey::RustcCommitDate, cfg_map)));
+        assert!(SEMVER_REGEX.is_match(&get_map_value(VergenKey::RustcSemver, cfg_map)));
+    }
 
     fn check_rustc_keys(cfg_map: &BTreeMap<VergenKey, Option<String>>) {
         let mut count = 0;
         for (k, v) in cfg_map {
             match *k {
-                VergenKey::RustcHostTriple | VergenKey::RustcChannel | VergenKey::RustcSemver => {
+                VergenKey::RustcHostTriple
+                | VergenKey::RustcChannel
+                | VergenKey::RustcSemver
+                | VergenKey::RustcCommitDate
+                | VergenKey::RustcCommitHash
+                | VergenKey::RustcLlvmVersion => {
                     assert!(v.is_some());
                     count += 1;
                 }
                 _ => {}
             }
         }
-        assert_eq!(count, 3);
+        assert_eq!(count, 6);
     }
 
     #[test]
@@ -122,6 +142,7 @@ mod test {
         let mut config = Config::default();
         add_rustc_config(ConstantsFlags::all(), &mut config)?;
         check_rustc_keys(config.cfg_map());
+        check_rustc_instructions(config.cfg_map());
         Ok(())
     }
 }

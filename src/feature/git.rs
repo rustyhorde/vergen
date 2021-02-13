@@ -159,10 +159,11 @@ mod test {
         config::{Config, VergenKey},
         constants::ConstantsFlags,
         error::Result,
+        test::get_map_value,
     };
     use lazy_static::lazy_static;
     use regex::Regex;
-    use std::{collections::BTreeMap, convert::identity, env, path::PathBuf};
+    use std::{collections::BTreeMap, env, path::PathBuf};
 
     lazy_static! {
         static ref SHORT_SHA_REGEX: Regex = Regex::new(r"^[0-9a-f]{7}$").unwrap();
@@ -188,31 +189,6 @@ mod test {
             }
         }
         assert_eq!(count, 6);
-    }
-
-    // cargo:rustc-env=VERGEN_BUILD_DATE=2021-02-12
-    // cargo:rustc-env=VERGEN_BUILD_TIMESTAMP=2021-02-12T18:02:05.827740629+00:00
-    // cargo:rustc-env=VERGEN_GIT_BRANCH=feature/git2
-    // cargo:rustc-env=VERGEN_GIT_COMMIT_DATE=2021-02-12T12:57:25-05:00
-    // cargo:rustc-env=VERGEN_GIT_SEMVER=v3.2.0-92-gd3c3c4a
-    // cargo:rustc-env=VERGEN_GIT_SEMVER_LIGHTWEIGHT=v3.2.0-92-gd3c3c4a
-    // cargo:rustc-env=VERGEN_GIT_SHA=d3c3c4a4ca051cdde5a92da208f52350f583fd18
-    // cargo:rustc-env=VERGEN_GIT_SHA_SHORT=d3c3c4a
-    // cargo:rustc-env=VERGEN_RUSTC_CHANNEL=nightly
-    // cargo:rustc-env=VERGEN_RUSTC_COMMIT_DATE=2021-02-11
-    // cargo:rustc-env=VERGEN_RUSTC_COMMIT_HASH=e9920ef7749d11fc71cc32ca4ba055bcfeaab945
-    // cargo:rustc-env=VERGEN_RUSTC_HOST_TRIPLE=x86_64-unknown-linux-gnu
-    // cargo:rustc-env=VERGEN_RUSTC_LLVM_VERSION=11.0
-    // cargo:rustc-env=VERGEN_RUSTC_SEMVER=1.52.0-nightly
-    // cargo:rerun-if-changed=/home/jozias/projects/rust-lang/vergen/.git/HEAD
-    // cargo:rerun-if-changed=/home/jozias/projects/rust-lang/vergen/.git/refs/heads/feature/git2
-
-    fn get_map_value(key: VergenKey, cfg_map: &BTreeMap<VergenKey, Option<String>>) -> String {
-        cfg_map
-            .get(&key)
-            .unwrap_or_else(|| &None)
-            .clone()
-            .map_or_else(String::default, identity)
     }
 
     fn check_git_instructions(cfg_map: &BTreeMap<VergenKey, Option<String>>) {

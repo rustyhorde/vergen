@@ -222,5 +222,27 @@ pub use crate::constants::ConstantsFlags;
 pub use crate::error::Error;
 pub use crate::gen::gen;
 
-#[cfg(all(test, not(feature = "git")))]
+#[cfg(all(
+    test,
+    not(feature = "git"),
+    not(feature = "build"),
+    not(feature = "rustc")
+))]
 use {lazy_static as _, regex as _};
+
+#[cfg(all(test, any(feature = "build", feature = "git", feature = "rustc")))]
+pub(crate) mod test {
+    use crate::config::VergenKey;
+    use std::{collections::BTreeMap, convert::identity};
+
+    pub(crate) fn get_map_value(
+        key: VergenKey,
+        cfg_map: &BTreeMap<VergenKey, Option<String>>,
+    ) -> String {
+        cfg_map
+            .get(&key)
+            .unwrap_or_else(|| &None)
+            .clone()
+            .map_or_else(String::default, identity)
+    }
+}
