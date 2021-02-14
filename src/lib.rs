@@ -56,7 +56,10 @@
 //! #..
 //!
 //! [build-dependencies]
-//! vergen = "3"
+//! vergen = "4"
+//! # or
+//! vergen = { version = "4", default-features = false, features = ["build", "rustc"] }
+//! # if you wish to disable certain features
 //! ```
 //!
 //! ### build.rs
