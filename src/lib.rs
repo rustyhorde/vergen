@@ -85,7 +85,12 @@
 //! 1. [`git2::Repository::describe`]
 //! 2. [`CARGO_PKG_VERSION`]
 //!
-//! By default, if the `git` feature is enabled semver generation will use the first method.  If the `git` feature is disabled or method one errors, generation falls back to the second method.
+//! By default, if the `git` feature is enabled semver generation will use the first method.
+//! If the `git` feature is disabled or method one errors, generation falls back to the second method.
+//! Note that the `git describe` method is only useful if you have tags on your repository.
+//! I recommend [`SemVer`] tags, but this will work with any tag format.
+//! If your repository has no tags, this method will always fall back to [`CARGO_PKG_VERSION`].
+//! Also worth noting, `VERGEN_SEMVER` and `VERGEN_SEMVER_LIGHTWEIGHT` will only differ if you use [lightweight] tags in your repository.
 //!
 //! If you wish to force method two even if the `git` feature is enabled you may toggle off [`SEMVER`] and toggle on [`SEMVER_FROM_CARGO_PKG`].
 //!
@@ -102,6 +107,8 @@
 //! [build scripts]: https://doc.rust-lang.org/cargo/reference/build-scripts.html
 //! [cargo:rustc-env]: https://doc.rust-lang.org/cargo/reference/build-scripts.html#rustc-env
 //! [cargo:rerun-if-changed]: https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed
+//! [lightweight]: https://git-scm.com/book/en/v2/Git-Basics-Tagging
+//! [SemVer]: https://semver.org/
 //!
 #![deny(
     absolute_paths_not_starting_with_crate,
