@@ -1,4 +1,6 @@
 # vergen
+Generate build, git, and rustc related 'cargo:rustc-env' instructions via 'build.rs' for use in your code via the env! macro
+
 ## Current Release
 [![Crates.io](https://img.shields.io/crates/v/vergen.svg)](https://crates.io/crates/vergen)
 [![Crates.io](https://img.shields.io/crates/l/vergen.svg)](https://crates.io/crates/vergen)

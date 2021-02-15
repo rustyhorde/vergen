@@ -5,12 +5,12 @@ description = "Generate build, git, and rustc related 'cargo:rustc-env' instruct
 documentation = "http://docs.rs/vergen"
 edition = "2018"
 homepage = "http://github.com/rustyhorde/vergen"
-keywords = ["cargo", "instructions", "semver", "git", "build.rs"]
+keywords = ["cargo", "instructions", "build", "tool"]
 license = "MIT OR Apache-2.0"
 name = "vergen"
 readme = "README.md"
 repository = "https://github.com/rustyhorde/vergen"
-version = "4.0.0"
+version = "4.0.1"
 
 [features]
 default = ["build", "git", "rustc"]
