@@ -52,6 +52,9 @@ cargo:rerun-if-changed=/Users/yoda/projects/rust-lang/vergen/.git/refs/heads/fea
 ## Example Usage
 See the documentation at [docs.rs](https://docs.rs/vergen/3.2.0/vergen/#cargo-key-build-script-output) for example usage
 
+## Contributing
+See the documentation at [CONTRIBUTING.md](CONTRIBUTING.md)
+
 ## License
 
 Licensed under either of
