@@ -10,13 +10,14 @@
 
 use crate::{
     constants::{
-        ConstantsFlags, BUILD_DATE_NAME, BUILD_TIMESTAMP_NAME, GIT_BRANCH_NAME,
-        GIT_COMMIT_DATE_NAME, GIT_SEMVER_NAME, GIT_SEMVER_TAGS_NAME, GIT_SHA_NAME,
-        GIT_SHA_SHORT_NAME, RUSTC_CHANNEL_NAME, RUSTC_COMMIT_DATE, RUSTC_COMMIT_HASH,
-        RUSTC_HOST_TRIPLE_NAME, RUSTC_LLVM_VERSION, RUSTC_SEMVER_NAME,
+        ConstantsFlags, BUILD_DATE_NAME, BUILD_TIMESTAMP_NAME, CARGO_FEATURES, CARGO_PROFILE,
+        CARGO_TARGET_TRIPLE, GIT_BRANCH_NAME, GIT_COMMIT_DATE_NAME, GIT_SEMVER_NAME,
+        GIT_SEMVER_TAGS_NAME, GIT_SHA_NAME, GIT_SHA_SHORT_NAME, RUSTC_CHANNEL_NAME,
+        RUSTC_COMMIT_DATE, RUSTC_COMMIT_HASH, RUSTC_HOST_TRIPLE_NAME, RUSTC_LLVM_VERSION,
+        RUSTC_SEMVER_NAME,
     },
     error::Result,
-    feature::{add_build_config, add_git_config, add_rustc_config},
+    feature::{add_build_config, add_cargo_config, add_git_config, add_rustc_config},
 };
 use enum_iterator::IntoEnumIterator;
 use getset::{Getters, MutGetters};
@@ -57,6 +58,12 @@ pub(crate) enum VergenKey {
     RustcLlvmVersion,
     /// The version information of the rust compiler. (VERGEN_RUSTC_SEMVER)
     RustcSemver,
+    /// The cargo target triple (VERGEN_CARGO_TARGET_TRIPLE)
+    CargoTargetTriple,
+    /// The cargo profile (VERGEN_CARGO_PROFILE)
+    CargoProfile,
+    /// The cargo features (VERGEN_CARGO_FEATURES)
+    CargoFeatures,
 }
 
 impl VergenKey {
@@ -77,6 +84,9 @@ impl VergenKey {
             VergenKey::RustcHostTriple => RUSTC_HOST_TRIPLE_NAME,
             VergenKey::RustcLlvmVersion => RUSTC_LLVM_VERSION,
             VergenKey::RustcSemver => RUSTC_SEMVER_NAME,
+            VergenKey::CargoTargetTriple => CARGO_TARGET_TRIPLE,
+            VergenKey::CargoProfile => CARGO_PROFILE,
+            VergenKey::CargoFeatures => CARGO_FEATURES,
         }
     }
 }
@@ -110,6 +120,7 @@ impl Config {
         add_build_config(flags, &mut config);
         add_git_config(flags, repo_path, &mut config)?;
         add_rustc_config(flags, &mut config)?;
+        add_cargo_config(flags, &mut config);
 
         Ok(config)
     }

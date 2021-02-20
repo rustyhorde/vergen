@@ -13,8 +13,9 @@ repository = "https://github.com/rustyhorde/vergen"
 version = "4.0.3"
 
 [features]
-default = ["build", "git", "rustc"]
+default = ["build", "cargo", "git", "rustc"]
 build = ["chrono"]
+cargo = []
 git = ["chrono", "git2"]
 rustc = ["rustc_version"]
 
@@ -32,6 +33,7 @@ serde_derive = "1"
 chrono = "0"
 
 [dev-dependencies]
+ctor = "0"
 lazy_static = "1"
 regex = "1"
 rustversion = "1"
