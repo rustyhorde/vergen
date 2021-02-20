@@ -96,24 +96,40 @@ mod test {
         assert_eq!(count, 3);
     }
 
+    fn setup() {
+        env::set_var("TARGET", "x86_64-unknown-linux-gnu");
+        env::set_var("PROFILE", "debug");
+        env::set_var("CARGO_FEATURE_GIT", "git");
+        env::set_var("CARGO_FEATURE_BUILD", "build");
+    }
+
+    fn teardown() {
+        env::remove_var("TARGET");
+        env::remove_var("PROFILE");
+        env::remove_var("CARGO_FEATURE_GIT");
+        env::remove_var("CARGO_FEATURE_BUILD");
+    }
+
     #[test]
     fn add_cargo_config_works() {
+        setup();
         let mut config = Config::default();
         add_cargo_config(ConstantsFlags::all(), &mut config);
         check_cargo_keys(config.cfg_map());
         check_cargo_instructions(config.cfg_map());
+        teardown();
     }
 
     #[test]
     fn default_feature_works() {
+        setup();
         env::remove_var("CARGO_FEATURE_GIT");
         env::remove_var("CARGO_FEATURE_BUILD");
         let mut config = Config::default();
         add_cargo_config(ConstantsFlags::all(), &mut config);
         check_cargo_keys(config.cfg_map());
         check_cargo_instructions(config.cfg_map());
-        env::set_var("CARGO_FEATURE_GIT", "git");
-        env::set_var("CARGO_FEATURE_BUILD", "build");
+        teardown();
     }
 }
 

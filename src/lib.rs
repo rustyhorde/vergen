@@ -259,24 +259,3 @@ pub(crate) mod test {
             .map_or_else(String::default, identity)
     }
 }
-
-#[cfg(test)]
-use std::env;
-
-#[cfg(test)]
-#[ctor::ctor]
-fn setup() {
-    env::set_var("TARGET", "x86_64-unknown-linux-gnu");
-    env::set_var("PROFILE", "debug");
-    env::set_var("CARGO_FEATURE_GIT", "git");
-    env::set_var("CARGO_FEATURE_BUILD", "build");
-}
-
-#[cfg(test)]
-#[ctor::dtor]
-fn teardown() {
-    env::remove_var("TARGET");
-    env::remove_var("PROFILE");
-    env::remove_var("CARGO_FEATURE_GIT");
-    env::remove_var("CARGO_FEATURE_BUILD");
-}

@@ -33,7 +33,6 @@ serde_derive = "1"
 chrono = "0"
 
 [dev-dependencies]
-ctor = "0"
 lazy_static = "1"
 regex = "1"
 rustversion = "1"
