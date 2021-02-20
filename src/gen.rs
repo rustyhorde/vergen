@@ -97,7 +97,11 @@ fn some_vals<'a>(tuple: (&'a VergenKey, &'a Option<String>)) -> Option<(&VergenK
 #[cfg(test)]
 mod test {
     use super::{gen, gen_cargo_instructions};
-    use crate::{constants::ConstantsFlags, error::Result};
+    use crate::{
+        constants::ConstantsFlags,
+        error::Result,
+        testutils::{setup, teardown},
+    };
     use lazy_static::lazy_static;
     use regex::Regex;
     use std::{io, path::PathBuf};
@@ -107,8 +111,11 @@ mod test {
     }
 
     #[test]
+    #[serial_test::serial]
     fn gen_works() -> Result<()> {
+        setup();
         assert!(gen(ConstantsFlags::all()).is_ok());
+        teardown();
         Ok(())
     }
 

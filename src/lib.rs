@@ -261,3 +261,22 @@ pub(crate) mod test {
             .map_or_else(String::default, identity)
     }
 }
+
+#[cfg(test)]
+pub(crate) mod testutils {
+    use std::env;
+
+    pub(crate) fn setup() {
+        env::set_var("TARGET", "x86_64-unknown-linux-gnu");
+        env::set_var("PROFILE", "debug");
+        env::set_var("CARGO_FEATURE_GIT", "git");
+        env::set_var("CARGO_FEATURE_BUILD", "build");
+    }
+
+    pub(crate) fn teardown() {
+        env::remove_var("TARGET");
+        env::remove_var("PROFILE");
+        env::remove_var("CARGO_FEATURE_GIT");
+        env::remove_var("CARGO_FEATURE_BUILD");
+    }
+}

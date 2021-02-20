@@ -69,6 +69,7 @@ mod test {
         config::{Config, VergenKey},
         constants::ConstantsFlags,
         test::get_map_value,
+        testutils::{setup, teardown},
     };
     use std::{collections::BTreeMap, env};
 
@@ -94,20 +95,6 @@ mod test {
             }
         }
         assert_eq!(count, 3);
-    }
-
-    fn setup() {
-        env::set_var("TARGET", "x86_64-unknown-linux-gnu");
-        env::set_var("PROFILE", "debug");
-        env::set_var("CARGO_FEATURE_GIT", "git");
-        env::set_var("CARGO_FEATURE_BUILD", "build");
-    }
-
-    fn teardown() {
-        env::remove_var("TARGET");
-        env::remove_var("PROFILE");
-        env::remove_var("CARGO_FEATURE_GIT");
-        env::remove_var("CARGO_FEATURE_BUILD");
     }
 
     #[test]
