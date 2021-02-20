@@ -234,6 +234,8 @@ pub use crate::gen::gen;
 
 #[cfg(all(test, not(feature = "rustc")))]
 use rustversion as _;
+#[cfg(all(test, not(feature = "cargo")))]
+use serial_test as _;
 
 #[cfg(all(
     test,

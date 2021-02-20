@@ -36,6 +36,7 @@ chrono = "0"
 lazy_static = "1"
 regex = "1"
 rustversion = "1"
+serial_test = "0"
 
 [package.metadata.cargo-all-features]
 skip_optional_dependencies = true

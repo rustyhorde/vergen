@@ -111,6 +111,7 @@ mod test {
     }
 
     #[test]
+    #[serial_test::serial]
     fn add_cargo_config_works() {
         setup();
         let mut config = Config::default();
@@ -121,6 +122,7 @@ mod test {
     }
 
     #[test]
+    #[serial_test::serial]
     fn default_feature_works() {
         setup();
         env::remove_var("CARGO_FEATURE_GIT");
