@@ -234,8 +234,18 @@ pub use crate::gen::gen;
 
 #[cfg(all(test, not(feature = "rustc")))]
 use rustversion as _;
+#[cfg(all(test, not(feature = "cargo")))]
+use serial_test as _;
 
-#[cfg(all(test, any(feature = "build", feature = "git", feature = "rustc")))]
+#[cfg(all(
+    test,
+    any(
+        feature = "build",
+        feature = "cargo",
+        feature = "git",
+        feature = "rustc"
+    )
+))]
 pub(crate) mod test {
     use crate::config::VergenKey;
     use std::{collections::BTreeMap, convert::identity};
@@ -249,5 +259,24 @@ pub(crate) mod test {
             .unwrap_or_else(|| &None)
             .clone()
             .map_or_else(String::default, identity)
+    }
+}
+
+#[cfg(test)]
+pub(crate) mod testutils {
+    use std::env;
+
+    pub(crate) fn setup() {
+        env::set_var("TARGET", "x86_64-unknown-linux-gnu");
+        env::set_var("PROFILE", "debug");
+        env::set_var("CARGO_FEATURE_GIT", "git");
+        env::set_var("CARGO_FEATURE_BUILD", "build");
+    }
+
+    pub(crate) fn teardown() {
+        env::remove_var("TARGET");
+        env::remove_var("PROFILE");
+        env::remove_var("CARGO_FEATURE_GIT");
+        env::remove_var("CARGO_FEATURE_BUILD");
     }
 }

@@ -13,8 +13,9 @@ repository = "https://github.com/rustyhorde/vergen"
 version = "4.0.3"
 
 [features]
-default = ["build", "git", "rustc"]
+default = ["build", "cargo", "git", "rustc"]
 build = ["chrono"]
+cargo = []
 git = ["chrono", "git2"]
 rustc = ["rustc_version"]
 
@@ -35,6 +36,7 @@ chrono = "0"
 lazy_static = "1"
 regex = "1"
 rustversion = "1"
+serial_test = "0"
 
 [package.metadata.cargo-all-features]
 skip_optional_dependencies = true

@@ -36,7 +36,10 @@ bitflags!(
     ///     ConstantsFlags::BRANCH |
     ///     ConstantsFlags::RUSTC_COMMIT_HASH |
     ///     ConstantsFlags::RUSTC_COMMIT_DATE |
-    ///     ConstantsFlags::RUSTC_LLVM_VERSION;
+    ///     ConstantsFlags::RUSTC_LLVM_VERSION |
+    ///     ConstantsFlags::CARGO_TARGET_TRIPLE |
+    ///     ConstantsFlags::CARGO_PROFILE |
+    ///     ConstantsFlags::CARGO_FEATURES;
     ///
     /// assert_eq!(actual_flags, expected_flags)
     /// # }
@@ -108,10 +111,22 @@ bitflags!(
         ///
         /// `01/22/21`
         const RUSTC_COMMIT_DATE      = 0b1000_0000_0000_0000;
-        // Generates the rustc LLVM version
+        /// Generates the rustc LLVM version
         ///
         /// `1.2.3`
         const RUSTC_LLVM_VERSION     = 0b0001_0000_0000_0000_0000;
+        /// Generates the cargo target triple constant.
+        ///
+        /// `x86_64-unknown-linux-gnu`
+        const CARGO_TARGET_TRIPLE    = 0b0010_0000_0000_0000_0000;
+        /// Generates the cargo profile constant.
+        ///
+        /// `debug`
+        const CARGO_PROFILE          = 0b0100_0000_0000_0000_0000;
+        /// Generates the cargo features constant.
+        ///
+        /// `git,cargo`
+        const CARGO_FEATURES         = 0b1000_0000_0000_0000_0000;
     }
 );
 
@@ -134,6 +149,11 @@ pub(crate) const RUSTC_SEMVER_NAME: &str = "VERGEN_RUSTC_SEMVER";
 pub(crate) const RUSTC_COMMIT_HASH: &str = "VERGEN_RUSTC_COMMIT_HASH";
 pub(crate) const RUSTC_COMMIT_DATE: &str = "VERGEN_RUSTC_COMMIT_DATE";
 pub(crate) const RUSTC_LLVM_VERSION: &str = "VERGEN_RUSTC_LLVM_VERSION";
+
+// cargo Constants
+pub(crate) const CARGO_TARGET_TRIPLE: &str = "VERGEN_CARGO_TARGET_TRIPLE";
+pub(crate) const CARGO_PROFILE: &str = "VERGEN_CARGO_PROFILE";
+pub(crate) const CARGO_FEATURES: &str = "VERGEN_CARGO_FEATURES";
 
 #[cfg(test)]
 mod test {
@@ -175,6 +195,18 @@ mod test {
             ConstantsFlags::RUSTC_LLVM_VERSION.bits(),
             0b0001_0000_0000_0000_0000
         );
+        assert_eq!(
+            ConstantsFlags::CARGO_TARGET_TRIPLE.bits(),
+            0b0010_0000_0000_0000_0000
+        );
+        assert_eq!(
+            ConstantsFlags::CARGO_PROFILE.bits(),
+            0b0100_0000_0000_0000_0000
+        );
+        assert_eq!(
+            ConstantsFlags::CARGO_FEATURES.bits(),
+            0b1000_0000_0000_0000_0000
+        );
     }
 
     #[test]
@@ -198,5 +230,10 @@ mod test {
         assert_eq!(RUSTC_COMMIT_HASH, "VERGEN_RUSTC_COMMIT_HASH");
         assert_eq!(RUSTC_COMMIT_DATE, "VERGEN_RUSTC_COMMIT_DATE");
         assert_eq!(RUSTC_LLVM_VERSION, "VERGEN_RUSTC_LLVM_VERSION");
+
+        // cargo Constants
+        assert_eq!(CARGO_TARGET_TRIPLE, "VERGEN_CARGO_TARGET_TRIPLE");
+        assert_eq!(CARGO_PROFILE, "VERGEN_CARGO_PROFILE");
+        assert_eq!(CARGO_FEATURES, "VERGEN_CARGO_FEATURES");
     }
 }

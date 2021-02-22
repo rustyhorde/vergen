@@ -8,18 +8,30 @@
 
 //! `vergen` feature implementations
 
-#[cfg(any(feature = "build", feature = "git", feature = "rustc"))]
+#[cfg(any(
+    feature = "build",
+    feature = "cargo",
+    feature = "git",
+    feature = "rustc"
+))]
 use {crate::config::VergenKey, std::collections::BTreeMap};
 
 mod build;
+mod cargo;
 mod git;
 mod rustc;
 
 pub(crate) use build::add_build_config;
+pub(crate) use cargo::add_cargo_config;
 pub(crate) use git::add_git_config;
 pub(crate) use rustc::add_rustc_config;
 
-#[cfg(any(feature = "build", feature = "git", feature = "rustc"))]
+#[cfg(any(
+    feature = "build",
+    feature = "cargo",
+    feature = "git",
+    feature = "rustc"
+))]
 pub(crate) fn add_entry(
     map: &mut BTreeMap<VergenKey, Option<String>>,
     key: VergenKey,
@@ -28,7 +40,15 @@ pub(crate) fn add_entry(
     *map.entry(key).or_insert_with(Option::default) = value;
 }
 
-#[cfg(all(test, any(feature = "build", feature = "git", feature = "rustc")))]
+#[cfg(all(
+    test,
+    any(
+        feature = "build",
+        feature = "cargo",
+        feature = "git",
+        feature = "rustc"
+    )
+))]
 mod test {
     use super::add_entry;
     use crate::config::VergenKey;
