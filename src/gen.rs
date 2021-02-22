@@ -107,7 +107,56 @@ mod test {
     use std::{io, path::PathBuf};
 
     lazy_static! {
+        static ref DATE_RE_STR: &'static str =
+            r#"cargo:rustc-env=VERGEN_BUILD_DATE=\d{4}-\d{2}-\d{2}"#;
+        static ref TIMESTAMP_RE_STR: &'static str = r#"cargo:rustc-env=VERGEN_BUILD_TIMESTAMP=([0-9]+)-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])[Tt]([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9]|60)(\.[0-9]+)?(([Zz])|([\+|\-]([01][0-9]|2[0-3]):[0-5][0-9]))"#;
+        static ref CARGO_SEMVER_RE_STR: &'static str =
+            r#"cargo:rustc-env=VERGEN_GIT_SEMVER=\d{1}\.\d{1}\.\d{1}"#;
+        static ref CARGO_TT_RE_STR: &'static str =
+            r#"cargo:rustc-env=VERGEN_CARGO_TARGET_TRIPLE=[a-zA-Z0-9-_]+"#;
+        static ref CARGO_PROF_RE_STR: &'static str =
+            r#"cargo:rustc-env=VERGEN_CARGO_PROFILE=[a-zA-Z0-9-_]+"#;
+        static ref CARGO_FEA_RE_STR: &'static str =
+            r#"cargo:rustc-env=VERGEN_CARGO_FEATURES=[a-zA-Z0-9-_]+,[a-zA-Z0-9-_]+"#;
+        static ref GIT_BRANCH_RE_STR: &'static str = r#"cargo:rustc-env=VERGEN_GIT_BRANCH=.*"#;
+        static ref GIT_CD_RE_STR: &'static str = r#"cargo:rustc-env=VERGEN_GIT_COMMIT_DATE=([0-9]+)-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])[Tt]([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9]|60)(\.[0-9]+)?(([Zz])|([\+|\-]([01][0-9]|2[0-3]):[0-5][0-9]))"#;
+        static ref GIT_SEMVER_RE_STR: &'static str = r#"cargo:rustc-env=VERGEN_GIT_SEMVER=(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)(?:-(?P<prerelease>(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+(?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?"#;
+        static ref GIT_SL_RE_STR: &'static str =
+            r#"cargo:rustc-env=VERGEN_GIT_SEMVER_LIGHTWEIGHT=.*"#;
+        static ref GIT_SHA_RE_STR: &'static str = r#"cargo:rustc-env=VERGEN_GIT_SHA=[0-9a-f]{40}"#;
+        static ref GIT_SHA_SHORT_RE_STR: &'static str =
+            r#"cargo:rustc-env=VERGEN_GIT_SHA_SHORT=[0-9a-f]{7}"#;
+        static ref GIT_RIC_RE_STR: &'static str = r#"cargo:rerun-if-changed=.*\.git/HEAD"#;
+        static ref GIT_RIC1_RE_STR: &'static str = r#"cargo:rerun-if-changed=.*"#;
         static ref VBD_REGEX: Regex = Regex::new(r".*VERGEN_BUILD_DATE.*").unwrap();
+        static ref BUILD_REGEX: Regex = {
+            let start = vec!["^", *DATE_RE_STR].join("");
+            let date_re_str =
+                vec![&start[..], *TIMESTAMP_RE_STR, *CARGO_SEMVER_RE_STR, "$"].join("\n");
+            Regex::new(&date_re_str).unwrap()
+        };
+        static ref CARGO_REGEX: Regex = {
+            let start = vec!["^", *CARGO_TT_RE_STR].join("");
+            let cargo_re_str =
+                vec![&start[..], *CARGO_PROF_RE_STR, *CARGO_FEA_RE_STR, "$"].join("\n");
+            Regex::new(&cargo_re_str).unwrap()
+        };
+        static ref GIT_REGEX: Regex = {
+            let start = vec!["^", *GIT_BRANCH_RE_STR].join("");
+            let re_str = vec![
+                &start[..],
+                *GIT_CD_RE_STR,
+                *GIT_SEMVER_RE_STR,
+                *GIT_SL_RE_STR,
+                *GIT_SHA_RE_STR,
+                *GIT_SHA_SHORT_RE_STR,
+                *GIT_RIC_RE_STR,
+                *GIT_RIC1_RE_STR,
+                "$",
+            ]
+            .join("\n");
+            Regex::new(&re_str).unwrap()
+        };
     }
 
     #[test]
@@ -173,5 +222,96 @@ mod test {
         let stdout = String::from_utf8_lossy(&stdout_buf);
         assert!(!VBD_REGEX.is_match(&stdout));
         Ok(())
+    }
+
+    #[cfg(all(
+        not(feature = "build"),
+        not(feature = "cargo"),
+        not(feature = "git"),
+        not(feature = "rustc"),
+    ))]
+    #[test]
+    fn no_features_no_output() {
+        let repo_path = PathBuf::from(".");
+        let mut stdout_buf = vec![];
+        let mut stderr_buf = vec![];
+        assert!(gen_cargo_instructions(
+            ConstantsFlags::all(),
+            Some(repo_path),
+            &mut stdout_buf,
+            &mut stderr_buf
+        )
+        .is_ok());
+        assert!(stdout_buf.is_empty());
+        assert!(stderr_buf.is_empty());
+    }
+
+    #[cfg(all(
+        feature = "build",
+        not(feature = "cargo"),
+        not(feature = "git"),
+        not(feature = "rustc"),
+    ))]
+    #[test]
+    fn build_output_only() {
+        let repo_path = PathBuf::from(".");
+        let mut stdout_buf = vec![];
+        let mut stderr_buf = vec![];
+        assert!(gen_cargo_instructions(
+            ConstantsFlags::all(),
+            Some(repo_path),
+            &mut stdout_buf,
+            &mut stderr_buf
+        )
+        .is_ok());
+        assert!(BUILD_REGEX.is_match(&String::from_utf8_lossy(&stdout_buf)));
+        assert!(stderr_buf.is_empty());
+    }
+
+    #[cfg(all(
+        not(feature = "build"),
+        feature = "cargo",
+        not(feature = "git"),
+        not(feature = "rustc"),
+    ))]
+    #[test]
+    #[serial_test::serial]
+    fn cargo_output_only() {
+        setup();
+        let repo_path = PathBuf::from(".");
+        let mut stdout_buf = vec![];
+        let mut stderr_buf = vec![];
+        assert!(gen_cargo_instructions(
+            ConstantsFlags::all(),
+            Some(repo_path),
+            &mut stdout_buf,
+            &mut stderr_buf
+        )
+        .is_ok());
+        assert!(CARGO_REGEX.is_match(&String::from_utf8_lossy(&stdout_buf)));
+        assert!(stderr_buf.is_empty());
+        teardown();
+    }
+
+    #[cfg(all(
+        not(feature = "build"),
+        not(feature = "cargo"),
+        feature = "git",
+        not(feature = "rustc"),
+    ))]
+    #[test]
+    fn git_output_only() {
+        let repo_path = PathBuf::from(".");
+        let mut stdout_buf = vec![];
+        let mut stderr_buf = vec![];
+        assert!(gen_cargo_instructions(
+            ConstantsFlags::all(),
+            Some(repo_path),
+            &mut stdout_buf,
+            &mut stderr_buf
+        )
+        .is_ok());
+        assert!(GIT_REGEX.is_match(&String::from_utf8_lossy(&stdout_buf)));
+        assert!(stderr_buf.is_empty());
     }
 }
