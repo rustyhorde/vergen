@@ -383,12 +383,14 @@ mod test {
         check_rustc_output(&stdout_buf, &stderr_buf);
     }
 
+    #[cfg(feature = "rustc")]
     #[rustversion::nightly]
     fn check_rustc_output(stdout: &[u8], stderr: &[u8]) {
         assert!(RUSTC_NIGHTLY_REGEX.is_match(&String::from_utf8_lossy(&stdout_buf)));
         assert!(stderr.is_empty());
     }
 
+    #[cfg(feature = "rustc")]
     #[rustversion::any(beta, stable)]
     fn check_rustc_output(stdout: &[u8], stderr: &[u8]) {
         assert!(!stdout.is_empty());
