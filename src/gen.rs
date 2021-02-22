@@ -183,13 +183,24 @@ mod test {
         static ref RUSTC_LLVM_RE_STR: &'static str =
             r#"cargo:rustc-env=VERGEN_RUSTC_LLVM_VERSION=11.0"#;
         static ref RUSTC_SEMVER_RE_STR: &'static str = r#"cargo:rustc-env=VERGEN_RUSTC_SEMVER=(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)(?:-(?P<prerelease>(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+(?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?"#;
-        static ref RUSTC_REGEX: Regex = {
+        static ref RUSTC_NIGHTLY_REGEX: Regex = {
             let re_str = vec![
                 *RUSTC_CHANNEL_RE_STR,
                 *RUSTC_CD_RE_STR,
                 *RUSTC_CH_RE_STR,
                 *RUSTC_HT_RE_STR,
                 *RUSTC_LLVM_RE_STR,
+                *RUSTC_SEMVER_RE_STR,
+            ]
+            .join("\n");
+            Regex::new(&re_str).unwrap()
+        };
+        static ref RUSTC_REGEX: Regex = {
+            let re_str = vec![
+                *RUSTC_CHANNEL_RE_STR,
+                *RUSTC_CD_RE_STR,
+                *RUSTC_CH_RE_STR,
+                *RUSTC_HT_RE_STR,
                 *RUSTC_SEMVER_RE_STR,
             ]
             .join("\n");
@@ -358,6 +369,25 @@ mod test {
 
     #[cfg(feature = "rustc")]
     #[test]
+    #[rustversion::nightly]
+    fn contains_rustc_output() {
+        let repo_path = PathBuf::from(".");
+        let mut stdout_buf = vec![];
+        let mut stderr_buf = vec![];
+        assert!(gen_cargo_instructions(
+            ConstantsFlags::all(),
+            Some(repo_path),
+            &mut stdout_buf,
+            &mut stderr_buf
+        )
+        .is_ok());
+        assert!(RUSTC_NIGHTLY_REGEX.is_match(&String::from_utf8_lossy(&stdout_buf)));
+        assert!(stderr_buf.is_empty());
+    }
+
+    #[cfg(feature = "rustc")]
+    #[test]
+    #[rustversion::any(beta, stable)]
     fn contains_rustc_output() {
         let repo_path = PathBuf::from(".");
         let mut stdout_buf = vec![];
