@@ -369,7 +369,6 @@ mod test {
 
     #[cfg(feature = "rustc")]
     #[test]
-    #[rustversion::nightly]
     fn contains_rustc_output() {
         let repo_path = PathBuf::from(".");
         let mut stdout_buf = vec![];
@@ -381,25 +380,18 @@ mod test {
             &mut stderr_buf
         )
         .is_ok());
-        assert!(RUSTC_NIGHTLY_REGEX.is_match(&String::from_utf8_lossy(&stdout_buf)));
-        assert!(stderr_buf.is_empty());
+        check_rustc_output(&stdout_buf, &stderr_buf);
     }
 
-    #[cfg(feature = "rustc")]
-    #[test]
+    #[rustversion::nightly]
+    fn check_rustc_output(stdout: &[u8], stderr: &[u8]) {
+        assert!(RUSTC_NIGHTLY_REGEX.is_match(&String::from_utf8_lossy(&stdout_buf)));
+        assert!(stderr.is_empty());
+    }
+
     #[rustversion::any(beta, stable)]
-    fn contains_rustc_output() {
-        let repo_path = PathBuf::from(".");
-        let mut stdout_buf = vec![];
-        let mut stderr_buf = vec![];
-        assert!(gen_cargo_instructions(
-            ConstantsFlags::all(),
-            Some(repo_path),
-            &mut stdout_buf,
-            &mut stderr_buf
-        )
-        .is_ok());
-        assert!(RUSTC_REGEX.is_match(&String::from_utf8_lossy(&stdout_buf)));
-        assert!(stderr_buf.is_empty());
+    fn check_rustc_output(stdout: &[u8], stderr: &[u8]) {
+        assert!(!stdout.is_empty());
+        assert!(stderr.is_empty());
     }
 }
