@@ -199,17 +199,22 @@ mod test {
             .join("\n");
             Regex::new(&re_str).unwrap()
         };
-        // static ref RUSTC_REGEX: Regex = {
-        //     let re_str = vec![
-        //         *RUSTC_CHANNEL_RE_STR,
-        //         *RUSTC_CD_RE_STR,
-        //         *RUSTC_CH_RE_STR,
-        //         *RUSTC_HT_RE_STR,
-        //         *RUSTC_SEMVER_RE_STR,
-        //     ]
-        //     .join("\n");
-        //     Regex::new(&re_str).unwrap()
-        // };
+    }
+
+    #[cfg(feature = "rustc")]
+    #[rustversion::stable]
+    lazy_static! {
+        static ref RUSTC_REGEX: Regex = {
+            let re_str = vec![
+                *RUSTC_CHANNEL_RE_STR,
+                *RUSTC_CD_RE_STR,
+                *RUSTC_CH_RE_STR,
+                *RUSTC_HT_RE_STR,
+                *RUSTC_SEMVER_RE_STR,
+            ]
+            .join("\n");
+            Regex::new(&re_str).unwrap()
+        };
     }
 
     #[test]
@@ -394,10 +399,19 @@ mod test {
         assert!(stderr.is_empty());
     }
 
+    // TODO: Check this on new beta releases, the regex was causing a panic
+    // outside of my control
     #[cfg(feature = "rustc")]
-    #[rustversion::any(beta, stable)]
+    #[rustversion::beta]
     fn check_rustc_output(stdout: &[u8], stderr: &[u8]) {
         assert!(!stdout.is_empty());
+        assert!(stderr.is_empty());
+    }
+
+    #[cfg(feature = "rustc")]
+    #[rustversion::stable]
+    fn check_rustc_output(stdout: &[u8], stderr: &[u8]) {
+        assert!(RUSTC_REGEX.is_match(&String::from_utf8_lossy(&stdout)));
         assert!(stderr.is_empty());
     }
 }
