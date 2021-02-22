@@ -386,7 +386,7 @@ mod test {
     #[cfg(feature = "rustc")]
     #[rustversion::nightly]
     fn check_rustc_output(stdout: &[u8], stderr: &[u8]) {
-        assert!(RUSTC_NIGHTLY_REGEX.is_match(&String::from_utf8_lossy(&stdout_buf)));
+        assert!(RUSTC_NIGHTLY_REGEX.is_match(&String::from_utf8_lossy(&stdout)));
         assert!(stderr.is_empty());
     }
 
