@@ -117,12 +117,16 @@ mod test {
         static ref TIMESTAMP_RE_STR: &'static str = r#"cargo:rustc-env=VERGEN_BUILD_TIMESTAMP=([0-9]+)-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])[Tt]([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9]|60)(\.[0-9]+)?(([Zz])|([\+|\-]([01][0-9]|2[0-3]):[0-5][0-9]))"#;
         static ref CARGO_SEMVER_RE_STR: &'static str =
             r#"cargo:rustc-env=VERGEN_GIT_SEMVER=\d{1}\.\d{1}\.\d{1}"#;
-        static ref BUILD_CARGO_REGEX: Regex = {
-            let re_str = vec![*DATE_RE_STR, *TIMESTAMP_RE_STR, *CARGO_SEMVER_RE_STR].join("\n");
-            Regex::new(&re_str).unwrap()
-        };
         static ref BUILD_REGEX: Regex = {
             let re_str = vec![*DATE_RE_STR, *TIMESTAMP_RE_STR].join("\n");
+            Regex::new(&re_str).unwrap()
+        };
+    }
+
+    #[cfg(all(feature = "build", not(feature = "git")))]
+    lazy_static! {
+        static ref BUILD_CARGO_REGEX: Regex = {
+            let re_str = vec![*DATE_RE_STR, *TIMESTAMP_RE_STR, *CARGO_SEMVER_RE_STR].join("\n");
             Regex::new(&re_str).unwrap()
         };
     }
@@ -195,17 +199,17 @@ mod test {
             .join("\n");
             Regex::new(&re_str).unwrap()
         };
-        static ref RUSTC_REGEX: Regex = {
-            let re_str = vec![
-                *RUSTC_CHANNEL_RE_STR,
-                *RUSTC_CD_RE_STR,
-                *RUSTC_CH_RE_STR,
-                *RUSTC_HT_RE_STR,
-                *RUSTC_SEMVER_RE_STR,
-            ]
-            .join("\n");
-            Regex::new(&re_str).unwrap()
-        };
+        // static ref RUSTC_REGEX: Regex = {
+        //     let re_str = vec![
+        //         *RUSTC_CHANNEL_RE_STR,
+        //         *RUSTC_CD_RE_STR,
+        //         *RUSTC_CH_RE_STR,
+        //         *RUSTC_HT_RE_STR,
+        //         *RUSTC_SEMVER_RE_STR,
+        //     ]
+        //     .join("\n");
+        //     Regex::new(&re_str).unwrap()
+        // };
     }
 
     #[test]
