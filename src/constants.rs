@@ -6,15 +6,16 @@
 // option. All files in the project carrying such notice may not be copied,
 // modified, or distributed except according to those terms.
 
-//! Flags used to control the build script output.
+//! Flags used to toggle individual `cargo:` instruction generation
 
 use bitflags::bitflags;
 
 bitflags!(
-    /// Constants Flags
+    /// Flags used to toggle individual `cargo:` instruction generation
     ///
-    /// Use these to toggle off the generation of constants you won't use.
+    /// Use these to toggle off instructions you don't wish to generate
     ///
+    /// # Example
     /// ```
     /// # use vergen::ConstantsFlags;
     /// #
@@ -45,87 +46,131 @@ bitflags!(
     /// # }
     /// ```
     pub struct ConstantsFlags: u64 {
-        /// Generate the build timestamp constant.
+        /// Output the build timestamp instruction `VERGEN_BUILD_TIMESTAMP`
         ///
-        /// `2018-08-09T15:15:57.282334589+00:00`
+        /// `cargo:rustc-env=VERGEN_BUILD_TIMESTAMP=2021-02-12T01:54:15.134750+00:00`
+        ///
+        /// This is the UTC timestamp when the build was run
         const BUILD_TIMESTAMP        = 0b0000_0000_0000_0001;
-        /// Generate the build date constant.
+        /// Output the build date instruction `VERGEN_BUILD_DATE`
         ///
-        /// `2018-08-09`
+        /// `cargo:rustc-env=VERGEN_BUILD_DATE=2021-02-12`
+        ///
+        /// This is the UTC date when the build was run
         const BUILD_DATE             = 0b0000_0000_0000_0010;
-        /// Generate the SHA constant.
+        /// Output the SHA instruction `VERGEN_GIT_SHA`
         ///
-        /// `75b390dc6c05a6a4aa2791cc7b3934591803bc22`
+        /// `cargo:rustc-env=VERGEN_GIT_SHA=95fc0f5d066710f16e0c23ce3239d6e040abca0d`
+        ///
+        /// This is the most recent commit SHA on the current branch
         const SHA                    = 0b0000_0000_0000_0100;
-        /// Generate the short SHA constant.
+        /// Output the short SHA instruction `VERGEN_GIT_SHA_SHORT`
         ///
-        /// `75b390d`
+        /// `cargo:rustc-env=VERGEN_GIT_SHA_SHORT=95fc0f5`
+        ///
+        /// This is the most recent commit SHA on the current branch short version
         const SHA_SHORT              = 0b0000_0000_0000_1000;
-        /// Generate the commit date constant.
+        /// Output the short SHA instruction `VERGEN_GIT_COMMIT_DATE`
         ///
-        /// `2018-08-08`
+        /// `cargo:rustc-env=VERGEN_GIT_COMMIT_DATE=2021-02-11T20:05:53-05:00`
+        ///
+        /// This is the local timestamp of the most recent commit on the current branch
         const COMMIT_DATE            = 0b0000_0000_0001_0000;
-        /// Generate the semver constant.
+        /// Output the semantic version instruction `VERGEN_GIT_SEMVER`
         ///
-        /// This defaults to the output of `git describe`.  If that output is
-        /// empty, the the `CARGO_PKG_VERSION` environment variable is used.
+        /// `cargo:rustc-env=VERGEN_GIT_SEMVER=v3.2.0-86-g95fc0f5`
         ///
-        /// `v0.1.0`
+        /// This defaults to the output of [`git2::Repository::describe`].
+        /// If the `git` feature is disabled or the describe call fails, generation falls back to the [`CARGO_PKG_VERSION`] environment variable.
+        /// Note that the [git describe] method is only useful if you have tags on your repository.
+        /// I recommend [`SemVer`] tags, but this will work with any tag format.
+        ///
+        /// [git describe]: git2::Repository::describe
+        /// [`SemVer`]: https://semver.org/
+        /// [`CARGO_PKG_VERSION`]: https://doc.rust-lang.org/cargo/reference/environment-variables.html#environment-variables-cargo-sets-for-crates
         const SEMVER                 = 0b0000_0000_0100_0000;
-        /// Generate the semver constant, including lightweight tags.
+        /// Output the semantic version instruction `VERGEN_GIT_SEMVER_LIGHTWEIGHT`
         ///
-        /// This defaults to the output of `git describe --tags`.  If that output
-        /// is empty, the the `CARGO_PKG_VERSION` environment variable is used.
+        /// `cargo:rustc-env=VERGEN_GIT_SEMVER_LIGHTWEIGHT=blah-33-g95fc0f5`
         ///
-        /// `v0.1.0`
+        /// This follows the same rules as described in [`ConstantsFlags::SEMVER`].
+        /// Note that `VERGEN_GIT_SEMVER_LIGHTWEIGHT` will only differ from `VERGEN_GIT_SEMVER` if you use lightweight tags on your repository.
         const SEMVER_LIGHTWEIGHT     = 0b0000_0000_1000_0000;
-        /// Generate the `cargo:rebuild-if-changed=.git/HEAD` and the
-        /// `cargo:rebuild-if-changed=.git/<ref>` cargo build output.
+        /// Output the `cargo:rerun-if-changed` instructions
+        ///
+        /// `cargo:rerun-if-changed=/Users/yoda/projects/rust-lang/vergen/.git/HEAD`
+        ///
+        /// `cargo:rerun-if-changed=/Users/yoda/projects/rust-lang/vergen/.git/refs/heads/feature/git2`
+        ///
+        /// This toggle is useful to force the build script to re-run when you perform different git actions, i.e. change branches.
         const REBUILD_ON_HEAD_CHANGE = 0b0000_0001_0000_0000;
-        /// Generate the semver constant from `CARGO_PKG_VERSION`.  This is
-        /// mutually exclusive with the `SEMVER` flag.
+        /// Output the semantic version instruction `VERGEN_GIT_SEMVER`
         ///
-        /// `0.1.0`
+        /// `cargo:rustc-env=VERGEN_GIT_SEMVER=0.1.0`
+        ///
+        /// This flag can be used to force the semver instruction to be generated from the `CARGO_PKG_VERSION` environment variable.
+        /// Note that it is mutually exclusive with the `SEMVER` and `SEMVER_LIGHTWEIGHT` flags.
         const SEMVER_FROM_CARGO_PKG  = 0b0000_0010_0000_0000;
-        /// Generates the rustc compiler version.
+        /// Output the rustc compiler version instruction `VERGEN_RUSTC_SEMVER`
         ///
-        /// `1.43.1`
+        /// `cargo:rustc-env=VERGEN_RUSTC_SEMVER=1.52.0-nightly`
+        ///
+        /// This output is generated via the `rustversion` library and refers to the version of rust that was used to create the build.
         const RUSTC_SEMVER           = 0b0000_0100_0000_0000;
-        /// Generates the channel the rust compiler is installed from.
+        /// Output the rustc compiler channel instruction `VERGEN_RUSTC_CHANNEL`
         ///
-        /// `nightly`
+        /// `cargo:rustc-env=VERGEN_RUSTC_CHANNEL=nightly`
+        ///
+        /// This output is generated via the `rustversion` library and refers to the channel (dev, nightly, beta, or stable) of rust that was used to create the build.
         const RUSTC_CHANNEL          = 0b0000_1000_0000_0000;
-        /// Generate the host triple constant.
+        /// Output the rustc compiler host triple instruction `VERGEN_RUSTC_HOST_TRIPLE`
         ///
-        /// `x86_64-unknown-linux-gnu`
+        /// `cargo:rustc-env=VERGEN_RUSTC_HOST_TRIPLE=x86_64-apple-darwin`
+        ///
+        /// This output is generated via the `rustversion` library and refers to the host triple of rust that was used to create the build.
         const RUSTC_HOST_TRIPLE      = 0b0001_0000_0000_0000;
-        /// Generate the branch name constant.
+        /// Output the semantic version instruction `VERGEN_GIT_BRANCH`
         ///
-        /// `master`
+        /// `cargo:rustc-env=VERGEN_GIT_BRANCH=feature/git2`
+        ///
+        /// This output represents the current branch when the build was performed.
         const BRANCH                 = 0b0010_0000_0000_0000;
-        /// Generates the rustc commit hash
+        /// Output the rustc compiler commit SHA instruction `VERGEN_RUSTC_COMMIT_HASH`
         ///
-        /// `abcdef123`
+        /// `cargo:rustc-env=VERGEN_RUSTC_COMMIT_HASH=07194ffcd25b0871ce560b9f702e52db27ac9f77`
+        ///
+        /// This output is generated via the `rustversion` library and refers to the commit SHA of rust that was used to create the build.
         const RUSTC_COMMIT_HASH      = 0b0100_0000_0000_0000;
-        /// Generates the rustc commit date
+        /// Output the rustc compiler commit date instruction `VERGEN_RUSTC_COMMIT_DATE`
         ///
-        /// `01/22/21`
+        /// `cargo:rustc-env=VERGEN_RUSTC_COMMIT_DATE=2021-02-10`
+        ///
+        /// This output is generated via the `rustversion` library and refers to the commit date of rust that was used to create the build.
         const RUSTC_COMMIT_DATE      = 0b1000_0000_0000_0000;
-        /// Generates the rustc LLVM version
+        /// Output the rustc compiler LLVM instruction `VERGEN_RUSTC_LLVM_VERSION`
         ///
-        /// `1.2.3`
+        /// `cargo:rustc-env=VERGEN_RUSTC_LLVM_VERSION=11.0`
+        ///
+        /// This output is generated via the `rustversion` library and refers to the LLVM version of rust that was used to create the build.
+        /// Note that this output is only valid on the `nightly` channel currently.
         const RUSTC_LLVM_VERSION     = 0b0001_0000_0000_0000_0000;
-        /// Generates the cargo target triple constant.
+        /// Output the cargo target triple instruction `VERGEN_CARGO_TARGET_TRIPLE`
         ///
-        /// `x86_64-unknown-linux-gnu`
+        /// `cargo:rustc-env=VERGEN_CARGO_TARGET_TRIPLE=x86_64-unknown-linux-gnu`
+        ///
+        /// This output is made available by cargo at build time, and may be different than the host triple.
         const CARGO_TARGET_TRIPLE    = 0b0010_0000_0000_0000_0000;
-        /// Generates the cargo profile constant.
+        /// Output the cargo profile instruction `VERGEN_CARGO_PROFILE`
         ///
-        /// `debug`
+        /// `cargo:rustc-env=VERGEN_CARGO_PROFILE=debug`
+        ///
+        /// This output is made available by cargo at build time and represents the current profile cargo is using during the build.
         const CARGO_PROFILE          = 0b0100_0000_0000_0000_0000;
-        /// Generates the cargo features constant.
+        /// Output the cargo features instruction `VERGEN_CARGO_FEATURES`
         ///
-        /// `git,cargo`
+        /// `cargo:rustc-env=VERGEN_CARGO_FEATURES=git,build`
+        ///
+        /// This output is made available by cargo at build time and represents the current features cargo has enabled during the build.
         const CARGO_FEATURES         = 0b1000_0000_0000_0000_0000;
     }
 );
