@@ -2,9 +2,15 @@
 Generate build, git, and rustc related 'cargo:rustc-env' instructions via 'build.rs' for use in your code via the env! macro
 
 ## Current Release
+[![docs.rs](https://docs.rs/vergen/badge.svg)](https://docs.rs/vergen)
 [![Crates.io](https://img.shields.io/crates/v/vergen.svg)](https://crates.io/crates/vergen)
 [![Crates.io](https://img.shields.io/crates/l/vergen.svg)](https://crates.io/crates/vergen)
 [![Crates.io](https://img.shields.io/crates/d/vergen.svg)](https://crates.io/crates/vergen)
+[![codecov](https://codecov.io/gh/rustyhorde/vergen/branch/master/graph/badge.svg?token=cBXro7o2UN)](https://codecov.io/gh/rustyhorde/vergen)
+![CI](https://github.com/rustyhorde/vergen/actions/workflows/main.yml/badge.svg)
+
+## Example Usage
+See the documentation at [docs.rs](https://docs.rs/vergen) for example usage
 
 ## Release 4 Breaking Changes
 * The main entry point for use has changed from `generate_cargo_keys` to `gen`
@@ -43,18 +49,6 @@ cargo:rerun-if-changed=/Users/yoda/projects/rust-lang/vergen/.git/refs/heads/fea
 * Under the hood, the `Command`s used for git have been removed in lieu of using the `git2` library directly.
 * `git2` is also used to determine the `HEAD` path and the path that it refers to for the `cargo:rerun-if-changed` instructions.  This is more reliable then the manual method that was in place before.
 * I've migrated the CI stuff from Travis to GitHub Actions.
-
-## Build Status
-![CI](https://github.com/rustyhorde/vergen/workflows/CI/badge.svg)
-
-## Code Coverage
-[![codecov](https://codecov.io/gh/rustyhorde/vergen/branch/master/graph/badge.svg?token=cBXro7o2UN)](https://codecov.io/gh/rustyhorde/vergen)
-
-## Documentation
-[![docs.rs](https://docs.rs/vergen/badge.svg)](https://docs.rs/vergen)
-
-## Example Usage
-See the documentation at [docs.rs](https://docs.rs/vergen/3.2.0/vergen/#cargo-key-build-script-output) for example usage
 
 ## Contributing
 See the documentation at [CONTRIBUTING.md](CONTRIBUTING.md)
