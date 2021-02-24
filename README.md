@@ -6,14 +6,15 @@ Generate build, git, and rustc related 'cargo:rustc-env' instructions via 'build
 [![Crates.io](https://img.shields.io/crates/l/vergen.svg)](https://crates.io/crates/vergen)
 [![Crates.io](https://img.shields.io/crates/d/vergen.svg)](https://crates.io/crates/vergen)
 
-## Release 4.0 Breaking Changes
+## Release 4 Breaking Changes
 * The main entry point for use has changed from `generate_cargo_keys` to `gen`
-* There are now 3 features that allow you to control what instructions can be generated (`build`, `git`, and `rustc`).
+* There are now 4 features that allow you to control what instructions can be generated (`build`, `cargo`, `git`, and `rustc`).
     * The `build` feature enables the `VERGEN_BUILD_*` instructions.
-    * The `git` feature enables the `VERGEN_GIT_*` instructions, the `cargo:rerun-if-changed` instructions, and the `REBUILD_ON_HEAD_CHANGE` flag.
+    * The `git` feature enables the `VERGEN_GIT_*` instructions and the `cargo:rerun-if-changed` instructions.
     * The `rustc` feature enables the `VERGEN_RUSTC_*` instructions.
-    * By default, all three features are enabled.
-    * You can build with all three features disabled, which basically make the `gen` function a no-op.
+    * The `cargo` feature enables the `VERGEN_CARGO_*` instructions.
+    * By default, all features are enabled.
+    * You can build with all features disabled, which basically make the `gen` function a no-op.
     * You can still use `ConstantsFlags` to toggle individual cargo instructions.
 * The generated instructions have been normalized.  Therefore, you may need to update what env variable you are referring to in code.  I've included a list below of the full set of instructions that can be generated for reference.
 
