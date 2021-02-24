@@ -33,6 +33,9 @@ cargo:rustc-env=VERGEN_RUSTC_COMMIT_HASH=07194ffcd25b0871ce560b9f702e52db27ac9f7
 cargo:rustc-env=VERGEN_RUSTC_HOST_TRIPLE=x86_64-apple-darwin
 cargo:rustc-env=VERGEN_RUSTC_LLVM_VERSION=11.0
 cargo:rustc-env=VERGEN_RUSTC_SEMVER=1.52.0-nightly
+cargo:rustc-env=VERGEN_CARGO_TARGET_TRIPLE=x86_64-unknown-linux-gnu
+cargo:rustc-env=VERGEN_CARGO_PROFILE=debug
+cargo:rustc-env=VERGEN_CARGO_FEATURES=git,build
 cargo:rerun-if-changed=/Users/yoda/projects/rust-lang/vergen/.git/HEAD
 cargo:rerun-if-changed=/Users/yoda/projects/rust-lang/vergen/.git/refs/heads/feature/git2
 ```
