@@ -20,14 +20,11 @@ enum ErrKind {
 
 impl fmt::Display for ErrKind {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{}",
-            match self {
-                Self::Protocol => "protocol",
-                Self::Env => "env",
-            }
-        )
+        let err_kind = match self {
+            Self::Protocol => "protocol",
+            Self::Env => "env",
+        };
+        write!(f, "{}", err_kind)
     }
 }
 
