@@ -12,19 +12,62 @@
 //! * The [cargo:rustc-env] instructions add environment variables that can be used with the [env!](std::env!) macro in your code.
 //! * The [cargo:rerun-if-changed] instructions tell `cargo` to re-run the build script if the file at the given path has changed.
 //!
+//! ## Uses
+//! I personally use `vergen` for two use cases.
+//!
+//! The first is generating verbose output describing a command line application.
+//!
+//! ```text
+//! ~/p/r/app λ app -vv
+//! app 0.1.0
+//!
+//! Build Timestamp:     2021-02-23T20:14:46.558472672+00:00
+//! Build Version:       0.1.0-9-g46f83e1
+//! Commit SHA:          46f83e112520533338245862d366f6a02cef07d4
+//! Commit Date:         2021-02-23T08:08:02-05:00
+//! Commit Branch:       master
+//! rustc Version:       1.52.0-nightly
+//! rustc Channel:       nightly
+//! rustc Host Triple:   x86_64-unknown-linux-gnu
+//! rustc Commit SHA:    3f5aee2d5241139d808f4fdece0026603489afd1
+//! cargo Target Triple: x86_64-unknown-linux-musl
+//! cargo Profile:       release
+//! ```
+//!
+//! The second is information endpoints in web apis
+//!
+//! ```json
+//! ~/p/r/app λ curl https://some.app.com/info | jq
+//! {
+//!   "build_timestamp": "2021-02-19T21:32:22.932833758+00:00",
+//!   "git_semver": "0.0.0-7-gc96c096",
+//!   "git_sha": "c96c0961c3b7b749eab92f6f588b67915889c4cd",
+//!   "git_commit_date": "2021-02-19T16:29:06-05:00",
+//!   "git_branch": "master",
+//!   "rustc_semver": "1.52.0-nightly",
+//!   "rustc_channel": "nightly",
+//!   "rustc_host_triple": "x86_64-unknown-linux-gnu",
+//!   "rustc_commit_sha": "3f5aee2d5241139d808f4fdece0026603489afd1",
+//!   "cargo_target_triple": "x86_64-unknown-linux-musl",
+//!   "cargo_profile": "release"
+//! }
+//! ```
+//!
 //! ## Features
-//! `vergen` has three features toggles allowing you to customize your output.
+//! `vergen` has four feature toggles allowing you to customize your output.
 //!
 //! | Feature | Enables |
 //! | ------- | ------- |
 //! |  build  | `VERGEN_BUILD_*` instructions |
-//! |   git   | `VERGEN_GIT_*` instructions, the `cargo:rerun-if-changed` instructions, and the [`REBUILD_ON_HEAD_CHANGE`] flag  |
+//! |  cargo  | `VERGEN_CARGO_*` instructions |
+//! |   git   | `VERGEN_GIT_*` instructions and the `cargo:rerun-if-changed` instructions  |
 //! |  rustc  | `VERGEN_RUSTC_*` instructions |
 //!
-//! **NOTE** - All three features are enabled by default.
+//! **NOTE** - All four features are enabled by default.
 //!
 //! ## Sample Output
-//! If all three features are enabled, and all flags are toggled on, the build script will generate instructions for cargo similar to below
+//! If all features are enabled and all flags are toggled on the build script will generate instructions for cargo similar to below.
+//! Please see [`ConstantsFlags`](crate::constants::ConstantsFlags) for more details on instruction generation.
 //!
 //! ```text, no_run
 //! cargo:rustc-env=VERGEN_BUILD_DATE=2021-02-12
@@ -41,11 +84,20 @@
 //! cargo:rustc-env=VERGEN_RUSTC_HOST_TRIPLE=x86_64-apple-darwin
 //! cargo:rustc-env=VERGEN_RUSTC_LLVM_VERSION=11.0
 //! cargo:rustc-env=VERGEN_RUSTC_SEMVER=1.52.0-nightly
+//! cargo:rustc-env=VERGEN_CARGO_TARGET_TRIPLE=x86_64-unknown-linux-gnu
+//! cargo:rustc-env=VERGEN_CARGO_PROFILE=debug
+//! cargo:rustc-env=VERGEN_CARGO_FEATURES=git,build
 //! cargo:rerun-if-changed=/Users/yoda/projects/rust-lang/vergen/.git/HEAD
 //! cargo:rerun-if-changed=/Users/yoda/projects/rust-lang/vergen/.git/refs/heads/feature/git2
 //! ```
 //!
-//! ## Example Usage
+//! ## Usage
+//!
+//! 1. Ensure you have build scripts enabled via the `build` configuration in your `Cargo.toml`
+//! 1. Add `vergen` as a build dependency, optionally disabling default features in your `Cargo.toml`
+//! 1. Create a `build.rs` file that uses `vergen` to generate `cargo:` instructions.
+//! 1. Use the `env!` macro in your code
+//!
 //! ### Cargo.toml
 //! ```toml
 //! [package]
@@ -65,16 +117,19 @@
 //! ### build.rs
 //! **NOTE** - Individual instruction generation can be toggled on or off via [`ConstantsFlags`](crate::constants::ConstantsFlags)
 //! ```
-//! # use vergen::{ConstantsFlags, gen};
-//! #
-//! # fn main() {
-//! // Setup the flags, toggling off the 'SEMVER_FROM_CARGO_PKG' flag
-//! let mut flags = ConstantsFlags::all();
-//! flags.toggle(ConstantsFlags::SEMVER_FROM_CARGO_PKG);
+//! use vergen::{ConstantsFlags, Error, gen};
 //!
-//! // Generate the 'cargo:' instruction output
-//! gen(flags).expect("Unable to generate the cargo keys!");
-//! # }
+//! fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!   // Setup the flags, toggling off unused instructions
+//!   let mut flags = ConstantsFlags::all();
+//!   flags.toggle(ConstantsFlags::SEMVER_FROM_CARGO_PKG);
+//!   flags.toggle(ConstantsFlags::SEMVER_LIGHTWEIGHT);
+//!   flags.toggle(ConstantsFlags::SHA_SHORT);
+//!   flags.toggle(ConstantsFlags::BUILD_DATE);
+//!
+//!   // Generate the 'cargo:' instruction output
+//!   gen(flags).map_err(Error::into)
+//! }
 //! ```
 //!
 //! ### Use in code
@@ -120,7 +175,7 @@
     asm_sub_register,
     bare_trait_objects,
     bindings_with_variant_name,
-    // box_pointers,
+    box_pointers,
     broken_intra_doc_links,
     cenum_impl_drop_cast,
     clashing_extern_declarations,
@@ -156,7 +211,7 @@
     missing_copy_implementations,
     missing_crate_level_docs,
     missing_debug_implementations,
-    // missing_doc_code_examples,
+    missing_doc_code_examples,
     missing_docs,
     mixed_script_confusables,
     mutable_borrow_reservation_conflict,
@@ -167,7 +222,7 @@
     non_snake_case,
     non_upper_case_globals,
     nontrivial_structural_match,
-    // overlapping_range_endpoints
+    overlapping_range_endpoints,
     path_statements,
     pointer_structural_match,
     // private_doc_tests,
@@ -193,7 +248,7 @@
     unreachable_pub,
     unsafe_code,
     // unsafe_op_in_unsafe_fn,
-    // unstable_features,
+    unstable_features,
     unstable_name_collisions,
     unused_allocation,
     unused_assignments,
@@ -220,7 +275,7 @@
     where_clauses_object_safety,
     while_true,
 )]
-#![allow(clippy::clippy::multiple_crate_versions)]
+#![allow(clippy::multiple_crate_versions)]
 
 mod config;
 mod constants;
