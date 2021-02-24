@@ -8,25 +8,45 @@
 
 //! `vergen` errors
 
+use std::fmt;
+
 /// A result that must include an `crate::error::Error`
 pub(crate) type Result<T> = std::result::Result<T, Error>;
+
+enum ErrKind {
+    Protocol,
+    Env,
+}
+
+impl fmt::Display for ErrKind {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Self::Protocol => "protocol",
+                Self::Env => "env",
+            }
+        )
+    }
+}
 
 /// An error generated from the `vergen` library
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     /// An error from the `git2` library
     #[cfg(feature = "git")]
-    #[error("An error occurred in the 'git2' library: {}", .0)]
+    #[error("{}: An error occurred in the 'git2' library: {}", ErrKind::Protocol, .0)]
     Git2(#[from] git2::Error),
     /// An error writing the cargo instructions to stdout
-    #[error("There was an error writing the cargo instructions to stdout: {}", .0)]
+    #[error("{}: There was an error writing the cargo instructions to stdout: {}", ErrKind::Protocol, .0)]
     Io(#[from] std::io::Error),
     /// An error from the `rustc_version` library
-    #[error("An error occurred in the 'rustc_version' library: {}", .0)]
+    #[error("{}: An error occurred in the 'rustc_version' library: {}", ErrKind::Protocol, .0)]
     #[cfg(feature = "rustc")]
     RustcVersion(#[from] rustc_version::Error),
     /// An error getting the 'CARGO_PKG_VERSION' environment variable
-    #[error("The 'CARGO_PKG_VERSION' environment variable may not be set: {}", .0)]
+    #[error("{}: The 'CARGO_PKG_VERSION' environment variable may not be set: {}", ErrKind::Env, .0)]
     Var(#[from] std::env::VarError),
 }
 
@@ -46,7 +66,7 @@ mod test {
     fn io_error() {
         let err: Error = io::Error::new(ErrorKind::Other, "testing").into();
         assert_eq!(
-            "There was an error writing the cargo instructions to stdout: testing",
+            "protocol: There was an error writing the cargo instructions to stdout: testing",
             format!("{}", err)
         );
     }
@@ -58,7 +78,7 @@ mod test {
         assert!(res.is_err());
         let err = res.err().unwrap();
         assert_eq!(
-            "An error occurred in the \'rustc_version\' library: unexpected `rustc -vV` format",
+            "protocol: An error occurred in the \'rustc_version\' library: unexpected `rustc -vV` format",
             format!("{}", err)
         );
     }
@@ -70,9 +90,9 @@ mod test {
         assert!(res.is_err());
         let err = res.err().unwrap();
         #[cfg(target_family = "unix")]
-        assert_eq!("An error occurred in the \'git2\' library: failed to resolve path \'blah\': No such file or directory; class=Os (2); code=NotFound (-3)", format!("{}", err));
+        assert_eq!("protocol: An error occurred in the \'git2\' library: failed to resolve path \'blah\': No such file or directory; class=Os (2); code=NotFound (-3)", format!("{}", err));
         #[cfg(target_family = "windows")]
-        assert_eq!("An error occurred in the \'git2\' library: failed to resolve path \'blah\': failed to resolve path \'blah\': The system cannot find the file specified.\r\n; class=Os (2); code=NotFound (-3)", format!("{}", err));
+        assert_eq!("protocol: An error occurred in the \'git2\' library: failed to resolve path \'blah\': The system cannot find the file specified.\r\n; class=Os (2); code=NotFound (-3)", format!("{}", err));
     }
 
     #[test]
@@ -81,7 +101,7 @@ mod test {
         assert!(res.is_err());
         let err = res.err().unwrap();
         assert_eq!(
-            "The \'CARGO_PKG_VERSION\' environment variable may not be set: environment variable not found",
+            "env: The \'CARGO_PKG_VERSION\' environment variable may not be set: environment variable not found",
             format!("{}", err)
         );
     }
