@@ -21,10 +21,18 @@ mod cargo;
 mod git;
 mod rustc;
 
-pub(crate) use build::add_build_config;
-pub(crate) use cargo::add_cargo_config;
-pub(crate) use git::add_git_config;
-pub(crate) use rustc::add_rustc_config;
+#[cfg(feature = "build")]
+pub use build::Build;
+pub(crate) use build::{add_build_config, configure_build};
+#[cfg(feature = "cargo")]
+pub use cargo::Cargo;
+pub(crate) use cargo::{add_cargo_config, configure_cargo};
+pub(crate) use git::{add_git_config, configure_git};
+#[cfg(feature = "git")]
+pub use git::{Git, SemverKind, ShaKind};
+#[cfg(feature = "rustc")]
+pub use rustc::Rustc;
+pub(crate) use rustc::{add_rustc_config, configure_rustc};
 
 #[cfg(any(
     feature = "build",
@@ -38,6 +46,32 @@ pub(crate) fn add_entry(
     value: Option<String>,
 ) {
     *map.entry(key).or_insert_with(Option::default) = value;
+}
+
+/// The timezone kind to use with date information
+#[cfg(any(feature = "git", feature = "build"))]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum TimeZone {
+    /// UTC
+    Utc,
+    /// Local
+    Local,
+}
+
+/// The timestamp kind to output
+#[cfg(any(feature = "git", feature = "build"))]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum TimestampKind {
+    /// Output the date only
+    DateOnly,
+    /// Output the time only
+    TimeOnly,
+    /// Output the date and time only
+    DateAndTime,
+    /// Output the timestamp only
+    Timestamp,
+    /// Output all formats
+    All,
 }
 
 #[cfg(all(
