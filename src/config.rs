@@ -16,8 +16,6 @@ use crate::feature::Cargo;
 use crate::feature::Git;
 #[cfg(feature = "rustc")]
 use crate::feature::Rustc;
-#[cfg(any(feature = "build", feature = "git"))]
-use crate::feature::{TimeZone, TimestampKind};
 use crate::{
     constants::{
         ConstantsFlags, BUILD_DATE_NAME, BUILD_SEMVER_NAME, BUILD_TIMESTAMP_NAME, BUILD_TIME_NAME,
@@ -115,94 +113,6 @@ impl Default for Instructions {
 }
 
 impl Instructions {
-    /// Set the timezone for all date/time related instructions
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use vergen::{vergen, Config, TimeZone};
-    /// # use vergen::Error;
-    ///
-    /// # pub fn main() -> Result<(), Error> {
-    /// let mut config = Config::default();
-    /// // Set the default timezone to local for all date/time instructions
-    /// let _ = config.timezone(TimeZone::Local);
-    ///
-    /// // Generate the output
-    /// vergen(config)?;
-    /// #   Ok(())
-    /// # }
-    /// ```
-    ///
-    #[cfg(any(feature = "build", feature = "git"))]
-    pub fn timezone(&mut self, tz: TimeZone) -> &mut Self {
-        let _ = self.set_timezone(tz);
-        self
-    }
-
-    #[cfg(all(feature = "build", not(feature = "git")))]
-    fn set_timezone(&mut self, tz: TimeZone) -> &mut Self {
-        *self.build_mut().timezone_mut() = tz;
-        self
-    }
-
-    #[cfg(all(feature = "git", not(feature = "build")))]
-    fn set_timezone(&mut self, tz: TimeZone) -> &mut Self {
-        *self.git_mut().commit_timestamp_timezone_mut() = tz;
-        self
-    }
-
-    #[cfg(all(feature = "git", feature = "build"))]
-    fn set_timezone(&mut self, tz: TimeZone) -> &mut Self {
-        *self.build_mut().timezone_mut() = tz;
-        *self.git_mut().commit_timestamp_timezone_mut() = tz;
-        self
-    }
-
-    /// Set the timestamp kind for all date/time related instructions
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use vergen::{vergen, Config, TimestampKind};
-    /// # use vergen::Error;
-    ///
-    /// # pub fn main() -> Result<(), Error> {
-    /// let mut config = Config::default();
-    /// // Set the default timestamp kind to time only for all date/time instructions
-    /// let _ = config.ts_kind(TimestampKind::TimeOnly);
-    ///
-    /// // Generate the output
-    /// vergen(config)?;
-    /// #   Ok(())
-    /// # }
-    /// ```
-    ///
-    #[cfg(any(feature = "build", feature = "git"))]
-    pub fn ts_kind(&mut self, tk: TimestampKind) -> &mut Self {
-        let _ = self.set_ts(tk);
-        self
-    }
-
-    #[cfg(all(feature = "build", not(feature = "git")))]
-    fn set_ts(&mut self, tk: TimestampKind) -> &mut Self {
-        *self.build_mut().kind_mut() = tk;
-        self
-    }
-
-    #[cfg(all(feature = "git", not(feature = "build")))]
-    fn set_ts(&mut self, tk: TimestampKind) -> &mut Self {
-        *self.git_mut().commit_timestamp_kind_mut() = tk;
-        self
-    }
-
-    #[cfg(all(feature = "git", feature = "build"))]
-    fn set_ts(&mut self, tk: TimestampKind) -> &mut Self {
-        *self.build_mut().kind_mut() = tk;
-        *self.git_mut().commit_timestamp_kind_mut() = tk;
-        self
-    }
-
     pub(crate) fn config<T>(self, repo_path: Option<T>) -> Result<Config>
     where
         T: AsRef<Path>,
@@ -407,94 +317,5 @@ mod test {
         check_cargo_config(&default);
         check_git_config(&default);
         check_rustc_config(&default);
-    }
-
-    #[test]
-    #[cfg(any(feature = "build", feature = "git"))]
-    fn tz_and_tk_bg() -> Result<(), crate::Error> {
-        use crate::{TimeZone, TimestampKind};
-
-        let _config = Instructions::default()
-            .timezone(TimeZone::Local)
-            .ts_kind(TimestampKind::DateOnly)
-            .config(Some("."))?;
-
-        let _config = Instructions::default()
-            .timezone(TimeZone::Local)
-            .ts_kind(TimestampKind::TimeOnly)
-            .config(Some("."))?;
-
-        let _config = Instructions::default()
-            .timezone(TimeZone::Local)
-            .ts_kind(TimestampKind::DateAndTime)
-            .config(Some("."))?;
-
-        let _config = Instructions::default()
-            .timezone(TimeZone::Local)
-            .ts_kind(TimestampKind::All)
-            .config(Some("."))?;
-
-        Ok(())
-    }
-
-    #[test]
-    #[cfg(all(feature = "build", not(feature = "git")))]
-    fn tz_and_tk_bo() -> Result<(), crate::Error> {
-        use crate::{TimeZone, TimestampKind};
-
-        let _config = Instructions::default()
-            .timezone(TimeZone::Local)
-            .ts_kind(TimestampKind::DateOnly)
-            .config(Some("."))?;
-
-        let _config = Instructions::default()
-            .timezone(TimeZone::Local)
-            .ts_kind(TimestampKind::TimeOnly)
-            .config(Some("."))?;
-
-        let _config = Instructions::default()
-            .timezone(TimeZone::Local)
-            .ts_kind(TimestampKind::DateAndTime)
-            .config(Some("."))?;
-
-        let _config = Instructions::default()
-            .timezone(TimeZone::Local)
-            .ts_kind(TimestampKind::All)
-            .config(Some("."))?;
-
-        Ok(())
-    }
-
-    #[test]
-    #[cfg(all(feature = "git", not(feature = "build")))]
-    fn tz_and_tk_go() -> Result<(), crate::Error> {
-        use crate::{SemverKind, ShaKind, TimeZone, TimestampKind};
-
-        let _config = Instructions::default()
-            .timezone(TimeZone::Local)
-            .ts_kind(TimestampKind::DateOnly)
-            .config(Some("."))?;
-
-        let _config = Instructions::default()
-            .timezone(TimeZone::Local)
-            .ts_kind(TimestampKind::TimeOnly)
-            .config(Some("."))?;
-
-        let _config = Instructions::default()
-            .timezone(TimeZone::Local)
-            .ts_kind(TimestampKind::DateAndTime)
-            .config(Some("."))?;
-
-        let _config = Instructions::default()
-            .timezone(TimeZone::Local)
-            .ts_kind(TimestampKind::All)
-            .config(Some("."))?;
-
-        let mut blah = Instructions::default();
-        *blah.git_mut().sha_kind_mut() = ShaKind::Short;
-        *blah.git_mut().semver_kind_mut() = SemverKind::Lightweight;
-        let _config = blah.config(Some("."))?;
-
-        Ok(())
     }
 }
