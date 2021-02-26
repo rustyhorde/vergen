@@ -423,6 +423,17 @@ mod test {
             .timezone(TimeZone::Local)
             .ts_kind(TimestampKind::TimeOnly)
             .config(Some("."))?;
+
+        let _config = Instructions::default()
+            .timezone(TimeZone::Local)
+            .ts_kind(TimestampKind::DateAndTime)
+            .config(Some("."))?;
+
+        let _config = Instructions::default()
+            .timezone(TimeZone::Local)
+            .ts_kind(TimestampKind::All)
+            .config(Some("."))?;
+
         Ok(())
     }
 
@@ -435,18 +446,55 @@ mod test {
             .timezone(TimeZone::Local)
             .ts_kind(TimestampKind::DateOnly)
             .config(Some("."))?;
+
+        let _config = Instructions::default()
+            .timezone(TimeZone::Local)
+            .ts_kind(TimestampKind::TimeOnly)
+            .config(Some("."))?;
+
+        let _config = Instructions::default()
+            .timezone(TimeZone::Local)
+            .ts_kind(TimestampKind::DateAndTime)
+            .config(Some("."))?;
+
+        let _config = Instructions::default()
+            .timezone(TimeZone::Local)
+            .ts_kind(TimestampKind::All)
+            .config(Some("."))?;
+
         Ok(())
     }
 
     #[test]
     #[cfg(all(feature = "git", not(feature = "build")))]
     fn tz_and_tk_go() -> Result<(), crate::Error> {
-        use crate::{TimeZone, TimestampKind};
+        use crate::{SemverKind, ShaKind, TimeZone, TimestampKind};
 
         let _config = Instructions::default()
             .timezone(TimeZone::Local)
             .ts_kind(TimestampKind::DateOnly)
             .config(Some("."))?;
+
+        let _config = Instructions::default()
+            .timezone(TimeZone::Local)
+            .ts_kind(TimestampKind::TimeOnly)
+            .config(Some("."))?;
+
+        let _config = Instructions::default()
+            .timezone(TimeZone::Local)
+            .ts_kind(TimestampKind::DateAndTime)
+            .config(Some("."))?;
+
+        let _config = Instructions::default()
+            .timezone(TimeZone::Local)
+            .ts_kind(TimestampKind::All)
+            .config(Some("."))?;
+
+        let mut blah = Instructions::default();
+        *blah.git_mut().sha_kind_mut() = ShaKind::Short;
+        *blah.git_mut().semver_kind_mut() = SemverKind::Lightweight;
+        let _config = blah.config(Some("."))?;
+
         Ok(())
     }
 }
