@@ -411,7 +411,7 @@ mod test {
 
     #[test]
     #[cfg(any(feature = "build", feature = "git"))]
-    fn blah() -> Result<(), crate::Error> {
+    fn tz_and_tk_bg() -> Result<(), crate::Error> {
         use crate::{TimeZone, TimestampKind};
 
         let _config = Instructions::default()
@@ -428,7 +428,7 @@ mod test {
 
     #[test]
     #[cfg(all(feature = "build", not(feature = "git")))]
-    fn blah() -> Result<(), crate::Error> {
+    fn tz_and_tk_bo() -> Result<(), crate::Error> {
         use crate::{TimeZone, TimestampKind};
 
         let _config = Instructions::default()
@@ -440,7 +440,7 @@ mod test {
 
     #[test]
     #[cfg(all(feature = "git", not(feature = "build")))]
-    fn blah() -> Result<(), crate::Error> {
+    fn tz_and_tk_go() -> Result<(), crate::Error> {
         use crate::{TimeZone, TimestampKind};
 
         let _config = Instructions::default()
