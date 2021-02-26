@@ -229,13 +229,31 @@ mod test {
     }
 
     #[test]
+    #[serial_test::serial]
     fn cargo_config() {
+        setup();
         let mut config = Instructions::default();
         assert!(config.cargo().features);
         assert!(config.cargo().profile);
         assert!(config.cargo().target_triple);
         config.cargo_mut().features = false;
         assert!(!config.cargo().features);
+        teardown();
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn config_default_feature_works() {
+        setup();
+        env::remove_var("CARGO_FEATURE_GIT");
+        env::remove_var("CARGO_FEATURE_BUILD");
+        let mut config = Instructions::default();
+        assert!(config.cargo().features);
+        assert!(config.cargo().profile);
+        assert!(config.cargo().target_triple);
+        config.cargo_mut().features = false;
+        assert!(!config.cargo().features);
+        teardown();
     }
 }
 

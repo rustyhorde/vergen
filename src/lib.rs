@@ -66,14 +66,14 @@
 //! **NOTE** - All four features are enabled by default.
 //!
 //! ## Sample Output
-//! If all features are enabled and all flags are toggled on the build script will generate instructions for cargo similar to below.
+//! If all features are enabled and the default [`Config`] is used the build script will generate instructions for cargo similar to below.
 //!
 //! Please see [`Config`](crate::Config) for more details on instruction generation.
 //!
 //! ```text, no_run
 //! cargo:rustc-env=VERGEN_BUILD_TIMESTAMP=2021-02-25T23:28:39.493201+00:00
 //! cargo:rustc-env=VERGEN_BUILD_SEMVER=4.1.0
-//! cargo:rustc-env=VERGEN_GIT_BRANCH=feature/datetime-toggles
+//! cargo:rustc-env=VERGEN_GIT_BRANCH=feature/fun
 //! cargo:rustc-env=VERGEN_GIT_COMMIT_TIMESTAMP=2021-02-24T20:55:21+00:00
 //! cargo:rustc-env=VERGEN_GIT_SEMVER=4.1.0-2-gf49246c
 //! cargo:rustc-env=VERGEN_GIT_SHA=f49246ce334567bff9f950bfd0f3078184a2738a
@@ -86,8 +86,8 @@
 //! cargo:rustc-env=VERGEN_CARGO_TARGET_TRIPLE=x86_64-unknown-linux-gnu
 //! cargo:rustc-env=VERGEN_CARGO_PROFILE=debug
 //! cargo:rustc-env=VERGEN_CARGO_FEATURES=git,build
-//! cargo:rerun-if-changed=/Users/kon8116/projects/rust-lang/vergen/.git/HEAD
-//! cargo:rerun-if-changed=/Users/kon8116/projects/rust-lang/vergen/.git/refs/heads/feature/datetime-toggles
+//! cargo:rerun-if-changed=/Users/yoda/projects/rust-lang/vergen/.git/HEAD
+//! cargo:rerun-if-changed=/Users/yoda/projects/rust-lang/vergen/.git/refs/heads/feature/fun
 //! ```
 //!
 //! ## Usage
@@ -133,6 +133,13 @@
 //! [build scripts]: https://doc.rust-lang.org/cargo/reference/build-scripts.html
 //! [cargo:rustc-env]: https://doc.rust-lang.org/cargo/reference/build-scripts.html#rustc-env
 //! [cargo:rerun-if-changed]: https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed
+//!
+//! ## Deprecation Warning
+//! The [`gen`](gen()) function and [`ConstantsFlags`](crate::ConstantsFlags) have been deprecated.  They will be removed when version 5 is released.
+//!
+//! Please switch to using the [`vergen`](vergen()) function with [`Config`](crate::Config) instead.
+//!
+//! This change was made because the [`ConstantsFlags`](crate::ConstantsFlags) were growing bloated.
 //!
 #![deny(
     absolute_paths_not_starting_with_crate,
@@ -250,7 +257,7 @@ mod feature;
 mod gen;
 
 pub use crate::config::Instructions as Config;
-#[deprecated(since = "4.2.0", note = "Please use the vergen function instead")]
+#[deprecated(since = "4.2.0", note = "Please use `Config` instead")]
 pub use crate::constants::ConstantsFlags;
 pub use crate::error::Error;
 #[cfg(feature = "build")]

@@ -16,6 +16,8 @@ use crate::feature::Cargo;
 use crate::feature::Git;
 #[cfg(feature = "rustc")]
 use crate::feature::Rustc;
+#[cfg(any(feature = "build", feature = "git"))]
+use crate::feature::{TimeZone, TimestampKind};
 use crate::{
     constants::{
         ConstantsFlags, BUILD_DATE_NAME, BUILD_SEMVER_NAME, BUILD_TIMESTAMP_NAME, BUILD_TIME_NAME,
@@ -39,10 +41,10 @@ use std::{
 
 /// Configure `vergen` to produce the `cargo:` instructions you need
 ///
-/// * See [`Build`](crate::Build) for details on `build` feature configuration
-/// * See [`Cargo`](crate::Cargo) for details on `cargo` feature configuration
-/// * See [`Git`](crate::Git) for details on `git` feature configuration
-/// * See [`Rustc`](crate::Rustc) for details on `rustc` feature configuration
+/// * See [`Build`](crate::Build) for details on `VERGEN_BUILD_*` instruction configuration
+/// * See [`Cargo`](crate::Cargo) for details on `VERGEN_CARGO_*` instruction configuration
+/// * See [`Git`](crate::Git) for details on `VERGEN_GIT_*` instruction configuration
+/// * See [`Rustc`](crate::Rustc) for details on `VERGEN_RUSTC_*` instruction configuration
 ///
 /// # Example
 ///
@@ -113,6 +115,94 @@ impl Default for Instructions {
 }
 
 impl Instructions {
+    /// Set the timezone for all date/time related instructions
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use vergen::{vergen, Config, TimeZone};
+    /// # use vergen::Error;
+    ///
+    /// # pub fn main() -> Result<(), Error> {
+    /// let mut config = Config::default();
+    /// // Set the default timezone to local for all date/time instructions
+    /// let _ = config.timezone(TimeZone::Local);
+    ///
+    /// // Generate the output
+    /// vergen(config)?;
+    /// #   Ok(())
+    /// # }
+    /// ```
+    ///
+    #[cfg(any(feature = "build", feature = "git"))]
+    pub fn timezone(&mut self, tz: TimeZone) -> &mut Self {
+        let _ = self.set_timezone(tz);
+        self
+    }
+
+    #[cfg(all(feature = "build", not(feature = "git")))]
+    fn set_timezone(&mut self, tz: TimeZone) -> &mut Self {
+        *self.build_mut().timezone_mut() = tz;
+        self
+    }
+
+    #[cfg(all(feature = "git", not(feature = "build")))]
+    fn set_timezone(&mut self, tz: TimeZone) -> &mut Self {
+        *self.git_mut().commit_timestamp_timezone_mut() = tz;
+        self
+    }
+
+    #[cfg(all(feature = "git", feature = "build"))]
+    fn set_timezone(&mut self, tz: TimeZone) -> &mut Self {
+        *self.build_mut().timezone_mut() = tz;
+        *self.git_mut().commit_timestamp_timezone_mut() = tz;
+        self
+    }
+
+    /// Set the timestamp kind for all date/time related instructions
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use vergen::{vergen, Config, TimestampKind};
+    /// # use vergen::Error;
+    ///
+    /// # pub fn main() -> Result<(), Error> {
+    /// let mut config = Config::default();
+    /// // Set the default timestamp kind to time only for all date/time instructions
+    /// let _ = config.ts_kind(TimestampKind::TimeOnly);
+    ///
+    /// // Generate the output
+    /// vergen(config)?;
+    /// #   Ok(())
+    /// # }
+    /// ```
+    ///
+    #[cfg(any(feature = "build", feature = "git"))]
+    pub fn ts_kind(&mut self, tk: TimestampKind) -> &mut Self {
+        let _ = self.set_ts(tk);
+        self
+    }
+
+    #[cfg(all(feature = "build", not(feature = "git")))]
+    fn set_ts(&mut self, tk: TimestampKind) -> &mut Self {
+        *self.build_mut().kind_mut() = tk;
+        self
+    }
+
+    #[cfg(all(feature = "git", not(feature = "build")))]
+    fn set_ts(&mut self, tk: TimestampKind) -> &mut Self {
+        *self.git_mut().commit_timestamp_kind_mut() = tk;
+        self
+    }
+
+    #[cfg(all(feature = "git", feature = "build"))]
+    fn set_ts(&mut self, tk: TimestampKind) -> &mut Self {
+        *self.build_mut().kind_mut() = tk;
+        *self.git_mut().commit_timestamp_kind_mut() = tk;
+        self
+    }
+
     pub(crate) fn config<T>(self, repo_path: Option<T>) -> Result<Config>
     where
         T: AsRef<Path>,

@@ -36,7 +36,7 @@ use std::{
 /// # }
 /// ```
 #[cfg(not(feature = "git"))]
-#[deprecated(since = "4.2.0", note = "Please use the vergen function instead")]
+#[deprecated(since = "4.2.0", note = "Please use the `vergen` function instead")]
 pub fn gen(flags: ConstantsFlags) -> Result<()> {
     // This is here to help with type inference
     let no_repo: Option<&'static str> = None;
@@ -85,7 +85,7 @@ pub fn vergen(config: crate::Config) -> Result<()> {
 /// # }
 /// ```
 #[cfg(feature = "git")]
-#[deprecated(since = "4.2.0", note = "Please use the vergen function instead")]
+#[deprecated(since = "4.2.0", note = "Please use the `vergen` function instead")]
 pub fn gen(flags: ConstantsFlags) -> Result<()> {
     config_from_flags(flags, Some("."), &mut io::stdout())
 }
