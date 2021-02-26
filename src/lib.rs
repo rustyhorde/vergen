@@ -66,21 +66,20 @@
 //! **NOTE** - All four features are enabled by default.
 //!
 //! ## Sample Output
-//! If all features are enabled and all flags are toggled on the build script will generate instructions for cargo similar to below.
-//! Please see [`ConstantsFlags`](crate::constants::ConstantsFlags) for more details on instruction generation.
+//! If all features are enabled and the default [`Config`] is used the build script will generate instructions for cargo similar to below.
+//!
+//! Please see [`Config`](crate::Config) for more details on instruction generation.
 //!
 //! ```text, no_run
-//! cargo:rustc-env=VERGEN_BUILD_DATE=2021-02-12
-//! cargo:rustc-env=VERGEN_BUILD_TIMESTAMP=2021-02-12T01:54:15.134750+00:00
-//! cargo:rustc-env=VERGEN_GIT_BRANCH=feature/git2
-//! cargo:rustc-env=VERGEN_GIT_COMMIT_DATE=2021-02-11T20:05:53-05:00
-//! cargo:rustc-env=VERGEN_GIT_SEMVER=v3.2.0-86-g95fc0f5
-//! cargo:rustc-env=VERGEN_GIT_SEMVER_LIGHTWEIGHT=blah-33-g95fc0f5
-//! cargo:rustc-env=VERGEN_GIT_SHA=95fc0f5d066710f16e0c23ce3239d6e040abca0d
-//! cargo:rustc-env=VERGEN_GIT_SHA_SHORT=95fc0f5
+//! cargo:rustc-env=VERGEN_BUILD_TIMESTAMP=2021-02-25T23:28:39.493201+00:00
+//! cargo:rustc-env=VERGEN_BUILD_SEMVER=4.1.0
+//! cargo:rustc-env=VERGEN_GIT_BRANCH=feature/fun
+//! cargo:rustc-env=VERGEN_GIT_COMMIT_TIMESTAMP=2021-02-24T20:55:21+00:00
+//! cargo:rustc-env=VERGEN_GIT_SEMVER=4.1.0-2-gf49246c
+//! cargo:rustc-env=VERGEN_GIT_SHA=f49246ce334567bff9f950bfd0f3078184a2738a
 //! cargo:rustc-env=VERGEN_RUSTC_CHANNEL=nightly
-//! cargo:rustc-env=VERGEN_RUSTC_COMMIT_DATE=2021-02-10
-//! cargo:rustc-env=VERGEN_RUSTC_COMMIT_HASH=07194ffcd25b0871ce560b9f702e52db27ac9f77
+//! cargo:rustc-env=VERGEN_RUSTC_COMMIT_DATE=2021-02-24
+//! cargo:rustc-env=VERGEN_RUSTC_COMMIT_HASH=a8486b64b0c87dabd045453b6c81500015d122d6
 //! cargo:rustc-env=VERGEN_RUSTC_HOST_TRIPLE=x86_64-apple-darwin
 //! cargo:rustc-env=VERGEN_RUSTC_LLVM_VERSION=11.0
 //! cargo:rustc-env=VERGEN_RUSTC_SEMVER=1.52.0-nightly
@@ -88,7 +87,7 @@
 //! cargo:rustc-env=VERGEN_CARGO_PROFILE=debug
 //! cargo:rustc-env=VERGEN_CARGO_FEATURES=git,build
 //! cargo:rerun-if-changed=/Users/yoda/projects/rust-lang/vergen/.git/HEAD
-//! cargo:rerun-if-changed=/Users/yoda/projects/rust-lang/vergen/.git/refs/heads/feature/git2
+//! cargo:rerun-if-changed=/Users/yoda/projects/rust-lang/vergen/.git/refs/heads/feature/fun
 //! ```
 //!
 //! ## Usage
@@ -115,20 +114,13 @@
 //! ```
 //!
 //! ### build.rs
-//! **NOTE** - Individual instruction generation can be toggled on or off via [`ConstantsFlags`](crate::constants::ConstantsFlags)
+//! **NOTE** - Individual instruction generation can be toggled on or off via [`Config`](crate::Config)
 //! ```
-//! use vergen::{ConstantsFlags, Error, gen};
+//! use vergen::{Config, Error, vergen};
 //!
 //! fn main() -> Result<(), Box<dyn std::error::Error>> {
-//!   // Setup the flags, toggling off unused instructions
-//!   let mut flags = ConstantsFlags::all();
-//!   flags.toggle(ConstantsFlags::SEMVER_FROM_CARGO_PKG);
-//!   flags.toggle(ConstantsFlags::SEMVER_LIGHTWEIGHT);
-//!   flags.toggle(ConstantsFlags::SHA_SHORT);
-//!   flags.toggle(ConstantsFlags::BUILD_DATE);
-//!
-//!   // Generate the 'cargo:' instruction output
-//!   gen(flags).map_err(Error::into)
+//!   // Generate the default 'cargo:' instruction output
+//!   vergen(Config::default()).map_err(Error::into)
 //! }
 //! ```
 //!
@@ -138,35 +130,16 @@
 //! println!("git semver: {}", env!("VERGEN_GIT_SEMVER"));
 //! ```
 //!
-//! ### Note on `VERGEN_SEMVER` and `VERGEN_SEMVER_LIGHTWEIGHT`
-//! `VERGEN_SEMVER` and `VERGEN_SEMVER_LIGHTWEIGHT` can be generated via two methods
-//! 1. [`git2::Repository::describe`]
-//! 2. [`CARGO_PKG_VERSION`]
-//!
-//! By default, if the `git` feature is enabled semver generation will use the first method.
-//! If the `git` feature is disabled or method one errors, generation falls back to the second method.
-//! Note that the `git describe` method is only useful if you have tags on your repository.
-//! I recommend [`SemVer`] tags, but this will work with any tag format.
-//! If your repository has no tags, this method will always fall back to [`CARGO_PKG_VERSION`].
-//! Also worth noting, `VERGEN_SEMVER` and `VERGEN_SEMVER_LIGHTWEIGHT` will only differ if you use [lightweight] tags in your repository.
-//!
-//! If you wish to force method two even if the `git` feature is enabled you may toggle off [`SEMVER`] and toggle on [`SEMVER_FROM_CARGO_PKG`].
-//!
-//! ### Note on `REBUILD_ON_HEAD_CHANGE`
-//! `vergen` can also be configured to instruct `cargo` to re-run the build script when either `<gitpath>/HEAD` or the file that `<gitpath>/HEAD` points at changes.
-//!
-//! This can behavior can be toggled on or off with the [`REBUILD_ON_HEAD_CHANGE`] flag.
-//!
-//! [`SEMVER`]: crate::constants::ConstantsFlags::SEMVER
-//! [`SEMVER_FROM_CARGO_PKG`]: crate::constants::ConstantsFlags::SEMVER_FROM_CARGO_PKG
-//! [`REBUILD_ON_HEAD_CHANGE`]: crate::constants::ConstantsFlags::REBUILD_ON_HEAD_CHANGE
-//! [git describe]: git2::Repository::describe
-//! [`CARGO_PKG_VERSION`]: https://doc.rust-lang.org/cargo/reference/environment-variables.html#environment-variables-cargo-sets-for-crates
 //! [build scripts]: https://doc.rust-lang.org/cargo/reference/build-scripts.html
 //! [cargo:rustc-env]: https://doc.rust-lang.org/cargo/reference/build-scripts.html#rustc-env
 //! [cargo:rerun-if-changed]: https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed
-//! [lightweight]: https://git-scm.com/book/en/v2/Git-Basics-Tagging
-//! [SemVer]: https://semver.org/
+//!
+//! ## Deprecation Warning
+//! The [`gen`](gen()) function and [`ConstantsFlags`](crate::ConstantsFlags) have been deprecated.  They will be removed when version 5 is released.
+//!
+//! Please switch to using the [`vergen`](vergen()) function with [`Config`](crate::Config) instead.
+//!
+//! This change was made because the [`ConstantsFlags`](crate::ConstantsFlags) were growing bloated.
 //!
 #![deny(
     absolute_paths_not_starting_with_crate,
@@ -188,7 +161,7 @@
     const_item_mutation,
     dead_code,
     deprecated,
-    deprecated_in_future,
+    // deprecated_in_future,
     drop_bounds,
     elided_lifetimes_in_paths,
     ellipsis_inclusive_range_patterns,
@@ -211,7 +184,7 @@
     missing_copy_implementations,
     missing_crate_level_docs,
     missing_debug_implementations,
-    missing_doc_code_examples,
+    // missing_doc_code_examples,
     missing_docs,
     mixed_script_confusables,
     mutable_borrow_reservation_conflict,
@@ -283,9 +256,29 @@ mod error;
 mod feature;
 mod gen;
 
+pub use crate::config::Instructions as Config;
+#[deprecated(since = "4.2.0", note = "Please use `Config` instead")]
 pub use crate::constants::ConstantsFlags;
 pub use crate::error::Error;
+#[cfg(feature = "build")]
+pub use crate::feature::Build;
+#[cfg(feature = "cargo")]
+pub use crate::feature::Cargo;
+#[cfg(feature = "git")]
+pub use crate::feature::Git;
+#[cfg(feature = "rustc")]
+pub use crate::feature::Rustc;
+#[cfg(feature = "git")]
+pub use crate::feature::SemverKind;
+#[cfg(feature = "git")]
+pub use crate::feature::ShaKind;
+#[cfg(any(feature = "git", feature = "build"))]
+pub use crate::feature::TimeZone;
+#[cfg(any(feature = "git", feature = "build"))]
+pub use crate::feature::TimestampKind;
+#[allow(deprecated)]
 pub use crate::gen::gen;
+pub use crate::gen::vergen;
 
 #[cfg(all(test, not(feature = "rustc")))]
 use rustversion as _;

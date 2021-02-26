@@ -9,7 +9,7 @@
 //! `vergen` cargo instruction generation
 
 use crate::{
-    config::{Config, VergenKey},
+    config::{Config, Instructions, VergenKey},
     constants::ConstantsFlags,
     error::Result,
 };
@@ -22,13 +22,25 @@ use std::{
 ///
 /// # Errors
 ///
-/// Any generated errors will be wrapped in [vergen::Error](crate::error::Error)
+/// Any generated errors will be wrapped in [`vergen::Error`](crate::error::Error)
 ///
+/// # Usage
+///
+/// ```
+/// # use vergen::{ConstantsFlags, Error, gen};
+/// #
+/// # fn main() -> std::result::Result<(), Error> {
+/// // Generate the default 'cargo:' instruction output
+/// gen(ConstantsFlags::all())?;
+/// #   Ok(())
+/// # }
+/// ```
 #[cfg(not(feature = "git"))]
+#[deprecated(since = "4.2.0", note = "Please use the `vergen` function instead")]
 pub fn gen(flags: ConstantsFlags) -> Result<()> {
     // This is here to help with type inference
     let no_repo: Option<&'static str> = None;
-    gen_cargo_instructions(flags, no_repo, &mut io::stdout(), &mut io::stderr())
+    config_from_flags(flags, no_repo, &mut io::stdout())
 }
 
 /// Generate the `cargo:` instructions
@@ -40,47 +52,103 @@ pub fn gen(flags: ConstantsFlags) -> Result<()> {
 /// # Usage
 ///
 /// ```
-/// # use vergen::{ConstantsFlags, gen};
+/// # use vergen::{Config, Error, vergen};
 /// #
-/// # fn main() {
-/// // Generate the 'cargo:' instruction output
-/// gen(ConstantsFlags::all()).expect("Unable to generate the cargo keys!");
+/// # fn main() -> std::result::Result<(), Error> {
+/// // Generate the default 'cargo:' instruction output
+/// vergen(Config::default())?;
+/// #   Ok(())
+/// # }
+/// ```
+#[cfg(not(feature = "git"))]
+pub fn vergen(config: crate::Config) -> Result<()> {
+    // This is here to help with type inference
+    let no_repo: Option<&'static str> = None;
+    config_from_instructions(config, no_repo, &mut io::stdout())
+}
+
+/// Generate the `cargo:` instructions
+///
+/// # Errors
+///
+/// Any generated errors will be wrapped in [`vergen::Error`](crate::error::Error)
+///
+/// # Usage
+///
+/// ```
+/// # use vergen::{ConstantsFlags, Error, gen};
+/// #
+/// # fn main() -> std::result::Result<(), Error> {
+/// // Generate the default 'cargo:' instruction output
+/// gen(ConstantsFlags::all())?;
+/// #   Ok(())
 /// # }
 /// ```
 #[cfg(feature = "git")]
+#[deprecated(since = "4.2.0", note = "Please use the `vergen` function instead")]
 pub fn gen(flags: ConstantsFlags) -> Result<()> {
-    gen_cargo_instructions(flags, Some("."), &mut io::stdout(), &mut io::stderr())
+    config_from_flags(flags, Some("."), &mut io::stdout())
 }
 
-fn gen_cargo_instructions<T, U, V>(
-    flags: ConstantsFlags,
-    repo: Option<V>,
+/// Generate the `cargo:` instructions
+///
+/// # Errors
+///
+/// Any generated errors will be wrapped in [`vergen::Error`](crate::error::Error)
+///
+/// # Usage
+///
+/// ```
+/// # use vergen::{Config, Error, vergen};
+/// #
+/// # fn main() -> std::result::Result<(), Error> {
+/// // Generate the default 'cargo:' instruction output
+/// vergen(Config::default())?;
+/// #   Ok(())
+/// # }
+/// ```
+#[cfg(feature = "git")]
+pub fn vergen(config: crate::Config) -> Result<()> {
+    config_from_instructions(config, Some("."), &mut io::stdout())
+}
+
+fn config_from_flags<T, U>(flags: ConstantsFlags, repo: Option<U>, stdout: &mut T) -> Result<()>
+where
+    T: Write,
+    U: AsRef<Path>,
+{
+    output_cargo_instructions(&Config::build(flags, repo)?, stdout)
+}
+
+fn config_from_instructions<T, U>(
+    instructions: Instructions,
+    repo: Option<U>,
     stdout: &mut T,
-    _stderr: &mut U,
 ) -> Result<()>
 where
     T: Write,
-    U: Write,
-    V: AsRef<Path>,
+    U: AsRef<Path>,
 {
-    // Generate the config to drive 'cargo:' instruction output
-    let config = Config::build(flags, repo)?;
+    output_cargo_instructions(&instructions.config(repo)?, stdout)
+}
 
+fn output_cargo_instructions<T>(config: &Config, stdout: &mut T) -> Result<()>
+where
+    T: Write,
+{
     // Generate the 'cargo:' instruction output
     for (k, v) in config.cfg_map().iter().filter_map(some_vals) {
         writeln!(stdout, "cargo:rustc-env={}={}", k.name(), v)?;
     }
 
-    if flags.contains(ConstantsFlags::REBUILD_ON_HEAD_CHANGE) {
-        // Add the HEAD path to cargo:rerun-if-changed
-        if let Some(head_path) = config.head_path() {
-            writeln!(stdout, "cargo:rerun-if-changed={}", head_path.display())?;
-        }
+    // Add the HEAD path to cargo:rerun-if-changed
+    if let Some(head_path) = config.head_path() {
+        writeln!(stdout, "cargo:rerun-if-changed={}", head_path.display())?;
+    }
 
-        // Add the resolved ref path to cargo:rerun-if-changed
-        if let Some(ref_path) = config.ref_path() {
-            writeln!(stdout, "cargo:rerun-if-changed={}", ref_path.display())?;
-        }
+    // Add the resolved ref path to cargo:rerun-if-changed
+    if let Some(ref_path) = config.ref_path() {
+        writeln!(stdout, "cargo:rerun-if-changed={}", ref_path.display())?;
     }
 
     Ok(())
@@ -96,8 +164,11 @@ fn some_vals<'a>(tuple: (&'a VergenKey, &'a Option<String>)) -> Option<(&VergenK
 
 #[cfg(test)]
 mod test {
-    use super::{gen, gen_cargo_instructions};
+    #[allow(deprecated)]
+    use super::gen;
+    use super::{config_from_flags, vergen};
     use crate::{
+        config::Instructions,
         constants::ConstantsFlags,
         error::Result,
         testutils::{setup, teardown},
@@ -219,6 +290,7 @@ mod test {
 
     #[test]
     #[serial_test::serial]
+    #[allow(deprecated)]
     fn gen_works() -> Result<()> {
         setup();
         assert!(gen(ConstantsFlags::all()).is_ok());
@@ -227,41 +299,36 @@ mod test {
     }
 
     #[test]
+    #[serial_test::serial]
+    fn vergen_works() -> Result<()> {
+        setup();
+        assert!(vergen(Instructions::default()).is_ok());
+        teardown();
+        Ok(())
+    }
+
+    #[test]
     fn describe_falls_back() -> Result<()> {
         let no_tags_path = PathBuf::from("testdata").join("notagsrepo");
-        assert!(gen_cargo_instructions(
-            ConstantsFlags::all(),
-            Some(no_tags_path),
-            &mut io::sink(),
-            &mut io::sink(),
-        )
-        .is_ok());
+        assert!(
+            config_from_flags(ConstantsFlags::all(), Some(no_tags_path), &mut io::sink(),).is_ok()
+        );
         Ok(())
     }
 
     #[test]
     fn describe() -> Result<()> {
         let no_tags_path = PathBuf::from("testdata").join("tagsrepo");
-        assert!(gen_cargo_instructions(
-            ConstantsFlags::all(),
-            Some(no_tags_path),
-            &mut io::sink(),
-            &mut io::sink(),
-        )
-        .is_ok());
+        assert!(
+            config_from_flags(ConstantsFlags::all(), Some(no_tags_path), &mut io::sink(),).is_ok()
+        );
         Ok(())
     }
 
     #[test]
     fn detached_head() -> Result<()> {
         let dh_path = PathBuf::from("testdata").join("detachedhead");
-        assert!(gen_cargo_instructions(
-            ConstantsFlags::all(),
-            Some(dh_path),
-            &mut io::sink(),
-            &mut io::sink(),
-        )
-        .is_ok());
+        assert!(config_from_flags(ConstantsFlags::all(), Some(dh_path), &mut io::sink(),).is_ok());
         Ok(())
     }
 
@@ -273,10 +340,7 @@ mod test {
         flags.toggle(ConstantsFlags::BUILD_DATE);
 
         let mut stdout_buf = vec![];
-        let mut stderr = vec![];
-        assert!(
-            gen_cargo_instructions(flags, Some(repo_path), &mut stdout_buf, &mut stderr).is_ok()
-        );
+        assert!(config_from_flags(flags, Some(repo_path), &mut stdout_buf).is_ok());
         let stdout = String::from_utf8_lossy(&stdout_buf);
         assert!(!VBD_REGEX.is_match(&stdout));
         Ok(())
@@ -292,16 +356,10 @@ mod test {
     fn no_features_no_output() {
         let repo_path = PathBuf::from(".");
         let mut stdout_buf = vec![];
-        let mut stderr_buf = vec![];
-        assert!(gen_cargo_instructions(
-            ConstantsFlags::all(),
-            Some(repo_path),
-            &mut stdout_buf,
-            &mut stderr_buf
-        )
-        .is_ok());
+        assert!(
+            config_from_flags(ConstantsFlags::all(), Some(repo_path), &mut stdout_buf,).is_ok()
+        );
         assert!(stdout_buf.is_empty());
-        assert!(stderr_buf.is_empty());
     }
 
     #[cfg(all(feature = "build", not(feature = "git")))]
@@ -309,16 +367,10 @@ mod test {
     fn contains_only_build_output() {
         let repo_path = PathBuf::from(".");
         let mut stdout_buf = vec![];
-        let mut stderr_buf = vec![];
-        assert!(gen_cargo_instructions(
-            ConstantsFlags::all(),
-            Some(repo_path),
-            &mut stdout_buf,
-            &mut stderr_buf
-        )
-        .is_ok());
+        assert!(
+            config_from_flags(ConstantsFlags::all(), Some(repo_path), &mut stdout_buf,).is_ok()
+        );
         assert!(BUILD_CARGO_REGEX.is_match(&String::from_utf8_lossy(&stdout_buf)));
-        assert!(stderr_buf.is_empty());
     }
 
     #[cfg(all(feature = "build", feature = "git"))]
@@ -326,16 +378,10 @@ mod test {
     fn contains_build_output() {
         let repo_path = PathBuf::from(".");
         let mut stdout_buf = vec![];
-        let mut stderr_buf = vec![];
-        assert!(gen_cargo_instructions(
-            ConstantsFlags::all(),
-            Some(repo_path),
-            &mut stdout_buf,
-            &mut stderr_buf
-        )
-        .is_ok());
+        assert!(
+            config_from_flags(ConstantsFlags::all(), Some(repo_path), &mut stdout_buf,).is_ok()
+        );
         assert!(BUILD_REGEX.is_match(&String::from_utf8_lossy(&stdout_buf)));
-        assert!(stderr_buf.is_empty());
     }
 
     #[cfg(feature = "cargo")]
@@ -345,16 +391,10 @@ mod test {
         setup();
         let repo_path = PathBuf::from(".");
         let mut stdout_buf = vec![];
-        let mut stderr_buf = vec![];
-        assert!(gen_cargo_instructions(
-            ConstantsFlags::all(),
-            Some(repo_path),
-            &mut stdout_buf,
-            &mut stderr_buf
-        )
-        .is_ok());
+        assert!(
+            config_from_flags(ConstantsFlags::all(), Some(repo_path), &mut stdout_buf,).is_ok()
+        );
         assert!(CARGO_REGEX.is_match(&String::from_utf8_lossy(&stdout_buf)));
-        assert!(stderr_buf.is_empty());
         teardown();
     }
 
@@ -363,17 +403,11 @@ mod test {
     fn contains_git_output() {
         let repo_path = PathBuf::from(".");
         let mut stdout_buf = vec![];
-        let mut stderr_buf = vec![];
-        assert!(gen_cargo_instructions(
-            ConstantsFlags::all(),
-            Some(repo_path),
-            &mut stdout_buf,
-            &mut stderr_buf
-        )
-        .is_ok());
+        assert!(
+            config_from_flags(ConstantsFlags::all(), Some(repo_path), &mut stdout_buf,).is_ok()
+        );
         assert!(GIT_REGEX.is_match(&String::from_utf8_lossy(&stdout_buf)));
         assert!(GIT_RIC_REGEX.is_match(&String::from_utf8_lossy(&stdout_buf)));
-        assert!(stderr_buf.is_empty());
     }
 
     #[cfg(feature = "rustc")]
@@ -381,37 +415,185 @@ mod test {
     fn contains_rustc_output() {
         let repo_path = PathBuf::from(".");
         let mut stdout_buf = vec![];
-        let mut stderr_buf = vec![];
-        assert!(gen_cargo_instructions(
-            ConstantsFlags::all(),
-            Some(repo_path),
-            &mut stdout_buf,
-            &mut stderr_buf
-        )
-        .is_ok());
-        check_rustc_output(&stdout_buf, &stderr_buf);
+        assert!(
+            config_from_flags(ConstantsFlags::all(), Some(repo_path), &mut stdout_buf,).is_ok()
+        );
+        check_rustc_output(&stdout_buf);
     }
 
     #[cfg(feature = "rustc")]
     #[rustversion::nightly]
-    fn check_rustc_output(stdout: &[u8], stderr: &[u8]) {
+    fn check_rustc_output(stdout: &[u8]) {
         assert!(RUSTC_NIGHTLY_REGEX.is_match(&String::from_utf8_lossy(&stdout)));
-        assert!(stderr.is_empty());
     }
 
     // TODO: Check this on new beta releases, the regex was causing a panic
     // outside of my control
     #[cfg(feature = "rustc")]
     #[rustversion::beta]
-    fn check_rustc_output(stdout: &[u8], stderr: &[u8]) {
+    fn check_rustc_output(stdout: &[u8]) {
         assert!(!stdout.is_empty());
-        assert!(stderr.is_empty());
     }
 
     #[cfg(feature = "rustc")]
     #[rustversion::stable]
-    fn check_rustc_output(stdout: &[u8], stderr: &[u8]) {
+    fn check_rustc_output(stdout: &[u8]) {
         assert!(RUSTC_REGEX.is_match(&String::from_utf8_lossy(&stdout)));
-        assert!(stderr.is_empty());
+    }
+
+    #[cfg(feature = "build")]
+    #[test]
+    fn build_local_timezone() {
+        use super::config_from_instructions;
+        use crate::TimeZone;
+
+        let repo_path = PathBuf::from(".");
+        let mut stdout_buf = vec![];
+        let mut config = Instructions::default();
+        *config.build_mut().timezone_mut() = TimeZone::Local;
+        assert!(config_from_instructions(config, Some(repo_path), &mut stdout_buf,).is_ok());
+    }
+
+    #[cfg(feature = "git")]
+    #[test]
+    fn git_local_timezone() {
+        use super::config_from_instructions;
+        use crate::TimeZone;
+
+        let repo_path = PathBuf::from(".");
+        let mut stdout_buf = vec![];
+        let mut config = Instructions::default();
+        *config.git_mut().commit_timestamp_timezone_mut() = TimeZone::Local;
+        assert!(config_from_instructions(config, Some(repo_path), &mut stdout_buf,).is_ok());
+    }
+
+    #[cfg(feature = "build")]
+    #[test]
+    fn build_time_only() {
+        use super::config_from_instructions;
+        use crate::TimestampKind;
+
+        let repo_path = PathBuf::from(".");
+        let mut stdout_buf = vec![];
+        let mut config = Instructions::default();
+        *config.build_mut().kind_mut() = TimestampKind::TimeOnly;
+        assert!(config_from_instructions(config, Some(repo_path), &mut stdout_buf,).is_ok());
+    }
+
+    #[cfg(feature = "git")]
+    #[test]
+    fn git_time_only() {
+        use super::config_from_instructions;
+        use crate::TimestampKind;
+
+        let repo_path = PathBuf::from(".");
+        let mut stdout_buf = vec![];
+        let mut config = Instructions::default();
+        *config.git_mut().commit_timestamp_kind_mut() = TimestampKind::TimeOnly;
+        assert!(config_from_instructions(config, Some(repo_path), &mut stdout_buf,).is_ok());
+    }
+
+    #[cfg(feature = "build")]
+    #[test]
+    fn build_date_only() {
+        use super::config_from_instructions;
+        use crate::TimestampKind;
+
+        let repo_path = PathBuf::from(".");
+        let mut stdout_buf = vec![];
+        let mut config = Instructions::default();
+        *config.build_mut().kind_mut() = TimestampKind::DateOnly;
+        assert!(config_from_instructions(config, Some(repo_path), &mut stdout_buf,).is_ok());
+    }
+
+    #[cfg(feature = "git")]
+    #[test]
+    fn git_date_only() {
+        use super::config_from_instructions;
+        use crate::TimestampKind;
+
+        let repo_path = PathBuf::from(".");
+        let mut stdout_buf = vec![];
+        let mut config = Instructions::default();
+        *config.git_mut().commit_timestamp_kind_mut() = TimestampKind::DateOnly;
+        assert!(config_from_instructions(config, Some(repo_path), &mut stdout_buf,).is_ok());
+    }
+
+    #[cfg(feature = "build")]
+    #[test]
+    fn build_date_and_time() {
+        use super::config_from_instructions;
+        use crate::TimestampKind;
+
+        let repo_path = PathBuf::from(".");
+        let mut stdout_buf = vec![];
+        let mut config = Instructions::default();
+        *config.build_mut().kind_mut() = TimestampKind::DateAndTime;
+        assert!(config_from_instructions(config, Some(repo_path), &mut stdout_buf,).is_ok());
+    }
+
+    #[cfg(feature = "git")]
+    #[test]
+    fn git_date_and_time() {
+        use super::config_from_instructions;
+        use crate::TimestampKind;
+
+        let repo_path = PathBuf::from(".");
+        let mut stdout_buf = vec![];
+        let mut config = Instructions::default();
+        *config.git_mut().commit_timestamp_kind_mut() = TimestampKind::DateAndTime;
+        assert!(config_from_instructions(config, Some(repo_path), &mut stdout_buf,).is_ok());
+    }
+
+    #[cfg(feature = "build")]
+    #[test]
+    fn build_all_kind() {
+        use super::config_from_instructions;
+        use crate::TimestampKind;
+
+        let repo_path = PathBuf::from(".");
+        let mut stdout_buf = vec![];
+        let mut config = Instructions::default();
+        *config.build_mut().kind_mut() = TimestampKind::All;
+        assert!(config_from_instructions(config, Some(repo_path), &mut stdout_buf,).is_ok());
+    }
+
+    #[cfg(feature = "git")]
+    #[test]
+    fn git_all_kind() {
+        use super::config_from_instructions;
+        use crate::TimestampKind;
+
+        let repo_path = PathBuf::from(".");
+        let mut stdout_buf = vec![];
+        let mut config = Instructions::default();
+        *config.git_mut().commit_timestamp_kind_mut() = TimestampKind::All;
+        assert!(config_from_instructions(config, Some(repo_path), &mut stdout_buf,).is_ok());
+    }
+
+    #[cfg(feature = "git")]
+    #[test]
+    fn sha_kind() {
+        use super::config_from_instructions;
+        use crate::ShaKind;
+
+        let repo_path = PathBuf::from(".");
+        let mut stdout_buf = vec![];
+        let mut config = Instructions::default();
+        *config.git_mut().sha_kind_mut() = ShaKind::Short;
+        assert!(config_from_instructions(config, Some(repo_path), &mut stdout_buf,).is_ok());
+    }
+
+    #[cfg(feature = "git")]
+    #[test]
+    fn semver_kind() {
+        use super::config_from_instructions;
+        use crate::SemverKind;
+
+        let repo_path = PathBuf::from(".");
+        let mut stdout_buf = vec![];
+        let mut config = Instructions::default();
+        *config.git_mut().semver_kind_mut() = SemverKind::Lightweight;
+        assert!(config_from_instructions(config, Some(repo_path), &mut stdout_buf,).is_ok());
     }
 }

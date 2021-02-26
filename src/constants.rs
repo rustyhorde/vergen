@@ -11,6 +11,11 @@
 use bitflags::bitflags;
 
 bitflags!(
+    /// **DEPRECATED** - [`ConstantsFlags`] has been deprecated in favor of [`Config`](crate::config::Instructions).
+    ///
+    /// Please make the switch to that instead. [`ConstantsFlags`] will be removed in
+    /// version 5.
+    ///
     /// Flags used to toggle individual `cargo:` instruction generation
     ///
     /// Use these to toggle off instructions you don't wish to generate
@@ -178,10 +183,14 @@ bitflags!(
 // Build Constants
 pub(crate) const BUILD_TIMESTAMP_NAME: &str = "VERGEN_BUILD_TIMESTAMP";
 pub(crate) const BUILD_DATE_NAME: &str = "VERGEN_BUILD_DATE";
+pub(crate) const BUILD_TIME_NAME: &str = "VERGEN_BUILD_TIME";
+pub(crate) const BUILD_SEMVER_NAME: &str = "VERGEN_BUILD_SEMVER";
 
 // git Constants
 pub(crate) const GIT_BRANCH_NAME: &str = "VERGEN_GIT_BRANCH";
 pub(crate) const GIT_COMMIT_DATE_NAME: &str = "VERGEN_GIT_COMMIT_DATE";
+pub(crate) const GIT_COMMIT_TIME_NAME: &str = "VERGEN_GIT_COMMIT_TIME";
+pub(crate) const GIT_COMMIT_TIMESTAMP_NAME: &str = "VERGEN_GIT_COMMIT_TIMESTAMP";
 pub(crate) const GIT_SEMVER_NAME: &str = "VERGEN_GIT_SEMVER";
 pub(crate) const GIT_SEMVER_TAGS_NAME: &str = "VERGEN_GIT_SEMVER_LIGHTWEIGHT";
 pub(crate) const GIT_SHA_NAME: &str = "VERGEN_GIT_SHA";

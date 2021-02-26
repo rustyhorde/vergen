@@ -8,32 +8,104 @@
 
 //! `vergen` build feature implementation
 
-use crate::{config::Config, constants::ConstantsFlags};
+use crate::{
+    config::{Config, Instructions},
+    constants::ConstantsFlags,
+};
 #[cfg(feature = "build")]
 use {
-    crate::{config::VergenKey, feature::add_entry},
-    chrono::Utc,
+    crate::{
+        config::VergenKey,
+        feature::{add_entry, TimeZone, TimestampKind},
+    },
+    chrono::{DateTime, Local, Utc},
+    getset::{Getters, MutGetters},
     std::env,
 };
+
+/// Configuration for the `VERGEN_BUILD_*` instructions
+///
+/// # Instructions
+/// The following instructions can be generated:
+///
+/// | Instruction | Default |
+/// | ----------- | :-----: |
+/// | `cargo:rustc-env=VERGEN_BUILD_DATE=2021-02-12` | |
+/// | `cargo:rustc-env=VERGEN_BUILD_TIME=11:22:34` | |
+/// | `cargo:rustc-env=VERGEN_BUILD_TIMESTAMP=2021-02-12T01:54:15.134750+00:00` | * |
+/// | `cargo:rustc-env=VERGEN_BUILD_SEMVER=4.2.0` | * |
+///
+/// * If the `timestamp` field is false, the date/time instructions will not be generated.
+/// * If the `semver` field is false, the semver instruction will not be generated.
+/// * **NOTE** - By default, the date/time related instructions will use [`UTC`](TimeZone::Utc).
+/// * **NOTE** - The date/time instruction output is determined by the [`kind`](TimestampKind) field and can be any combination of the three.
+///
+/// # Example
+///
+/// ```
+/// # use vergen::Error;
+/// use vergen::{vergen, Config};
+#[cfg_attr(feature = "build", doc = r##"use vergen::{TimestampKind, TimeZone};"##)]
+///
+/// # pub fn main() -> Result<(), Error> {
+/// let mut config = Config::default();
+#[cfg_attr(
+    feature = "build",
+    doc = r##"
+// Generate all three date/time instructions
+*config.build_mut().kind_mut() = TimestampKind::All;
+// Change the date/time instructions to show `Local` time
+*config.build_mut().timezone_mut() = TimeZone::Local;
+
+// Generate the instructions
+vergen(config)?;
+"##
+)]
+/// # Ok(())
+/// # }
+#[cfg(feature = "build")]
+#[derive(Clone, Copy, Debug, Getters, MutGetters)]
+#[getset(get = "pub(crate)", get_mut = "pub")]
+pub struct Build {
+    /// Enable/Disable the `VERGEN_BUILD_DATE`, `VERGEN_BUILD_TIME`, and `VERGEN_BUILD_TIMESTAMP` instructions.
+    timestamp: bool,
+    /// The timezone to use for the date/time instructions.
+    timezone: TimeZone,
+    /// The kind of date/time instructions to output.
+    kind: TimestampKind,
+    /// Enable/Disable the `VERGEN_BUILD_SEMVER` instruction.
+    semver: bool,
+}
+
+#[cfg(feature = "build")]
+impl Default for Build {
+    fn default() -> Self {
+        Self {
+            timestamp: true,
+            timezone: TimeZone::Utc,
+            kind: TimestampKind::Timestamp,
+            semver: true,
+        }
+    }
+}
+
+#[cfg(feature = "build")]
+impl Build {
+    pub(crate) fn has_enabled(self) -> bool {
+        self.timestamp || self.semver
+    }
+}
 
 #[cfg(feature = "build")]
 pub(crate) fn add_build_config(flags: ConstantsFlags, config: &mut Config) {
     // Setup datetime information
     let now = Utc::now();
     if flags.contains(ConstantsFlags::BUILD_TIMESTAMP) {
-        add_entry(
-            config.cfg_map_mut(),
-            VergenKey::BuildTimestamp,
-            Some(now.to_rfc3339()),
-        );
+        add_timestamp_entry(config, &now);
     }
 
     if flags.contains(ConstantsFlags::BUILD_DATE) {
-        add_entry(
-            config.cfg_map_mut(),
-            VergenKey::BuildDate,
-            Some(now.format("%Y-%m-%d").to_string()),
-        );
+        add_date_entry(config, &now);
     }
 
     if flags.contains(ConstantsFlags::SEMVER_FROM_CARGO_PKG) {
@@ -45,15 +117,102 @@ pub(crate) fn add_build_config(flags: ConstantsFlags, config: &mut Config) {
     }
 }
 
+#[cfg(feature = "build")]
+pub(crate) fn configure_build(instructions: Instructions, config: &mut Config) {
+    let build_config = instructions.build();
+
+    if build_config.has_enabled() {
+        if *build_config.timestamp() {
+            match build_config.timezone() {
+                TimeZone::Utc => add_config_entries(config, *build_config, &Utc::now()),
+                TimeZone::Local => add_config_entries(config, *build_config, &Local::now()),
+            };
+        }
+
+        if *build_config.semver() {
+            add_entry(
+                config.cfg_map_mut(),
+                VergenKey::BuildSemver,
+                env::var("CARGO_PKG_VERSION").ok(),
+            );
+        }
+    }
+}
+
+#[cfg(feature = "build")]
+fn add_config_entries<T>(config: &mut Config, build_config: Build, now: &DateTime<T>)
+where
+    T: chrono::TimeZone,
+    T::Offset: std::fmt::Display,
+{
+    match build_config.kind() {
+        TimestampKind::DateOnly => add_date_entry(config, now),
+        TimestampKind::TimeOnly => add_time_entry(config, now),
+        TimestampKind::DateAndTime => {
+            add_date_entry(config, now);
+            add_time_entry(config, now);
+        }
+        TimestampKind::Timestamp => add_timestamp_entry(config, now),
+        TimestampKind::All => {
+            add_date_entry(config, now);
+            add_time_entry(config, now);
+            add_timestamp_entry(config, now);
+        }
+    }
+}
+
+#[cfg(feature = "build")]
+fn add_date_entry<T>(config: &mut Config, now: &DateTime<T>)
+where
+    T: chrono::TimeZone,
+    T::Offset: std::fmt::Display,
+{
+    add_entry(
+        config.cfg_map_mut(),
+        VergenKey::BuildDate,
+        Some(now.format("%Y-%m-%d").to_string()),
+    );
+}
+
+#[cfg(feature = "build")]
+fn add_time_entry<T>(config: &mut Config, now: &DateTime<T>)
+where
+    T: chrono::TimeZone,
+    T::Offset: std::fmt::Display,
+{
+    add_entry(
+        config.cfg_map_mut(),
+        VergenKey::BuildTime,
+        Some(now.format("%H:%M:%S").to_string()),
+    );
+}
+
+#[cfg(feature = "build")]
+fn add_timestamp_entry<T>(config: &mut Config, now: &DateTime<T>)
+where
+    T: chrono::TimeZone,
+    T::Offset: std::fmt::Display,
+{
+    add_entry(
+        config.cfg_map_mut(),
+        VergenKey::BuildTimestamp,
+        Some(now.to_rfc3339()),
+    );
+}
+
 #[cfg(not(feature = "build"))]
 pub(crate) fn add_build_config(_flags: ConstantsFlags, _config: &mut Config) {}
+
+#[cfg(not(feature = "build"))]
+pub(crate) fn configure_build(_instructions: Instructions, _config: &mut Config) {}
 
 #[cfg(all(test, feature = "build"))]
 mod test {
     use super::add_build_config;
     use crate::{
-        config::{Config, VergenKey},
+        config::{Config, Instructions, VergenKey},
         constants::ConstantsFlags,
+        feature::{TimeZone, TimestampKind},
         test::get_map_value,
     };
     use lazy_static::lazy_static;
@@ -92,6 +251,16 @@ mod test {
         add_build_config(ConstantsFlags::all(), &mut config);
         check_build_keys(config.cfg_map());
         check_build_instructions(config.cfg_map());
+    }
+
+    #[test]
+    fn build_config() {
+        let mut config = Instructions::default();
+        assert!(config.build().timestamp());
+        assert_eq!(config.build().timezone(), &TimeZone::Utc);
+        assert_eq!(config.build().kind(), &TimestampKind::Timestamp);
+        *config.build_mut().kind_mut() = TimestampKind::All;
+        assert_eq!(config.build().kind(), &TimestampKind::All);
     }
 }
 
