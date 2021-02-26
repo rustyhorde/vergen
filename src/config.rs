@@ -408,4 +408,14 @@ mod test {
         check_git_config(&default);
         check_rustc_config(&default);
     }
+
+    #[test]
+    #[cfg(any(feature = "build", feature = "git"))]
+    fn blah() {
+        use crate::{TimeZone, TimestampKind};
+
+        let mut default = Instructions::default();
+        let _ = default.timezone(TimeZone::Local);
+        let _ = default.ts_kind(TimestampKind::DateOnly);
+    }
 }

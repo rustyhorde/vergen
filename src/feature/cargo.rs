@@ -19,7 +19,7 @@ use {
     std::env,
 };
 
-/// `cargo` feature configuration
+/// Configuration for the `VERGEN_CARGO_*` instructions
 ///
 /// # Instructions
 /// The following instructions can be generated:

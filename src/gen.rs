@@ -440,4 +440,18 @@ mod test {
     fn check_rustc_output(stdout: &[u8]) {
         assert!(RUSTC_REGEX.is_match(&String::from_utf8_lossy(&stdout)));
     }
+
+    #[cfg(all(feature = "build", feature = "git"))]
+    #[test]
+    fn blah() {
+        use super::config_from_instructions;
+        use crate::{TimeZone, TimestampKind};
+
+        let repo_path = PathBuf::from(".");
+        let mut stdout_buf = vec![];
+        let mut config = Instructions::default();
+        let _ = config.timezone(TimeZone::Local);
+        let _ = config.ts_kind(TimestampKind::TimeOnly);
+        assert!(config_from_instructions(config, Some(repo_path), &mut stdout_buf,).is_ok());
+    }
 }

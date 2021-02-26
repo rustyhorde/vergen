@@ -23,7 +23,7 @@ use {
     std::env,
 };
 
-/// `build` feature configuration
+/// Configuration for the `VERGEN_BUILD_*` instructions
 ///
 /// # Instructions
 /// The following instructions can be generated:

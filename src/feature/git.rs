@@ -47,7 +47,7 @@ pub enum ShaKind {
     Short,
 }
 
-/// `git` feature configuration
+/// Configuration for the `VERGEN_GIT_*` instructions
 ///
 /// # Instructions
 /// The following instructions can be generated:

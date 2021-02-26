@@ -20,7 +20,7 @@ use {
     rustc_version::{version_meta, Channel},
 };
 
-/// `rustc` feature configuration
+/// Configuration for the `VERGEN_RUSTC_*` instructions
 ///
 /// # Instructions
 /// The following instructions can be generated:
