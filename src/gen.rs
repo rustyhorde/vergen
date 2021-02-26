@@ -443,7 +443,7 @@ mod test {
 
     #[cfg(feature = "build")]
     #[test]
-    fn local_timezone() {
+    fn build_local_timezone() {
         use super::config_from_instructions;
         use crate::TimeZone;
 
@@ -454,9 +454,22 @@ mod test {
         assert!(config_from_instructions(config, Some(repo_path), &mut stdout_buf,).is_ok());
     }
 
+    #[cfg(feature = "git")]
+    #[test]
+    fn git_local_timezone() {
+        use super::config_from_instructions;
+        use crate::TimeZone;
+
+        let repo_path = PathBuf::from(".");
+        let mut stdout_buf = vec![];
+        let mut config = Instructions::default();
+        *config.git_mut().commit_timestamp_timezone_mut() = TimeZone::Local;
+        assert!(config_from_instructions(config, Some(repo_path), &mut stdout_buf,).is_ok());
+    }
+
     #[cfg(feature = "build")]
     #[test]
-    fn time_only() {
+    fn build_time_only() {
         use super::config_from_instructions;
         use crate::TimestampKind;
 
@@ -467,9 +480,22 @@ mod test {
         assert!(config_from_instructions(config, Some(repo_path), &mut stdout_buf,).is_ok());
     }
 
+    #[cfg(feature = "git")]
+    #[test]
+    fn git_time_only() {
+        use super::config_from_instructions;
+        use crate::TimestampKind;
+
+        let repo_path = PathBuf::from(".");
+        let mut stdout_buf = vec![];
+        let mut config = Instructions::default();
+        *config.git_mut().commit_timestamp_kind_mut() = TimestampKind::TimeOnly;
+        assert!(config_from_instructions(config, Some(repo_path), &mut stdout_buf,).is_ok());
+    }
+
     #[cfg(feature = "build")]
     #[test]
-    fn date_only() {
+    fn build_date_only() {
         use super::config_from_instructions;
         use crate::TimestampKind;
 
@@ -480,9 +506,22 @@ mod test {
         assert!(config_from_instructions(config, Some(repo_path), &mut stdout_buf,).is_ok());
     }
 
+    #[cfg(feature = "git")]
+    #[test]
+    fn git_date_only() {
+        use super::config_from_instructions;
+        use crate::TimestampKind;
+
+        let repo_path = PathBuf::from(".");
+        let mut stdout_buf = vec![];
+        let mut config = Instructions::default();
+        *config.git_mut().commit_timestamp_kind_mut() = TimestampKind::DateOnly;
+        assert!(config_from_instructions(config, Some(repo_path), &mut stdout_buf,).is_ok());
+    }
+
     #[cfg(feature = "build")]
     #[test]
-    fn date_and_time() {
+    fn build_date_and_time() {
         use super::config_from_instructions;
         use crate::TimestampKind;
 
@@ -493,9 +532,22 @@ mod test {
         assert!(config_from_instructions(config, Some(repo_path), &mut stdout_buf,).is_ok());
     }
 
+    #[cfg(feature = "git")]
+    #[test]
+    fn git_date_and_time() {
+        use super::config_from_instructions;
+        use crate::TimestampKind;
+
+        let repo_path = PathBuf::from(".");
+        let mut stdout_buf = vec![];
+        let mut config = Instructions::default();
+        *config.git_mut().commit_timestamp_kind_mut() = TimestampKind::DateAndTime;
+        assert!(config_from_instructions(config, Some(repo_path), &mut stdout_buf,).is_ok());
+    }
+
     #[cfg(feature = "build")]
     #[test]
-    fn all_kind() {
+    fn build_all_kind() {
         use super::config_from_instructions;
         use crate::TimestampKind;
 
@@ -503,6 +555,19 @@ mod test {
         let mut stdout_buf = vec![];
         let mut config = Instructions::default();
         *config.build_mut().kind_mut() = TimestampKind::All;
+        assert!(config_from_instructions(config, Some(repo_path), &mut stdout_buf,).is_ok());
+    }
+
+    #[cfg(feature = "git")]
+    #[test]
+    fn git_all_kind() {
+        use super::config_from_instructions;
+        use crate::TimestampKind;
+
+        let repo_path = PathBuf::from(".");
+        let mut stdout_buf = vec![];
+        let mut config = Instructions::default();
+        *config.git_mut().commit_timestamp_kind_mut() = TimestampKind::All;
         assert!(config_from_instructions(config, Some(repo_path), &mut stdout_buf,).is_ok());
     }
 
