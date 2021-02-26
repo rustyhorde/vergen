@@ -411,11 +411,42 @@ mod test {
 
     #[test]
     #[cfg(any(feature = "build", feature = "git"))]
-    fn blah() {
+    fn blah() -> Result<(), crate::Error> {
         use crate::{TimeZone, TimestampKind};
 
-        let mut default = Instructions::default();
-        let _ = default.timezone(TimeZone::Local);
-        let _ = default.ts_kind(TimestampKind::DateOnly);
+        let _config = Instructions::default()
+            .timezone(TimeZone::Local)
+            .ts_kind(TimestampKind::DateOnly)
+            .config(Some("."))?;
+
+        let _config = Instructions::default()
+            .timezone(TimeZone::Local)
+            .ts_kind(TimestampKind::TimeOnly)
+            .config(Some("."))?;
+        Ok(())
+    }
+
+    #[test]
+    #[cfg(all(feature = "build", not(feature = "git")))]
+    fn blah() -> Result<(), crate::Error> {
+        use crate::{TimeZone, TimestampKind};
+
+        let _config = Instructions::default()
+            .timezone(TimeZone::Local)
+            .ts_kind(TimestampKind::DateOnly)
+            .config(Some("."))?;
+        Ok(())
+    }
+
+    #[test]
+    #[cfg(all(feature = "git", not(feature = "build")))]
+    fn blah() -> Result<(), crate::Error> {
+        use crate::{TimeZone, TimestampKind};
+
+        let _config = Instructions::default()
+            .timezone(TimeZone::Local)
+            .ts_kind(TimestampKind::DateOnly)
+            .config(Some("."))?;
+        Ok(())
     }
 }
