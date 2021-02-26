@@ -441,17 +441,44 @@ mod test {
         assert!(RUSTC_REGEX.is_match(&String::from_utf8_lossy(&stdout)));
     }
 
-    #[cfg(all(feature = "build", feature = "git"))]
+    #[cfg(any(feature = "build", feature = "git"))]
     #[test]
-    fn blah() {
+    fn timezone_and_ts_kind() {
         use super::config_from_instructions;
         use crate::{TimeZone, TimestampKind};
 
         let repo_path = PathBuf::from(".");
         let mut stdout_buf = vec![];
         let mut config = Instructions::default();
-        let _ = config.timezone(TimeZone::Local);
-        let _ = config.ts_kind(TimestampKind::TimeOnly);
+        let _ = config
+            .timezone(TimeZone::Local)
+            .ts_kind(TimestampKind::TimeOnly);
+        assert!(config_from_instructions(config, Some(repo_path), &mut stdout_buf,).is_ok());
+    }
+
+    #[cfg(feature = "git")]
+    #[test]
+    fn sha_kind() {
+        use super::config_from_instructions;
+        use crate::ShaKind;
+
+        let repo_path = PathBuf::from(".");
+        let mut stdout_buf = vec![];
+        let mut config = Instructions::default();
+        *config.git_mut().sha_kind_mut() = ShaKind::Short;
+        assert!(config_from_instructions(config, Some(repo_path), &mut stdout_buf,).is_ok());
+    }
+
+    #[cfg(feature = "git")]
+    #[test]
+    fn semver_kind() {
+        use super::config_from_instructions;
+        use crate::SemverKind;
+
+        let repo_path = PathBuf::from(".");
+        let mut stdout_buf = vec![];
+        let mut config = Instructions::default();
+        *config.git_mut().semver_kind_mut() = SemverKind::Lightweight;
         assert!(config_from_instructions(config, Some(repo_path), &mut stdout_buf,).is_ok());
     }
 }
