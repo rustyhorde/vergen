@@ -379,6 +379,25 @@ mod test {
         assert!(stdout_buf.is_empty());
     }
 
+    #[cfg(all(
+        not(feature = "build"),
+        not(feature = "cargo"),
+        not(feature = "git"),
+        not(feature = "rustc"),
+    ))]
+    #[test]
+    fn no_features_no_output_inst() {
+        let repo_path = PathBuf::from(".");
+        let mut stdout_buf = vec![];
+        assert!(config_from_instructions(
+            Instructions::default(),
+            Some(repo_path),
+            &mut stdout_buf,
+        )
+        .is_ok());
+        assert!(stdout_buf.is_empty());
+    }
+
     #[cfg(all(feature = "build", not(feature = "git")))]
     #[test]
     fn contains_only_build_output() {
