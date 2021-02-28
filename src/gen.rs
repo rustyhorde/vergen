@@ -166,7 +166,7 @@ fn some_vals<'a>(tuple: (&'a VergenKey, &'a Option<String>)) -> Option<(&VergenK
 mod test {
     #[allow(deprecated)]
     use super::gen;
-    use super::{config_from_flags, vergen};
+    use super::{config_from_flags, config_from_instructions, vergen};
     use crate::{
         config::Instructions,
         constants::ConstantsFlags,
@@ -188,8 +188,14 @@ mod test {
         static ref TIMESTAMP_RE_STR: &'static str = r#"cargo:rustc-env=VERGEN_BUILD_TIMESTAMP=([0-9]+)-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])[Tt]([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9]|60)(\.[0-9]+)?(([Zz])|([\+|\-]([01][0-9]|2[0-3]):[0-5][0-9]))"#;
         static ref CARGO_SEMVER_RE_STR: &'static str =
             r#"cargo:rustc-env=VERGEN_GIT_SEMVER=\d{1}\.\d{1}\.\d{1}"#;
+        static ref BUILD_SEMVER_RE_STR: &'static str =
+            r#"cargo:rustc-env=VERGEN_BUILD_SEMVER=\d{1}\.\d{1}\.\d{1}"#;
         static ref BUILD_REGEX: Regex = {
             let re_str = vec![*DATE_RE_STR, *TIMESTAMP_RE_STR].join("\n");
+            Regex::new(&re_str).unwrap()
+        };
+        static ref BUILD_REGEX_INST: Regex = {
+            let re_str = vec![*TIMESTAMP_RE_STR, *BUILD_SEMVER_RE_STR].join("\n");
             Regex::new(&re_str).unwrap()
         };
     }
@@ -220,6 +226,7 @@ mod test {
     lazy_static! {
         static ref GIT_BRANCH_RE_STR: &'static str = r#"cargo:rustc-env=VERGEN_GIT_BRANCH=.*"#;
         static ref GIT_CD_RE_STR: &'static str = r#"cargo:rustc-env=VERGEN_GIT_COMMIT_DATE=([0-9]+)-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])[Tt]([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9]|60)(\.[0-9]+)?(([Zz])|([\+|\-]([01][0-9]|2[0-3]):[0-5][0-9]))"#;
+        static ref GIT_CT_RE_STR: &'static str = r#"cargo:rustc-env=VERGEN_GIT_COMMIT_TIMESTAMP=([0-9]+)-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])[Tt]([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9]|60)(\.[0-9]+)?(([Zz])|([\+|\-]([01][0-9]|2[0-3]):[0-5][0-9]))"#;
         static ref GIT_SEMVER_RE_STR: &'static str = r#"cargo:rustc-env=VERGEN_GIT_SEMVER=(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)(?:-(?P<prerelease>(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+(?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?"#;
         static ref GIT_SL_RE_STR: &'static str =
             r#"cargo:rustc-env=VERGEN_GIT_SEMVER_LIGHTWEIGHT=.*"#;
@@ -242,6 +249,16 @@ mod test {
         };
         static ref GIT_RIC_REGEX: Regex = {
             let re_str = vec![*GIT_RIC_RE_STR, *GIT_RIC1_RE_STR].join("\n");
+            Regex::new(&re_str).unwrap()
+        };
+        static ref GIT_REGEX_INST: Regex = {
+            let re_str = vec![
+                *GIT_BRANCH_RE_STR,
+                *GIT_CT_RE_STR,
+                *GIT_SEMVER_RE_STR,
+                *GIT_SHA_RE_STR,
+            ]
+            .join("\n");
             Regex::new(&re_str).unwrap()
         };
     }
@@ -384,6 +401,20 @@ mod test {
         assert!(BUILD_REGEX.is_match(&String::from_utf8_lossy(&stdout_buf)));
     }
 
+    #[cfg(feature = "build")]
+    #[test]
+    fn contains_build_output_inst() {
+        let repo_path = PathBuf::from(".");
+        let mut stdout_buf = vec![];
+        assert!(config_from_instructions(
+            Instructions::default(),
+            Some(repo_path),
+            &mut stdout_buf,
+        )
+        .is_ok());
+        assert!(BUILD_REGEX_INST.is_match(&String::from_utf8_lossy(&stdout_buf)));
+    }
+
     #[cfg(feature = "cargo")]
     #[test]
     #[serial_test::serial]
@@ -394,6 +425,23 @@ mod test {
         assert!(
             config_from_flags(ConstantsFlags::all(), Some(repo_path), &mut stdout_buf,).is_ok()
         );
+        assert!(CARGO_REGEX.is_match(&String::from_utf8_lossy(&stdout_buf)));
+        teardown();
+    }
+
+    #[cfg(feature = "cargo")]
+    #[test]
+    #[serial_test::serial]
+    fn contains_cargo_output_inst() {
+        setup();
+        let repo_path = PathBuf::from(".");
+        let mut stdout_buf = vec![];
+        assert!(config_from_instructions(
+            Instructions::default(),
+            Some(repo_path),
+            &mut stdout_buf,
+        )
+        .is_ok());
         assert!(CARGO_REGEX.is_match(&String::from_utf8_lossy(&stdout_buf)));
         teardown();
     }
@@ -410,6 +458,21 @@ mod test {
         assert!(GIT_RIC_REGEX.is_match(&String::from_utf8_lossy(&stdout_buf)));
     }
 
+    #[cfg(feature = "git")]
+    #[test]
+    fn contains_git_output_inst() {
+        let repo_path = PathBuf::from(".");
+        let mut stdout_buf = vec![];
+        assert!(config_from_instructions(
+            Instructions::default(),
+            Some(repo_path),
+            &mut stdout_buf,
+        )
+        .is_ok());
+        assert!(GIT_REGEX_INST.is_match(&String::from_utf8_lossy(&stdout_buf)));
+        assert!(GIT_RIC_REGEX.is_match(&String::from_utf8_lossy(&stdout_buf)));
+    }
+
     #[cfg(feature = "rustc")]
     #[test]
     fn contains_rustc_output() {
@@ -418,6 +481,20 @@ mod test {
         assert!(
             config_from_flags(ConstantsFlags::all(), Some(repo_path), &mut stdout_buf,).is_ok()
         );
+        check_rustc_output(&stdout_buf);
+    }
+
+    #[cfg(feature = "rustc")]
+    #[test]
+    fn contains_rustc_output_inst() {
+        let repo_path = PathBuf::from(".");
+        let mut stdout_buf = vec![];
+        assert!(config_from_instructions(
+            Instructions::default(),
+            Some(repo_path),
+            &mut stdout_buf,
+        )
+        .is_ok());
         check_rustc_output(&stdout_buf);
     }
 
