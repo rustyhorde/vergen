@@ -112,13 +112,14 @@ mod test {
         config::Instructions,
         error::Result,
         testutils::{setup, teardown},
+        TimestampKind,
     };
     use lazy_static::lazy_static;
     use regex::Regex;
     use std::{io, path::PathBuf};
 
     lazy_static! {
-        static ref VBD_REGEX: Regex = Regex::new(r".*VERGEN_BUILD_DATE.*").unwrap();
+        static ref VBD_REGEX: Regex = Regex::new(r".*VERGEN_BUILD_TIMESTAMP.*").unwrap();
     }
 
     #[cfg(feature = "build")]
@@ -130,10 +131,6 @@ mod test {
             r#"cargo:rustc-env=VERGEN_GIT_SEMVER=\d{1}\.\d{1}\.\d{1}"#;
         static ref BUILD_SEMVER_RE_STR: &'static str =
             r#"cargo:rustc-env=VERGEN_BUILD_SEMVER=\d{1}\.\d{1}\.\d{1}"#;
-        static ref BUILD_REGEX: Regex = {
-            let re_str = vec![*DATE_RE_STR, *TIMESTAMP_RE_STR].join("\n");
-            Regex::new(&re_str).unwrap()
-        };
         static ref BUILD_REGEX_INST: Regex = {
             let re_str = vec![*TIMESTAMP_RE_STR, *BUILD_SEMVER_RE_STR].join("\n");
             Regex::new(&re_str).unwrap()
@@ -175,18 +172,6 @@ mod test {
             r#"cargo:rustc-env=VERGEN_GIT_SHA_SHORT=[0-9a-f]{7}"#;
         static ref GIT_RIC_RE_STR: &'static str = r#"cargo:rerun-if-changed=.*\.git/HEAD"#;
         static ref GIT_RIC1_RE_STR: &'static str = r#"cargo:rerun-if-changed=.*"#;
-        static ref GIT_REGEX: Regex = {
-            let re_str = vec![
-                *GIT_BRANCH_RE_STR,
-                *GIT_CD_RE_STR,
-                *GIT_SEMVER_RE_STR,
-                *GIT_SL_RE_STR,
-                *GIT_SHA_RE_STR,
-                *GIT_SHA_SHORT_RE_STR,
-            ]
-            .join("\n");
-            Regex::new(&re_str).unwrap()
-        };
         static ref GIT_RIC_REGEX: Regex = {
             let re_str = vec![*GIT_RIC_RE_STR, *GIT_RIC1_RE_STR].join("\n");
             Regex::new(&re_str).unwrap()
@@ -302,7 +287,8 @@ mod test {
     #[test]
     fn toggle_works() -> Result<()> {
         let repo_path = PathBuf::from(".");
-        let config = Instructions::default();
+        let mut config = Instructions::default();
+        *config.build_mut().kind_mut() = TimestampKind::DateOnly;
 
         let mut stdout_buf = vec![];
         assert!(config_from_instructions(config, Some(repo_path), &mut stdout_buf).is_ok());
