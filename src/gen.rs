@@ -10,38 +10,12 @@
 
 use crate::{
     config::{Config, Instructions, VergenKey},
-    constants::ConstantsFlags,
     error::Result,
 };
 use std::{
     io::{self, Write},
     path::Path,
 };
-
-/// Generate the `cargo:` instructions
-///
-/// # Errors
-///
-/// Any generated errors will be wrapped in [`vergen::Error`](crate::error::Error)
-///
-/// # Usage
-///
-/// ```
-/// # use vergen::{ConstantsFlags, Error, gen};
-/// #
-/// # fn main() -> std::result::Result<(), Error> {
-/// // Generate the default 'cargo:' instruction output
-/// gen(ConstantsFlags::all())?;
-/// #   Ok(())
-/// # }
-/// ```
-#[cfg(not(feature = "git"))]
-#[deprecated(since = "4.2.0", note = "Please use the `vergen` function instead")]
-pub fn gen(flags: ConstantsFlags) -> Result<()> {
-    // This is here to help with type inference
-    let no_repo: Option<&'static str> = None;
-    config_from_flags(flags, no_repo, &mut io::stdout())
-}
 
 /// Generate the `cargo:` instructions
 ///
@@ -76,29 +50,6 @@ pub fn vergen(config: crate::Config) -> Result<()> {
 /// # Usage
 ///
 /// ```
-/// # use vergen::{ConstantsFlags, Error, gen};
-/// #
-/// # fn main() -> std::result::Result<(), Error> {
-/// // Generate the default 'cargo:' instruction output
-/// gen(ConstantsFlags::all())?;
-/// #   Ok(())
-/// # }
-/// ```
-#[cfg(feature = "git")]
-#[deprecated(since = "4.2.0", note = "Please use the `vergen` function instead")]
-pub fn gen(flags: ConstantsFlags) -> Result<()> {
-    config_from_flags(flags, Some("."), &mut io::stdout())
-}
-
-/// Generate the `cargo:` instructions
-///
-/// # Errors
-///
-/// Any generated errors will be wrapped in [`vergen::Error`](crate::error::Error)
-///
-/// # Usage
-///
-/// ```
 /// # use vergen::{Config, Error, vergen};
 /// #
 /// # fn main() -> std::result::Result<(), Error> {
@@ -110,14 +61,6 @@ pub fn gen(flags: ConstantsFlags) -> Result<()> {
 #[cfg(feature = "git")]
 pub fn vergen(config: crate::Config) -> Result<()> {
     config_from_instructions(config, Some("."), &mut io::stdout())
-}
-
-fn config_from_flags<T, U>(flags: ConstantsFlags, repo: Option<U>, stdout: &mut T) -> Result<()>
-where
-    T: Write,
-    U: AsRef<Path>,
-{
-    output_cargo_instructions(&Config::build(flags, repo)?, stdout)
 }
 
 fn config_from_instructions<T, U>(
@@ -164,12 +107,9 @@ fn some_vals<'a>(tuple: (&'a VergenKey, &'a Option<String>)) -> Option<(&VergenK
 
 #[cfg(test)]
 mod test {
-    #[allow(deprecated)]
-    use super::gen;
-    use super::{config_from_flags, config_from_instructions, vergen};
+    use super::{config_from_instructions, vergen};
     use crate::{
         config::Instructions,
-        constants::ConstantsFlags,
         error::Result,
         testutils::{setup, teardown},
     };
@@ -310,7 +250,7 @@ mod test {
     #[allow(deprecated)]
     fn gen_works() -> Result<()> {
         setup();
-        assert!(gen(ConstantsFlags::all()).is_ok());
+        assert!(vergen(Instructions::default()).is_ok());
         teardown();
         Ok(())
     }
@@ -327,25 +267,34 @@ mod test {
     #[test]
     fn describe_falls_back() -> Result<()> {
         let no_tags_path = PathBuf::from("testdata").join("notagsrepo");
-        assert!(
-            config_from_flags(ConstantsFlags::all(), Some(no_tags_path), &mut io::sink(),).is_ok()
-        );
+        assert!(config_from_instructions(
+            Instructions::default(),
+            Some(no_tags_path),
+            &mut io::sink(),
+        )
+        .is_ok());
         Ok(())
     }
 
     #[test]
     fn describe() -> Result<()> {
         let no_tags_path = PathBuf::from("testdata").join("tagsrepo");
-        assert!(
-            config_from_flags(ConstantsFlags::all(), Some(no_tags_path), &mut io::sink(),).is_ok()
-        );
+        assert!(config_from_instructions(
+            Instructions::default(),
+            Some(no_tags_path),
+            &mut io::sink(),
+        )
+        .is_ok());
         Ok(())
     }
 
     #[test]
     fn detached_head() -> Result<()> {
         let dh_path = PathBuf::from("testdata").join("detachedhead");
-        assert!(config_from_flags(ConstantsFlags::all(), Some(dh_path), &mut io::sink(),).is_ok());
+        assert!(
+            config_from_instructions(Instructions::default(), Some(dh_path), &mut io::sink(),)
+                .is_ok()
+        );
         Ok(())
     }
 
@@ -353,11 +302,10 @@ mod test {
     #[test]
     fn toggle_works() -> Result<()> {
         let repo_path = PathBuf::from(".");
-        let mut flags = ConstantsFlags::all();
-        flags.toggle(ConstantsFlags::BUILD_DATE);
+        let config = Instructions::default();
 
         let mut stdout_buf = vec![];
-        assert!(config_from_flags(flags, Some(repo_path), &mut stdout_buf).is_ok());
+        assert!(config_from_instructions(config, Some(repo_path), &mut stdout_buf).is_ok());
         let stdout = String::from_utf8_lossy(&stdout_buf);
         assert!(!VBD_REGEX.is_match(&stdout));
         Ok(())
@@ -373,22 +321,6 @@ mod test {
     fn no_features_no_output() {
         let repo_path = PathBuf::from(".");
         let mut stdout_buf = vec![];
-        assert!(
-            config_from_flags(ConstantsFlags::all(), Some(repo_path), &mut stdout_buf,).is_ok()
-        );
-        assert!(stdout_buf.is_empty());
-    }
-
-    #[cfg(all(
-        not(feature = "build"),
-        not(feature = "cargo"),
-        not(feature = "git"),
-        not(feature = "rustc"),
-    ))]
-    #[test]
-    fn no_features_no_output_inst() {
-        let repo_path = PathBuf::from(".");
-        let mut stdout_buf = vec![];
         assert!(config_from_instructions(
             Instructions::default(),
             Some(repo_path),
@@ -398,31 +330,9 @@ mod test {
         assert!(stdout_buf.is_empty());
     }
 
-    #[cfg(all(feature = "build", not(feature = "git")))]
-    #[test]
-    fn contains_only_build_output() {
-        let repo_path = PathBuf::from(".");
-        let mut stdout_buf = vec![];
-        assert!(
-            config_from_flags(ConstantsFlags::all(), Some(repo_path), &mut stdout_buf,).is_ok()
-        );
-        assert!(BUILD_CARGO_REGEX.is_match(&String::from_utf8_lossy(&stdout_buf)));
-    }
-
-    #[cfg(all(feature = "build", feature = "git"))]
-    #[test]
-    fn contains_build_output() {
-        let repo_path = PathBuf::from(".");
-        let mut stdout_buf = vec![];
-        assert!(
-            config_from_flags(ConstantsFlags::all(), Some(repo_path), &mut stdout_buf,).is_ok()
-        );
-        assert!(BUILD_REGEX.is_match(&String::from_utf8_lossy(&stdout_buf)));
-    }
-
     #[cfg(feature = "build")]
     #[test]
-    fn contains_build_output_inst() {
+    fn contains_build_output() {
         let repo_path = PathBuf::from(".");
         let mut stdout_buf = vec![];
         assert!(config_from_instructions(
@@ -441,20 +351,6 @@ mod test {
         setup();
         let repo_path = PathBuf::from(".");
         let mut stdout_buf = vec![];
-        assert!(
-            config_from_flags(ConstantsFlags::all(), Some(repo_path), &mut stdout_buf,).is_ok()
-        );
-        assert!(CARGO_REGEX.is_match(&String::from_utf8_lossy(&stdout_buf)));
-        teardown();
-    }
-
-    #[cfg(feature = "cargo")]
-    #[test]
-    #[serial_test::serial]
-    fn contains_cargo_output_inst() {
-        setup();
-        let repo_path = PathBuf::from(".");
-        let mut stdout_buf = vec![];
         assert!(config_from_instructions(
             Instructions::default(),
             Some(repo_path),
@@ -470,18 +366,6 @@ mod test {
     fn contains_git_output() {
         let repo_path = PathBuf::from(".");
         let mut stdout_buf = vec![];
-        assert!(
-            config_from_flags(ConstantsFlags::all(), Some(repo_path), &mut stdout_buf,).is_ok()
-        );
-        assert!(GIT_REGEX.is_match(&String::from_utf8_lossy(&stdout_buf)));
-        assert!(GIT_RIC_REGEX.is_match(&String::from_utf8_lossy(&stdout_buf)));
-    }
-
-    #[cfg(feature = "git")]
-    #[test]
-    fn contains_git_output_inst() {
-        let repo_path = PathBuf::from(".");
-        let mut stdout_buf = vec![];
         assert!(config_from_instructions(
             Instructions::default(),
             Some(repo_path),
@@ -495,17 +379,6 @@ mod test {
     #[cfg(feature = "rustc")]
     #[test]
     fn contains_rustc_output() {
-        let repo_path = PathBuf::from(".");
-        let mut stdout_buf = vec![];
-        assert!(
-            config_from_flags(ConstantsFlags::all(), Some(repo_path), &mut stdout_buf,).is_ok()
-        );
-        check_rustc_output(&stdout_buf);
-    }
-
-    #[cfg(feature = "rustc")]
-    #[test]
-    fn contains_rustc_output_inst() {
         let repo_path = PathBuf::from(".");
         let mut stdout_buf = vec![];
         assert!(config_from_instructions(
