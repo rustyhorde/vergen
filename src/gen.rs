@@ -112,7 +112,6 @@ mod test {
         config::Instructions,
         error::Result,
         testutils::{setup, teardown},
-        TimestampKind,
     };
     use lazy_static::lazy_static;
     use regex::Regex;
@@ -285,7 +284,9 @@ mod test {
 
     // TODO: Make this a macro to check all toggles
     #[test]
+    #[cfg(feature = "build")]
     fn toggle_works() -> Result<()> {
+        use crate::TimestampKind;
         let repo_path = PathBuf::from(".");
         let mut config = Instructions::default();
         *config.build_mut().kind_mut() = TimestampKind::DateOnly;
