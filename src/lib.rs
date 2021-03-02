@@ -257,8 +257,6 @@ mod feature;
 mod gen;
 
 pub use crate::config::Instructions as Config;
-#[deprecated(since = "4.2.0", note = "Please use `Config` instead")]
-pub use crate::constants::ConstantsFlags;
 pub use crate::error::Error;
 #[cfg(feature = "build")]
 pub use crate::feature::Build;
@@ -276,39 +274,12 @@ pub use crate::feature::ShaKind;
 pub use crate::feature::TimeZone;
 #[cfg(any(feature = "git", feature = "build"))]
 pub use crate::feature::TimestampKind;
-#[allow(deprecated)]
-pub use crate::gen::gen;
 pub use crate::gen::vergen;
 
 #[cfg(all(test, not(feature = "rustc")))]
 use rustversion as _;
 #[cfg(all(test, not(feature = "cargo")))]
 use serial_test as _;
-
-#[cfg(all(
-    test,
-    any(
-        feature = "build",
-        feature = "cargo",
-        feature = "git",
-        feature = "rustc"
-    )
-))]
-pub(crate) mod test {
-    use crate::config::VergenKey;
-    use std::{collections::BTreeMap, convert::identity};
-
-    pub(crate) fn get_map_value(
-        key: VergenKey,
-        cfg_map: &BTreeMap<VergenKey, Option<String>>,
-    ) -> String {
-        cfg_map
-            .get(&key)
-            .unwrap_or_else(|| &None)
-            .clone()
-            .map_or_else(String::default, identity)
-    }
-}
 
 #[cfg(test)]
 pub(crate) mod testutils {

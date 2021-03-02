@@ -18,17 +18,14 @@ use crate::feature::Git;
 use crate::feature::Rustc;
 use crate::{
     constants::{
-        ConstantsFlags, BUILD_DATE_NAME, BUILD_SEMVER_NAME, BUILD_TIMESTAMP_NAME, BUILD_TIME_NAME,
-        CARGO_FEATURES, CARGO_PROFILE, CARGO_TARGET_TRIPLE, GIT_BRANCH_NAME, GIT_COMMIT_DATE_NAME,
+        BUILD_DATE_NAME, BUILD_SEMVER_NAME, BUILD_TIMESTAMP_NAME, BUILD_TIME_NAME, CARGO_FEATURES,
+        CARGO_PROFILE, CARGO_TARGET_TRIPLE, GIT_BRANCH_NAME, GIT_COMMIT_DATE_NAME,
         GIT_COMMIT_TIMESTAMP_NAME, GIT_COMMIT_TIME_NAME, GIT_SEMVER_NAME, GIT_SEMVER_TAGS_NAME,
         GIT_SHA_NAME, GIT_SHA_SHORT_NAME, RUSTC_CHANNEL_NAME, RUSTC_COMMIT_DATE, RUSTC_COMMIT_HASH,
         RUSTC_HOST_TRIPLE_NAME, RUSTC_LLVM_VERSION, RUSTC_SEMVER_NAME,
     },
     error::Result,
-    feature::{
-        add_build_config, add_cargo_config, add_git_config, add_rustc_config, configure_build,
-        configure_cargo, configure_git, configure_rustc,
-    },
+    feature::{configure_build, configure_cargo, configure_git, configure_rustc},
 };
 use enum_iterator::IntoEnumIterator;
 use getset::{Getters, MutGetters};
@@ -221,22 +218,6 @@ impl Default for Config {
             head_path: Option::default(),
             ref_path: Option::default(),
         }
-    }
-}
-
-impl Config {
-    pub(crate) fn build<T>(flags: ConstantsFlags, repo_path: Option<T>) -> Result<Config>
-    where
-        T: AsRef<Path>,
-    {
-        let mut config = Config::default();
-
-        add_build_config(flags, &mut config);
-        add_git_config(flags, repo_path, &mut config)?;
-        add_rustc_config(flags, &mut config)?;
-        add_cargo_config(flags, &mut config);
-
-        Ok(config)
     }
 }
 
