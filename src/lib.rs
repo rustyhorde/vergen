@@ -256,7 +256,7 @@
 #![cfg_attr(
     nightly_lints,
     deny(
-        rustdoc::rustdoc::broken_intra_doc_links,
+        rustdoc::broken_intra_doc_links,
         rustdoc::invalid_codeblock_attributes,
         rustdoc::invalid_html_tags,
         rustdoc::missing_crate_level_docs,
