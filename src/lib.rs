@@ -149,7 +149,6 @@
     bare_trait_objects,
     bindings_with_variant_name,
     box_pointers,
-    broken_intra_doc_links,
     cenum_impl_drop_cast,
     clashing_extern_declarations,
     clippy::all,
@@ -173,8 +172,6 @@
     incomplete_features,
     indirect_structural_match,
     inline_no_sanitize,
-    invalid_codeblock_attributes,
-    invalid_html_tags,
     invalid_value,
     irrefutable_let_patterns,
     keyword_idents,
@@ -182,7 +179,6 @@
     macro_use_extern_crate,
     meta_variable_misuse,
     missing_copy_implementations,
-    missing_crate_level_docs,
     missing_debug_implementations,
     // missing_doc_code_examples,
     missing_docs,
@@ -247,6 +243,20 @@
     variant_size_differences,
     where_clauses_object_safety,
     while_true,
+)]
+#![cfg(nightly_lints)]
+#![deny(
+    rustdoc::broken_intra_doc_links,
+    rustdoc::invalid_codeblock_attributes,
+    rustdoc::invalid_html_tags,
+    rustdoc::missing_crate_level_docs
+)]
+#![cfg(not(nightly_lints))]
+#![deny(
+    broken_intra_doc_links,
+    invalid_codeblock_attributes,
+    invalid_html_tags,
+    missing_crate_level_docs
 )]
 #![allow(clippy::multiple_crate_versions)]
 

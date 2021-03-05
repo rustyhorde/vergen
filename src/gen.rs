@@ -273,7 +273,7 @@ mod test {
             r#"cargo:rustc-env=VERGEN_RUSTC_COMMIT_HASH=[0-9a-f]{40}"#;
         static ref RUSTC_HT_RE_STR: &'static str = r#"cargo:rustc-env=VERGEN_RUSTC_HOST_TRIPLE=.*"#;
         static ref RUSTC_LLVM_RE_STR: &'static str =
-            r#"cargo:rustc-env=VERGEN_RUSTC_LLVM_VERSION=11.0"#;
+            r#"cargo:rustc-env=VERGEN_RUSTC_LLVM_VERSION=\d{2}\.\d{1}"#;
         static ref RUSTC_SEMVER_RE_STR: &'static str = r#"cargo:rustc-env=VERGEN_RUSTC_SEMVER=(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)(?:-(?P<prerelease>(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+(?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?"#;
         static ref RUSTC_NIGHTLY_REGEX: Regex = {
             let re_str = vec![

@@ -30,6 +30,7 @@ thiserror = "1"
 
 [build-dependencies]
 chrono = "0"
+rustversion = "1"
 
 [dev-dependencies]
 lazy_static = "1"
