@@ -244,19 +244,23 @@
     where_clauses_object_safety,
     while_true,
 )]
-#![cfg(nightly_lints)]
-#![deny(
-    rustdoc::broken_intra_doc_links,
-    rustdoc::invalid_codeblock_attributes,
-    rustdoc::invalid_html_tags,
-    rustdoc::missing_crate_level_docs
+#![cfg_attr(
+    not(nightly_lints),
+    deny(
+        broken_intra_doc_links,
+        invalid_codeblock_attributes,
+        invalid_html_tags,
+        missing_crate_level_docs,
+    )
 )]
-#![cfg(not(nightly_lints))]
-#![deny(
-    broken_intra_doc_links,
-    invalid_codeblock_attributes,
-    invalid_html_tags,
-    missing_crate_level_docs
+#![cfg_attr(
+    nightly_lints,
+    deny(
+        rustdoc::rustdoc::broken_intra_doc_links,
+        rustdoc::invalid_codeblock_attributes,
+        rustdoc::invalid_html_tags,
+        rustdoc::missing_crate_level_docs,
+    )
 )]
 #![allow(clippy::multiple_crate_versions)]
 
