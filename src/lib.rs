@@ -134,13 +134,6 @@
 //! [cargo:rustc-env]: https://doc.rust-lang.org/cargo/reference/build-scripts.html#rustc-env
 //! [cargo:rerun-if-changed]: https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed
 //!
-//! ## Deprecation Warning
-//! The [`gen`](gen()) function and [`ConstantsFlags`](crate::ConstantsFlags) have been deprecated.  They will be removed when version 5 is released.
-//!
-//! Please switch to using the [`vergen`](vergen()) function with [`Config`](crate::Config) instead.
-//!
-//! This change was made because the [`ConstantsFlags`](crate::ConstantsFlags) were growing bloated.
-//!
 #![deny(
     absolute_paths_not_starting_with_crate,
     anonymous_parameters,
