@@ -8,10 +8,8 @@
 
 //! `vergen` cargo instruction generation
 
-use crate::{
-    config::{Config, Instructions, VergenKey},
-    error::Result,
-};
+use crate::config::{Config, Instructions, VergenKey};
+use anyhow::Result;
 use std::{
     io::{self, Write},
     path::Path,
@@ -26,12 +24,12 @@ use std::{
 /// # Usage
 ///
 /// ```
-/// # use vergen::{Config, Error, vergen};
+/// # use anyhow::Result;
+/// # use vergen::{Config, vergen};
 /// #
-/// # fn main() -> std::result::Result<(), Error> {
+/// # fn main() -> Result<()> {
 /// // Generate the default 'cargo:' instruction output
-/// vergen(Config::default())?;
-/// #   Ok(())
+/// vergen(Config::default())
 /// # }
 /// ```
 #[cfg(not(feature = "git"))]
@@ -50,12 +48,12 @@ pub fn vergen(config: crate::Config) -> Result<()> {
 /// # Usage
 ///
 /// ```
-/// # use vergen::{Config, Error, vergen};
+/// # use anyhow::Result;
+/// # use vergen::{Config, vergen};
 /// #
-/// # fn main() -> std::result::Result<(), Error> {
+/// # fn main() -> Result<()> {
 /// // Generate the default 'cargo:' instruction output
-/// vergen(Config::default())?;
-/// #   Ok(())
+/// vergen(Config::default())
 /// # }
 /// ```
 #[cfg(feature = "git")]
@@ -110,9 +108,9 @@ mod test {
     use super::{config_from_instructions, vergen};
     use crate::{
         config::Instructions,
-        error::Result,
         testutils::{setup, teardown},
     };
+    use anyhow::Result;
     use lazy_static::lazy_static;
     use regex::Regex;
     use std::{io, path::PathBuf};

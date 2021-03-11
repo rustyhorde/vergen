@@ -20,6 +20,7 @@ git = ["chrono", "git2"]
 rustc = ["rustc_version"]
 
 [dependencies]
+anyhow = "1"
 chrono = { version = "0", optional = true }
 enum-iterator = "0"
 getset = "0"

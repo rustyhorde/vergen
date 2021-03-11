@@ -10,9 +10,6 @@
 
 use std::fmt;
 
-/// A result that must include an `crate::error::Error`
-pub(crate) type Result<T> = std::result::Result<T, Error>;
-
 enum ErrKind {
     Protocol,
     Env,
@@ -30,7 +27,7 @@ impl fmt::Display for ErrKind {
 
 /// An error generated from the `vergen` library
 #[derive(Debug, thiserror::Error)]
-pub enum Error {
+pub(crate) enum Error {
     /// An error from the `git2` library
     #[cfg(feature = "git")]
     #[error("{}: An error occurred in the 'git2' library: {}", ErrKind::Protocol, .0)]

@@ -116,11 +116,12 @@
 //! ### build.rs
 //! **NOTE** - Individual instruction generation can be toggled on or off via [`Config`](crate::Config)
 //! ```
-//! use vergen::{Config, Error, vergen};
+//! # use anyhow::Result;
+//! use vergen::{Config, vergen};
 //!
-//! fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! fn main() -> Result<()> {
 //!   // Generate the default 'cargo:' instruction output
-//!   vergen(Config::default()).map_err(Error::into)
+//!   vergen(Config::default())
 //! }
 //! ```
 //!
@@ -264,7 +265,6 @@ mod feature;
 mod gen;
 
 pub use crate::config::Instructions as Config;
-pub use crate::error::Error;
 #[cfg(feature = "build")]
 pub use crate::feature::Build;
 #[cfg(feature = "cargo")]

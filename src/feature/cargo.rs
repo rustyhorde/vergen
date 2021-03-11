@@ -35,10 +35,10 @@ use {
 /// # Example
 ///
 /// ```
-/// # use vergen::Error;
+/// # use anyhow::Result;
 /// use vergen::{vergen, Config};
 ///
-/// # pub fn main() -> Result<(), Error> {
+/// # pub fn main() -> Result<()> {
 /// let mut config = Config::default();
 #[cfg_attr(
     feature = "cargo",

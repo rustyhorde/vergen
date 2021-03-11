@@ -40,11 +40,11 @@ use {
 /// # Example
 ///
 /// ```
-/// # use vergen::Error;
+/// # use anyhow::Result;
 /// use vergen::{vergen, Config};
 #[cfg_attr(feature = "build", doc = r##"use vergen::{TimestampKind, TimeZone};"##)]
 ///
-/// # pub fn main() -> Result<(), Error> {
+/// # pub fn main() -> Result<()> {
 /// let mut config = Config::default();
 #[cfg_attr(
     feature = "build",

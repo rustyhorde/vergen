@@ -8,10 +8,8 @@
 
 //! `vergen` git feature implementation
 
-use crate::{
-    config::{Config, Instructions},
-    error::Result,
-};
+use crate::config::{Config, Instructions};
+use anyhow::Result;
 use std::path::Path;
 #[cfg(feature = "git")]
 use {
@@ -78,11 +76,11 @@ pub enum ShaKind {
 /// # Example
 ///
 /// ```
-/// # use vergen::Error;
+/// # use anyhow::Result;
 /// use vergen::{vergen, Config};
 #[cfg_attr(feature = "git", doc = r##"use vergen::ShaKind;"##)]
 ///
-/// # pub fn main() -> Result<(), Error> {
+/// # pub fn main() -> Result<()> {
 /// let mut config = Config::default();
 #[cfg_attr(
     feature = "git",

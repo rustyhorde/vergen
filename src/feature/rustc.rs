@@ -8,10 +8,8 @@
 
 //! `vergen` rustc feature implementation
 
-use crate::{
-    config::{Config, Instructions},
-    error::Result,
-};
+use crate::config::{Config, Instructions};
+use anyhow::Result;
 #[cfg(feature = "rustc")]
 use {
     crate::{config::VergenKey, feature::add_entry},
@@ -45,10 +43,10 @@ use {
 /// # Example
 ///
 /// ```
-/// # use vergen::Error;
+/// # use anyhow::Result;
 /// use vergen::{vergen, Config};
 ///
-/// # pub fn main() -> Result<(), Error> {
+/// # pub fn main() -> Result<()> {
 /// let mut config = Config::default();
 #[cfg_attr(
     feature = "rustc",
