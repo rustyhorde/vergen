@@ -10,6 +10,8 @@
 
 use crate::config::{Config, Instructions, VergenKey};
 use anyhow::Result;
+#[cfg(feature = "git")]
+use std::env;
 use std::{
     io::{self, Write},
     path::Path,
@@ -58,7 +60,7 @@ pub fn vergen(config: crate::Config) -> Result<()> {
 /// ```
 #[cfg(feature = "git")]
 pub fn vergen(config: crate::Config) -> Result<()> {
-    config_from_instructions(config, Some("."), &mut io::stdout())
+    config_from_instructions(config, Some(env::current_dir()?), &mut io::stdout())
 }
 
 fn config_from_instructions<T, U>(
