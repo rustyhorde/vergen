@@ -116,11 +116,12 @@
 //! ### build.rs
 //! **NOTE** - Individual instruction generation can be toggled on or off via [`Config`](crate::Config)
 //! ```
-//! use vergen::{Config, Error, vergen};
+//! # use anyhow::Result;
+//! use vergen::{Config, vergen};
 //!
-//! fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! fn main() -> Result<()> {
 //!   // Generate the default 'cargo:' instruction output
-//!   vergen(Config::default()).map_err(Error::into)
+//!   vergen(Config::default())
 //! }
 //! ```
 //!
@@ -133,13 +134,6 @@
 //! [build scripts]: https://doc.rust-lang.org/cargo/reference/build-scripts.html
 //! [cargo:rustc-env]: https://doc.rust-lang.org/cargo/reference/build-scripts.html#rustc-env
 //! [cargo:rerun-if-changed]: https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed
-//!
-//! ## Deprecation Warning
-//! The [`gen`](gen()) function and [`ConstantsFlags`](crate::ConstantsFlags) have been deprecated.  They will be removed when version 5 is released.
-//!
-//! Please switch to using the [`vergen`](vergen()) function with [`Config`](crate::Config) instead.
-//!
-//! This change was made because the [`ConstantsFlags`](crate::ConstantsFlags) were growing bloated.
 //!
 #![deny(
     absolute_paths_not_starting_with_crate,
@@ -271,9 +265,6 @@ mod feature;
 mod gen;
 
 pub use crate::config::Instructions as Config;
-#[deprecated(since = "4.2.0", note = "Please use `Config` instead")]
-pub use crate::constants::ConstantsFlags;
-pub use crate::error::Error;
 #[cfg(feature = "build")]
 pub use crate::feature::Build;
 #[cfg(feature = "cargo")]
@@ -290,39 +281,12 @@ pub use crate::feature::ShaKind;
 pub use crate::feature::TimeZone;
 #[cfg(any(feature = "git", feature = "build"))]
 pub use crate::feature::TimestampKind;
-#[allow(deprecated)]
-pub use crate::gen::gen;
 pub use crate::gen::vergen;
 
 #[cfg(all(test, not(feature = "rustc")))]
 use rustversion as _;
 #[cfg(all(test, not(feature = "cargo")))]
 use serial_test as _;
-
-#[cfg(all(
-    test,
-    any(
-        feature = "build",
-        feature = "cargo",
-        feature = "git",
-        feature = "rustc"
-    )
-))]
-pub(crate) mod test {
-    use crate::config::VergenKey;
-    use std::{collections::BTreeMap, convert::identity};
-
-    pub(crate) fn get_map_value(
-        key: VergenKey,
-        cfg_map: &BTreeMap<VergenKey, Option<String>>,
-    ) -> String {
-        cfg_map
-            .get(&key)
-            .unwrap_or_else(|| &None)
-            .clone()
-            .map_or_else(String::default, identity)
-    }
-}
 
 #[cfg(test)]
 pub(crate) mod testutils {

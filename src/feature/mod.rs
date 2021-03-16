@@ -21,18 +21,18 @@ mod cargo;
 mod git;
 mod rustc;
 
+pub(crate) use build::configure_build;
 #[cfg(feature = "build")]
 pub use build::Build;
-pub(crate) use build::{add_build_config, configure_build};
+pub(crate) use cargo::configure_cargo;
 #[cfg(feature = "cargo")]
 pub use cargo::Cargo;
-pub(crate) use cargo::{add_cargo_config, configure_cargo};
-pub(crate) use git::{add_git_config, configure_git};
+pub(crate) use git::configure_git;
 #[cfg(feature = "git")]
 pub use git::{Git, SemverKind, ShaKind};
+pub(crate) use rustc::configure_rustc;
 #[cfg(feature = "rustc")]
 pub use rustc::Rustc;
-pub(crate) use rustc::{add_rustc_config, configure_rustc};
 
 #[cfg(any(
     feature = "build",
