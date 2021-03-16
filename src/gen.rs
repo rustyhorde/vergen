@@ -21,7 +21,10 @@ use std::{
 ///
 /// # Errors
 ///
-/// Any generated errors will be wrapped in [`vergen::Error`](crate::error::Error)
+/// * Errors may be generated from the `git2` library.
+/// * [I/O](std::io::Error) errors may be generated.
+/// * Errors may be generated from the `rustc_version` library.
+/// * [env](std::env::VarError) errors may be generated.
 ///
 /// # Usage
 ///
@@ -45,7 +48,10 @@ pub fn vergen(config: crate::Config) -> Result<()> {
 ///
 /// # Errors
 ///
-/// Any generated errors will be wrapped in [`vergen::Error`](crate::error::Error)
+/// * Errors may be generated from the `git2` library.
+/// * [I/O](std::io::Error) errors may be generated.
+/// * Errors may be generated from the `rustc_version` library.
+/// * [env](std::env::VarError) errors may be generated.
 ///
 /// # Usage
 ///

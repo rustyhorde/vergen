@@ -72,7 +72,7 @@
 //!
 //! ```text, no_run
 //! cargo:rustc-env=VERGEN_BUILD_TIMESTAMP=2021-02-25T23:28:39.493201+00:00
-//! cargo:rustc-env=VERGEN_BUILD_SEMVER=4.1.0
+//! cargo:rustc-env=VERGEN_BUILD_SEMVER=5.0.0
 //! cargo:rustc-env=VERGEN_GIT_BRANCH=feature/fun
 //! cargo:rustc-env=VERGEN_GIT_COMMIT_TIMESTAMP=2021-02-24T20:55:21+00:00
 //! cargo:rustc-env=VERGEN_GIT_SEMVER=4.1.0-2-gf49246c
@@ -83,12 +83,41 @@
 //! cargo:rustc-env=VERGEN_RUSTC_HOST_TRIPLE=x86_64-apple-darwin
 //! cargo:rustc-env=VERGEN_RUSTC_LLVM_VERSION=11.0
 //! cargo:rustc-env=VERGEN_RUSTC_SEMVER=1.52.0-nightly
-//! cargo:rustc-env=VERGEN_CARGO_TARGET_TRIPLE=x86_64-unknown-linux-gnu
-//! cargo:rustc-env=VERGEN_CARGO_PROFILE=debug
 //! cargo:rustc-env=VERGEN_CARGO_FEATURES=git,build
+//! cargo:rustc-env=VERGEN_CARGO_PROFILE=debug
+//! cargo:rustc-env=VERGEN_CARGO_TARGET_TRIPLE=x86_64-unknown-linux-gnu
 //! cargo:rerun-if-changed=/Users/yoda/projects/rust-lang/vergen/.git/HEAD
 //! cargo:rerun-if-changed=/Users/yoda/projects/rust-lang/vergen/.git/refs/heads/feature/fun
 //! ```
+//!
+//! ## Environment Variables
+//! A full list of environment variables that can be generated are listed in the following table
+//!
+//! | Variable | Sample |
+//! | -------  | ------ |
+//! | See [`Build`](crate::Build) to configure the following |
+//! | `VERGEN_BUILD_DATE` | 2021-02-25 |
+//! | `VERGEN_BUILD_TIME` | 23:28:39.493201 |
+//! | `VERGEN_BUILD_TIMESTAMP` | 2021-02-25T23:28:39.493201+00:00 |
+//! | `VERGEN_BUILD_SEMVER` | 5.0.0 |
+//! | See [`Git`](crate::Git) to configure the following |
+//! | `VERGEN_GIT_BRANCH` | feature/fun |
+//! | `VERGEN_GIT_COMMIT_DATE` | 2021-02-24 |
+//! | `VERGEN_GIT_COMMIT_TIME` | 20:55:21 |
+//! | `VERGEN_GIT_COMMIT_TIMESTAMP` | 2021-02-24T20:55:21+00:00 |
+//! | `VERGEN_GIT_SEMVER` | 5.0.0-2-gf49246c |
+//! | `VERGEN_GIT_SHA` | f49246ce334567bff9f950bfd0f3078184a2738a |
+//! | See [`Rustc`](crate::Rustc) to configure the following |
+//! | `VERGEN_RUSTC_CHANNEL` | nightly |
+//! | `VERGEN_RUSTC_COMMIT_DATE` | 2021-02-24 |
+//! | `VERGEN_RUSTC_COMMIT_HASH` | a8486b64b0c87dabd045453b6c81500015d122d6 |
+//! | `VERGEN_RUSTC_HOST_TRIPLE` | x86_64-apple-darwin |
+//! | `VERGEN_RUSTC_LLVM_VERSION` | 11.0 |
+//! | `VERGEN_RUSTC_SEMVER` | 1.52.0-nightly |
+//! | See [`Cargo`](crate::Cargo) to configure the following |
+//! | `VERGEN_CARGO_FEATURES` | git,build |
+//! | `VERGEN_CARGO_PROFILE` | debug |
+//! | `VERGEN_CARGO_TARGET_TRIPLE` | x86_64-unknown-linux-gnu |
 //!
 //! ## Usage
 //!
@@ -107,9 +136,9 @@
 //! #..
 //!
 //! [build-dependencies]
-//! vergen = "4"
+//! vergen = "5"
 //! # or
-//! vergen = { version = "4", default-features = false, features = ["build", "rustc"] }
+//! vergen = { version = "5", default-features = false, features = ["build", "rustc"] }
 //! # if you wish to disable certain features
 //! ```
 //!
@@ -135,6 +164,7 @@
 //! [cargo:rustc-env]: https://doc.rust-lang.org/cargo/reference/build-scripts.html#rustc-env
 //! [cargo:rerun-if-changed]: https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed
 //!
+// rustc lints
 #![deny(
     absolute_paths_not_starting_with_crate,
     anonymous_parameters,
@@ -145,21 +175,20 @@
     box_pointers,
     cenum_impl_drop_cast,
     clashing_extern_declarations,
-    clippy::all,
-    clippy::pedantic,
-    clippy::cargo,
     coherence_leak_check,
     confusable_idents,
     const_evaluatable_unchecked,
     const_item_mutation,
     dead_code,
     deprecated,
-    // deprecated_in_future,
+    deprecated_in_future,
     drop_bounds,
     elided_lifetimes_in_paths,
     ellipsis_inclusive_range_patterns,
     explicit_outlives_requirements,
     exported_private_dependencies,
+    forbidden_lint_groups,
+    function_item_references,
     illegal_floating_point_literal_pattern,
     improper_ctypes,
     improper_ctypes_definitions,
@@ -174,13 +203,13 @@
     meta_variable_misuse,
     missing_copy_implementations,
     missing_debug_implementations,
-    // missing_doc_code_examples,
     missing_docs,
     mixed_script_confusables,
     mutable_borrow_reservation_conflict,
     no_mangle_generic_items,
     non_ascii_idents,
     non_camel_case_types,
+    non_fmt_panic,
     non_shorthand_field_patterns,
     non_snake_case,
     non_upper_case_globals,
@@ -188,14 +217,13 @@
     overlapping_range_endpoints,
     path_statements,
     pointer_structural_match,
-    // private_doc_tests,
     private_in_public,
     proc_macro_derive_resolution_fallback,
     redundant_semicolons,
     renamed_and_removed_lints,
     safe_packed_borrows,
-    single_use_lifetimes,
     stable_features,
+    temporary_cstring_as_ptr,
     trivial_bounds,
     trivial_casts,
     trivial_numeric_casts,
@@ -204,15 +232,16 @@
     unaligned_references,
     uncommon_codepoints,
     unconditional_recursion,
+    uninhabited_static,
     unknown_lints,
     unnameable_test_items,
     unreachable_code,
     unreachable_patterns,
     unreachable_pub,
     unsafe_code,
-    // unsafe_op_in_unsafe_fn,
     unstable_features,
     unstable_name_collisions,
+    unsupported_naked_functions,
     unused_allocation,
     unused_assignments,
     unused_attributes,
@@ -236,7 +265,7 @@
     unused_variables,
     variant_size_differences,
     where_clauses_object_safety,
-    while_true,
+    while_true
 )]
 #![cfg_attr(
     not(nightly_lints),
@@ -245,8 +274,31 @@
         invalid_codeblock_attributes,
         invalid_html_tags,
         missing_crate_level_docs,
+        missing_doc_code_examples,
+        private_doc_tests,
     )
 )]
+#![cfg_attr(
+    beta_lints,
+    deny(
+        disjoint_capture_drop_reorder,
+        missing_abi,
+        single_use_lifetimes,
+        semicolon_in_expressions_from_macros,
+    )
+)]
+#![cfg_attr(
+    nightly_lints,
+    deny(
+        legacy_derive_helpers,
+        noop_method_call,
+        proc_macro_back_compat,
+        unsafe_op_in_unsafe_fn,
+    )
+)]
+// clippy lints
+#![deny(clippy::all, clippy::cargo, clippy::pedantic)]
+// rustdoc lints
 #![cfg_attr(
     nightly_lints,
     deny(
@@ -254,9 +306,10 @@
         rustdoc::invalid_codeblock_attributes,
         rustdoc::invalid_html_tags,
         rustdoc::missing_crate_level_docs,
+        rustdoc::missing_doc_code_examples,
+        rustdoc::private_doc_tests,
     )
 )]
-#![allow(clippy::multiple_crate_versions)]
 
 mod config;
 mod constants;
