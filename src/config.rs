@@ -24,8 +24,8 @@ use crate::{
         CARGO_PROFILE, CARGO_TARGET_TRIPLE, GIT_BRANCH_NAME, GIT_COMMIT_DATE_NAME,
         GIT_COMMIT_TIMESTAMP_NAME, GIT_COMMIT_TIME_NAME, GIT_SEMVER_NAME, GIT_SEMVER_TAGS_NAME,
         GIT_SHA_NAME, GIT_SHA_SHORT_NAME, RUSTC_CHANNEL_NAME, RUSTC_COMMIT_DATE, RUSTC_COMMIT_HASH,
-        RUSTC_HOST_TRIPLE_NAME, RUSTC_LLVM_VERSION, RUSTC_SEMVER_NAME, SYSINFO_NAME,
-        SYSINFO_OS_VERSION,
+        RUSTC_HOST_TRIPLE_NAME, RUSTC_LLVM_VERSION, RUSTC_SEMVER_NAME, SYSINFO_CPU_CORE_COUNT,
+        SYSINFO_CPU_VENDOR, SYSINFO_MEMORY, SYSINFO_NAME, SYSINFO_OS_VERSION, SYSINFO_USER,
     },
     feature::{
         configure_build, configure_cargo, configure_git, configure_rustc, configure_sysinfo,
@@ -138,7 +138,7 @@ impl Instructions {
         configure_git(self, repo_path, &mut config)?;
         configure_rustc(self, &mut config)?;
         configure_cargo(self, &mut config);
-        configure_sysinfo(self, &mut config);
+        configure_sysinfo(self, &mut config)?;
 
         Ok(config)
     }
@@ -194,6 +194,14 @@ pub(crate) enum VergenKey {
     SysinfoName,
     /// The sysinfo os version (VERGEN_SYSINFO_OS_VERSION)
     SysinfoOsVersion,
+    /// The sysinfo user name (VERGEN_SYSINFO_USER)
+    SysinfoUser,
+    /// The sysinfo total memory (VERGEN_SYSINFO_TOTAL_MEMORY)
+    SysinfoMemory,
+    /// The sysinfo cpu vendor (VERGEN_SYSINFO_CPU_VENDOR)
+    SysinfoCpuVendor,
+    /// The sysinfo cpu core count (VERGEN_SYSINFO_CPU_CORE_COUNT)
+    SysinfoCpuCoreCount,
 }
 
 impl VergenKey {
@@ -223,6 +231,10 @@ impl VergenKey {
             VergenKey::CargoFeatures => CARGO_FEATURES,
             VergenKey::SysinfoName => SYSINFO_NAME,
             VergenKey::SysinfoOsVersion => SYSINFO_OS_VERSION,
+            VergenKey::SysinfoUser => SYSINFO_USER,
+            VergenKey::SysinfoMemory => SYSINFO_MEMORY,
+            VergenKey::SysinfoCpuVendor => SYSINFO_CPU_VENDOR,
+            VergenKey::SysinfoCpuCoreCount => SYSINFO_CPU_CORE_COUNT,
         }
     }
 }
@@ -322,6 +334,10 @@ mod test {
         assert!(config.has_enabled());
         assert!(config.name());
         assert!(config.os_version());
+        assert!(config.user());
+        assert!(config.memory());
+        assert!(config.cpu_vendor());
+        assert!(config.cpu_core_count());
     }
 
     #[cfg(not(feature = "si"))]

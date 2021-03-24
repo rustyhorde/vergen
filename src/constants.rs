@@ -40,6 +40,10 @@ pub(crate) const CARGO_FEATURES: &str = "VERGEN_CARGO_FEATURES";
 // sysinfo Constants
 pub(crate) const SYSINFO_NAME: &str = "VERGEN_SYSINFO_NAME";
 pub(crate) const SYSINFO_OS_VERSION: &str = "VERGEN_SYSINFO_OS_VERSION";
+pub(crate) const SYSINFO_USER: &str = "VERGEN_SYSINFO_USER";
+pub(crate) const SYSINFO_MEMORY: &str = "VERGEN_SYSINFO_TOTAL_MEMORY";
+pub(crate) const SYSINFO_CPU_VENDOR: &str = "VERGEN_SYSINFO_CPU_VENDOR";
+pub(crate) const SYSINFO_CPU_CORE_COUNT: &str = "VERGEN_SYSINFO_CPU_CORE_COUNT";
 
 #[cfg(test)]
 mod test {
@@ -75,5 +79,9 @@ mod test {
         // sysinfo Constants
         assert_eq!(SYSINFO_NAME, "VERGEN_SYSINFO_NAME");
         assert_eq!(SYSINFO_OS_VERSION, "VERGEN_SYSINFO_OS_VERSION");
+        assert_eq!(SYSINFO_USER, "VERGEN_SYSINFO_USER");
+        assert_eq!(SYSINFO_MEMORY, "VERGEN_SYSINFO_TOTAL_MEMORY");
+        assert_eq!(SYSINFO_CPU_VENDOR, "VERGEN_SYSINFO_CPU_VENDOR");
+        assert_eq!(SYSINFO_CPU_CORE_COUNT, "VERGEN_SYSINFO_CPU_CORE_COUNT");
     }
 }

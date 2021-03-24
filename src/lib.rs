@@ -54,7 +54,7 @@
 //! ```
 //!
 //! ## Features
-//! `vergen` has four feature toggles allowing you to customize your output.
+//! `vergen` has five feature toggles allowing you to customize your output.
 //!
 //! | Feature | Enables |
 //! | ------- | ------- |
@@ -62,8 +62,9 @@
 //! |  cargo  | `VERGEN_CARGO_*` instructions |
 //! |   git   | `VERGEN_GIT_*` instructions and the `cargo:rerun-if-changed` instructions  |
 //! |  rustc  | `VERGEN_RUSTC_*` instructions |
+//! |   si    | `VERGEN_SYSINFO_*` instructions |
 //!
-//! **NOTE** - All four features are enabled by default.
+//! **NOTE** - All five features are enabled by default.
 //!
 //! ## Sample Output
 //! If all features are enabled and the default [`Config`] is used the build script will generate instructions for cargo similar to below.
@@ -86,6 +87,9 @@
 //! cargo:rustc-env=VERGEN_CARGO_FEATURES=git,build
 //! cargo:rustc-env=VERGEN_CARGO_PROFILE=debug
 //! cargo:rustc-env=VERGEN_CARGO_TARGET_TRIPLE=x86_64-unknown-linux-gnu
+//! cargo:rustc-env=VERGEN_SYSINFO_NAME=Darwin
+//! cargo:rustc-env=VERGEN_SYSINFO_OS_VERSION=MacOS 10.15.7 Catalina
+//! cargo:rustc-env=VERGEN_SYSINFO_USER=yoda
 //! cargo:rerun-if-changed=/Users/yoda/projects/rust-lang/vergen/.git/HEAD
 //! cargo:rerun-if-changed=/Users/yoda/projects/rust-lang/vergen/.git/refs/heads/feature/fun
 //! ```
@@ -118,6 +122,13 @@
 //! | `VERGEN_CARGO_FEATURES` | git,build |
 //! | `VERGEN_CARGO_PROFILE` | debug |
 //! | `VERGEN_CARGO_TARGET_TRIPLE` | x86_64-unknown-linux-gnu |
+//! | See [`Sysinfo`](crate::Sysinfo) to configure the following |
+//! | `VERGEN_SYSINFO_NAME` | Darwin |
+//! | `VERGEN_SYSINFO_OS_VERSION` | `MacOS 10.15.7 Catalina` |
+//! | `VERGEN_SYSINFO_USER` | Yoda |
+//! | `VERGEN_SYSINFO_TOTAL_MEMORY` | 16 GB |
+//! | `VERGEN_SYSINFO_CPU_VENDOR` | Intel(R) Core(TM) i7-7820HQ CPU @ 2.90GHz |
+//! | `VERGEN_SYSINFO_CPU_CORE_COUNT` | 4 |
 //!
 //! ## Usage
 //!
@@ -307,7 +318,7 @@
         rustdoc::invalid_html_tags,
         rustdoc::missing_crate_level_docs,
         rustdoc::missing_doc_code_examples,
-        rustdoc::private_doc_tests,
+        // rustdoc::private_doc_tests,
     )
 )]
 
