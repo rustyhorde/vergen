@@ -235,6 +235,17 @@ mod test {
         };
     }
 
+    #[cfg(feature = "si")]
+    lazy_static! {
+        static ref NAME_RE_STR: &'static str = r#"cargo:rustc-env=VERGEN_SYSINFO_NAME=.*"#;
+        static ref OS_VERSION_RE_STR: &'static str =
+            r#"cargo:rustc-env=VERGEN_SYSINFO_OS_VERSION=.*"#;
+        static ref SYSINFO_REGEX_INST: Regex = {
+            let re_str = vec![*NAME_RE_STR, *OS_VERSION_RE_STR].join("\n");
+            Regex::new(&re_str).unwrap()
+        };
+    }
+
     #[test]
     #[serial_test::serial]
     #[allow(deprecated)]
@@ -309,6 +320,7 @@ mod test {
         not(feature = "cargo"),
         not(feature = "git"),
         not(feature = "rustc"),
+        not(feature = "si"),
     ))]
     #[test]
     fn no_features_no_output() {
@@ -381,6 +393,20 @@ mod test {
         )
         .is_ok());
         check_rustc_output(&stdout_buf);
+    }
+
+    #[cfg(feature = "si")]
+    #[test]
+    fn contains_sysinfo_output() {
+        let repo_path = PathBuf::from(".");
+        let mut stdout_buf = vec![];
+        assert!(config_from_instructions(
+            Instructions::default(),
+            Some(repo_path),
+            &mut stdout_buf,
+        )
+        .is_ok());
+        assert!(SYSINFO_REGEX_INST.is_match(&String::from_utf8_lossy(&stdout_buf)));
     }
 
     #[cfg(feature = "rustc")]

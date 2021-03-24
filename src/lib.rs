@@ -330,6 +330,8 @@ pub use crate::feature::Rustc;
 pub use crate::feature::SemverKind;
 #[cfg(feature = "git")]
 pub use crate::feature::ShaKind;
+#[cfg(feature = "si")]
+pub use crate::feature::Sysinfo;
 #[cfg(any(feature = "git", feature = "build"))]
 pub use crate::feature::TimeZone;
 #[cfg(any(feature = "git", feature = "build"))]

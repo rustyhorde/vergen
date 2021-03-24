@@ -37,6 +37,10 @@ pub(crate) const CARGO_TARGET_TRIPLE: &str = "VERGEN_CARGO_TARGET_TRIPLE";
 pub(crate) const CARGO_PROFILE: &str = "VERGEN_CARGO_PROFILE";
 pub(crate) const CARGO_FEATURES: &str = "VERGEN_CARGO_FEATURES";
 
+// sysinfo Constants
+pub(crate) const SYSINFO_NAME: &str = "VERGEN_SYSINFO_NAME";
+pub(crate) const SYSINFO_OS_VERSION: &str = "VERGEN_SYSINFO_OS_VERSION";
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -67,5 +71,9 @@ mod test {
         assert_eq!(CARGO_TARGET_TRIPLE, "VERGEN_CARGO_TARGET_TRIPLE");
         assert_eq!(CARGO_PROFILE, "VERGEN_CARGO_PROFILE");
         assert_eq!(CARGO_FEATURES, "VERGEN_CARGO_FEATURES");
+
+        // sysinfo Constants
+        assert_eq!(SYSINFO_NAME, "VERGEN_SYSINFO_NAME");
+        assert_eq!(SYSINFO_OS_VERSION, "VERGEN_SYSINFO_OS_VERSION");
     }
 }
