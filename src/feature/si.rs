@@ -14,7 +14,7 @@ use anyhow::Result;
 use {
     crate::{config::VergenKey, error::Error::Pid, feature::add_entry},
     getset::{Getters, MutGetters},
-    sysinfo::{get_current_pid, ProcessorExt, System, SystemExt, UserExt},
+    sysinfo::{get_current_pid, Process, ProcessorExt, System, SystemExt, User, UserExt},
 };
 
 /// Configuration for the `VERGEN_SYSINFO_*` instructions
@@ -130,7 +130,7 @@ pub(crate) fn configure_sysinfo(instructions: Instructions, config: &mut Config)
             let pid = get_current_pid().map_err(|e| Pid { msg: e })?;
             if let Some(process) = system.get_process(pid) {
                 for user in system.get_users() {
-                    if *user.get_uid() == process.uid {
+                    if check_user(process, user) {
                         add_entry(
                             config.cfg_map_mut(),
                             VergenKey::SysinfoUser,
@@ -190,6 +190,16 @@ pub(crate) fn configure_sysinfo(instructions: Instructions, config: &mut Config)
 #[cfg(not(feature = "si"))]
 pub(crate) fn configure_sysinfo(_instructions: Instructions, _config: &mut Config) -> Result<()> {
     Ok(())
+}
+
+#[cfg(all(feature = "si", not(target_os = "windows")))]
+fn check_user(process: &Process, user: &User) -> bool {
+    *user.get_uid() == process.uid
+}
+
+#[cfg(all(feature = "si", target_os = "windows"))]
+fn check_user(_process: &Process, _user: &User) -> bool {
+    false
 }
 
 #[cfg(all(test, feature = "si"))]
