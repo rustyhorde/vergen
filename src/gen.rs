@@ -235,7 +235,34 @@ mod test {
         };
     }
 
-    #[cfg(feature = "si")]
+    #[cfg(all(feature = "si", not(target_os = "windows")))]
+    lazy_static! {
+        static ref NAME_RE_STR: &'static str = r#"cargo:rustc-env=VERGEN_SYSINFO_NAME=.*"#;
+        static ref OS_VERSION_RE_STR: &'static str =
+            r#"cargo:rustc-env=VERGEN_SYSINFO_OS_VERSION=.*"#;
+        static ref USER_RE_STR: &'static str = r#"cargo:rustc-env=VERGEN_SYSINFO_USER=.*"#;
+        static ref TOTAL_MEMORY_RE_STR: &'static str =
+            r#"cargo:rustc-env=VERGEN_SYSINFO_TOTAL_MEMORY=.*"#;
+        static ref CPU_VENDOR_RE_STR: &'static str =
+            r#"cargo:rustc-env=VERGEN_SYSINFO_CPU_VENDOR=.*"#;
+        static ref CPU_CORE_RE_STR: &'static str =
+            r#"cargo:rustc-env=VERGEN_SYSINFO_CPU_CORE_COUNT=.*"#;
+        #[cfg(not(target_os = "windows"))]
+        static ref SYSINFO_REGEX_INST: Regex = {
+            let re_str = vec![
+                *NAME_RE_STR,
+                *OS_VERSION_RE_STR,
+                *USER_RE_STR,
+                *TOTAL_MEMORY_RE_STR,
+                *CPU_VENDOR_RE_STR,
+                *CPU_CORE_RE_STR,
+            ]
+            .join("\n");
+            Regex::new(&re_str).unwrap()
+        };
+    }
+
+    #[cfg(all(feature = "si", target_os = "windows"))]
     lazy_static! {
         static ref NAME_RE_STR: &'static str = r#"cargo:rustc-env=VERGEN_SYSINFO_NAME=.*"#;
         static ref OS_VERSION_RE_STR: &'static str =
@@ -246,6 +273,7 @@ mod test {
             r#"cargo:rustc-env=VERGEN_SYSINFO_CPU_VENDOR=.*"#;
         static ref CPU_CORE_RE_STR: &'static str =
             r#"cargo:rustc-env=VERGEN_SYSINFO_CPU_CORE_COUNT=.*"#;
+        #[cfg(not(target_os = "windows"))]
         static ref SYSINFO_REGEX_INST: Regex = {
             let re_str = vec![
                 *NAME_RE_STR,
