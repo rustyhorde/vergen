@@ -247,7 +247,6 @@ mod test {
             r#"cargo:rustc-env=VERGEN_SYSINFO_CPU_VENDOR=.*"#;
         static ref CPU_CORE_RE_STR: &'static str =
             r#"cargo:rustc-env=VERGEN_SYSINFO_CPU_CORE_COUNT=.*"#;
-        #[cfg(not(target_os = "windows"))]
         static ref SYSINFO_REGEX_INST: Regex = {
             let re_str = vec![
                 *NAME_RE_STR,
@@ -273,7 +272,6 @@ mod test {
             r#"cargo:rustc-env=VERGEN_SYSINFO_CPU_VENDOR=.*"#;
         static ref CPU_CORE_RE_STR: &'static str =
             r#"cargo:rustc-env=VERGEN_SYSINFO_CPU_CORE_COUNT=.*"#;
-        #[cfg(not(target_os = "windows"))]
         static ref SYSINFO_REGEX_INST: Regex = {
             let re_str = vec![
                 *NAME_RE_STR,
