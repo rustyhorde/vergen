@@ -16,15 +16,21 @@ use crate::feature::Cargo;
 use crate::feature::Git;
 #[cfg(feature = "rustc")]
 use crate::feature::Rustc;
+#[cfg(feature = "si")]
+use crate::feature::Sysinfo;
 use crate::{
     constants::{
         BUILD_DATE_NAME, BUILD_SEMVER_NAME, BUILD_TIMESTAMP_NAME, BUILD_TIME_NAME, CARGO_FEATURES,
         CARGO_PROFILE, CARGO_TARGET_TRIPLE, GIT_BRANCH_NAME, GIT_COMMIT_DATE_NAME,
         GIT_COMMIT_TIMESTAMP_NAME, GIT_COMMIT_TIME_NAME, GIT_SEMVER_NAME, GIT_SEMVER_TAGS_NAME,
         GIT_SHA_NAME, GIT_SHA_SHORT_NAME, RUSTC_CHANNEL_NAME, RUSTC_COMMIT_DATE, RUSTC_COMMIT_HASH,
-        RUSTC_HOST_TRIPLE_NAME, RUSTC_LLVM_VERSION, RUSTC_SEMVER_NAME,
+        RUSTC_HOST_TRIPLE_NAME, RUSTC_LLVM_VERSION, RUSTC_SEMVER_NAME, SYSINFO_CPU_BRAND,
+        SYSINFO_CPU_CORE_COUNT, SYSINFO_CPU_FREQUENCY, SYSINFO_CPU_NAME, SYSINFO_CPU_VENDOR,
+        SYSINFO_MEMORY, SYSINFO_NAME, SYSINFO_OS_VERSION, SYSINFO_USER,
     },
-    feature::{configure_build, configure_cargo, configure_git, configure_rustc},
+    feature::{
+        configure_build, configure_cargo, configure_git, configure_rustc, configure_sysinfo,
+    },
 };
 use anyhow::Result;
 use enum_iterator::IntoEnumIterator;
@@ -40,6 +46,7 @@ use std::{
 /// * See [`Cargo`](crate::Cargo) for details on `VERGEN_CARGO_*` instruction configuration
 /// * See [`Git`](crate::Git) for details on `VERGEN_GIT_*` instruction configuration
 /// * See [`Rustc`](crate::Rustc) for details on `VERGEN_RUSTC_*` instruction configuration
+/// * See [`Sysinfo`](crate::Sysinfo) for details on `VERGEN_SYSINFO_*` instruction configuration
 ///
 /// # Example
 ///
@@ -76,6 +83,13 @@ use std::{
 *config.cargo_mut().profile_mut() = false;
 "##
 )]
+#[cfg_attr(
+    feature = "si",
+    doc = r##"
+// Turn off the sysinfo name instruction
+*config.sysinfo_mut().name_mut() = false;
+"##
+)]
 /// ```
 #[derive(Clone, Copy, Debug, Getters, MutGetters)]
 #[getset(get = "pub(crate)", get_mut = "pub")]
@@ -92,6 +106,9 @@ pub struct Instructions {
     /// Use this to modify the [`Rustc`] feature configuration.
     #[cfg(feature = "rustc")]
     rustc: Rustc,
+    /// Use this to modify the [`Sysinfo`] feature configuration.
+    #[cfg(feature = "si")]
+    sysinfo: Sysinfo,
 }
 
 impl Default for Instructions {
@@ -105,6 +122,8 @@ impl Default for Instructions {
             git: Git::default(),
             #[cfg(feature = "rustc")]
             rustc: Rustc::default(),
+            #[cfg(feature = "si")]
+            sysinfo: Sysinfo::default(),
         }
     }
 }
@@ -120,6 +139,7 @@ impl Instructions {
         configure_git(self, repo_path, &mut config)?;
         configure_rustc(self, &mut config)?;
         configure_cargo(self, &mut config);
+        configure_sysinfo(self, &mut config)?;
 
         Ok(config)
     }
@@ -171,6 +191,24 @@ pub(crate) enum VergenKey {
     CargoProfile,
     /// The cargo features (VERGEN_CARGO_FEATURES)
     CargoFeatures,
+    /// The sysinfo system name (VERGEN_SYSINFO_NAME)
+    SysinfoName,
+    /// The sysinfo os version (VERGEN_SYSINFO_OS_VERSION)
+    SysinfoOsVersion,
+    /// The sysinfo user name (VERGEN_SYSINFO_USER)
+    SysinfoUser,
+    /// The sysinfo total memory (VERGEN_SYSINFO_TOTAL_MEMORY)
+    SysinfoMemory,
+    /// The sysinfo cpu vendor (VERGEN_SYSINFO_CPU_VENDOR)
+    SysinfoCpuVendor,
+    /// The sysinfo cpu core count (VERGEN_SYSINFO_CPU_CORE_COUNT)
+    SysinfoCpuCoreCount,
+    /// The sysinfo cpu core count (VERGEN_SYSINFO_CPU_NAME)
+    SysinfoCpuName,
+    /// The sysinfo cpu core count (VERGEN_SYSINFO_CPU_BRAND)
+    SysinfoCpuBrand,
+    /// The sysinfo cpu core count (VERGEN_SYSINFO_CPU_FREQUENCY)
+    SysinfoCpuFrequency,
 }
 
 impl VergenKey {
@@ -198,6 +236,15 @@ impl VergenKey {
             VergenKey::CargoTargetTriple => CARGO_TARGET_TRIPLE,
             VergenKey::CargoProfile => CARGO_PROFILE,
             VergenKey::CargoFeatures => CARGO_FEATURES,
+            VergenKey::SysinfoName => SYSINFO_NAME,
+            VergenKey::SysinfoOsVersion => SYSINFO_OS_VERSION,
+            VergenKey::SysinfoUser => SYSINFO_USER,
+            VergenKey::SysinfoMemory => SYSINFO_MEMORY,
+            VergenKey::SysinfoCpuVendor => SYSINFO_CPU_VENDOR,
+            VergenKey::SysinfoCpuCoreCount => SYSINFO_CPU_CORE_COUNT,
+            VergenKey::SysinfoCpuName => SYSINFO_CPU_NAME,
+            VergenKey::SysinfoCpuBrand => SYSINFO_CPU_BRAND,
+            VergenKey::SysinfoCpuFrequency => SYSINFO_CPU_FREQUENCY,
         }
     }
 }
@@ -291,6 +338,21 @@ mod test {
     #[cfg(not(feature = "rustc"))]
     fn check_rustc_config(_instructions: &Instructions) {}
 
+    #[cfg(feature = "si")]
+    fn check_sysinfo_config(instructions: &Instructions) {
+        let config = instructions.sysinfo();
+        assert!(config.has_enabled());
+        assert!(config.name());
+        assert!(config.os_version());
+        assert!(config.user());
+        assert!(config.memory());
+        assert!(config.cpu_vendor());
+        assert!(config.cpu_core_count());
+    }
+
+    #[cfg(not(feature = "si"))]
+    fn check_sysinfo_config(_instructions: &Instructions) {}
+
     #[test]
     fn default_instructions() {
         let default = Instructions::default();
@@ -298,5 +360,6 @@ mod test {
         check_cargo_config(&default);
         check_git_config(&default);
         check_rustc_config(&default);
+        check_sysinfo_config(&default);
     }
 }

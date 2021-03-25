@@ -205,7 +205,7 @@ mod test {
         static ref RUSTC_LLVM_RE_STR: &'static str =
             r#"cargo:rustc-env=VERGEN_RUSTC_LLVM_VERSION=\d{2}\.\d{1}"#;
         static ref RUSTC_SEMVER_RE_STR: &'static str = r#"cargo:rustc-env=VERGEN_RUSTC_SEMVER=(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)(?:-(?P<prerelease>(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+(?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?"#;
-        static ref RUSTC_NIGHTLY_REGEX: Regex = {
+        static ref RUSTC_REGEX: Regex = {
             let re_str = vec![
                 *RUSTC_CHANNEL_RE_STR,
                 *RUSTC_CD_RE_STR,
@@ -219,16 +219,50 @@ mod test {
         };
     }
 
-    #[cfg(feature = "rustc")]
-    #[rustversion::stable]
+    #[cfg(all(feature = "si", not(target_os = "windows")))]
     lazy_static! {
-        static ref RUSTC_REGEX: Regex = {
+        static ref NAME_RE_STR: &'static str = r#"cargo:rustc-env=VERGEN_SYSINFO_NAME=.*"#;
+        static ref OS_VERSION_RE_STR: &'static str =
+            r#"cargo:rustc-env=VERGEN_SYSINFO_OS_VERSION=.*"#;
+        static ref USER_RE_STR: &'static str = r#"cargo:rustc-env=VERGEN_SYSINFO_USER=.*"#;
+        static ref TOTAL_MEMORY_RE_STR: &'static str =
+            r#"cargo:rustc-env=VERGEN_SYSINFO_TOTAL_MEMORY=.*"#;
+        static ref CPU_VENDOR_RE_STR: &'static str =
+            r#"cargo:rustc-env=VERGEN_SYSINFO_CPU_VENDOR=.*"#;
+        static ref CPU_CORE_RE_STR: &'static str =
+            r#"cargo:rustc-env=VERGEN_SYSINFO_CPU_CORE_COUNT=.*"#;
+        static ref SYSINFO_REGEX_INST: Regex = {
             let re_str = vec![
-                *RUSTC_CHANNEL_RE_STR,
-                *RUSTC_CD_RE_STR,
-                *RUSTC_CH_RE_STR,
-                *RUSTC_HT_RE_STR,
-                *RUSTC_SEMVER_RE_STR,
+                *NAME_RE_STR,
+                *OS_VERSION_RE_STR,
+                *USER_RE_STR,
+                *TOTAL_MEMORY_RE_STR,
+                *CPU_VENDOR_RE_STR,
+                *CPU_CORE_RE_STR,
+            ]
+            .join("\n");
+            Regex::new(&re_str).unwrap()
+        };
+    }
+
+    #[cfg(all(feature = "si", target_os = "windows"))]
+    lazy_static! {
+        static ref NAME_RE_STR: &'static str = r#"cargo:rustc-env=VERGEN_SYSINFO_NAME=.*"#;
+        static ref OS_VERSION_RE_STR: &'static str =
+            r#"cargo:rustc-env=VERGEN_SYSINFO_OS_VERSION=.*"#;
+        static ref TOTAL_MEMORY_RE_STR: &'static str =
+            r#"cargo:rustc-env=VERGEN_SYSINFO_TOTAL_MEMORY=.*"#;
+        static ref CPU_VENDOR_RE_STR: &'static str =
+            r#"cargo:rustc-env=VERGEN_SYSINFO_CPU_VENDOR=.*"#;
+        static ref CPU_CORE_RE_STR: &'static str =
+            r#"cargo:rustc-env=VERGEN_SYSINFO_CPU_CORE_COUNT=.*"#;
+        static ref SYSINFO_REGEX_INST: Regex = {
+            let re_str = vec![
+                *NAME_RE_STR,
+                *OS_VERSION_RE_STR,
+                *TOTAL_MEMORY_RE_STR,
+                *CPU_VENDOR_RE_STR,
+                *CPU_CORE_RE_STR,
             ]
             .join("\n");
             Regex::new(&re_str).unwrap()
@@ -309,6 +343,7 @@ mod test {
         not(feature = "cargo"),
         not(feature = "git"),
         not(feature = "rustc"),
+        not(feature = "si"),
     ))]
     #[test]
     fn no_features_no_output() {
@@ -383,22 +418,21 @@ mod test {
         check_rustc_output(&stdout_buf);
     }
 
-    #[cfg(feature = "rustc")]
-    #[rustversion::nightly]
-    fn check_rustc_output(stdout: &[u8]) {
-        assert!(RUSTC_NIGHTLY_REGEX.is_match(&String::from_utf8_lossy(&stdout)));
+    #[cfg(feature = "si")]
+    #[test]
+    fn contains_sysinfo_output() {
+        let repo_path = PathBuf::from(".");
+        let mut stdout_buf = vec![];
+        assert!(config_from_instructions(
+            Instructions::default(),
+            Some(repo_path),
+            &mut stdout_buf,
+        )
+        .is_ok());
+        assert!(SYSINFO_REGEX_INST.is_match(&String::from_utf8_lossy(&stdout_buf)));
     }
 
-    // TODO: Check this on new beta releases, the regex was causing a panic
-    // outside of my control
     #[cfg(feature = "rustc")]
-    #[rustversion::beta]
-    fn check_rustc_output(stdout: &[u8]) {
-        assert!(!stdout.is_empty());
-    }
-
-    #[cfg(feature = "rustc")]
-    #[rustversion::stable]
     fn check_rustc_output(stdout: &[u8]) {
         assert!(RUSTC_REGEX.is_match(&String::from_utf8_lossy(&stdout)));
     }

@@ -12,7 +12,8 @@
     feature = "build",
     feature = "cargo",
     feature = "git",
-    feature = "rustc"
+    feature = "rustc",
+    feature = "si",
 ))]
 use {crate::config::VergenKey, std::collections::BTreeMap};
 
@@ -20,6 +21,7 @@ mod build;
 mod cargo;
 mod git;
 mod rustc;
+mod si;
 
 pub(crate) use build::configure_build;
 #[cfg(feature = "build")]
@@ -33,12 +35,16 @@ pub use git::{Git, SemverKind, ShaKind};
 pub(crate) use rustc::configure_rustc;
 #[cfg(feature = "rustc")]
 pub use rustc::Rustc;
+pub(crate) use si::configure_sysinfo;
+#[cfg(feature = "si")]
+pub use si::Sysinfo;
 
 #[cfg(any(
     feature = "build",
     feature = "cargo",
     feature = "git",
-    feature = "rustc"
+    feature = "rustc",
+    feature = "si",
 ))]
 pub(crate) fn add_entry(
     map: &mut BTreeMap<VergenKey, Option<String>>,
@@ -80,7 +86,8 @@ pub enum TimestampKind {
         feature = "build",
         feature = "cargo",
         feature = "git",
-        feature = "rustc"
+        feature = "rustc",
+        feature = "si",
     )
 ))]
 mod test {

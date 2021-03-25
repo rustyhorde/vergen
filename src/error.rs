@@ -42,6 +42,14 @@ pub(crate) enum Error {
     /// An error getting the 'CARGO_PKG_VERSION' environment variable
     #[error("{}: The 'CARGO_PKG_VERSION' environment variable may not be set: {}", ErrKind::Env, .0)]
     Var(#[from] std::env::VarError),
+    /// An error getting the current pid
+    #[cfg(feature = "si")]
+    #[error(
+        "{}: Unable to determine the current process pid: {}",
+        ErrKind::Protocol,
+        msg
+    )]
+    Pid { msg: &'static str },
 }
 
 #[cfg(test)]
@@ -87,6 +95,16 @@ mod test {
         assert_eq!("protocol: An error occurred in the \'git2\' library: failed to resolve path \'blah\': No such file or directory; class=Os (2); code=NotFound (-3)", format!("{}", err));
         #[cfg(target_family = "windows")]
         assert_eq!("protocol: An error occurred in the \'git2\' library: failed to resolve path \'blah\': The system cannot find the file specified.\r\n; class=Os (2); code=NotFound (-3)", format!("{}", err));
+    }
+
+    #[cfg(feature = "si")]
+    #[test]
+    fn pid_error() {
+        let err: Error = Error::Pid { msg: "test" };
+        assert_eq!(
+            "protocol: Unable to determine the current process pid: test",
+            format!("{}", err)
+        );
     }
 
     #[test]
