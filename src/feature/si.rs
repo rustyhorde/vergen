@@ -150,17 +150,10 @@ pub(crate) fn configure_sysinfo(instructions: Instructions, config: &mut Config)
                 count += 1;
             }
 
-            let suffix = match count {
-                0 => "KB",
-                1 => "MB",
-                2 => "GB",
-                _ => "xB",
-            };
-
             add_entry(
                 config.cfg_map_mut(),
                 VergenKey::SysinfoMemory,
-                Some(format!("{} {}", curr_memory, suffix)),
+                Some(format!("{} {}", curr_memory, suffix(count))),
             );
         }
 
@@ -202,8 +195,19 @@ fn check_user(_process: &Process, _user: &User) -> bool {
     false
 }
 
+#[cfg(feature = "si")]
+fn suffix(val: usize) -> &'static str {
+    match val {
+        0 => "KB",
+        1 => "MB",
+        2 => "GB",
+        _ => "xB",
+    }
+}
+
 #[cfg(all(test, feature = "si"))]
 mod test {
+    use super::{suffix, Sysinfo};
     use crate::config::Instructions;
 
     #[test]
@@ -216,6 +220,43 @@ mod test {
         assert!(config.sysinfo().cpu_core_count);
         config.sysinfo_mut().os_version = false;
         assert!(!config.sysinfo().os_version);
+    }
+
+    #[test]
+    fn has_enabled_works() {
+        let mut sysinfo = Sysinfo::default();
+        assert!(sysinfo.has_enabled());
+        *sysinfo.name_mut() = false;
+        assert!(sysinfo.has_enabled());
+        *sysinfo.name_mut() = true;
+        *sysinfo.os_version_mut() = false;
+        assert!(sysinfo.has_enabled());
+        *sysinfo.os_version_mut() = true;
+        *sysinfo.user_mut() = false;
+        assert!(sysinfo.has_enabled());
+        *sysinfo.user_mut() = true;
+        *sysinfo.memory_mut() = false;
+        assert!(sysinfo.has_enabled());
+        *sysinfo.memory_mut() = true;
+        *sysinfo.cpu_vendor_mut() = false;
+        assert!(sysinfo.has_enabled());
+        *sysinfo.cpu_vendor_mut() = true;
+        *sysinfo.cpu_core_count_mut() = false;
+        assert!(sysinfo.has_enabled());
+        *sysinfo.name_mut() = false;
+        *sysinfo.os_version_mut() = false;
+        *sysinfo.user_mut() = false;
+        *sysinfo.memory_mut() = false;
+        *sysinfo.cpu_vendor_mut() = false;
+        assert!(!sysinfo.has_enabled());
+    }
+
+    #[test]
+    fn suffix_works() {
+        assert_eq!("KB", suffix(0));
+        assert_eq!("MB", suffix(1));
+        assert_eq!("GB", suffix(2));
+        assert_eq!("xB", suffix(3));
     }
 }
 
