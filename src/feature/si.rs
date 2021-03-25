@@ -228,26 +228,15 @@ mod test {
         assert!(sysinfo.has_enabled());
         *sysinfo.name_mut() = false;
         assert!(sysinfo.has_enabled());
-        *sysinfo.name_mut() = true;
         *sysinfo.os_version_mut() = false;
         assert!(sysinfo.has_enabled());
-        *sysinfo.os_version_mut() = true;
         *sysinfo.user_mut() = false;
         assert!(sysinfo.has_enabled());
-        *sysinfo.user_mut() = true;
         *sysinfo.memory_mut() = false;
         assert!(sysinfo.has_enabled());
-        *sysinfo.memory_mut() = true;
         *sysinfo.cpu_vendor_mut() = false;
         assert!(sysinfo.has_enabled());
-        *sysinfo.cpu_vendor_mut() = true;
         *sysinfo.cpu_core_count_mut() = false;
-        assert!(sysinfo.has_enabled());
-        *sysinfo.name_mut() = false;
-        *sysinfo.os_version_mut() = false;
-        *sysinfo.user_mut() = false;
-        *sysinfo.memory_mut() = false;
-        *sysinfo.cpu_vendor_mut() = false;
         assert!(!sysinfo.has_enabled());
     }
 
