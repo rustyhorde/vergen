@@ -74,6 +74,12 @@ pub struct Sysinfo {
     cpu_vendor: bool,
     /// Enable/Disable the `VERGEN_SYSINFO_CPU_CORE_COUNT` instruction
     cpu_core_count: bool,
+    /// Enable/Disable the `VERGEN_SYSINFO_CPU_NAME` instruction
+    cpu_name: bool,
+    /// Enable/Disable the `VERGEN_SYSINFO_CPU_BRAND` instruction
+    cpu_brand: bool,
+    /// Enable/Disable the `VERGEN_SYSINFO_CPU_FREQUENCY` instruction
+    cpu_frequency: bool,
 }
 
 #[cfg(feature = "si")]
@@ -86,6 +92,9 @@ impl Default for Sysinfo {
             memory: true,
             cpu_vendor: true,
             cpu_core_count: true,
+            cpu_name: true,
+            cpu_brand: true,
+            cpu_frequency: true,
         }
     }
 }
@@ -99,6 +108,9 @@ impl Sysinfo {
             || self.memory
             || self.cpu_vendor
             || self.cpu_core_count
+            || self.cpu_name
+            || self.cpu_brand
+            || self.cpu_frequency
     }
 }
 
@@ -175,6 +187,43 @@ pub(crate) fn configure_sysinfo(instructions: Instructions, config: &mut Config)
                 system.get_physical_core_count().map(|x| x.to_string()),
             );
         }
+
+        if *sysinfo_config.cpu_name() {
+            add_entry(
+                config.cfg_map_mut(),
+                VergenKey::SysinfoCpuName,
+                Some(
+                    system
+                        .get_processors()
+                        .iter()
+                        .map(|p| p.get_name())
+                        .collect::<Vec<&str>>()
+                        .join(","),
+                ),
+            );
+        }
+
+        if *sysinfo_config.cpu_brand() {
+            add_entry(
+                config.cfg_map_mut(),
+                VergenKey::SysinfoCpuBrand,
+                system
+                    .get_processors()
+                    .get(0)
+                    .map(|processor| processor.get_brand().to_string()),
+            );
+        }
+
+        if *sysinfo_config.cpu_frequency() {
+            add_entry(
+                config.cfg_map_mut(),
+                VergenKey::SysinfoCpuFrequency,
+                system
+                    .get_processors()
+                    .get(0)
+                    .map(|processor| processor.get_frequency().to_string()),
+            );
+        }
     }
 
     Ok(())
@@ -218,6 +267,9 @@ mod test {
         assert!(config.sysinfo().user);
         assert!(config.sysinfo().cpu_vendor);
         assert!(config.sysinfo().cpu_core_count);
+        assert!(config.sysinfo().cpu_name);
+        assert!(config.sysinfo().cpu_brand);
+        assert!(config.sysinfo().cpu_frequency);
         config.sysinfo_mut().os_version = false;
         assert!(!config.sysinfo().os_version);
     }
@@ -237,6 +289,12 @@ mod test {
         *sysinfo.cpu_vendor_mut() = false;
         assert!(sysinfo.has_enabled());
         *sysinfo.cpu_core_count_mut() = false;
+        assert!(sysinfo.has_enabled());
+        *sysinfo.cpu_name_mut() = false;
+        assert!(sysinfo.has_enabled());
+        *sysinfo.cpu_brand_mut() = false;
+        assert!(sysinfo.has_enabled());
+        *sysinfo.cpu_frequency_mut() = false;
         assert!(!sysinfo.has_enabled());
     }
 

@@ -24,8 +24,9 @@ use crate::{
         CARGO_PROFILE, CARGO_TARGET_TRIPLE, GIT_BRANCH_NAME, GIT_COMMIT_DATE_NAME,
         GIT_COMMIT_TIMESTAMP_NAME, GIT_COMMIT_TIME_NAME, GIT_SEMVER_NAME, GIT_SEMVER_TAGS_NAME,
         GIT_SHA_NAME, GIT_SHA_SHORT_NAME, RUSTC_CHANNEL_NAME, RUSTC_COMMIT_DATE, RUSTC_COMMIT_HASH,
-        RUSTC_HOST_TRIPLE_NAME, RUSTC_LLVM_VERSION, RUSTC_SEMVER_NAME, SYSINFO_CPU_CORE_COUNT,
-        SYSINFO_CPU_VENDOR, SYSINFO_MEMORY, SYSINFO_NAME, SYSINFO_OS_VERSION, SYSINFO_USER,
+        RUSTC_HOST_TRIPLE_NAME, RUSTC_LLVM_VERSION, RUSTC_SEMVER_NAME, SYSINFO_CPU_BRAND,
+        SYSINFO_CPU_CORE_COUNT, SYSINFO_CPU_FREQUENCY, SYSINFO_CPU_NAME, SYSINFO_CPU_VENDOR,
+        SYSINFO_MEMORY, SYSINFO_NAME, SYSINFO_OS_VERSION, SYSINFO_USER,
     },
     feature::{
         configure_build, configure_cargo, configure_git, configure_rustc, configure_sysinfo,
@@ -202,6 +203,12 @@ pub(crate) enum VergenKey {
     SysinfoCpuVendor,
     /// The sysinfo cpu core count (VERGEN_SYSINFO_CPU_CORE_COUNT)
     SysinfoCpuCoreCount,
+    /// The sysinfo cpu core count (VERGEN_SYSINFO_CPU_NAME)
+    SysinfoCpuName,
+    /// The sysinfo cpu core count (VERGEN_SYSINFO_CPU_BRAND)
+    SysinfoCpuBrand,
+    /// The sysinfo cpu core count (VERGEN_SYSINFO_CPU_FREQUENCY)
+    SysinfoCpuFrequency,
 }
 
 impl VergenKey {
@@ -235,6 +242,9 @@ impl VergenKey {
             VergenKey::SysinfoMemory => SYSINFO_MEMORY,
             VergenKey::SysinfoCpuVendor => SYSINFO_CPU_VENDOR,
             VergenKey::SysinfoCpuCoreCount => SYSINFO_CPU_CORE_COUNT,
+            VergenKey::SysinfoCpuName => SYSINFO_CPU_NAME,
+            VergenKey::SysinfoCpuBrand => SYSINFO_CPU_BRAND,
+            VergenKey::SysinfoCpuFrequency => SYSINFO_CPU_FREQUENCY,
         }
     }
 }
