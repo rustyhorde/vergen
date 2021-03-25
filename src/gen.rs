@@ -205,29 +205,13 @@ mod test {
         static ref RUSTC_LLVM_RE_STR: &'static str =
             r#"cargo:rustc-env=VERGEN_RUSTC_LLVM_VERSION=\d{2}\.\d{1}"#;
         static ref RUSTC_SEMVER_RE_STR: &'static str = r#"cargo:rustc-env=VERGEN_RUSTC_SEMVER=(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)(?:-(?P<prerelease>(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+(?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?"#;
-        static ref RUSTC_NIGHTLY_REGEX: Regex = {
-            let re_str = vec![
-                *RUSTC_CHANNEL_RE_STR,
-                *RUSTC_CD_RE_STR,
-                *RUSTC_CH_RE_STR,
-                *RUSTC_HT_RE_STR,
-                *RUSTC_LLVM_RE_STR,
-                *RUSTC_SEMVER_RE_STR,
-            ]
-            .join("\n");
-            Regex::new(&re_str).unwrap()
-        };
-    }
-
-    #[cfg(feature = "rustc")]
-    #[rustversion::stable]
-    lazy_static! {
         static ref RUSTC_REGEX: Regex = {
             let re_str = vec![
                 *RUSTC_CHANNEL_RE_STR,
                 *RUSTC_CD_RE_STR,
                 *RUSTC_CH_RE_STR,
                 *RUSTC_HT_RE_STR,
+                *RUSTC_LLVM_RE_STR,
                 *RUSTC_SEMVER_RE_STR,
             ]
             .join("\n");
@@ -449,21 +433,6 @@ mod test {
     }
 
     #[cfg(feature = "rustc")]
-    #[rustversion::nightly]
-    fn check_rustc_output(stdout: &[u8]) {
-        assert!(RUSTC_NIGHTLY_REGEX.is_match(&String::from_utf8_lossy(&stdout)));
-    }
-
-    // TODO: Check this on new beta releases, the regex was causing a panic
-    // outside of my control
-    #[cfg(feature = "rustc")]
-    #[rustversion::beta]
-    fn check_rustc_output(stdout: &[u8]) {
-        assert!(!stdout.is_empty());
-    }
-
-    #[cfg(feature = "rustc")]
-    #[rustversion::stable]
     fn check_rustc_output(stdout: &[u8]) {
         assert!(RUSTC_REGEX.is_match(&String::from_utf8_lossy(&stdout)));
     }

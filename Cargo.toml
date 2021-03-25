@@ -37,7 +37,6 @@ rustversion = "1"
 [dev-dependencies]
 lazy_static = "1"
 regex = "1"
-rustversion = "1"
 serial_test = "0"
 
 [package.metadata.cargo-all-features]

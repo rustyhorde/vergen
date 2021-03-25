@@ -349,8 +349,6 @@ pub use crate::feature::TimeZone;
 pub use crate::feature::TimestampKind;
 pub use crate::gen::vergen;
 
-#[cfg(all(test, not(feature = "rustc")))]
-use rustversion as _;
 #[cfg(all(test, not(feature = "cargo")))]
 use serial_test as _;
 
