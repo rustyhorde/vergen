@@ -3,6 +3,40 @@ on: [push, pull_request]
 name: CI
 
 jobs:
+  rustfmt:
+    name: ☢️ Formatting ☢️
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+          components: rustfmt
+      - run: cargo fmt --all -- --check
+  clippy:
+    name: 🕳️ Lints 🕳️
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+          components: clippy
+      - run: cargo clippy --all -- -D warnings
   test:
     name: vergen
     runs-on: ${{ matrix.os }}
@@ -93,6 +127,13 @@ jobs:
             ~/.cargo/bin/cargo-tarpaulin*
             ~/.cargo/bin/cargo-*-all-features*
           key: ${{ runner.os }}-${{ matrix.rust }}-${{ hashFiles('**/Cargo.toml') }}
+      - uses: actions-rs/toolchain@v1
+        name: 📅 Update 📅
+        with:
+          profile: minimal
+          toolchain: ${{ matrix.rust }}
+          target: ${{ matrix.other }}
+          override: true
       - name: ✔️ Checkout (notagsrepo master) ✔️
         run: cd testdata/notagsrepo && git checkout master && cd ..
       - name: ✔️ Checkout (tagsrepo master) ✔️
@@ -116,18 +157,6 @@ jobs:
           version: latest
           use-tool-cache: true
         continue-on-error: true
-      - name: 📅 Update 📅
-        run: rustup update --no-self-update ${{ matrix.rust }} && rustup default ${{ matrix.rust }}
-      - name: ➕ Add ➕
-        run: rustup component add rustfmt || echo "rustfmt not available"
-      - name: ➕ Add ➕
-        run: rustup component add clippy || echo "clippy not available"
-      - name: ☢️ Formatting ☢️
-        run: cargo fmt --all -- --check
-      - name: 🕳️ Lints 🕳️
-        run: cargo clippy --all -- -D warnings
-      - name: 🏗️ Build 🏗️
-        run: cargo build-all-features
       - name: 🧪 Test 🧪
         run: cargo test-all-features
       - name: 🙊 Code Coverage 🙊
