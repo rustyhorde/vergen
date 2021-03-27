@@ -3,84 +3,120 @@ on: [push, pull_request]
 name: CI
 
 jobs:
+  rustfmt:
+    name: ☢️ Formatting ☢️
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+          components: rustfmt
+      - run: cargo fmt --all -- --check
+  lints:
+    name: 🕳️ Lints 🕳️
+    needs: rustfmt
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+          components: clippy
+      - run: cargo clippy --all -- -D warnings
   test:
     name: vergen
+    needs: lints
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         include:
         - os: ubuntu-latest
           rust: stable
-          other: i686-unknown-linux-gnu
+          target: i686-unknown-linux-gnu
         - os: ubuntu-latest
           rust: stable
-          other: x86_64-unknown-linux-gnu
+          target: x86_64-unknown-linux-gnu
         - os: ubuntu-latest
           rust: beta
-          other: i686-unknown-linux-gnu
+          target: i686-unknown-linux-gnu
         - os: ubuntu-latest
           rust: beta
-          other: x86_64-unknown-linux-gnu
+          target: x86_64-unknown-linux-gnu
         - os: ubuntu-latest
           rust: nightly
-          other: i686-unknown-linux-gnu
+          target: i686-unknown-linux-gnu
         - os: ubuntu-latest
           rust: nightly
-          other: x86_64-unknown-linux-gnu
+          target: x86_64-unknown-linux-gnu
         - os: macos-latest
           rust: stable
-          other: x86_64-apple-darwin
+          target: x86_64-apple-darwin
         - os: macos-latest
           rust: stable
-          other: x86_64-apple-ios
+          target: x86_64-apple-ios
         - os: macos-latest
           rust: beta
-          other: x86_64-apple-darwin
+          target: x86_64-apple-darwin
         - os: macos-latest
           rust: beta
-          other: x86_64-apple-ios
+          target: x86_64-apple-ios
         - os: macos-latest
           rust: nightly
-          other: x86_64-apple-darwin
+          target: x86_64-apple-darwin
         - os: macos-latest
           rust: nightly
-          other: x86_64-apple-ios
+          target: x86_64-apple-ios
         - os: windows-latest
           rust: stable-msvc
-          other: i686-pc-windows-msvc
+          target: i686-pc-windows-msvc
         - os: windows-latest
           rust: stable-msvc
-          other: x86_64-pc-windows-msvc
+          target: x86_64-pc-windows-msvc
         - os: windows-latest
           rust: beta-msvc
-          other: i686-pc-windows-msvc
+          target: i686-pc-windows-msvc
         - os: windows-latest
           rust: beta-msvc
-          other: x86_64-pc-windows-msvc
+          target: x86_64-pc-windows-msvc
         - os: windows-latest
           rust: nightly-msvc
-          other: i686-pc-windows-msvc
+          target: i686-pc-windows-msvc
         - os: windows-latest
           rust: nightly-msvc
-          other: x86_64-pc-windows-msvc
+          target: x86_64-pc-windows-msvc
         - os: windows-latest
           rust: stable-gnu
-          other: i686-pc-windows-gnu
+          target: i686-pc-windows-gnu
         - os: windows-latest
           rust: stable-gnu
-          other: x86_64-pc-windows-gnu
+          target: x86_64-pc-windows-gnu
         - os: windows-latest
           rust: beta-gnu
-          other: i686-pc-windows-gnu
+          target: i686-pc-windows-gnu
         - os: windows-latest
           rust: beta-gnu
-          other: x86_64-pc-windows-gnu
+          target: x86_64-pc-windows-gnu
         - os: windows-latest
           rust: nightly-gnu
-          other: i686-pc-windows-gnu
+          target: i686-pc-windows-gnu
         - os: windows-latest
           rust: nightly-gnu
-          other: x86_64-pc-windows-gnu
+          target: x86_64-pc-windows-gnu
     steps:
       - name: ✔️ Checkout ✔️
         uses: actions/checkout@v2
@@ -92,7 +128,14 @@ jobs:
           path: |
             ~/.cargo/bin/cargo-tarpaulin*
             ~/.cargo/bin/cargo-*-all-features*
-          key: ${{ runner.os }}-${{ matrix.rust }}-${{ hashFiles('**/Cargo.toml') }}
+          key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.toml') }}
+      - uses: actions-rs/toolchain@v1
+        name: 🧰 Toolchain 🧰
+        with:
+          profile: minimal
+          toolchain: ${{ matrix.rust }}
+          target: ${{ matrix.target }}
+          override: true
       - name: ✔️ Checkout (notagsrepo master) ✔️
         run: cd testdata/notagsrepo && git checkout master && cd ..
       - name: ✔️ Checkout (tagsrepo master) ✔️
@@ -116,18 +159,6 @@ jobs:
           version: latest
           use-tool-cache: true
         continue-on-error: true
-      - name: 📅 Update 📅
-        run: rustup update --no-self-update ${{ matrix.rust }} && rustup default ${{ matrix.rust }}
-      - name: ➕ Add ➕
-        run: rustup component add rustfmt || echo "rustfmt not available"
-      - name: ➕ Add ➕
-        run: rustup component add clippy || echo "clippy not available"
-      - name: ☢️ Formatting ☢️
-        run: cargo fmt --all -- --check
-      - name: 🕳️ Lints 🕳️
-        run: cargo clippy --all -- -D warnings
-      - name: 🏗️ Build 🏗️
-        run: cargo build-all-features
       - name: 🧪 Test 🧪
         run: cargo test-all-features
       - name: 🙊 Code Coverage 🙊
