@@ -126,9 +126,12 @@ jobs:
           path: |
             ~/.cargo/bin/cargo-tarpaulin*
             ~/.cargo/bin/cargo-*-all-features*
-          key: ${{ runner.os }}-${{ matrix.rust }}-${{ hashFiles('**/Cargo.toml') }}
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.toml') }}
       - uses: actions-rs/toolchain@v1
-        name: 📅 Update 📅
+        name: 🧰 Toolchain 🧰
         with:
           profile: minimal
           toolchain: ${{ matrix.rust }}
