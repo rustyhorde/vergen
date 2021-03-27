@@ -17,8 +17,9 @@ jobs:
           override: true
           components: rustfmt
       - run: cargo fmt --all -- --check
-  clippy:
+  lints:
     name: 🕳️ Lints 🕳️
+    needs: rustfmt
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -39,6 +40,7 @@ jobs:
       - run: cargo clippy --all -- -D warnings
   test:
     name: vergen
+    needs: lints
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
