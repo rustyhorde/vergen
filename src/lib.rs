@@ -279,7 +279,7 @@
     while_true
 )]
 #![cfg_attr(
-    not(nightly_lints),
+    not(vergen_nightly_lints),
     deny(
         broken_intra_doc_links,
         invalid_codeblock_attributes,
@@ -290,7 +290,7 @@
     )
 )]
 #![cfg_attr(
-    beta_lints,
+    vergen_beta_lints,
     deny(
         disjoint_capture_drop_reorder,
         missing_abi,
@@ -299,7 +299,7 @@
     )
 )]
 #![cfg_attr(
-    nightly_lints,
+    vergen_nightly_lints,
     deny(
         legacy_derive_helpers,
         noop_method_call,

@@ -14,7 +14,7 @@ pub fn main() {
 
 #[rustversion::nightly]
 fn nightly_lints() {
-    println!("cargo:rustc-cfg=nightly_lints");
+    println!("cargo:rustc-cfg=vergen_nightly_lints");
 }
 
 #[rustversion::not(nightly)]
@@ -22,7 +22,7 @@ fn nightly_lints() {}
 
 #[rustversion::any(beta, nightly)]
 fn beta_lints() {
-    println!("cargo:rustc-cfg=beta_lints");
+    println!("cargo:rustc-cfg=vergen_beta_lints");
 }
 
 #[rustversion::stable]
