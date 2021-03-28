@@ -127,7 +127,7 @@
 //! | `VERGEN_SYSINFO_OS_VERSION` | Linux  Manjaro Linux |
 //! | `VERGEN_SYSINFO_USER` | Yoda |
 //! | `VERGEN_SYSINFO_TOTAL_MEMORY` | 33 GB |
-//! | `VERGEN_SYSINFO_CPU_VENDOR` | AuthenticAMD |
+//! | `VERGEN_SYSINFO_CPU_VENDOR` | Authentic AMD |
 //! | `VERGEN_SYSINFO_CPU_CORE_COUNT` | 8 |
 //! | `VERGEN_SYSINFO_CPU_NAME` | cpu0,cpu1,cpu2,cpu3,cpu4,cpu5,cpu6,cpu7 |
 //! | `VERGEN_SYSINFO_CPU_BRAND` | AMD Ryzen Threadripper 1900X 8-Core Processor |
