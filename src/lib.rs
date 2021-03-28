@@ -232,7 +232,6 @@
     proc_macro_derive_resolution_fallback,
     redundant_semicolons,
     renamed_and_removed_lints,
-    safe_packed_borrows,
     stable_features,
     temporary_cstring_as_ptr,
     trivial_bounds,
@@ -287,6 +286,7 @@
         missing_crate_level_docs,
         missing_doc_code_examples,
         private_doc_tests,
+        safe_packed_borrows,
     )
 )]
 #![cfg_attr(
@@ -305,6 +305,7 @@
         noop_method_call,
         proc_macro_back_compat,
         unsafe_op_in_unsafe_fn,
+        unaligned_references,
     )
 )]
 // clippy lints
