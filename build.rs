@@ -10,20 +10,29 @@ pub fn main() {
     println!("cargo:rustc-env=VERGEN_GIT_SEMVER=v3.2.0-86-g95fc0f5");
     nightly_lints();
     beta_lints();
+    stable_lints();
 }
 
 #[rustversion::nightly]
 fn nightly_lints() {
-    println!("cargo:rustc-cfg=vergen_nightly_lints");
+    println!("cargo:rustc-cfg=nightly_lints");
 }
 
 #[rustversion::not(nightly)]
 fn nightly_lints() {}
 
-#[rustversion::any(beta, nightly)]
+#[rustversion::beta]
 fn beta_lints() {
-    println!("cargo:rustc-cfg=vergen_beta_lints");
+    println!("cargo:rustc-cfg=beta_lints");
 }
 
-#[rustversion::stable]
+#[rustversion::not(beta)]
 fn beta_lints() {}
+
+#[rustversion::stable]
+fn stable_lints() {
+    println!("cargo:rustc-cfg=stable_lints");
+}
+
+#[rustversion::not(stable)]
+fn stable_lints() {}

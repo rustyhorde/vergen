@@ -196,6 +196,7 @@
     dead_code,
     deprecated,
     deprecated_in_future,
+    disjoint_capture_drop_reorder,
     drop_bounds,
     elided_lifetimes_in_paths,
     ellipsis_inclusive_range_patterns,
@@ -215,6 +216,7 @@
     late_bound_lifetime_arguments,
     macro_use_extern_crate,
     meta_variable_misuse,
+    missing_abi,
     missing_copy_implementations,
     missing_debug_implementations,
     missing_docs,
@@ -235,6 +237,8 @@
     proc_macro_derive_resolution_fallback,
     redundant_semicolons,
     renamed_and_removed_lints,
+    semicolon_in_expressions_from_macros,
+    single_use_lifetimes,
     stable_features,
     temporary_cstring_as_ptr,
     trivial_bounds,
@@ -280,49 +284,49 @@
     where_clauses_object_safety,
     while_true
 )]
+// nightly only lints
+#![cfg_attr(nightly_lints, deny(unaligned_references))]
+// nightly or beta only lints
 #![cfg_attr(
-    not(vergen_nightly_lints),
+    any(beta_lints, nightly_lints),
+    deny(
+        legacy_derive_helpers,
+        noop_method_call,
+        proc_macro_back_compat,
+        unsafe_op_in_unsafe_fn,
+    )
+)]
+// beta or stable only lints
+#![cfg_attr(any(beta_lints, stable_lints), deny(safe_packed_borrows))]
+// stable only lints
+#![cfg_attr(
+    stable_lints,
     deny(
         broken_intra_doc_links,
         invalid_codeblock_attributes,
         invalid_html_tags,
         missing_crate_level_docs,
         missing_doc_code_examples,
+        non_autolinks,
         private_doc_tests,
-        safe_packed_borrows,
-    )
-)]
-#![cfg_attr(
-    vergen_beta_lints,
-    deny(
-        disjoint_capture_drop_reorder,
-        missing_abi,
-        single_use_lifetimes,
-        semicolon_in_expressions_from_macros,
-    )
-)]
-#![cfg_attr(
-    vergen_nightly_lints,
-    deny(
-        legacy_derive_helpers,
-        noop_method_call,
-        proc_macro_back_compat,
-        unsafe_op_in_unsafe_fn,
-        unaligned_references,
+        private_intra_doc_links,
     )
 )]
 // clippy lints
-#![deny(clippy::all, clippy::cargo, clippy::pedantic)]
+#![deny(clippy::all, clippy::pedantic)]
+#![allow(clippy::copy_iterator)]
 // rustdoc lints
 #![cfg_attr(
-    nightly_lints,
+    any(nightly_lints, beta_lints),
     deny(
         rustdoc::broken_intra_doc_links,
         rustdoc::invalid_codeblock_attributes,
         rustdoc::invalid_html_tags,
         rustdoc::missing_crate_level_docs,
         rustdoc::missing_doc_code_examples,
-        // rustdoc::private_doc_tests,
+        rustdoc::non_autolinks,
+        rustdoc::private_doc_tests,
+        rustdoc::private_intra_doc_links,
     )
 )]
 
