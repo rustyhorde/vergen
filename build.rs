@@ -1,6 +1,7 @@
 use chrono::Utc;
 
 pub fn main() {
+    println!("cargo:rerun-if-changed=build.rs");
     // These are here so some doc tests work
     let now = Utc::now();
     println!(

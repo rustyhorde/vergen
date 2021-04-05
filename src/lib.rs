@@ -285,7 +285,7 @@
     while_true
 )]
 // nightly only lints
-#![cfg_attr(nightly_lints, deny(unaligned_references))]
+#![cfg_attr(nightly_lints, deny(or_patterns_back_compat))]
 // nightly or beta only lints
 #![cfg_attr(
     any(beta_lints, nightly_lints),
@@ -294,6 +294,7 @@
         noop_method_call,
         proc_macro_back_compat,
         unsafe_op_in_unsafe_fn,
+        unaligned_references,
     )
 )]
 // beta or stable only lints
