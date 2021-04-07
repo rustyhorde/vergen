@@ -40,12 +40,15 @@ A full list of environment variables that can be generated are listed in the fol
 | `VERGEN_CARGO_FEATURES` | git,build |
 | `VERGEN_CARGO_PROFILE` | debug |
 | `VERGEN_CARGO_TARGET_TRIPLE` | x86_64-unknown-linux-gnu |
-| `VERGEN_SYSINFO_NAME` | Darwin |
-| `VERGEN_SYSINFO_OS_VERSION` | MacOS 10.15.7 Catalina |
+| `VERGEN_SYSINFO_NAME` | Manjaro Linux |
+| `VERGEN_SYSINFO_OS_VERSION` | Linux  Manjaro Linux |
 | `VERGEN_SYSINFO_USER` | Yoda |
-| `VERGEN_SYSINFO_TOTAL_MEMORY` | 16 GB |
-| `VERGEN_SYSINFO_CPU_VENDOR` | Intel(R) Core(TM) i7-7820HQ CPU @ 2.90GHz |
-| `VERGEN_SYSINFO_CPU_CORE_COUNT` | 4 |
+| `VERGEN_SYSINFO_TOTAL_MEMORY` | 33 GB |
+| `VERGEN_SYSINFO_CPU_VENDOR` | Authentic AMD |
+| `VERGEN_SYSINFO_CPU_CORE_COUNT` | 8 |
+| `VERGEN_SYSINFO_CPU_NAME` | cpu0,cpu1,cpu2,cpu3,cpu4,cpu5,cpu6,cpu7 |
+| `VERGEN_SYSINFO_CPU_BRAND` | AMD Ryzen Threadripper 1900X 8-Core Processor |
+| `VERGEN_SYSINFO_CPU_FREQUENCY` | 3792 |
 
 ## Contributing
 See the documentation at [CONTRIBUTING.md](CONTRIBUTING.md)
