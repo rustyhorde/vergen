@@ -325,11 +325,12 @@
         rustdoc::invalid_html_tags,
         rustdoc::missing_crate_level_docs,
         rustdoc::missing_doc_code_examples,
-        rustdoc::non_autolinks,
         rustdoc::private_doc_tests,
         rustdoc::private_intra_doc_links,
     )
 )]
+#![cfg_attr(beta_lints, deny(rustdoc::non_autolinks))]
+#![cfg_attr(nightly_lints, deny(rustdoc::bare_urls))]
 
 mod config;
 mod constants;
