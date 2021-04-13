@@ -12,9 +12,14 @@ use crate::config::{Config, Instructions};
 use anyhow::Result;
 #[cfg(feature = "si")]
 use {
-    crate::{config::VergenKey, error::Error::Pid, feature::add_entry},
+    crate::{config::VergenKey, feature::add_entry},
     getset::{Getters, MutGetters},
-    sysinfo::{get_current_pid, Process, ProcessorExt, System, SystemExt, User, UserExt},
+    sysinfo::{ProcessorExt, System, SystemExt},
+};
+#[cfg(not(target_os = "macos"))]
+use {
+    error::Error::Pid,
+    sysinfo::{get_current_pid, Process, User, UserExt},
 };
 
 /// Configuration for the `VERGEN_SYSINFO_*` instructions
@@ -115,13 +120,26 @@ impl Sysinfo {
     }
 }
 
+#[cfg(all(feature = "si", not(target_os = "macos")))]
+fn setup_system() -> System {
+    let mut system = System::new_all();
+    system.refresh_all();
+    system
+}
+
+#[cfg(all(feature = "si", target_os = "macos"))]
+fn setup_system() -> System {
+    let mut system = System::new();
+    system.refresh_memory();
+    system.refresh_cpu();
+    system
+}
+
 #[cfg(feature = "si")]
 pub(crate) fn configure_sysinfo(instructions: Instructions, config: &mut Config) -> Result<()> {
     let sysinfo_config = instructions.sysinfo();
     if sysinfo_config.has_enabled() {
-        let mut system = System::new_all();
-        // First we update all information of our system struct.
-        system.refresh_all();
+        let system = setup_system();
 
         if *sysinfo_config.name() {
             add_entry(
@@ -140,15 +158,20 @@ pub(crate) fn configure_sysinfo(instructions: Instructions, config: &mut Config)
         }
 
         if *sysinfo_config.user() {
-            let pid = get_current_pid().map_err(|e| Pid { msg: e })?;
-            if let Some(process) = system.get_process(pid) {
-                for user in system.get_users() {
-                    if check_user(process, user) {
-                        add_entry(
-                            config.cfg_map_mut(),
-                            VergenKey::SysinfoUser,
-                            Some(user.get_name().to_string()),
-                        );
+            cfg_if::cfg_if! {
+                if #[cfg(target_os = "macos")] {
+                } else {
+                    let pid = get_current_pid().map_err(|e| Pid { msg: e })?;
+                    if let Some(process) = system.get_process(pid) {
+                        for user in system.get_users() {
+                            if check_user(process, user) {
+                                add_entry(
+                                    config.cfg_map_mut(),
+                                    VergenKey::SysinfoUser,
+                                    Some(user.get_name().to_string()),
+                                );
+                            }
+                        }
                     }
                 }
             }
@@ -231,11 +254,12 @@ pub(crate) fn configure_sysinfo(instructions: Instructions, config: &mut Config)
 }
 
 #[cfg(not(feature = "si"))]
+#[allow(clippy::unnecessary_wraps)]
 pub(crate) fn configure_sysinfo(_instructions: Instructions, _config: &mut Config) -> Result<()> {
     Ok(())
 }
 
-#[cfg(all(feature = "si", not(target_os = "windows")))]
+#[cfg(all(feature = "si", not(target_os = "windows"), not(target_os = "macos")))]
 fn check_user(process: &Process, user: &User) -> bool {
     *user.get_uid() == process.uid
 }

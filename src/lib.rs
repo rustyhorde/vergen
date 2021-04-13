@@ -359,6 +359,8 @@ pub use crate::feature::TimeZone;
 pub use crate::feature::TimestampKind;
 pub use crate::gen::vergen;
 
+#[cfg(not(feature = "si"))]
+use cfg_if as _;
 #[cfg(all(test, not(feature = "cargo")))]
 use serial_test as _;
 

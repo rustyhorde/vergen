@@ -49,6 +49,7 @@ pub(crate) enum Error {
         ErrKind::Protocol,
         msg
     )]
+    #[cfg(not(target_os = "macos"))]
     Pid { msg: &'static str },
 }
 
@@ -97,7 +98,7 @@ mod test {
         assert_eq!("protocol: An error occurred in the \'git2\' library: failed to resolve path \'blah\': The system cannot find the file specified.\r\n; class=Os (2); code=NotFound (-3)", format!("{}", err));
     }
 
-    #[cfg(feature = "si")]
+    #[cfg(all(feature = "si", not(target_os = "macos")))]
     #[test]
     fn pid_error() {
         let err: Error = Error::Pid { msg: "test" };
