@@ -16,7 +16,7 @@ use {
     getset::{Getters, MutGetters},
     sysinfo::{ProcessorExt, System, SystemExt},
 };
-#[cfg(not(target_os = "macos"))]
+#[cfg(all(feature = "si", not(target_os = "macos")))]
 use {
     error::Error::Pid,
     sysinfo::{get_current_pid, Process, User, UserExt},
@@ -136,6 +136,7 @@ fn setup_system() -> System {
 }
 
 #[cfg(feature = "si")]
+#[allow(clippy::unnecessary_wraps, clippy::too_many_lines)]
 pub(crate) fn configure_sysinfo(instructions: Instructions, config: &mut Config) -> Result<()> {
     let sysinfo_config = instructions.sysinfo();
     if sysinfo_config.has_enabled() {

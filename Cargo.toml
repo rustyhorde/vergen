@@ -13,7 +13,7 @@ repository = "https://github.com/rustyhorde/vergen"
 version = "5.1.1"
 
 [features]
-default = ["build", "cargo", "git", "rustc"]
+default = ["build", "cargo", "git", "rustc", "si"]
 build = ["chrono"]
 cargo = []
 git = ["chrono", "git2"]
