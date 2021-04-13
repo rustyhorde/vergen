@@ -10,16 +10,16 @@
 
 use crate::config::{Config, Instructions};
 use anyhow::Result;
+#[cfg(all(feature = "si", not(target_os = "macos")))]
+use {
+    crate::error::Error::Pid,
+    sysinfo::{get_current_pid, Process, User, UserExt},
+};
 #[cfg(feature = "si")]
 use {
     crate::{config::VergenKey, feature::add_entry},
     getset::{Getters, MutGetters},
     sysinfo::{ProcessorExt, System, SystemExt},
-};
-#[cfg(all(feature = "si", not(target_os = "macos")))]
-use {
-    crate::error::Error::Pid,
-    sysinfo::{get_current_pid, Process, User, UserExt},
 };
 
 /// Configuration for the `VERGEN_SYSINFO_*` instructions
