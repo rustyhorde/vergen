@@ -18,7 +18,7 @@ use {
 };
 #[cfg(all(feature = "si", not(target_os = "macos")))]
 use {
-    error::Error::Pid,
+    crate::error::Error::Pid,
     sysinfo::{get_current_pid, Process, User, UserExt},
 };
 
