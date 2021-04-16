@@ -84,9 +84,9 @@ impl Cargo {
 
 #[cfg(feature = "cargo")]
 fn is_cargo_feature(var: (String, String)) -> Option<String> {
-    let (k, v) = var;
+    let (k, _) = var;
     if k.starts_with("CARGO_FEATURE_") {
-        Some(v)
+        Some(k.replace("CARGO_FEATURE_", "").to_lowercase())
     } else {
         None
     }
