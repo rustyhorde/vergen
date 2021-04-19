@@ -66,7 +66,7 @@ vergen(config)?;
 #[cfg(feature = "si")]
 #[derive(Clone, Copy, Debug, Getters, MutGetters)]
 #[getset(get = "pub(crate)", get_mut = "pub")]
-#[allow(clippy::clippy::struct_excessive_bools)]
+#[allow(clippy::struct_excessive_bools)]
 pub struct Sysinfo {
     /// Enable/Disable the `VERGEN_SYSINFO_NAME` instruction
     name: bool,
