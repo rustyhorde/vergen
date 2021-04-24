@@ -104,6 +104,8 @@ vergen(config)?;
 #[derive(Clone, Copy, Debug, Getters, MutGetters)]
 #[getset(get = "pub(crate)", get_mut = "pub")]
 pub struct Git {
+    /// Enable/Disable the git output
+    enabled: bool,
     /// Enable/Disable the `VERGEN_GIT_BRANCH` instruction
     branch: bool,
     /// Enable/Disable the `VERGEN_GIT_COMMIT_DATE`, `VERGEN_GIT_COMMIT_TIME`, and `VERGEN_GIT_COMMIT_TIMESTAMP` instructions
@@ -128,6 +130,7 @@ pub struct Git {
 impl Default for Git {
     fn default() -> Self {
         Self {
+            enabled: true,
             branch: true,
             commit_timestamp: true,
             commit_timestamp_timezone: feature::TimeZone::Utc,
@@ -144,7 +147,12 @@ impl Default for Git {
 #[cfg(feature = "git")]
 impl Git {
     pub(crate) fn has_enabled(&self) -> bool {
-        self.branch || self.commit_timestamp || self.rerun_on_head_change || self.semver || self.sha
+        self.enabled
+            && (self.branch
+                || self.commit_timestamp
+                || self.rerun_on_head_change
+                || self.semver
+                || self.sha)
     }
 }
 
@@ -373,6 +381,58 @@ mod test {
         assert_eq!(config.git().sha_kind, ShaKind::Normal);
         config.git_mut().commit_timestamp_kind = TimestampKind::All;
         assert_eq!(config.git().commit_timestamp_kind, TimestampKind::All);
+    }
+
+    #[test]
+    fn not_enabled() {
+        let mut config = Instructions::default();
+        *config.git_mut().enabled_mut() = false;
+        assert!(!config.git().has_enabled());
+    }
+
+    #[test]
+    fn no_branch() {
+        let mut config = Instructions::default();
+        *config.git_mut().branch_mut() = false;
+        assert!(config.git().has_enabled());
+    }
+
+    #[test]
+    fn no_timestamp() {
+        let mut config = Instructions::default();
+        *config.git_mut().branch_mut() = false;
+        *config.git_mut().commit_timestamp_mut() = false;
+        assert!(config.git().has_enabled());
+    }
+
+    #[test]
+    fn no_rerun_on_head_change() {
+        let mut config = Instructions::default();
+        *config.git_mut().branch_mut() = false;
+        *config.git_mut().commit_timestamp_mut() = false;
+        *config.git_mut().rerun_on_head_change_mut() = false;
+        assert!(config.git().has_enabled());
+    }
+
+    #[test]
+    fn no_semver() {
+        let mut config = Instructions::default();
+        *config.git_mut().branch_mut() = false;
+        *config.git_mut().commit_timestamp_mut() = false;
+        *config.git_mut().rerun_on_head_change_mut() = false;
+        *config.git_mut().semver_mut() = false;
+        assert!(config.git().has_enabled());
+    }
+
+    #[test]
+    fn nothing() {
+        let mut config = Instructions::default();
+        *config.git_mut().branch_mut() = false;
+        *config.git_mut().commit_timestamp_mut() = false;
+        *config.git_mut().rerun_on_head_change_mut() = false;
+        *config.git_mut().semver_mut() = false;
+        *config.git_mut().sha_mut() = false;
+        assert!(!config.git().has_enabled());
     }
 }
 

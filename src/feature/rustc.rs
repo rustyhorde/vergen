@@ -63,7 +63,10 @@ vergen(config)?;
 #[cfg(feature = "rustc")]
 #[derive(Clone, Copy, Debug, Getters, MutGetters)]
 #[getset(get = "pub(crate)", get_mut = "pub")]
+#[allow(clippy::struct_excessive_bools)]
 pub struct Rustc {
+    /// Enable/Disable the rustc output
+    enabled: bool,
     /// Enable/Disable the `VERGEN_RUSTC_CHANNEL` instruction
     channel: bool,
     /// Enable/Disable the `VERGEN_RUSTC_COMMIT_DATE` instruction
@@ -82,6 +85,7 @@ pub struct Rustc {
 impl Default for Rustc {
     fn default() -> Self {
         Self {
+            enabled: true,
             channel: true,
             commit_date: true,
             host_triple: true,
@@ -95,7 +99,12 @@ impl Default for Rustc {
 #[cfg(feature = "rustc")]
 impl Rustc {
     pub(crate) fn has_enabled(self) -> bool {
-        self.channel || self.commit_date || self.host_triple || self.llvm_version || self.sha
+        self.enabled
+            && (self.channel
+                || self.commit_date
+                || self.host_triple
+                || self.llvm_version
+                || self.sha)
     }
 }
 
@@ -185,6 +194,58 @@ mod test {
         assert!(config.rustc().sha);
         config.rustc_mut().host_triple = false;
         assert!(!config.rustc().host_triple);
+    }
+
+    #[test]
+    fn not_enabled() {
+        let mut config = Instructions::default();
+        *config.rustc_mut().enabled_mut() = false;
+        assert!(!config.rustc().has_enabled());
+    }
+
+    #[test]
+    fn no_channel() {
+        let mut config = Instructions::default();
+        *config.rustc_mut().channel_mut() = false;
+        assert!(config.rustc().has_enabled());
+    }
+
+    #[test]
+    fn no_commit_date() {
+        let mut config = Instructions::default();
+        *config.rustc_mut().channel_mut() = false;
+        *config.rustc_mut().commit_date_mut() = false;
+        assert!(config.rustc().has_enabled());
+    }
+
+    #[test]
+    fn no_host_triple() {
+        let mut config = Instructions::default();
+        *config.rustc_mut().channel_mut() = false;
+        *config.rustc_mut().commit_date_mut() = false;
+        *config.rustc_mut().host_triple_mut() = false;
+        assert!(config.rustc().has_enabled());
+    }
+
+    #[test]
+    fn no_llvm_version() {
+        let mut config = Instructions::default();
+        *config.rustc_mut().channel_mut() = false;
+        *config.rustc_mut().commit_date_mut() = false;
+        *config.rustc_mut().host_triple_mut() = false;
+        *config.rustc_mut().llvm_version_mut() = false;
+        assert!(config.rustc().has_enabled());
+    }
+
+    #[test]
+    fn nothing() {
+        let mut config = Instructions::default();
+        *config.rustc_mut().channel_mut() = false;
+        *config.rustc_mut().commit_date_mut() = false;
+        *config.rustc_mut().host_triple_mut() = false;
+        *config.rustc_mut().llvm_version_mut() = false;
+        *config.rustc_mut().sha_mut() = false;
+        assert!(!config.rustc().has_enabled());
     }
 }
 

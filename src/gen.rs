@@ -396,6 +396,17 @@ mod test {
         assert!(BUILD_REGEX_INST.is_match(&String::from_utf8_lossy(&stdout_buf)));
     }
 
+    #[cfg(feature = "build")]
+    #[test]
+    fn contains_no_build_output() {
+        let repo_path = PathBuf::from(".");
+        let mut stdout_buf = vec![];
+        let mut instructions = Instructions::default();
+        *instructions.build_mut().enabled_mut() = false;
+        assert!(config_from_instructions(instructions, Some(repo_path), &mut stdout_buf,).is_ok());
+        assert!(!BUILD_REGEX_INST.is_match(&String::from_utf8_lossy(&stdout_buf)));
+    }
+
     #[cfg(feature = "cargo")]
     #[test]
     #[serial_test::serial]
@@ -410,6 +421,20 @@ mod test {
         )
         .is_ok());
         assert!(CARGO_REGEX.is_match(&String::from_utf8_lossy(&stdout_buf)));
+        teardown();
+    }
+
+    #[cfg(feature = "cargo")]
+    #[test]
+    #[serial_test::serial]
+    fn contains_no_cargo_output() {
+        setup();
+        let repo_path = PathBuf::from(".");
+        let mut stdout_buf = vec![];
+        let mut instructions = Instructions::default();
+        *instructions.cargo_mut().enabled_mut() = false;
+        assert!(config_from_instructions(instructions, Some(repo_path), &mut stdout_buf,).is_ok());
+        assert!(!CARGO_REGEX.is_match(&String::from_utf8_lossy(&stdout_buf)));
         teardown();
     }
 
@@ -428,6 +453,18 @@ mod test {
         assert!(GIT_RIC_REGEX.is_match(&String::from_utf8_lossy(&stdout_buf)));
     }
 
+    #[cfg(feature = "git")]
+    #[test]
+    fn contains_no_git_output() {
+        let repo_path = PathBuf::from(".");
+        let mut stdout_buf = vec![];
+        let mut instructions = Instructions::default();
+        *instructions.git_mut().enabled_mut() = false;
+        assert!(config_from_instructions(instructions, Some(repo_path), &mut stdout_buf,).is_ok());
+        assert!(!GIT_REGEX_INST.is_match(&String::from_utf8_lossy(&stdout_buf)));
+        assert!(!GIT_RIC_REGEX.is_match(&String::from_utf8_lossy(&stdout_buf)));
+    }
+
     #[cfg(feature = "rustc")]
     #[test]
     fn contains_rustc_output() {
@@ -440,6 +477,17 @@ mod test {
         )
         .is_ok());
         check_rustc_output(&stdout_buf);
+    }
+
+    #[cfg(feature = "rustc")]
+    #[test]
+    fn contains_no_rustc_output() {
+        let repo_path = PathBuf::from(".");
+        let mut stdout_buf = vec![];
+        let mut instructions = Instructions::default();
+        *instructions.rustc_mut().enabled_mut() = false;
+        assert!(config_from_instructions(instructions, Some(repo_path), &mut stdout_buf,).is_ok());
+        check_no_rustc_output(&stdout_buf);
     }
 
     #[cfg(feature = "si")]
@@ -456,9 +504,25 @@ mod test {
         assert!(SYSINFO_REGEX_INST.is_match(&String::from_utf8_lossy(&stdout_buf)));
     }
 
+    #[cfg(feature = "si")]
+    #[test]
+    fn contains_no_sysinfo_output() {
+        let repo_path = PathBuf::from(".");
+        let mut stdout_buf = vec![];
+        let mut instructions = Instructions::default();
+        *instructions.sysinfo_mut().enabled_mut() = false;
+        assert!(config_from_instructions(instructions, Some(repo_path), &mut stdout_buf,).is_ok());
+        assert!(!SYSINFO_REGEX_INST.is_match(&String::from_utf8_lossy(&stdout_buf)));
+    }
+
     #[cfg(feature = "rustc")]
     fn check_rustc_output(stdout: &[u8]) {
         assert!(RUSTC_REGEX.is_match(&String::from_utf8_lossy(&stdout)));
+    }
+
+    #[cfg(feature = "rustc")]
+    fn check_no_rustc_output(stdout: &[u8]) {
+        assert!(!RUSTC_REGEX.is_match(&String::from_utf8_lossy(&stdout)));
     }
 
     #[cfg(feature = "build")]
