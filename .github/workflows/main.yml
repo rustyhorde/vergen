@@ -1,4 +1,11 @@
-on: [push, pull_request]
+on:
+  # Trigger the workflow on push to master or any pull request
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - '*'
 
 name: CI
 
