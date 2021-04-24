@@ -64,6 +64,8 @@ vergen(config)?;
 #[derive(Clone, Copy, Debug, Getters, MutGetters)]
 #[getset(get = "pub(crate)", get_mut = "pub")]
 pub struct Build {
+    /// Enable/Disable the build output
+    enabled: bool,
     /// Enable/Disable the `VERGEN_BUILD_DATE`, `VERGEN_BUILD_TIME`, and `VERGEN_BUILD_TIMESTAMP` instructions.
     timestamp: bool,
     /// The timezone to use for the date/time instructions.
@@ -78,6 +80,7 @@ pub struct Build {
 impl Default for Build {
     fn default() -> Self {
         Self {
+            enabled: true,
             timestamp: true,
             timezone: TimeZone::Utc,
             kind: TimestampKind::Timestamp,
@@ -89,7 +92,7 @@ impl Default for Build {
 #[cfg(feature = "build")]
 impl Build {
     pub(crate) fn has_enabled(self) -> bool {
-        self.timestamp || self.semver
+        self.enabled && (self.timestamp || self.semver)
     }
 }
 
@@ -194,6 +197,13 @@ mod test {
         assert_eq!(config.build().kind(), &TimestampKind::Timestamp);
         *config.build_mut().kind_mut() = TimestampKind::All;
         assert_eq!(config.build().kind(), &TimestampKind::All);
+    }
+
+    #[test]
+    fn not_enabled() {
+        let mut config = Instructions::default();
+        *config.build_mut().enabled_mut() = false;
+        assert!(!config.build().has_enabled());
     }
 }
 

@@ -56,6 +56,8 @@ vergen(config)?;
 #[derive(Clone, Copy, Debug, Getters, MutGetters)]
 #[getset(get = "pub(crate)", get_mut = "pub")]
 pub struct Cargo {
+    /// Enable/Disable the cargo output
+    enabled: bool,
     /// Enable/Disable the `VERGEN_CARGO_FEATURES` instruction
     features: bool,
     /// Enable/Disable the `VERGEN_CARGO_PROFILE` instruction
@@ -68,6 +70,7 @@ pub struct Cargo {
 impl Default for Cargo {
     fn default() -> Self {
         Self {
+            enabled: true,
             features: true,
             profile: true,
             target_triple: true,
@@ -78,7 +81,7 @@ impl Default for Cargo {
 #[cfg(feature = "cargo")]
 impl Cargo {
     pub(crate) fn has_enabled(self) -> bool {
-        self.features || self.profile || self.target_triple
+        self.enabled && (self.features || self.profile || self.target_triple)
     }
 }
 
@@ -163,6 +166,13 @@ mod test {
         config.cargo_mut().features = false;
         assert!(!config.cargo().features);
         teardown();
+    }
+
+    #[test]
+    fn not_enabled() {
+        let mut config = Instructions::default();
+        *config.cargo_mut().enabled_mut() = false;
+        assert!(!config.cargo().has_enabled());
     }
 }
 

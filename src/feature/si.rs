@@ -68,6 +68,8 @@ vergen(config)?;
 #[getset(get = "pub(crate)", get_mut = "pub")]
 #[allow(clippy::struct_excessive_bools)]
 pub struct Sysinfo {
+    /// Enable/Disable the sysinfo output
+    enabled: bool,
     /// Enable/Disable the `VERGEN_SYSINFO_NAME` instruction
     name: bool,
     /// Enable/Disable the `VERGEN_SYSINFO_OS_VERSION` instruction
@@ -92,6 +94,7 @@ pub struct Sysinfo {
 impl Default for Sysinfo {
     fn default() -> Self {
         Self {
+            enabled: true,
             name: true,
             os_version: true,
             user: true,
@@ -108,15 +111,16 @@ impl Default for Sysinfo {
 #[cfg(feature = "si")]
 impl Sysinfo {
     pub(crate) fn has_enabled(self) -> bool {
-        self.name
-            || self.os_version
-            || self.user
-            || self.memory
-            || self.cpu_vendor
-            || self.cpu_core_count
-            || self.cpu_name
-            || self.cpu_brand
-            || self.cpu_frequency
+        self.enabled
+            && (self.name
+                || self.os_version
+                || self.user
+                || self.memory
+                || self.cpu_vendor
+                || self.cpu_core_count
+                || self.cpu_name
+                || self.cpu_brand
+                || self.cpu_frequency)
     }
 }
 
@@ -330,6 +334,13 @@ mod test {
         assert_eq!("MB", suffix(1));
         assert_eq!("GB", suffix(2));
         assert_eq!("xB", suffix(3));
+    }
+
+    #[test]
+    fn not_enabled() {
+        let mut config = Instructions::default();
+        *config.sysinfo_mut().enabled_mut() = false;
+        assert!(!config.sysinfo().has_enabled());
     }
 }
 
