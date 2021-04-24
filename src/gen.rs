@@ -426,6 +426,7 @@ mod test {
 
     #[cfg(feature = "cargo")]
     #[test]
+    #[serial_test::serial]
     fn contains_no_cargo_output() {
         setup();
         let repo_path = PathBuf::from(".");
