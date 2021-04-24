@@ -4,10 +4,11 @@ on:
   push:
     branches:
       - master
+    tags-ignore: '*'
   pull_request:
     branches:
       - '*'
-  tags-ignore: '*'
+    tags-ignore: '*'
 
 name: CI
 
