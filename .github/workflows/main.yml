@@ -1,11 +1,13 @@
 on:
   # Trigger the workflow on push to master or any pull request
+  # Ignore all tags
   push:
     branches:
       - master
   pull_request:
     branches:
       - '*'
+  tags-ignore: '*'
 
 name: CI
 
