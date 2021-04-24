@@ -202,6 +202,51 @@ mod test {
         *config.rustc_mut().enabled_mut() = false;
         assert!(!config.rustc().has_enabled());
     }
+
+    #[test]
+    fn no_channel() {
+        let mut config = Instructions::default();
+        *config.rustc_mut().channel_mut() = false;
+        assert!(config.rustc().has_enabled());
+    }
+
+    #[test]
+    fn no_commit_date() {
+        let mut config = Instructions::default();
+        *config.rustc_mut().channel_mut() = false;
+        *config.rustc_mut().commit_date_mut() = false;
+        assert!(config.rustc().has_enabled());
+    }
+
+    #[test]
+    fn no_host_triple() {
+        let mut config = Instructions::default();
+        *config.rustc_mut().channel_mut() = false;
+        *config.rustc_mut().commit_date_mut() = false;
+        *config.rustc_mut().host_triple_mut() = false;
+        assert!(config.rustc().has_enabled());
+    }
+
+    #[test]
+    fn no_llvm_version() {
+        let mut config = Instructions::default();
+        *config.rustc_mut().channel_mut() = false;
+        *config.rustc_mut().commit_date_mut() = false;
+        *config.rustc_mut().host_triple_mut() = false;
+        *config.rustc_mut().llvm_version_mut() = false;
+        assert!(config.rustc().has_enabled());
+    }
+
+    #[test]
+    fn nothing() {
+        let mut config = Instructions::default();
+        *config.rustc_mut().channel_mut() = false;
+        *config.rustc_mut().commit_date_mut() = false;
+        *config.rustc_mut().host_triple_mut() = false;
+        *config.rustc_mut().llvm_version_mut() = false;
+        *config.rustc_mut().sha_mut() = false;
+        assert!(!config.rustc().has_enabled());
+    }
 }
 
 #[cfg(all(test, not(feature = "rustc")))]

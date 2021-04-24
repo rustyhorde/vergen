@@ -174,6 +174,30 @@ mod test {
         *config.cargo_mut().enabled_mut() = false;
         assert!(!config.cargo().has_enabled());
     }
+
+    #[test]
+    fn no_features() {
+        let mut config = Instructions::default();
+        *config.cargo_mut().features_mut() = false;
+        assert!(config.cargo().has_enabled());
+    }
+
+    #[test]
+    fn no_profile() {
+        let mut config = Instructions::default();
+        *config.cargo_mut().features_mut() = false;
+        *config.cargo_mut().profile_mut() = false;
+        assert!(config.cargo().has_enabled());
+    }
+
+    #[test]
+    fn nothing() {
+        let mut config = Instructions::default();
+        *config.cargo_mut().features_mut() = false;
+        *config.cargo_mut().profile_mut() = false;
+        *config.cargo_mut().target_triple_mut() = false;
+        assert!(!config.cargo().has_enabled());
+    }
 }
 
 #[cfg(all(test, not(feature = "cargo")))]

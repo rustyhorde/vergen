@@ -205,6 +205,21 @@ mod test {
         *config.build_mut().enabled_mut() = false;
         assert!(!config.build().has_enabled());
     }
+
+    #[test]
+    fn no_timestamp() {
+        let mut config = Instructions::default();
+        *config.build_mut().timestamp_mut() = false;
+        assert!(config.build().has_enabled());
+    }
+
+    #[test]
+    fn nothing() {
+        let mut config = Instructions::default();
+        *config.build_mut().timestamp_mut() = false;
+        *config.build_mut().semver_mut() = false;
+        assert!(!config.build().has_enabled());
+    }
 }
 
 #[cfg(all(test, not(feature = "build")))]

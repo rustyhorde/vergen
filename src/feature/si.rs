@@ -342,6 +342,104 @@ mod test {
         *config.sysinfo_mut().enabled_mut() = false;
         assert!(!config.sysinfo().has_enabled());
     }
+
+    #[test]
+    fn no_name() {
+        let mut config = Instructions::default();
+        *config.sysinfo_mut().name_mut() = false;
+        assert!(config.sysinfo().has_enabled());
+    }
+
+    #[test]
+    fn no_os_version() {
+        let mut config = Instructions::default();
+        *config.sysinfo_mut().name_mut() = false;
+        *config.sysinfo_mut().os_version_mut() = false;
+        assert!(config.sysinfo().has_enabled());
+    }
+
+    #[test]
+    fn no_user() {
+        let mut config = Instructions::default();
+        *config.sysinfo_mut().name_mut() = false;
+        *config.sysinfo_mut().os_version_mut() = false;
+        *config.sysinfo_mut().user_mut() = false;
+        assert!(config.sysinfo().has_enabled());
+    }
+
+    #[test]
+    fn no_memory() {
+        let mut config = Instructions::default();
+        *config.sysinfo_mut().name_mut() = false;
+        *config.sysinfo_mut().os_version_mut() = false;
+        *config.sysinfo_mut().user_mut() = false;
+        *config.sysinfo_mut().memory_mut() = false;
+        assert!(config.sysinfo().has_enabled());
+    }
+    #[test]
+    fn no_cpu_vendor() {
+        let mut config = Instructions::default();
+        *config.sysinfo_mut().name_mut() = false;
+        *config.sysinfo_mut().os_version_mut() = false;
+        *config.sysinfo_mut().user_mut() = false;
+        *config.sysinfo_mut().memory_mut() = false;
+        *config.sysinfo_mut().cpu_vendor_mut() = false;
+        assert!(config.sysinfo().has_enabled());
+    }
+
+    #[test]
+    fn no_cpu_core_count() {
+        let mut config = Instructions::default();
+        *config.sysinfo_mut().name_mut() = false;
+        *config.sysinfo_mut().os_version_mut() = false;
+        *config.sysinfo_mut().user_mut() = false;
+        *config.sysinfo_mut().memory_mut() = false;
+        *config.sysinfo_mut().cpu_vendor_mut() = false;
+        *config.sysinfo_mut().cpu_core_count_mut() = false;
+        assert!(config.sysinfo().has_enabled());
+    }
+
+    #[test]
+    fn no_cpu_name() {
+        let mut config = Instructions::default();
+        *config.sysinfo_mut().name_mut() = false;
+        *config.sysinfo_mut().os_version_mut() = false;
+        *config.sysinfo_mut().user_mut() = false;
+        *config.sysinfo_mut().memory_mut() = false;
+        *config.sysinfo_mut().cpu_vendor_mut() = false;
+        *config.sysinfo_mut().cpu_core_count_mut() = false;
+        *config.sysinfo_mut().cpu_name_mut() = false;
+        assert!(config.sysinfo().has_enabled());
+    }
+
+    #[test]
+    fn no_cpu_brand() {
+        let mut config = Instructions::default();
+        *config.sysinfo_mut().name_mut() = false;
+        *config.sysinfo_mut().os_version_mut() = false;
+        *config.sysinfo_mut().user_mut() = false;
+        *config.sysinfo_mut().memory_mut() = false;
+        *config.sysinfo_mut().cpu_vendor_mut() = false;
+        *config.sysinfo_mut().cpu_core_count_mut() = false;
+        *config.sysinfo_mut().cpu_name_mut() = false;
+        *config.sysinfo_mut().cpu_brand_mut() = false;
+        assert!(config.sysinfo().has_enabled());
+    }
+
+    #[test]
+    fn nothing() {
+        let mut config = Instructions::default();
+        *config.sysinfo_mut().name_mut() = false;
+        *config.sysinfo_mut().os_version_mut() = false;
+        *config.sysinfo_mut().user_mut() = false;
+        *config.sysinfo_mut().memory_mut() = false;
+        *config.sysinfo_mut().cpu_vendor_mut() = false;
+        *config.sysinfo_mut().cpu_core_count_mut() = false;
+        *config.sysinfo_mut().cpu_name_mut() = false;
+        *config.sysinfo_mut().cpu_brand_mut() = false;
+        *config.sysinfo_mut().cpu_frequency_mut() = false;
+        assert!(!config.sysinfo().has_enabled());
+    }
 }
 
 #[cfg(all(test, not(feature = "si")))]

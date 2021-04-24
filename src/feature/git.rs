@@ -389,6 +389,51 @@ mod test {
         *config.git_mut().enabled_mut() = false;
         assert!(!config.git().has_enabled());
     }
+
+    #[test]
+    fn no_branch() {
+        let mut config = Instructions::default();
+        *config.git_mut().branch_mut() = false;
+        assert!(config.git().has_enabled());
+    }
+
+    #[test]
+    fn no_timestamp() {
+        let mut config = Instructions::default();
+        *config.git_mut().branch_mut() = false;
+        *config.git_mut().commit_timestamp_mut() = false;
+        assert!(config.git().has_enabled());
+    }
+
+    #[test]
+    fn no_rerun_on_head_change() {
+        let mut config = Instructions::default();
+        *config.git_mut().branch_mut() = false;
+        *config.git_mut().commit_timestamp_mut() = false;
+        *config.git_mut().rerun_on_head_change_mut() = false;
+        assert!(config.git().has_enabled());
+    }
+
+    #[test]
+    fn no_semver() {
+        let mut config = Instructions::default();
+        *config.git_mut().branch_mut() = false;
+        *config.git_mut().commit_timestamp_mut() = false;
+        *config.git_mut().rerun_on_head_change_mut() = false;
+        *config.git_mut().semver_mut() = false;
+        assert!(config.git().has_enabled());
+    }
+
+    #[test]
+    fn nothing() {
+        let mut config = Instructions::default();
+        *config.git_mut().branch_mut() = false;
+        *config.git_mut().commit_timestamp_mut() = false;
+        *config.git_mut().rerun_on_head_change_mut() = false;
+        *config.git_mut().semver_mut() = false;
+        *config.git_mut().sha_mut() = false;
+        assert!(!config.git().has_enabled());
+    }
 }
 
 #[cfg(all(test, not(feature = "git")))]
