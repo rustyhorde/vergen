@@ -19,8 +19,8 @@ use {
         feature::{self, add_entry, TimestampKind},
     },
     chrono::{DateTime, FixedOffset, Local, TimeZone, Utc},
-    getset::{Getters, MutGetters},
-    git2::{BranchType, DescribeOptions, Repository},
+    getset::{CopyGetters, Getters, MutGetters},
+    git2::{BranchType, DescribeFormatOptions, DescribeOptions, Repository},
     std::env,
 };
 
@@ -70,6 +70,7 @@ pub enum ShaKind {
 /// * **NOTE** - The SHA defaults to the [`Normal`](ShaKind::Normal) variant, but can be changed via the `sha_kind` field.
 /// * **NOTE** - The [SemVer] defaults to the [`Normal`](SemverKind::Normal) variant, but can be changed via the `semver_kind` field.
 /// * **NOTE** - The [SemVer] is only useful if you have tags on your repository.  If your repository has no tags, this will default to [`CARGO_PKG_VERSION`].
+/// * **NOTE** - You can add a `-dirty` flag to the [SemVer] output via the `semver_dirty` field.
 /// * **NOTE** - The [`Lightweight`](SemverKind::Lightweight) variant will only differ from the [`Normal`](SemverKind::Normal) variant if you use [lightweight] tags in your repository.
 /// * **NOTE** - By default, the date/time related instructions will use [`UTC`](crate::TimeZone::Utc).
 /// * **NOTE** - The date/time instruction output is determined by the [`kind`](crate::TimestampKind) field and can be any combination of the three.
@@ -91,6 +92,8 @@ pub enum ShaKind {
 *config.git_mut().sha_kind_mut() = ShaKind::Short;
 // Change the SEMVER output to the lightweight variant
 *config.git_mut().semver_kind_mut() = SemverKind::Lightweight;
+// Add a `-dirty` flag to the SEMVER output
+*config.git_mut().semver_dirty_mut() = Some("-dirty");
 
 // Generate the instructions
 vergen(config)?;
@@ -105,28 +108,41 @@ vergen(config)?;
 /// [`CARGO_PKG_VERSION`]: https://doc.rust-lang.org/cargo/reference/environment-variables.html#environment-variables-cargo-sets-for-crates
 ///
 #[cfg(feature = "git")]
-#[derive(Clone, Copy, Debug, Getters, MutGetters)]
-#[getset(get = "pub(crate)", get_mut = "pub")]
+#[derive(Clone, Copy, Debug, CopyGetters, Getters, MutGetters)]
+#[getset(get_mut = "pub")]
 pub struct Git {
     /// Enable/Disable the git output
+    #[getset(get = "pub(crate)")]
     enabled: bool,
     /// Enable/Disable the `VERGEN_GIT_BRANCH` instruction
+    #[getset(get = "pub(crate)")]
     branch: bool,
     /// Enable/Disable the `VERGEN_GIT_COMMIT_DATE`, `VERGEN_GIT_COMMIT_TIME`, and `VERGEN_GIT_COMMIT_TIMESTAMP` instructions
+    #[getset(get = "pub(crate)")]
     commit_timestamp: bool,
     /// The timezone to use for the date/time instructions.
+    #[getset(get = "pub(crate)")]
     commit_timestamp_timezone: feature::TimeZone,
     /// The kind of date/time instructions to output.
+    #[getset(get = "pub(crate)")]
     commit_timestamp_kind: TimestampKind,
     /// Enable/Disable the `cargo:rerun-if-changed` instructions
+    #[getset(get = "pub(crate)")]
     rerun_on_head_change: bool,
     /// Enable/Disable the `VERGEN_GIT_SEMVER` instruction
+    #[getset(get = "pub(crate)")]
     semver: bool,
     /// The kind of semver instruction to output.
+    #[getset(get = "pub(crate)")]
     semver_kind: SemverKind,
+    /// Enable/Disable the `-dirty` flag on `VERGEN_GIT_SEMVER*` output
+    #[getset(get_copy = "pub(crate)")]
+    semver_dirty: Option<&'static str>,
     /// Enable/Disable the `VERGEN_GIT_SHA` instruction
+    #[getset(get = "pub(crate)")]
     sha: bool,
     /// The kind of SHA instruction to output.
+    #[getset(get = "pub(crate)")]
     sha_kind: ShaKind,
 }
 
@@ -142,6 +158,7 @@ impl Default for Git {
             rerun_on_head_change: true,
             semver: true,
             semver_kind: SemverKind::Normal,
+            semver_dirty: None,
             sha: true,
             sha_kind: ShaKind::Normal,
         }
@@ -236,15 +253,16 @@ where
             }
 
             if *git_config.semver() {
+                let dirty = git_config.semver_dirty();
                 match *git_config.semver_kind() {
                     crate::SemverKind::Normal => {
-                        add_semver(&repo, &DescribeOptions::new(), false, config)
+                        add_semver(&repo, &DescribeOptions::new(), false, dirty, config)
                     }
                     crate::SemverKind::Lightweight => {
                         let mut opts = DescribeOptions::new();
                         let _ = opts.describe_tags();
 
-                        add_semver(&repo, &opts, true, config);
+                        add_semver(&repo, &opts, true, dirty, config);
                     }
                 }
             }
@@ -347,17 +365,28 @@ fn add_branch_name(repo: &Repository, config: &mut Config) -> Result<()> {
 }
 
 #[cfg(feature = "git")]
-fn add_semver(repo: &Repository, opts: &DescribeOptions, lw: bool, config: &mut Config) {
+fn add_semver(
+    repo: &Repository,
+    opts: &DescribeOptions,
+    lw: bool,
+    dirty: Option<&'static str>,
+    config: &mut Config,
+) {
     let key = if lw {
         VergenKey::SemverLightweight
     } else {
         VergenKey::Semver
     };
+    let mut format_opts = DescribeFormatOptions::new();
+    if let Some(dirty_text) = dirty {
+        let _ = format_opts.dirty_suffix(dirty_text);
+    };
+
     let semver: Option<String> = repo
         .describe(opts)
         .map_or_else(
             |_| env::var("CARGO_PKG_VERSION").map_err(Error::from),
-            |x| x.format(None).map_err(Error::from),
+            |x| x.format(Some(&format_opts)).map_err(Error::from),
         )
         .ok();
     add_entry(config.cfg_map_mut(), key, semver);
