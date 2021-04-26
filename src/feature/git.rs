@@ -56,7 +56,9 @@ pub enum ShaKind {
 /// | `cargo:rustc-env=VERGEN_GIT_COMMIT_TIME=01:54:15` | |
 /// | `cargo:rustc-env=VERGEN_GIT_COMMIT_TIMESTAMP=2021-02-12T01:54:15.134750+00:00` | * |
 /// | `cargo:rustc-env=VERGEN_GIT_SEMVER=v3.2.0-86-g95fc0f5d` | * |
+/// | `cargo:rustc-env=VERGEN_GIT_SEMVER_LIGHTWEIGHT=feature-test` | |
 /// | `cargo:rustc-env=VERGEN_GIT_SHA=95fc0f5d066710f16e0c23ce3239d6e040abca0d` | * |
+/// | `cargo:rustc-env=VERGEN_GIT_SHA_SHORT=95fc0f5` | |
 /// | `cargo:rerun-if-changed=/Users/yoda/projects/rust-lang/vergen/.git/HEAD` | * |
 /// | `cargo:rerun-if-changed=/Users/yoda/projects/rust-lang/vergen/.git/refs/heads/feature/git2` | * |
 ///
@@ -78,7 +80,7 @@ pub enum ShaKind {
 /// ```
 /// # use anyhow::Result;
 /// use vergen::{vergen, Config};
-#[cfg_attr(feature = "git", doc = r##"use vergen::ShaKind;"##)]
+#[cfg_attr(feature = "git", doc = r##"use vergen::{ShaKind, SemverKind};"##)]
 ///
 /// # pub fn main() -> Result<()> {
 /// let mut config = Config::default();
@@ -87,6 +89,8 @@ pub enum ShaKind {
     doc = r##"
 // Change the SHA output to the short variant
 *config.git_mut().sha_kind_mut() = ShaKind::Short;
+// Change the SEMVER output to the lightweight variant
+*config.git_mut().semver_kind_mut() = SemverKind::Lightweight;
 
 // Generate the instructions
 vergen(config)?;

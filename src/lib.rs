@@ -110,7 +110,9 @@
 //! | `VERGEN_GIT_COMMIT_TIME` | 20:55:21 |
 //! | `VERGEN_GIT_COMMIT_TIMESTAMP` | 2021-02-24T20:55:21+00:00 |
 //! | `VERGEN_GIT_SEMVER` | 5.0.0-2-gf49246c |
+//! | `VERGEN_GIT_SEMVER_LIGHTWEIGHT` | feature-test |
 //! | `VERGEN_GIT_SHA` | f49246ce334567bff9f950bfd0f3078184a2738a |
+//! | `VERGEN_GIT_SHA_SHORT` | f49246c |
 //! | See [`Rustc`](crate::Rustc) to configure the following |
 //! | `VERGEN_RUSTC_CHANNEL` | nightly |
 //! | `VERGEN_RUSTC_COMMIT_DATE` | 2021-02-24 |
@@ -138,7 +140,7 @@
 //! 1. Ensure you have build scripts enabled via the `build` configuration in your `Cargo.toml`
 //! 1. Add `vergen` as a build dependency, optionally disabling default features in your `Cargo.toml`
 //! 1. Create a `build.rs` file that uses `vergen` to generate `cargo:` instructions.
-//! 1. Use the `env!` macro in your code
+//! 1. Use the [`env!`](std::env!) or [`option_env!`](std::option_env!) macro in your code
 //!
 //! ### Cargo.toml
 //! ```toml

@@ -156,22 +156,22 @@ pub(crate) enum VergenKey {
     BuildTimestamp,
     /// The build semver. (VERGEN_BUILD_SEMVER)
     BuildSemver,
-    /// The current working branch name (VERGEN_BRANCH)
+    /// The current working branch name (VERGEN_GIT_BRANCH)
     Branch,
-    /// The commit date. (VERGEN_COMMIT_DATE)
+    /// The commit date. (VERGEN_GIT_COMMIT_DATE)
     CommitDate,
-    /// The commit time. (VERGEN_COMMIT_TIME)
+    /// The commit time. (VERGEN_GIT_COMMIT_TIME)
     CommitTime,
-    /// The commit timestamp. (VERGEN_COMMIT_TIMESTAMP)
+    /// The commit timestamp. (VERGEN_GIT_COMMIT_TIMESTAMP)
     CommitTimestamp,
-    /// The semver version from the last git tag. (VERGEN_SEMVER)
+    /// The semver version from the last git tag. (VERGEN_GIT_SEMVER)
     Semver,
     /// The semver version from the last git tag, including lightweight.
-    /// (VERGEN_SEMVER_LIGHTWEIGHT)
+    /// (VERGEN_GIT_SEMVER_LIGHTWEIGHT)
     SemverLightweight,
-    /// The latest commit SHA. (VERGEN_SHA)
+    /// The latest commit SHA. (VERGEN_GIT_SHA)
     Sha,
-    /// The latest commit short SHA. (VERGEN_SHA_SHORT)
+    /// The latest commit short SHA. (VERGEN_GIT_SHA_SHORT)
     ShortSha,
     /// The release channel of the rust compiler. (VERGEN_RUSTC_CHANNEL)
     RustcChannel,
