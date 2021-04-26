@@ -680,4 +680,16 @@ mod test {
         *config.git_mut().semver_kind_mut() = SemverKind::Lightweight;
         assert!(config_from_instructions(config, Some(repo_path), &mut stdout_buf,).is_ok());
     }
+
+    #[cfg(feature = "git")]
+    #[test]
+    fn git_dirty() {
+        use super::config_from_instructions;
+
+        let repo_path = PathBuf::from(".");
+        let mut stdout_buf = vec![];
+        let mut config = Instructions::default();
+        *config.git_mut().semver_dirty_mut() = Some("-dirty");
+        assert!(config_from_instructions(config, Some(repo_path), &mut stdout_buf,).is_ok());
+    }
 }
