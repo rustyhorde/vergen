@@ -276,7 +276,6 @@ where
                     }
                 }
             }
-
             *config.head_path_mut() = Some(repo_path.join("HEAD"));
         }
     }
