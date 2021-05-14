@@ -270,17 +270,14 @@ where
             if let Ok(resolved) = ref_head.resolve() {
                 if let Some(name) = resolved.name() {
                     let path = repo_path.join(name);
+                    // Check whether the path exists in the filesystem before emitting it
                     if path.exists() {
-                        *config.ref_path_mut() = Some(repo_path.join(name));
+                        *config.ref_path_mut() = Some(path);
                     }
                 }
             }
 
-            // Check whether the path exists in the filesystem before emitting it
-            let head_path = repo_path.join("HEAD");
-            if head_path.exists() {
-                *config.head_path_mut() = Some(repo_path.join("HEAD"));
-            }
+            *config.head_path_mut() = Some(repo_path.join("HEAD"));
         }
     }
     Ok(())
