@@ -198,7 +198,6 @@
     dead_code,
     deprecated,
     deprecated_in_future,
-    disjoint_capture_drop_reorder,
     drop_bounds,
     elided_lifetimes_in_paths,
     ellipsis_inclusive_range_patterns,
