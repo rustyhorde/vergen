@@ -298,8 +298,6 @@
         unaligned_references,
     )
 )]
-// beta or stable only lints
-#![cfg_attr(any(beta_lints, stable_lints), deny(safe_packed_borrows))]
 // stable only lints
 #![cfg_attr(
     stable_lints,
