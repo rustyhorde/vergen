@@ -269,7 +269,11 @@ where
 
             if let Ok(resolved) = ref_head.resolve() {
                 if let Some(name) = resolved.name() {
-                    *config.ref_path_mut() = Some(repo_path.join(name));
+                    let path = repo_path.join(name);
+                    // Check whether the path exists in the filesystem before emitting it
+                    if path.exists() {
+                        *config.ref_path_mut() = Some(path);
+                    }
                 }
             }
             *config.head_path_mut() = Some(repo_path.join("HEAD"));
