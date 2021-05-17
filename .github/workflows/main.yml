@@ -48,8 +48,8 @@ jobs:
           override: true
           components: clippy
       - run: cargo clippy --all -- -D warnings
-  test:
-    name: vergen
+  test-linux:
+    name: 🧪 Linux 🧪
     needs: lints
     runs-on: ${{ matrix.os }}
     strategy:
@@ -73,6 +73,62 @@ jobs:
         - os: ubuntu-latest
           rust: nightly
           target: x86_64-unknown-linux-gnu
+    steps:
+      - name: ✔️ Checkout ✔️
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: 💵 Cache 💵
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/bin/cargo-tarpaulin*
+            ~/.cargo/bin/cargo-*-all-features*
+          key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.toml') }}
+      - uses: actions-rs/toolchain@v1
+        name: 🧰 Toolchain 🧰
+        with:
+          profile: minimal
+          toolchain: ${{ matrix.rust }}
+          target: ${{ matrix.target }}
+          override: true
+      - name: ✔️ Checkout (notagsrepo master) ✔️
+        run: cd testdata/notagsrepo && git checkout master && cd ..
+      - name: ✔️ Checkout (tagsrepo master) ✔️
+        run: cd testdata/tagsrepo && git checkout master && cd ..
+      - name: ✔️ Checkout (detachedhead v0.0.1) ✔️
+        run: cd testdata/detachedhead && git checkout v0.0.1 && cd ..
+      - name: 🐕 Fetch 🐕
+        run: git submodule foreach --recursive 'git fetch --tags'
+      - name: 💾 Install (cargo-tarpaulin) 💾
+        uses: actions-rs/install@v0.1
+        with:
+          crate: cargo-tarpaulin
+          version: latest
+          use-tool-cache: true
+        continue-on-error: true
+      - name: 💾 Install (cargo-all-features) 💾
+        uses: actions-rs/install@v0.1
+        with:
+          crate: cargo-all-features
+          version: latest
+          use-tool-cache: true
+        continue-on-error: true
+      - name: 🧪 Test 🧪
+        run: cargo test-all-features
+      - name: 🙊 Code Coverage 🙊
+        run: cargo tarpaulin --out Xml
+      - name: 🙊 Upload Code Coverage 🙊
+        uses: codecov/codecov-action@v1
+        with:
+          files: ./cobertura.xml
+  test-macos:
+    name: 🧪 MacOS 🧪
+    needs: lints
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
         - os: macos-latest
           rust: stable
           target: x86_64-apple-darwin
@@ -91,6 +147,49 @@ jobs:
         - os: macos-latest
           rust: nightly
           target: x86_64-apple-ios
+    steps:
+      - name: ✔️ Checkout ✔️
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: 💵 Cache 💵
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/bin/cargo-*-all-features*
+          key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.toml') }}
+      - uses: actions-rs/toolchain@v1
+        name: 🧰 Toolchain 🧰
+        with:
+          profile: minimal
+          toolchain: ${{ matrix.rust }}
+          target: ${{ matrix.target }}
+          override: true
+      - name: ✔️ Checkout (notagsrepo master) ✔️
+        run: cd testdata/notagsrepo && git checkout master && cd ..
+      - name: ✔️ Checkout (tagsrepo master) ✔️
+        run: cd testdata/tagsrepo && git checkout master && cd ..
+      - name: ✔️ Checkout (detachedhead v0.0.1) ✔️
+        run: cd testdata/detachedhead && git checkout v0.0.1 && cd ..
+      - name: 🐕 Fetch 🐕
+        run: git submodule foreach --recursive 'git fetch --tags'
+      - name: 💾 Install (cargo-all-features) 💾
+        uses: actions-rs/install@v0.1
+        with:
+          crate: cargo-all-features
+          version: latest
+          use-tool-cache: true
+        continue-on-error: true
+      - name: 🧪 Test 🧪
+        run: cargo test-all-features
+  test-windows:
+    name: 🧪 Windows 🧪
+    if: ${{ false }}
+    needs: lints
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
         - os: windows-latest
           rust: stable-msvc
           target: i686-pc-windows-msvc
@@ -136,7 +235,6 @@ jobs:
         uses: actions/cache@v2
         with:
           path: |
-            ~/.cargo/bin/cargo-tarpaulin*
             ~/.cargo/bin/cargo-*-all-features*
           key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.toml') }}
       - uses: actions-rs/toolchain@v1
@@ -154,14 +252,6 @@ jobs:
         run: cd testdata/detachedhead && git checkout v0.0.1 && cd ..
       - name: 🐕 Fetch 🐕
         run: git submodule foreach --recursive 'git fetch --tags'
-      - name: 💾 Install (cargo-tarpaulin) 💾
-        uses: actions-rs/install@v0.1
-        if: matrix.os == 'ubuntu-latest'
-        with:
-          crate: cargo-tarpaulin
-          version: latest
-          use-tool-cache: true
-        continue-on-error: true
       - name: 💾 Install (cargo-all-features) 💾
         uses: actions-rs/install@v0.1
         with:
@@ -171,11 +261,3 @@ jobs:
         continue-on-error: true
       - name: 🧪 Test 🧪
         run: cargo test-all-features
-      - name: 🙊 Code Coverage 🙊
-        if: matrix.os == 'ubuntu-latest'
-        run: cargo tarpaulin --out Xml
-      - name: 🙊 Upload Code Coverage 🙊
-        uses: codecov/codecov-action@v1
-        if: matrix.os == 'ubuntu-latest'
-        with:
-          files: ./cobertura.xml
