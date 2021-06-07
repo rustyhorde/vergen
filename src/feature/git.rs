@@ -223,10 +223,10 @@ where
 
                     match git_config.commit_timestamp_timezone() {
                         crate::TimeZone::Utc => {
-                            add_config_entries(config, *git_config, &offset.with_timezone(&Utc))
+                            add_config_entries(config, *git_config, &offset.with_timezone(&Utc));
                         }
                         crate::TimeZone::Local => {
-                            add_config_entries(config, *git_config, &offset.with_timezone(&Local))
+                            add_config_entries(config, *git_config, &offset.with_timezone(&Local));
                         }
                     }
                 }
@@ -256,7 +256,7 @@ where
                 let dirty = git_config.semver_dirty();
                 match *git_config.semver_kind() {
                     crate::SemverKind::Normal => {
-                        add_semver(&repo, &DescribeOptions::new(), false, dirty, config)
+                        add_semver(&repo, &DescribeOptions::new(), false, dirty, config);
                     }
                     crate::SemverKind::Lightweight => {
                         let mut opts = DescribeOptions::new();

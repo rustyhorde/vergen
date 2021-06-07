@@ -206,7 +206,7 @@ pub(crate) fn configure_sysinfo(instructions: Instructions, config: &mut Config)
                     .get_processors()
                     .get(0)
                     .map(|processor| processor.get_vendor_id().to_string()),
-            )
+            );
         }
 
         if *sysinfo_config.cpu_core_count() {
