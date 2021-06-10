@@ -189,39 +189,39 @@ jobs:
     strategy:
       matrix:
         include:
-        # - os: windows-latest
-        #   rust: stable-msvc
-        #   target: i686-pc-windows-msvc
-        # - os: windows-latest
-        #   rust: stable-msvc
-        #   target: x86_64-pc-windows-msvc
-        # - os: windows-latest
-        #   rust: beta-msvc
-        #   target: i686-pc-windows-msvc
-        # - os: windows-latest
-        #   rust: beta-msvc
-        #   target: x86_64-pc-windows-msvc
-        # - os: windows-latest
-        #   rust: nightly-msvc
-        #   target: i686-pc-windows-msvc
+        - os: windows-latest
+          rust: stable-msvc
+          target: i686-pc-windows-msvc
+        - os: windows-latest
+          rust: stable-msvc
+          target: x86_64-pc-windows-msvc
+        - os: windows-latest
+          rust: beta-msvc
+          target: i686-pc-windows-msvc
+        - os: windows-latest
+          rust: beta-msvc
+          target: x86_64-pc-windows-msvc
+        - os: windows-latest
+          rust: nightly-msvc
+          target: i686-pc-windows-msvc
         - os: windows-latest
           rust: nightly-msvc
           target: x86_64-pc-windows-msvc
-        # - os: windows-latest
-        #   rust: stable-gnu
-        #   target: i686-pc-windows-gnu
-        # - os: windows-latest
-        #   rust: stable-gnu
-        #   target: x86_64-pc-windows-gnu
-        # - os: windows-latest
-        #   rust: beta-gnu
-        #   target: i686-pc-windows-gnu
-        # - os: windows-latest
-        #   rust: beta-gnu
-        #   target: x86_64-pc-windows-gnu
-        # - os: windows-latest
-        #   rust: nightly-gnu
-        #   target: i686-pc-windows-gnu
+        - os: windows-latest
+          rust: stable-gnu
+          target: i686-pc-windows-gnu
+        - os: windows-latest
+          rust: stable-gnu
+          target: x86_64-pc-windows-gnu
+        - os: windows-latest
+          rust: beta-gnu
+          target: i686-pc-windows-gnu
+        - os: windows-latest
+          rust: beta-gnu
+          target: x86_64-pc-windows-gnu
+        - os: windows-latest
+          rust: nightly-gnu
+          target: i686-pc-windows-gnu
         - os: windows-latest
           rust: nightly-gnu
           target: x86_64-pc-windows-gnu
