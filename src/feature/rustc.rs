@@ -150,7 +150,7 @@ pub(crate) fn configure_rustc(instructions: Instructions, config: &mut Config) -
             add_entry(
                 config.cfg_map_mut(),
                 VergenKey::RustcCommitHash,
-                rustc.commit_hash,
+                Some(rustc.commit_hash.unwrap_or_else(|| "unknown".to_string())),
             );
         }
 
@@ -158,7 +158,7 @@ pub(crate) fn configure_rustc(instructions: Instructions, config: &mut Config) -
             add_entry(
                 config.cfg_map_mut(),
                 VergenKey::RustcCommitDate,
-                rustc.commit_date,
+                Some(rustc.commit_date.unwrap_or_else(|| "unknown".to_string())),
             );
         }
 
