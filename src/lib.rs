@@ -215,6 +215,7 @@
     irrefutable_let_patterns,
     keyword_idents,
     late_bound_lifetime_arguments,
+    legacy_derive_helpers,
     macro_use_extern_crate,
     meta_variable_misuse,
     missing_abi,
@@ -231,10 +232,13 @@
     non_snake_case,
     non_upper_case_globals,
     nontrivial_structural_match,
+    noop_method_call,
+    or_patterns_back_compat,
     overlapping_range_endpoints,
     path_statements,
     pointer_structural_match,
     private_in_public,
+    proc_macro_back_compat,
     proc_macro_derive_resolution_fallback,
     redundant_semicolons,
     renamed_and_removed_lints,
@@ -257,6 +261,7 @@
     unreachable_patterns,
     unreachable_pub,
     unsafe_code,
+    unsafe_op_in_unsafe_fn,
     unstable_features,
     unstable_name_collisions,
     unsupported_naked_functions,
@@ -286,18 +291,14 @@
     while_true
 )]
 // nightly only lints
-#![cfg_attr(nightly_lints, deny(or_patterns_back_compat))]
+#![cfg_attr(nightly_lints, deny(future_prelude_collision, reserved_prefix))]
 // nightly or beta only lints
 #![cfg_attr(
     any(beta_lints, nightly_lints),
-    deny(
-        legacy_derive_helpers,
-        noop_method_call,
-        proc_macro_back_compat,
-        unsafe_op_in_unsafe_fn,
-        unaligned_references,
-    )
+    deny(disjoint_capture_migration, invalid_doc_attributes)
 )]
+// stable only lints
+#![cfg_attr(stable_lints, deny(disjoint_capture_drop_reorder))]
 // clippy lints
 #![deny(clippy::all, clippy::pedantic)]
 #![allow(clippy::copy_iterator)]
