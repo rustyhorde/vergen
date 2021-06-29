@@ -163,13 +163,13 @@ pub(crate) fn configure_sysinfo(instructions: Instructions, config: &mut Config)
                 if #[cfg(target_os = "macos")] {
                 } else {
                     let pid = get_current_pid().map_err(|e| Pid { msg: e })?;
-                    if let Some(process) = system.get_process(pid) {
-                        for user in system.get_users() {
+                    if let Some(process) = system.process(pid) {
+                        for user in system.users() {
                             if check_user(process, user) {
                                 add_entry(
                                     config.cfg_map_mut(),
                                     VergenKey::SysinfoUser,
-                                    Some(user.get_name().to_string()),
+                                    Some(user.name().to_string()),
                                 );
                             }
                         }
@@ -262,7 +262,7 @@ pub(crate) fn configure_sysinfo(_instructions: Instructions, _config: &mut Confi
 
 #[cfg(all(feature = "si", not(target_os = "windows"), not(target_os = "macos")))]
 fn check_user(process: &Process, user: &User) -> bool {
-    *user.get_uid() == process.uid
+    *user.uid() == process.uid
 }
 
 #[cfg(all(feature = "si", target_os = "windows"))]
