@@ -298,36 +298,19 @@
         unaligned_references,
     )
 )]
-// stable only lints
-#![cfg_attr(
-    stable_lints,
-    deny(
-        broken_intra_doc_links,
-        invalid_codeblock_attributes,
-        invalid_html_tags,
-        missing_crate_level_docs,
-        missing_doc_code_examples,
-        non_autolinks,
-        // private_doc_tests,
-        private_intra_doc_links,
-    )
-)]
 // clippy lints
 #![deny(clippy::all, clippy::pedantic)]
 #![allow(clippy::copy_iterator)]
 // rustdoc lints
-#![cfg_attr(
-    any(nightly_lints, beta_lints),
-    deny(
-        rustdoc::bare_urls,
-        rustdoc::broken_intra_doc_links,
-        rustdoc::invalid_codeblock_attributes,
-        rustdoc::invalid_html_tags,
-        rustdoc::missing_crate_level_docs,
-        rustdoc::missing_doc_code_examples,
-        // rustdoc::private_doc_tests,
-        rustdoc::private_intra_doc_links,
-    )
+#![deny(
+    rustdoc::bare_urls,
+    rustdoc::broken_intra_doc_links,
+    rustdoc::invalid_codeblock_attributes,
+    rustdoc::invalid_html_tags,
+    rustdoc::missing_crate_level_docs,
+    rustdoc::missing_doc_code_examples,
+    // rustdoc::private_doc_tests,
+    rustdoc::private_intra_doc_links,
 )]
 
 mod config;
