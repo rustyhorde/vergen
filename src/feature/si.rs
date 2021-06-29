@@ -147,18 +147,14 @@ pub(crate) fn configure_sysinfo(instructions: Instructions, config: &mut Config)
         let system = setup_system();
 
         if *sysinfo_config.name() {
-            add_entry(
-                config.cfg_map_mut(),
-                VergenKey::SysinfoName,
-                system.get_name(),
-            );
+            add_entry(config.cfg_map_mut(), VergenKey::SysinfoName, system.name());
         }
 
         if *sysinfo_config.os_version() {
             add_entry(
                 config.cfg_map_mut(),
                 VergenKey::SysinfoOsVersion,
-                system.get_long_os_version(),
+                system.long_os_version(),
             );
         }
 
@@ -183,7 +179,7 @@ pub(crate) fn configure_sysinfo(instructions: Instructions, config: &mut Config)
         }
 
         if *sysinfo_config.memory() {
-            let mut curr_memory = system.get_total_memory();
+            let mut curr_memory = system.total_memory();
             let mut count = 0;
 
             while curr_memory > 1000 {
@@ -203,9 +199,9 @@ pub(crate) fn configure_sysinfo(instructions: Instructions, config: &mut Config)
                 config.cfg_map_mut(),
                 VergenKey::SysinfoCpuVendor,
                 system
-                    .get_processors()
+                    .processors()
                     .get(0)
-                    .map(|processor| processor.get_vendor_id().to_string()),
+                    .map(|processor| processor.vendor_id().to_string()),
             );
         }
 
@@ -213,7 +209,7 @@ pub(crate) fn configure_sysinfo(instructions: Instructions, config: &mut Config)
             add_entry(
                 config.cfg_map_mut(),
                 VergenKey::SysinfoCpuCoreCount,
-                system.get_physical_core_count().map(|x| x.to_string()),
+                system.physical_core_count().map(|x| x.to_string()),
             );
         }
 
@@ -223,9 +219,9 @@ pub(crate) fn configure_sysinfo(instructions: Instructions, config: &mut Config)
                 VergenKey::SysinfoCpuName,
                 Some(
                     system
-                        .get_processors()
+                        .processors()
                         .iter()
-                        .map(|p| p.get_name())
+                        .map(|p| p.name())
                         .collect::<Vec<&str>>()
                         .join(","),
                 ),
@@ -237,9 +233,9 @@ pub(crate) fn configure_sysinfo(instructions: Instructions, config: &mut Config)
                 config.cfg_map_mut(),
                 VergenKey::SysinfoCpuBrand,
                 system
-                    .get_processors()
+                    .processors()
                     .get(0)
-                    .map(|processor| processor.get_brand().to_string()),
+                    .map(|processor| processor.brand().to_string()),
             );
         }
 
@@ -248,9 +244,9 @@ pub(crate) fn configure_sysinfo(instructions: Instructions, config: &mut Config)
                 config.cfg_map_mut(),
                 VergenKey::SysinfoCpuFrequency,
                 system
-                    .get_processors()
+                    .processors()
                     .get(0)
-                    .map(|processor| processor.get_frequency().to_string()),
+                    .map(|processor| processor.frequency().to_string()),
             );
         }
     }
