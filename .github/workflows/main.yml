@@ -33,10 +33,19 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os:
-          - ubuntu-latest
-          - macos-latest
-          - windows-latest
+        include:
+          - os: ubuntu-latest
+            rust: "1.52.0"
+          - os: ubuntu-latest
+            rust: stable
+          - os: ubuntu-latest
+            rust: beta
+          - os: ubuntu-latest
+            rust: nightly
+          - os: macos-latest
+            rust: stable
+          - os: windows-latest
+            rust: stable
     steps:
       - uses: actions/checkout@v2
         with:
@@ -44,7 +53,7 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: stable
+          toolchain: ${{ matrix.rust }}
           override: true
           components: clippy
       - run: cargo clippy --all -- -D warnings
@@ -56,13 +65,16 @@ jobs:
       matrix:
         include:
         - os: ubuntu-latest
-          rust: stable
+          rust: "1.52.0"
           target: i686-unknown-linux-gnu
         - os: ubuntu-latest
           rust: stable
-          target: x86_64-unknown-linux-gnu
+          target: i686-unknown-linux-gnu
         - os: ubuntu-latest
           rust: "1.52.0"
+          target: x86_64-unknown-linux-gnu
+        - os: ubuntu-latest
+          rust: stable
           target: x86_64-unknown-linux-gnu
         - os: ubuntu-latest
           rust: beta
@@ -133,8 +145,14 @@ jobs:
       matrix:
         include:
         - os: macos-latest
+          rust: "1.52.0"
+          target: x86_64-apple-darwin
+        - os: macos-latest
           rust: stable
           target: x86_64-apple-darwin
+        - os: macos-latest
+          rust: "1.52.0"
+          target: x86_64-apple-ios
         - os: macos-latest
           rust: stable
           target: x86_64-apple-ios
@@ -193,8 +211,14 @@ jobs:
       matrix:
         include:
         - os: windows-latest
+          rust: 1.52.0-msvc
+          target: i686-pc-windows-msvc
+        - os: windows-latest
           rust: stable-msvc
           target: i686-pc-windows-msvc
+        - os: windows-latest
+          rust: 1.52.0-stable-msvc
+          target: x86_64-pc-windows-msvc
         - os: windows-latest
           rust: stable-msvc
           target: x86_64-pc-windows-msvc
@@ -210,9 +234,15 @@ jobs:
         - os: windows-latest
           rust: nightly-msvc
           target: x86_64-pc-windows-msvc
+        - os: windows-latest
+          rust: 1.52.0-stable-gnu
+          target: i686-pc-windows-gnu
         - os: windows-latest
           rust: stable-gnu
           target: i686-pc-windows-gnu
+        - os: windows-latest
+          rust: 1.52.0-stable-gnu
+          target: x86_64-pc-windows-gnu
         - os: windows-latest
           rust: stable-gnu
           target: x86_64-pc-windows-gnu
