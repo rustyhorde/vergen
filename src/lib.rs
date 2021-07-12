@@ -313,8 +313,8 @@
 #![cfg_attr(stable_lints, deny(disjoint_capture_drop_reorder))]
 // clippy lints
 #![deny(clippy::all, clippy::pedantic)]
-#![allow(clippy::copy_iterator, clippy::default_trait_access)]
-#![cfg_attr(nightly_lints, allow(clippy::nonstandard_macro_braces))]
+#![cfg_attr(nightly_lints, deny(clippy::nonstandard_macro_braces))]
+#![cfg_attr(nightly_lints, allow(clippy::copy_iterator))]
 // rustdoc lints
 #![deny(
     rustdoc::bare_urls,
