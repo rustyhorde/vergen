@@ -217,7 +217,7 @@ jobs:
           rust: stable-msvc
           target: i686-pc-windows-msvc
         - os: windows-latest
-          rust: 1.52.0-stable-msvc
+          rust: 1.52.0-msvc
           target: x86_64-pc-windows-msvc
         - os: windows-latest
           rust: stable-msvc
@@ -235,13 +235,13 @@ jobs:
           rust: nightly-msvc
           target: x86_64-pc-windows-msvc
         - os: windows-latest
-          rust: 1.52.0-stable-gnu
+          rust: 1.52.0-gnu
           target: i686-pc-windows-gnu
         - os: windows-latest
           rust: stable-gnu
           target: i686-pc-windows-gnu
         - os: windows-latest
-          rust: 1.52.0-stable-gnu
+          rust: 1.52.0-gnu
           target: x86_64-pc-windows-gnu
         - os: windows-latest
           rust: stable-gnu
