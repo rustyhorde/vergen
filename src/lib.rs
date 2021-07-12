@@ -320,7 +320,7 @@
 // clippy lints
 #![cfg_attr(msrv, deny(clippy::all, clippy::pedantic))]
 #![cfg_attr(all(msrv, nightly_lints), deny(clippy::nonstandard_macro_braces))]
-#![cfg_attr(all(msrv, nightly_lints), allow(clippy::copy_iterator))]
+#![cfg_attr(msrv, allow(clippy::copy_iterator))]
 // rustdoc lints
 #![cfg_attr(msrv, deny(
     rustdoc::bare_urls,
