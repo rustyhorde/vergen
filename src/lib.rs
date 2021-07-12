@@ -227,13 +227,11 @@
     no_mangle_generic_items,
     non_ascii_idents,
     non_camel_case_types,
-    non_fmt_panic,
     non_shorthand_field_patterns,
     non_snake_case,
     non_upper_case_globals,
     nontrivial_structural_match,
     noop_method_call,
-    or_patterns_back_compat,
     overlapping_range_endpoints,
     path_statements,
     pointer_structural_match,
@@ -291,17 +289,32 @@
     while_true
 )]
 // nightly only lints
-#![cfg_attr(nightly_lints, deny(future_prelude_collision, reserved_prefix))]
-// nightly or beta only lints
 #![cfg_attr(
-    any(beta_lints, nightly_lints),
-    deny(disjoint_capture_migration, invalid_doc_attributes)
+    nightly_lints,
+    deny(
+        non_fmt_panics,
+        rust_2021_incompatible_closure_captures,
+        rust_2021_incompatible_or_patterns,
+        rust_2021_prefixes_incompatible_syntax,
+        rust_2021_prelude_collisions,
+        unsupported_calling_conventions,
+    )
+)]
+// nightly or beta only lints
+#![cfg_attr(any(beta_lints, nightly_lints), deny(invalid_doc_attributes))]
+// beta only lints
+#![cfg_attr(beta_lints, deny(disjoint_capture_migration))]
+// beta or stable only lints
+#![cfg_attr(
+    any(beta_lints, stable_lints),
+    deny(non_fmt_panic, or_patterns_back_compat)
 )]
 // stable only lints
 #![cfg_attr(stable_lints, deny(disjoint_capture_drop_reorder))]
 // clippy lints
 #![deny(clippy::all, clippy::pedantic)]
-#![allow(clippy::copy_iterator)]
+#![allow(clippy::copy_iterator, clippy::default_trait_access)]
+#![cfg_attr(nightly_lints, allow(clippy::nonstandard_macro_braces))]
 // rustdoc lints
 #![deny(
     rustdoc::bare_urls,
