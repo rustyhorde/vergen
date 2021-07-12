@@ -12,6 +12,7 @@ pub fn main() {
     nightly_lints();
     beta_lints();
     stable_lints();
+    msrv_lints();
 }
 
 #[rustversion::nightly]
@@ -37,3 +38,11 @@ fn stable_lints() {
 
 #[rustversion::not(stable)]
 fn stable_lints() {}
+
+#[rustversion::before(1.53)]
+fn msrv_lints() {}
+
+#[rustversion::since(1.53)]
+fn msrv_lints() {
+    println!("cargo:rustc-cfg=msrv");
+}
