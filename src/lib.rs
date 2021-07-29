@@ -292,31 +292,33 @@
     )
 )]
 // nightly only lints
+// #![cfg_attr(
+//     all(msrv, nightly_lints),
+//     deny()
+// )]
+// nightly or beta only lints
 #![cfg_attr(
-    all(msrv, nightly_lints),
+    all(msrv, any(beta_lints, nightly_lints)),
     deny(
+        dyn_drop,
         non_fmt_panics,
         rust_2021_incompatible_closure_captures,
         rust_2021_incompatible_or_patterns,
         rust_2021_prefixes_incompatible_syntax,
         rust_2021_prelude_collisions,
         unsupported_calling_conventions,
+        invalid_doc_attributes
     )
 )]
-// nightly or beta only lints
-#![cfg_attr(
-    all(msrv, any(beta_lints, nightly_lints)),
-    deny(invalid_doc_attributes)
-)]
 // beta only lints
-#![cfg_attr(all(msrv, beta_lints), deny(disjoint_capture_migration))]
+// #![cfg_attr(all(msrv, beta_lints), deny())]
 // beta or stable only lints
-#![cfg_attr(
-    all(msrv, any(beta_lints, stable_lints)),
-    deny(non_fmt_panic, or_patterns_back_compat)
-)]
+// #![cfg_attr( all(msrv, any(beta_lints, stable_lints)), deny())]
 // stable only lints
-#![cfg_attr(all(msrv, stable_lints), deny(disjoint_capture_drop_reorder))]
+#![cfg_attr(
+    all(msrv, stable_lints),
+    deny(non_fmt_panic, or_patterns_back_compat, disjoint_capture_migration)
+)]
 // clippy lints
 #![cfg_attr(msrv, deny(clippy::all, clippy::pedantic))]
 #![cfg_attr(all(msrv, nightly_lints), deny(clippy::nonstandard_macro_braces))]
