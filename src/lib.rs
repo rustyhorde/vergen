@@ -161,7 +161,7 @@
 //! ### build.rs
 //! **NOTE** - Individual instruction generation can be toggled on or off via [`Config`](crate::Config)
 //! ```
-//! # use anyhow::Result;
+//! use anyhow::Result;
 //! use vergen::{Config, vergen};
 //!
 //! fn main() -> Result<()> {
