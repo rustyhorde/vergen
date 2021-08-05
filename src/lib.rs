@@ -213,6 +213,7 @@
         incomplete_features,
         indirect_structural_match,
         inline_no_sanitize,
+        invalid_doc_attributes,
         invalid_value,
         irrefutable_let_patterns,
         keyword_idents,
@@ -292,10 +293,7 @@
     )
 )]
 // nightly only lints
-// #![cfg_attr(
-//     all(msrv, nightly_lints),
-//     deny()
-// )]
+#![cfg_attr(all(msrv, nightly_lints), deny(break_with_label_and_loop))]
 // nightly or beta only lints
 #![cfg_attr(
     all(msrv, any(beta_lints, nightly_lints)),
@@ -307,7 +305,6 @@
         rust_2021_prefixes_incompatible_syntax,
         rust_2021_prelude_collisions,
         unsupported_calling_conventions,
-        invalid_doc_attributes
     )
 )]
 // beta only lints
@@ -317,7 +314,7 @@
 // stable only lints
 #![cfg_attr(
     all(msrv, stable_lints),
-    deny(non_fmt_panic, or_patterns_back_compat, disjoint_capture_migration)
+    deny(disjoint_capture_migration, non_fmt_panic, or_patterns_back_compat)
 )]
 // clippy lints
 #![cfg_attr(msrv, deny(clippy::all, clippy::pedantic))]
