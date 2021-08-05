@@ -1,5 +1,5 @@
 # vergen
-Generate `build`, `git`, `rustc`, `cargo`, and `sysinfo` related 'cargo:rustc-env' instructions via 'build.rs' for use in your code via the [`env!`](https://doc.rust-lang.org/std/macro.env.html) macro or [`option_env!`](https://doc.rust-lang.org/std/macro.option_env.html) macro.
+Generate `build`, `git`, `rustc`, `cargo`, and `sysinfo` related [`cargo:rustc-env`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rustc-env) instructions via [`build.rs`](https://doc.rust-lang.org/cargo/reference/build-scripts.html) for use in your code via the [`env!`](https://doc.rust-lang.org/std/macro.env.html) macro or [`option_env!`](https://doc.rust-lang.org/std/macro.option_env.html) macro.
 
 ## Current Release
 [![docs.rs](https://docs.rs/vergen/badge.svg)](https://docs.rs/vergen)
