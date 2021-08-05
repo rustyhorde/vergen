@@ -7,7 +7,8 @@ Generate `build`, `git`, `rustc`, `cargo`, and `sysinfo` related [`cargo:rustc-e
 [![Crates.io](https://img.shields.io/crates/l/vergen.svg)](https://crates.io/crates/vergen)
 [![Crates.io](https://img.shields.io/crates/d/vergen.svg)](https://crates.io/crates/vergen)
 [![codecov](https://codecov.io/gh/rustyhorde/vergen/branch/master/graph/badge.svg?token=cBXro7o2UN)](https://codecov.io/gh/rustyhorde/vergen)
-![CI](https://github.com/rustyhorde/vergen/actions/workflows/main.yml/badge.svg)
+[![CI](https://github.com/rustyhorde/vergen/actions/workflows/main.yml/badge.svg)](https://github.com/rustyhorde/vergen/actions)
+[![sponsor](https://img.shields.io/github/sponsors/crazysacx?logo=github-sponsors)](https://github.com/sponsors/CraZySacX)
 
 ## Example Usage
 See the documentation at [docs.rs](https://docs.rs/vergen) for example usage
