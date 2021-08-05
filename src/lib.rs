@@ -292,10 +292,7 @@
     )
 )]
 // nightly only lints
-// #![cfg_attr(
-//     all(msrv, nightly_lints),
-//     deny()
-// )]
+#![cfg_attr(all(msrv, nightly_lints), deny(break_with_label_and_loop))]
 // nightly or beta only lints
 #![cfg_attr(
     all(msrv, any(beta_lints, nightly_lints)),
@@ -313,7 +310,7 @@
 // beta only lints
 // #![cfg_attr(all(msrv, beta_lints), deny())]
 // beta or stable only lints
-// #![cfg_attr( all(msrv, any(beta_lints, stable_lints)), deny())]
+// #![cfg_attr(all(msrv, any(beta_lints, stable_lints)), deny())]
 // stable only lints
 #![cfg_attr(
     all(msrv, stable_lints),
