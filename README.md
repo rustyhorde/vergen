@@ -1,5 +1,5 @@
 # vergen
-Generate build, git, and rustc related 'cargo:rustc-env' instructions via 'build.rs' for use in your code via the env! macro
+Generate `build`, `git`, `rustc`, `cargo`, and `sysinfo` related 'cargo:rustc-env' instructions via 'build.rs' for use in your code via the [`env!`](https://doc.rust-lang.org/std/macro.env.html) macro or [`option_env!`](https://doc.rust-lang.org/std/macro.option_env.html) macro.
 
 ## Current Release
 [![docs.rs](https://docs.rs/vergen/badge.svg)](https://docs.rs/vergen)
@@ -11,10 +11,6 @@ Generate build, git, and rustc related 'cargo:rustc-env' instructions via 'build
 
 ## Example Usage
 See the documentation at [docs.rs](https://docs.rs/vergen) for example usage
-
-## Release 5 Breaking Changes
-* The main entry point for use has changed from `gen` to `vergen`
-* The old `ConstantsFlags` has been removed in lieu of `Config`.
 
 ## Environment Variables
 A full list of environment variables that can be generated are listed in the following table.
