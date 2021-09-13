@@ -293,7 +293,7 @@
     )
 )]
 // nightly only lints
-// #![cfg_attr(all(msrv, nightly_lints), deny(break_with_label_and_loop))]
+// #![cfg_attr(all(msrv, nightly_lints), deny())]
 // nightly or beta only lints
 #![cfg_attr(
     all(msrv, any(beta_lints, nightly_lints)),
@@ -302,12 +302,9 @@
 // beta only lints
 // #![cfg_attr(all(msrv, beta_lints), deny())]
 // beta or stable only lints
-// #![cfg_attr( all(msrv, any(beta_lints, stable_lints)), deny())]
+// #![cfg_attr(all(msrv, any(beta_lints, stable_lints)), deny())]
 // stable only lints
-// #![cfg_attr(
-//     all(msrv, stable_lints),
-//     deny(disjoint_capture_migration, non_fmt_panic, or_patterns_back_compat)
-// )]
+// #![cfg_attr(all(msrv, stable_lints),deny())]
 // clippy lints
 #![cfg_attr(msrv, deny(clippy::all, clippy::pedantic))]
 #![cfg_attr(msrv, allow(clippy::copy_iterator))]
