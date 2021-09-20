@@ -293,7 +293,7 @@
     )
 )]
 // nightly only lints
-// #![cfg_attr(all(msrv, nightly_lints), deny())]
+#![cfg_attr(all(msrv, nightly_lints), deny(non_exhaustive_omitted_patterns))]
 // nightly or beta only lints
 #![cfg_attr(
     all(msrv, any(beta_lints, nightly_lints)),
