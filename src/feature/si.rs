@@ -221,7 +221,7 @@ pub(crate) fn configure_sysinfo(instructions: Instructions, config: &mut Config)
                     system
                         .processors()
                         .iter()
-                        .map(|p| p.name())
+                        .map(ProcessorExt::name)
                         .collect::<Vec<&str>>()
                         .join(","),
                 ),
