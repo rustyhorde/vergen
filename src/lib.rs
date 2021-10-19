@@ -293,11 +293,11 @@
     )
 )]
 // nightly only lints
-#![cfg_attr(all(msrv, nightly_lints), deny(must_not_suspend))]
+// #![cfg_attr(all(msrv, nightly_lints), deny())]
 // nightly or beta only lints
 #![cfg_attr(
     all(msrv, any(beta_lints, nightly_lints)),
-    deny(break_with_label_and_loop)
+    deny(break_with_label_and_loop, deref_into_dyn_supertrait, must_not_suspend,)
 )]
 // beta only lints
 // #![cfg_attr(all(msrv, beta_lints), deny())]
