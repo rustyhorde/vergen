@@ -111,7 +111,7 @@ pub struct Instructions {
     sysinfo: Sysinfo,
 }
 
-#[cfg_attr(nightly_lints, allow(clippy::derivable_impls))]
+#[cfg_attr(any(beta_lints, nightly_lints), allow(clippy::derivable_impls))]
 impl Default for Instructions {
     fn default() -> Self {
         Self {
