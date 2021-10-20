@@ -23,7 +23,7 @@ si = ["sysinfo"]
 [dependencies]
 anyhow = "1"
 cfg-if = "1"
-chrono = { version = "0", optional = true }
+chrono = { version = "0", optional = true, default-features = false }
 enum-iterator = "0"
 getset = "0"
 git2 = { version = "0", optional = true, default-features = false }
