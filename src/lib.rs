@@ -191,6 +191,7 @@
         bare_trait_objects,
         bindings_with_variant_name,
         box_pointers,
+        break_with_label_and_loop,
         cenum_impl_drop_cast,
         clashing_extern_declarations,
         coherence_leak_check,
@@ -297,7 +298,11 @@
 // nightly or beta only lints
 #![cfg_attr(
     all(msrv, any(beta_lints, nightly_lints)),
-    deny(break_with_label_and_loop, deref_into_dyn_supertrait, must_not_suspend,)
+    deny(
+        deref_into_dyn_supertrait,
+        proc_macro_back_compat,
+        proc_macro_derive_resolution_fallback
+    )
 )]
 // beta only lints
 // #![cfg_attr(all(msrv, beta_lints), deny())]
