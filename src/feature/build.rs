@@ -97,7 +97,7 @@ impl Build {
 }
 
 #[cfg(feature = "build")]
-pub(crate) fn configure_build(instructions: Instructions, config: &mut Config) {
+pub(crate) fn configure_build(instructions: &Instructions, config: &mut Config) {
     let build_config = instructions.build();
 
     if build_config.has_enabled() {
@@ -180,7 +180,7 @@ where
 }
 
 #[cfg(not(feature = "build"))]
-pub(crate) fn configure_build(_instructions: Instructions, _config: &mut Config) {}
+pub(crate) fn configure_build(_instructions: &Instructions, _config: &mut Config) {}
 
 #[cfg(all(test, feature = "build"))]
 mod test {

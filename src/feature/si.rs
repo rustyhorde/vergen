@@ -141,7 +141,7 @@ fn setup_system() -> System {
 
 #[cfg(feature = "si")]
 #[allow(clippy::unnecessary_wraps, clippy::too_many_lines)]
-pub(crate) fn configure_sysinfo(instructions: Instructions, config: &mut Config) -> Result<()> {
+pub(crate) fn configure_sysinfo(instructions: &Instructions, config: &mut Config) -> Result<()> {
     let sysinfo_config = instructions.sysinfo();
     if sysinfo_config.has_enabled() {
         let system = setup_system();
@@ -256,7 +256,7 @@ pub(crate) fn configure_sysinfo(instructions: Instructions, config: &mut Config)
 
 #[cfg(not(feature = "si"))]
 #[allow(clippy::unnecessary_wraps)]
-pub(crate) fn configure_sysinfo(_instructions: Instructions, _config: &mut Config) -> Result<()> {
+pub(crate) fn configure_sysinfo(_instructions: &Instructions, _config: &mut Config) -> Result<()> {
     Ok(())
 }
 

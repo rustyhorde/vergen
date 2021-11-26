@@ -10,8 +10,6 @@
 
 use crate::config::{Config, Instructions, VergenKey};
 use anyhow::Result;
-#[cfg(feature = "git")]
-use std::env;
 use std::{
     io::{self, Write},
     path::Path,
@@ -66,7 +64,14 @@ pub fn vergen(config: crate::Config) -> Result<()> {
 /// ```
 #[cfg(feature = "git")]
 pub fn vergen(config: crate::Config) -> Result<()> {
-    config_from_instructions(config, Some(env::current_dir()?), &mut io::stdout())
+    if *config.git().enabled() {
+        let base_git_dir = config.git().base_dir().clone();
+        config_from_instructions(config, base_git_dir, &mut io::stdout())
+    } else {
+        // This is here to help with type inference
+        let no_repo: Option<&'static str> = None;
+        config_from_instructions(config, no_repo, &mut io::stdout())
+    }
 }
 
 fn config_from_instructions<T, U>(

@@ -91,7 +91,8 @@ use std::{
 "##
 )]
 /// ```
-#[derive(Clone, Copy, Debug, Getters, MutGetters)]
+#[derive(Clone, Debug, Getters, MutGetters)]
+#[cfg_attr(not(feature = "git"), derive(Copy))]
 #[getset(get = "pub(crate)", get_mut = "pub")]
 pub struct Instructions {
     /// Use this to modify the [`Build`] feature configuration.
@@ -136,11 +137,11 @@ impl Instructions {
     {
         let mut config = Config::default();
 
-        configure_build(self, &mut config);
-        configure_git(self, repo_path, &mut config)?;
-        configure_rustc(self, &mut config)?;
-        configure_cargo(self, &mut config);
-        configure_sysinfo(self, &mut config)?;
+        configure_build(&self, &mut config);
+        configure_git(&self, repo_path, &mut config)?;
+        configure_rustc(&self, &mut config)?;
+        configure_cargo(&self, &mut config);
+        configure_sysinfo(&self, &mut config)?;
 
         Ok(config)
     }

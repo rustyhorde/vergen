@@ -109,7 +109,7 @@ impl Rustc {
 }
 
 #[cfg(feature = "rustc")]
-pub(crate) fn configure_rustc(instructions: Instructions, config: &mut Config) -> Result<()> {
+pub(crate) fn configure_rustc(instructions: &Instructions, config: &mut Config) -> Result<()> {
     let rustc_config = instructions.rustc();
     if rustc_config.has_enabled() {
         let rustc = version_meta()?;
@@ -176,7 +176,7 @@ pub(crate) fn configure_rustc(instructions: Instructions, config: &mut Config) -
 }
 
 #[cfg(not(feature = "rustc"))]
-pub(crate) fn configure_rustc(_instructions: Instructions, _config: &mut Config) -> Result<()> {
+pub(crate) fn configure_rustc(_instructions: &Instructions, _config: &mut Config) -> Result<()> {
     Ok(())
 }
 
