@@ -318,6 +318,18 @@ mod test {
     }
 
     #[test]
+    #[serial_test::serial]
+    #[cfg(feature = "git")]
+    fn vergen_base_dir() -> Result<()> {
+        setup();
+        let mut inst = Instructions::default();
+        *inst.git_mut().enabled_mut() = false;
+        assert!(vergen(inst).is_ok());
+        teardown();
+        Ok(())
+    }
+
+    #[test]
     fn describe_falls_back() -> Result<()> {
         let no_tags_path = PathBuf::from("testdata").join("notagsrepo");
         assert!(config_from_instructions(
