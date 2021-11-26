@@ -21,7 +21,7 @@ use {
     chrono::{DateTime, FixedOffset, Local, TimeZone, Utc},
     getset::{CopyGetters, Getters, MutGetters},
     git2::{BranchType, DescribeFormatOptions, DescribeOptions, Repository},
-    std::env,
+    std::{env, path::PathBuf},
 };
 
 /// The semver kind to output
@@ -108,12 +108,15 @@ vergen(config)?;
 /// [`CARGO_PKG_VERSION`]: https://doc.rust-lang.org/cargo/reference/environment-variables.html#environment-variables-cargo-sets-for-crates
 ///
 #[cfg(feature = "git")]
-#[derive(Clone, Copy, Debug, CopyGetters, Getters, MutGetters)]
+#[derive(Clone, Debug, CopyGetters, Getters, MutGetters)]
 #[getset(get_mut = "pub")]
 pub struct Git {
     /// Enable/Disable the git output
     #[getset(get = "pub(crate)")]
     enabled: bool,
+    /// Optional git base directory
+    #[getset(get = "pub(crate)")]
+    base_dir: Option<PathBuf>,
     /// Enable/Disable the `VERGEN_GIT_BRANCH` instruction
     #[getset(get = "pub(crate)")]
     branch: bool,
@@ -149,8 +152,14 @@ pub struct Git {
 #[cfg(feature = "git")]
 impl Default for Git {
     fn default() -> Self {
+        let base_dir = if let Ok(dir) = env::current_dir() {
+            Some(dir)
+        } else {
+            None
+        };
         Self {
             enabled: true,
+            base_dir,
             branch: true,
             commit_timestamp: true,
             commit_timestamp_timezone: feature::TimeZone::Utc,
@@ -179,7 +188,7 @@ impl Git {
 
 #[cfg(not(feature = "git"))]
 pub(crate) fn configure_git<T>(
-    _instructions: Instructions,
+    _instructions: &Instructions,
     _repo: Option<T>,
     _config: &mut Config,
 ) -> Result<()>
@@ -191,7 +200,7 @@ where
 
 #[cfg(feature = "git")]
 pub(crate) fn configure_git<T>(
-    instructions: Instructions,
+    instructions: &Instructions,
     repo_path_opt: Option<T>,
     config: &mut Config,
 ) -> Result<()>
@@ -223,10 +232,10 @@ where
 
                     match git_config.commit_timestamp_timezone() {
                         crate::TimeZone::Utc => {
-                            add_config_entries(config, *git_config, &offset.with_timezone(&Utc));
+                            add_config_entries(config, git_config, &offset.with_timezone(&Utc));
                         }
                         crate::TimeZone::Local => {
-                            add_config_entries(config, *git_config, &offset.with_timezone(&Local));
+                            add_config_entries(config, git_config, &offset.with_timezone(&Local));
                         }
                     }
                 }
@@ -283,7 +292,7 @@ where
 }
 
 #[cfg(feature = "git")]
-fn add_config_entries<T>(config: &mut Config, git_config: Git, now: &DateTime<T>)
+fn add_config_entries<T>(config: &mut Config, git_config: &Git, now: &DateTime<T>)
 where
     T: TimeZone,
     T::Offset: std::fmt::Display,

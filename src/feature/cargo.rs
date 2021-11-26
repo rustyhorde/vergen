@@ -96,7 +96,7 @@ fn is_cargo_feature(var: (String, String)) -> Option<String> {
 }
 
 #[cfg(feature = "cargo")]
-pub(crate) fn configure_cargo(instructions: Instructions, config: &mut Config) {
+pub(crate) fn configure_cargo(instructions: &Instructions, config: &mut Config) {
     let cargo_config = instructions.cargo();
 
     if cargo_config.has_enabled() {
@@ -130,7 +130,7 @@ pub(crate) fn configure_cargo(instructions: Instructions, config: &mut Config) {
 }
 
 #[cfg(not(feature = "cargo"))]
-pub(crate) fn configure_cargo(_instructions: Instructions, _config: &mut Config) {}
+pub(crate) fn configure_cargo(_instructions: &Instructions, _config: &mut Config) {}
 
 #[cfg(all(test, feature = "cargo"))]
 mod test {
