@@ -112,7 +112,7 @@ pub struct Instructions {
     sysinfo: Sysinfo,
 }
 
-#[allow(clippy::derivable_impls)]
+#[cfg_attr(msrv, allow(clippy::derivable_impls))]
 impl Default for Instructions {
     fn default() -> Self {
         Self {
