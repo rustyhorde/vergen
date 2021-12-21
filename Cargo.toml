@@ -14,16 +14,16 @@ version = "6.0.0"
 
 [features]
 default = ["build", "cargo", "git", "rustc", "si"]
-build = ["chrono"]
+build = ["time"]
 cargo = []
-git = ["chrono", "git2"]
+git = ["git2", "time"]
 rustc = ["rustc_version"]
 si = ["sysinfo"]
 
 [dependencies]
 anyhow = "1"
 cfg-if = "1"
-chrono = { version = "0", optional = true, default-features = false }
+time = { version = "0.3", optional = true, features = ["local-offset", "formatting", "macros"] }
 enum-iterator = "0"
 getset = "0"
 git2 = { version = "0", optional = true, default-features = false }
@@ -32,7 +32,7 @@ sysinfo = { version = "=0.19", optional = true, default-features = false }
 thiserror = "1"
 
 [build-dependencies]
-chrono = "0"
+time = { version = "0.3", features = ["formatting"] }
 rustversion = "1"
 
 [dev-dependencies]

@@ -1,12 +1,13 @@
-use chrono::Utc;
+use time::format_description;
 
 pub fn main() {
     println!("cargo:rerun-if-changed=build.rs");
     // These are here so some doc tests work
-    let now = Utc::now();
+    let now = time::OffsetDateTime::now_utc();
     println!(
         "cargo:rustc-env=VERGEN_BUILD_TIMESTAMP={}",
-        now.to_rfc3339()
+        now.format(&format_description::well_known::Rfc3339)
+            .unwrap()
     );
     println!("cargo:rustc-env=VERGEN_GIT_SEMVER=v3.2.0-86-g95fc0f5");
     nightly_lints();
