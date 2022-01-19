@@ -8,22 +8,14 @@
 
 //! `vergen` git feature implementation
 
-use crate::config::{Config, Instructions};
-use anyhow::Result;
-use std::path::Path;
 #[cfg(feature = "git")]
 use {
-    crate::{
-        config::VergenKey,
-        error::Error,
-        feature::{self, add_entry, TimestampKind},
-    },
+    crate::feature::{self, add_entry, TimestampKind},
     getset::{CopyGetters, Getters, MutGetters},
-    git2::{BranchType, DescribeFormatOptions, DescribeOptions, Repository},
     std::{env, path::PathBuf},
     time::{
         format_description::{self, well_known::Rfc3339},
-        OffsetDateTime, UtcOffset,
+        OffsetDateTime,
     },
 };
 
@@ -191,130 +183,55 @@ impl Git {
     }
 }
 
-#[cfg(not(feature = "git"))]
+#[cfg(not(any(feature = "gitoxide", feature = "git")))]
 pub(crate) fn configure_git<T>(
-    _instructions: &Instructions,
+    _instructions: &crate::config::Instructions,
     _repo: Option<T>,
-    _config: &mut Config,
-) -> Result<()>
+    _config: &mut crate::config::Config,
+) -> anyhow::Result<()>
 where
-    T: AsRef<Path>,
+    T: AsRef<std::path::Path>,
 {
     Ok(())
 }
 
 #[cfg(feature = "git")]
-pub(crate) fn configure_git<T>(
-    instructions: &Instructions,
-    repo_path_opt: Option<T>,
-    config: &mut Config,
-) -> Result<()>
-where
-    T: AsRef<Path>,
-{
-    if let Some(repo_path) = repo_path_opt {
-        let git_config = instructions.git();
-        if git_config.has_enabled() {
-            let repo = Repository::discover(repo_path)?;
-            let ref_head = repo.find_reference("HEAD")?;
-            let repo_path = repo.path().to_path_buf();
+fn add_config_entries(
+    config: &mut crate::config::Config,
+    git_config: &Git,
+    now: &OffsetDateTime,
+) -> anyhow::Result<()> {
+    use crate::config::{Config, VergenKey};
 
-            if *git_config.branch() {
-                add_branch_name(&repo, config)?;
-            }
-
-            if *git_config.commit_timestamp() || *git_config.sha() {
-                let commit = ref_head.peel_to_commit()?;
-
-                if *git_config.commit_timestamp() {
-                    let commit_time = OffsetDateTime::from_unix_timestamp(commit.time().seconds())?;
-
-                    match git_config.commit_timestamp_timezone() {
-                        crate::TimeZone::Utc => {
-                            add_config_entries(
-                                config,
-                                git_config,
-                                &commit_time.to_offset(UtcOffset::UTC),
-                            )?;
-                        }
-                        #[cfg(feature = "local_offset")]
-                        crate::TimeZone::Local => {
-                            add_config_entries(
-                                config,
-                                git_config,
-                                &commit_time.to_offset(UtcOffset::current_local_offset()?),
-                            )?;
-                        }
-                    }
-                }
-
-                if *git_config.sha() {
-                    match git_config.sha_kind() {
-                        crate::ShaKind::Normal => {
-                            add_entry(
-                                config.cfg_map_mut(),
-                                VergenKey::Sha,
-                                Some(commit.id().to_string()),
-                            );
-                        }
-                        crate::ShaKind::Short => {
-                            let obj = repo.revparse_single("HEAD")?;
-                            add_entry(
-                                config.cfg_map_mut(),
-                                VergenKey::ShortSha,
-                                obj.short_id()?.as_str().map(str::to_string),
-                            );
-                        }
-                        crate::ShaKind::Both => {
-                            add_entry(
-                                config.cfg_map_mut(),
-                                VergenKey::Sha,
-                                Some(commit.id().to_string()),
-                            );
-
-                            let obj = repo.revparse_single("HEAD")?;
-                            add_entry(
-                                config.cfg_map_mut(),
-                                VergenKey::ShortSha,
-                                obj.short_id()?.as_str().map(str::to_string),
-                            );
-                        }
-                    }
-                }
-            }
-
-            if *git_config.semver() {
-                let dirty = git_config.semver_dirty();
-                match *git_config.semver_kind() {
-                    crate::SemverKind::Normal => {
-                        add_semver(&repo, &DescribeOptions::new(), false, dirty, config);
-                    }
-                    crate::SemverKind::Lightweight => {
-                        let mut opts = DescribeOptions::new();
-                        let _ = opts.describe_tags();
-
-                        add_semver(&repo, &opts, true, dirty, config);
-                    }
-                }
-            }
-
-            if let Ok(resolved) = ref_head.resolve() {
-                if let Some(name) = resolved.name() {
-                    let path = repo_path.join(name);
-                    // Check whether the path exists in the filesystem before emitting it
-                    if path.exists() {
-                        *config.ref_path_mut() = Some(path);
-                    }
-                }
-            }
-            *config.head_path_mut() = Some(repo_path.join("HEAD"));
-        }
+    fn add_date_entry(config: &mut Config, now: &OffsetDateTime) -> anyhow::Result<()> {
+        let format = format_description::parse("[year]-[month]-[day]")?;
+        add_entry(
+            config.cfg_map_mut(),
+            VergenKey::CommitDate,
+            Some(now.format(&format)?),
+        );
+        Ok(())
     }
-    Ok(())
-}
 
-#[cfg(feature = "git")]
-fn add_config_entries(config: &mut Config, git_config: &Git, now: &OffsetDateTime) -> Result<()> {
+    fn add_time_entry(config: &mut Config, now: &OffsetDateTime) -> anyhow::Result<()> {
+        let format = format_description::parse("[hour]:[minute]:[second]")?;
+        add_entry(
+            config.cfg_map_mut(),
+            VergenKey::CommitTime,
+            Some(now.format(&format)?),
+        );
+        Ok(())
+    }
+
+    fn add_timestamp_entry(config: &mut Config, now: &OffsetDateTime) -> anyhow::Result<()> {
+        add_entry(
+            config.cfg_map_mut(),
+            VergenKey::CommitTimestamp,
+            Some(now.format(&Rfc3339)?),
+        );
+        Ok(())
+    }
+
     match git_config.commit_timestamp_kind() {
         TimestampKind::DateOnly => add_date_entry(config, now)?,
         TimestampKind::TimeOnly => add_time_entry(config, now)?,
@@ -332,97 +249,324 @@ fn add_config_entries(config: &mut Config, git_config: &Git, now: &OffsetDateTim
     Ok(())
 }
 
-#[cfg(feature = "git")]
-fn add_date_entry(config: &mut Config, now: &OffsetDateTime) -> Result<()> {
-    let format = format_description::parse("[year]-[month]-[day]")?;
-    add_entry(
-        config.cfg_map_mut(),
-        VergenKey::CommitDate,
-        Some(now.format(&format)?),
-    );
-    Ok(())
-}
+#[cfg(feature = "gitoxide")]
+mod gitoxide_impl {
+    use super::add_config_entries;
+    use crate::config::{Config, Instructions, VergenKey};
+    use crate::feature::add_entry;
+    use anyhow::Result;
+    use git_repository as git;
+    use std::path::Path;
+    use time::{OffsetDateTime, UtcOffset};
 
-#[cfg(feature = "git")]
-fn add_time_entry(config: &mut Config, now: &OffsetDateTime) -> Result<()> {
-    let format = format_description::parse("[hour]:[minute]:[second]")?;
-    add_entry(
-        config.cfg_map_mut(),
-        VergenKey::CommitTime,
-        Some(now.format(&format)?),
-    );
-    Ok(())
-}
+    pub(crate) fn configure_git<T>(
+        instructions: &Instructions,
+        repo_path: Option<T>,
+        config: &mut Config,
+    ) -> Result<()>
+    where
+        T: AsRef<Path>,
+    {
+        use time as _;
+        let git_config = instructions.git();
+        if !git_config.has_enabled() {
+            return Ok(());
+        }
+        let repo = match repo_path {
+            Some(path) => git_repository::discover(path.as_ref())?,
+            None => return Ok(()),
+        };
+        let mut head = repo.head()?;
+        if *git_config.branch() {
+            let branch_name = head.referent_name().map_or_else(
+                || "detached HEAD".to_string(),
+                |name| name.file_name().to_string(),
+            );
+            add_entry(config.cfg_map_mut(), VergenKey::Branch, Some(branch_name));
+        }
 
-#[cfg(feature = "git")]
-fn add_timestamp_entry(config: &mut Config, now: &OffsetDateTime) -> Result<()> {
-    add_entry(
-        config.cfg_map_mut(),
-        VergenKey::CommitTimestamp,
-        Some(now.format(&Rfc3339)?),
-    );
-    Ok(())
-}
+        if *git_config.commit_timestamp() || *git_config.sha() {
+            let sha_kinds = matches!(git_config.sha_kind(), crate::ShaKind::Both)
+                .then(|| vec![crate::ShaKind::Normal, crate::ShaKind::Short])
+                .unwrap_or_else(|| vec![*git_config.sha_kind()]);
+            let commit = head.peel_to_commit_in_place()?;
+            for sha_kind in sha_kinds {
+                match sha_kind {
+                    crate::ShaKind::Normal => {
+                        add_entry(
+                            config.cfg_map_mut(),
+                            VergenKey::Sha,
+                            Some(commit.id.to_string()),
+                        );
+                    }
+                    crate::ShaKind::Short => {
+                        add_entry(
+                            config.cfg_map_mut(),
+                            VergenKey::ShortSha,
+                            Some(commit.short_id()?.to_string()),
+                        );
+                    }
+                    crate::ShaKind::Both => {
+                        unreachable!("BUG: should have resolved this into normal|short")
+                    }
+                }
+            }
 
-#[cfg(feature = "git")]
-fn add_branch_name(repo: &Repository, config: &mut Config) -> Result<()> {
-    if repo.head_detached()? {
-        add_entry(
-            config.cfg_map_mut(),
-            VergenKey::Branch,
-            Some("detached HEAD".to_string()),
-        );
-    } else {
-        let locals = repo.branches(Some(BranchType::Local))?;
-        for (local, _bt) in locals.filter_map(std::result::Result::ok) {
-            if local.is_head() {
-                if let Some(name) = local.name()? {
-                    add_entry(
-                        config.cfg_map_mut(),
-                        VergenKey::Branch,
-                        Some(name.to_string()),
-                    );
+            if *git_config.commit_timestamp() {
+                let commit_time =
+                    OffsetDateTime::from_unix_timestamp(commit.time()?.seconds() as i64)?;
+
+                match git_config.commit_timestamp_timezone() {
+                    crate::TimeZone::Utc => {
+                        add_config_entries(
+                            config,
+                            git_config,
+                            &commit_time.to_offset(UtcOffset::UTC),
+                        )?;
+                    }
+                    #[cfg(feature = "local_offset")]
+                    crate::TimeZone::Local => {
+                        add_config_entries(
+                            config,
+                            git_config,
+                            &commit_time.to_offset(UtcOffset::current_local_offset()?),
+                        )?;
+                    }
                 }
             }
         }
+
+        if *git_config.semver() {
+            let dirty = git_config.semver_dirty();
+            let (ref_select, key) = match *git_config.semver_kind() {
+                crate::SemverKind::Normal => (
+                    git::commit::describe::SelectRef::AnnotatedTags,
+                    VergenKey::Semver,
+                ),
+                crate::SemverKind::Lightweight => (
+                    git::commit::describe::SelectRef::AllTags,
+                    VergenKey::SemverLightweight,
+                ),
+            };
+            let semver = head
+                .peel_to_commit_in_place()?
+                .describe()
+                .names(ref_select)
+                // TODO: add a flag to configure the suffix and check the worktree status
+                .try_format()?
+                .map(|mut format| {
+                    let dirty = dirty.and_then(|dirty| {
+                        // TODO: remove this in favor of configuring the describe operation above.
+                        let repo = git2::Repository::open(repo.path()).ok()?;
+                        let diff = repo.diff_index_to_workdir(None, None).ok()?;
+                        (diff.deltas().len() > 0).then(|| dirty)
+                    });
+                    if let Some(suffix) = dirty {
+                        format.dirty_suffix = Some(suffix.into());
+                    }
+                    format.to_string()
+                })
+                .or_else(|| std::env::var("CARGO_PKG_VERSION").ok());
+            add_entry(config.cfg_map_mut(), key, semver);
+        }
+
+        let head_path = repo.git_dir().join(head.name().to_path());
+        if head_path.is_file() {
+            *config.head_path_mut() = head_path.into();
+            if let git::head::Kind::Symbolic(reference) = head.kind {
+                *config.ref_path_mut() = repo.git_dir().join(reference.name.to_path()).into();
+            }
+        }
+        Ok(())
     }
-    Ok(())
 }
+#[cfg(feature = "gitoxide")]
+pub(crate) use self::gitoxide_impl::configure_git;
 
-#[cfg(feature = "git")]
-fn add_semver(
-    repo: &Repository,
-    opts: &DescribeOptions,
-    lw: bool,
-    dirty: Option<&'static str>,
-    config: &mut Config,
-) {
-    let key = if lw {
-        VergenKey::SemverLightweight
-    } else {
-        VergenKey::Semver
-    };
-    let mut format_opts = DescribeFormatOptions::new();
-    if let Some(dirty_text) = dirty {
-        let _ = format_opts.dirty_suffix(dirty_text);
+#[cfg(all(feature = "git", not(feature = "gitoxide")))]
+mod git2_impl {
+    use super::add_config_entries;
+    use crate::config::{Config, Instructions};
+    use anyhow::Result;
+    use std::path::Path;
+    use time::{OffsetDateTime, UtcOffset};
+
+    use {
+        crate::{config::VergenKey, error::Error, feature::add_entry},
+        git2::{BranchType, DescribeFormatOptions, DescribeOptions, Repository},
+        std::env,
     };
 
-    let semver: Option<String> = repo
-        .describe(opts)
-        .map_or_else(
-            |_| env::var("CARGO_PKG_VERSION").map_err(Error::from),
-            |x| x.format(Some(&format_opts)).map_err(Error::from),
-        )
-        .ok();
-    add_entry(config.cfg_map_mut(), key, semver);
+    pub(crate) fn configure_git<T>(
+        instructions: &Instructions,
+        repo_path_opt: Option<T>,
+        config: &mut Config,
+    ) -> Result<()>
+    where
+        T: AsRef<Path>,
+    {
+        if let Some(repo_path) = repo_path_opt {
+            let git_config = instructions.git();
+            if git_config.has_enabled() {
+                let repo = Repository::discover(repo_path)?;
+                let ref_head = repo.find_reference("HEAD")?;
+                let repo_path = repo.path().to_path_buf();
+
+                if *git_config.branch() {
+                    add_branch_name(&repo, config)?;
+                }
+
+                if *git_config.commit_timestamp() || *git_config.sha() {
+                    let commit = ref_head.peel_to_commit()?;
+
+                    if *git_config.commit_timestamp() {
+                        let commit_time =
+                            OffsetDateTime::from_unix_timestamp(commit.time().seconds())?;
+
+                        match git_config.commit_timestamp_timezone() {
+                            crate::TimeZone::Utc => {
+                                add_config_entries(
+                                    config,
+                                    git_config,
+                                    &commit_time.to_offset(UtcOffset::UTC),
+                                )?;
+                            }
+                            #[cfg(feature = "local_offset")]
+                            crate::TimeZone::Local => {
+                                add_config_entries(
+                                    config,
+                                    git_config,
+                                    &commit_time.to_offset(UtcOffset::current_local_offset()?),
+                                )?;
+                            }
+                        }
+                    }
+
+                    if *git_config.sha() {
+                        match git_config.sha_kind() {
+                            crate::ShaKind::Normal => {
+                                add_entry(
+                                    config.cfg_map_mut(),
+                                    VergenKey::Sha,
+                                    Some(commit.id().to_string()),
+                                );
+                            }
+                            crate::ShaKind::Short => {
+                                let obj = repo.revparse_single("HEAD")?;
+                                add_entry(
+                                    config.cfg_map_mut(),
+                                    VergenKey::ShortSha,
+                                    obj.short_id()?.as_str().map(str::to_string),
+                                );
+                            }
+                            crate::ShaKind::Both => {
+                                add_entry(
+                                    config.cfg_map_mut(),
+                                    VergenKey::Sha,
+                                    Some(commit.id().to_string()),
+                                );
+
+                                let obj = repo.revparse_single("HEAD")?;
+                                add_entry(
+                                    config.cfg_map_mut(),
+                                    VergenKey::ShortSha,
+                                    obj.short_id()?.as_str().map(str::to_string),
+                                );
+                            }
+                        }
+                    }
+                }
+
+                if *git_config.semver() {
+                    let dirty = git_config.semver_dirty();
+                    match *git_config.semver_kind() {
+                        crate::SemverKind::Normal => {
+                            add_semver(&repo, &DescribeOptions::new(), false, dirty, config);
+                        }
+                        crate::SemverKind::Lightweight => {
+                            let mut opts = DescribeOptions::new();
+                            let _ = opts.describe_tags();
+
+                            add_semver(&repo, &opts, true, dirty, config);
+                        }
+                    }
+                }
+
+                if let Ok(resolved) = ref_head.resolve() {
+                    if let Some(name) = resolved.name() {
+                        let path = repo_path.join(name);
+                        // Check whether the path exists in the filesystem before emitting it
+                        if path.exists() {
+                            *config.ref_path_mut() = Some(path);
+                        }
+                    }
+                }
+                *config.head_path_mut() = Some(repo_path.join("HEAD"));
+            }
+        }
+        Ok(())
+    }
+
+    fn add_branch_name(repo: &Repository, config: &mut Config) -> Result<()> {
+        if repo.head_detached()? {
+            add_entry(
+                config.cfg_map_mut(),
+                VergenKey::Branch,
+                Some("detached HEAD".to_string()),
+            );
+        } else {
+            let locals = repo.branches(Some(BranchType::Local))?;
+            for (local, _bt) in locals.filter_map(std::result::Result::ok) {
+                if local.is_head() {
+                    if let Some(name) = local.name()? {
+                        add_entry(
+                            config.cfg_map_mut(),
+                            VergenKey::Branch,
+                            Some(name.to_string()),
+                        );
+                    }
+                }
+            }
+        }
+        Ok(())
+    }
+
+    fn add_semver(
+        repo: &Repository,
+        opts: &DescribeOptions,
+        lw: bool,
+        dirty: Option<&'static str>,
+        config: &mut Config,
+    ) {
+        let key = if lw {
+            VergenKey::SemverLightweight
+        } else {
+            VergenKey::Semver
+        };
+        let mut format_opts = DescribeFormatOptions::new();
+        if let Some(dirty_text) = dirty {
+            let _ = format_opts.dirty_suffix(dirty_text);
+        };
+
+        let semver: Option<String> = repo
+            .describe(opts)
+            .map_or_else(
+                |_| env::var("CARGO_PKG_VERSION").map_err(Error::from),
+                |x| x.format(Some(&format_opts)).map_err(Error::from),
+            )
+            .ok();
+        add_entry(config.cfg_map_mut(), key, semver);
+    }
 }
+#[cfg(all(feature = "git", not(feature = "gitoxide")))]
+pub(crate) use self::git2_impl::configure_git;
 
 #[cfg(all(test, feature = "git"))]
 mod test {
-    use super::{SemverKind, ShaKind};
     use crate::{
         config::Instructions,
         feature::{TimeZone, TimestampKind},
+        SemverKind, ShaKind,
     };
 
     #[test]
@@ -493,6 +637,3 @@ mod test {
         assert!(!config.git().has_enabled());
     }
 }
-
-#[cfg(all(test, not(feature = "git")))]
-mod test {}

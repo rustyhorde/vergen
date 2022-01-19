@@ -339,6 +339,19 @@ mod error;
 mod feature;
 mod gen;
 
+// nobody uses it if neither 'build' nor 'git/gitoxide' are set, but it can still be activated manually, making a lint fail
+// unnecessarily.
+#[cfg(feature = "chrono")]
+use chrono as _;
+#[cfg(feature = "git2")]
+use git2 as _;
+#[cfg(feature = "git-repository")]
+use git_repository as _;
+#[cfg(feature = "rustc_version")]
+use rustc_version as _;
+#[cfg(feature = "sysinfo")]
+use sysinfo as _;
+
 pub use crate::config::Instructions as Config;
 #[cfg(feature = "build")]
 pub use crate::feature::Build;

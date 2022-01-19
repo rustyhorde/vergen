@@ -456,6 +456,7 @@ mod test {
     }
 
     #[cfg(feature = "git")]
+    #[cfg_attr(feature = "gitoxide", ignore)]
     #[test]
     fn contains_git_output() {
         let repo_path = PathBuf::from(".");

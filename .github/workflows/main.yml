@@ -103,13 +103,6 @@ jobs:
             ~/.cargo/bin/cargo-tarpaulin*
             ~/.cargo/bin/cargo-*-all-features*
           key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.toml') }}
-      - uses: actions-rs/toolchain@v1
-        name: 🧰 Toolchain 🧰
-        with:
-          profile: minimal
-          toolchain: ${{ matrix.rust }}
-          target: ${{ matrix.target }}
-          override: true
       - name: ✔️ Checkout (notagsrepo master) ✔️
         run: cd testdata/notagsrepo && git checkout master && cd ..
       - name: ✔️ Checkout (tagsrepo master) ✔️
@@ -132,6 +125,13 @@ jobs:
           version: latest
           use-tool-cache: true
         continue-on-error: true
+      - uses: actions-rs/toolchain@v1
+        name: 🧰 Toolchain 🧰
+        with:
+          profile: minimal
+          toolchain: ${{ matrix.rust }}
+          target: ${{ matrix.target }}
+          override: true
       - name: 🧪 Test 🧪
         run: cargo test-all-features
       - name: 🙊 Code Coverage 🙊
@@ -182,13 +182,6 @@ jobs:
           path: |
             ~/.cargo/bin/cargo-*-all-features*
           key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.toml') }}
-      - uses: actions-rs/toolchain@v1
-        name: 🧰 Toolchain 🧰
-        with:
-          profile: minimal
-          toolchain: ${{ matrix.rust }}
-          target: ${{ matrix.target }}
-          override: true
       - name: ✔️ Checkout (notagsrepo master) ✔️
         run: cd testdata/notagsrepo && git checkout master && cd ..
       - name: ✔️ Checkout (tagsrepo master) ✔️
@@ -204,6 +197,13 @@ jobs:
           version: latest
           use-tool-cache: true
         continue-on-error: true
+      - uses: actions-rs/toolchain@v1
+        name: 🧰 Toolchain 🧰
+        with:
+          profile: minimal
+          toolchain: ${{ matrix.rust }}
+          target: ${{ matrix.target }}
+          override: true
       - name: 🧪 Test 🧪
         run: cargo test-all-features
   test-windows:
@@ -272,13 +272,6 @@ jobs:
           path: |
             ~/.cargo/bin/cargo-*-all-features*
           key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.toml') }}
-      - uses: actions-rs/toolchain@v1
-        name: 🧰 Toolchain 🧰
-        with:
-          profile: minimal
-          toolchain: ${{ matrix.rust }}
-          target: ${{ matrix.target }}
-          override: true
       - name: ✔️ Checkout (notagsrepo master) ✔️
         run: cd testdata/notagsrepo && git checkout master && cd ..
       - name: ✔️ Checkout (tagsrepo master) ✔️
@@ -294,5 +287,12 @@ jobs:
           version: latest
           use-tool-cache: true
         continue-on-error: true
+      - uses: actions-rs/toolchain@v1
+        name: 🧰 Toolchain 🧰
+        with:
+          profile: minimal
+          toolchain: ${{ matrix.rust }}
+          target: ${{ matrix.target }}
+          override: true
       - name: 🧪 Test 🧪
         run: cargo test-all-features
