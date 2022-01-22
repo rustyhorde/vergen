@@ -152,9 +152,9 @@
 //! #..
 //!
 //! [build-dependencies]
-//! vergen = "5"
+//! vergen = "6"
 //! # or
-//! vergen = { version = "5", default-features = false, features = ["build", "rustc"] }
+//! vergen = { version = "6", default-features = false, features = ["build", "rustc"] }
 //! # if you wish to disable certain features
 //! ```
 //!
