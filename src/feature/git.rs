@@ -18,10 +18,10 @@ use {
         error::Error,
         feature::{self, add_entry, TimestampKind},
     },
-    chrono::{DateTime, FixedOffset, Local, TimeZone, Utc},
     getset::{CopyGetters, Getters, MutGetters},
     git2::{BranchType, DescribeFormatOptions, DescribeOptions, Repository},
     std::{env, path::PathBuf},
+    time::{format_description, OffsetDateTime, UtcOffset},
 };
 
 /// The semver kind to output
@@ -224,20 +224,31 @@ where
                 let commit = ref_head.peel_to_commit()?;
 
                 if *git_config.commit_timestamp() {
-                    let offset = if commit.time().sign() == '-' {
-                        FixedOffset::west(commit.time().offset_minutes() * 60)
-                            .timestamp(commit.time().seconds(), 0)
-                    } else {
-                        FixedOffset::east(commit.time().offset_minutes() * 60)
-                            .timestamp(commit.time().seconds(), 0)
-                    };
+                    let commit_time = OffsetDateTime::from_unix_timestamp(commit.time().seconds())?;
+                    // let offset = if commit.time().sign() == '-' {
+                    //     // FixedOffset::west(commit.time().offset_minutes() * 60)
+                    //     //     .timestamp(commit.time().seconds(), 0)
+                    //     UtcOffset::from_hms(0, -commit.time().offset_minutes(), 0).unwrap()
+                    // } else {
+                    //     // FixedOffset::east(commit.time().offset_minutes() * 60)
+                    //     //     .timestamp(commit.time().seconds(), 0)
+                    //     UtcOffset::from_hms(0, commit.time().offset_minutes(), 0).unwrap()
+                    // };
 
                     match git_config.commit_timestamp_timezone() {
                         crate::TimeZone::Utc => {
-                            add_config_entries(config, git_config, &offset.with_timezone(&Utc));
+                            add_config_entries(
+                                config,
+                                git_config,
+                                &commit_time.to_offset(UtcOffset::UTC),
+                            );
                         }
                         crate::TimeZone::Local => {
-                            add_config_entries(config, git_config, &offset.with_timezone(&Local));
+                            add_config_entries(
+                                config,
+                                git_config,
+                                &commit_time.to_offset(UtcOffset::current_local_offset()?),
+                            );
                         }
                     }
                 }
@@ -308,11 +319,7 @@ where
 }
 
 #[cfg(feature = "git")]
-fn add_config_entries<T>(config: &mut Config, git_config: &Git, now: &DateTime<T>)
-where
-    T: TimeZone,
-    T::Offset: std::fmt::Display,
-{
+fn add_config_entries(config: &mut Config, git_config: &Git, now: &OffsetDateTime) {
     match git_config.commit_timestamp_kind() {
         TimestampKind::DateOnly => add_date_entry(config, now),
         TimestampKind::TimeOnly => add_time_entry(config, now),
@@ -330,41 +337,33 @@ where
 }
 
 #[cfg(feature = "git")]
-fn add_date_entry<T>(config: &mut Config, now: &DateTime<T>)
-where
-    T: TimeZone,
-    T::Offset: std::fmt::Display,
-{
+fn add_date_entry(config: &mut Config, now: &OffsetDateTime) {
+    let format = format_description::parse("[year]-[month]-[day]").unwrap();
     add_entry(
         config.cfg_map_mut(),
         VergenKey::CommitDate,
-        Some(now.format("%Y-%m-%d").to_string()),
+        Some(now.format(&format).unwrap()),
     );
 }
 
 #[cfg(feature = "git")]
-fn add_time_entry<T>(config: &mut Config, now: &DateTime<T>)
-where
-    T: TimeZone,
-    T::Offset: std::fmt::Display,
-{
+fn add_time_entry(config: &mut Config, now: &OffsetDateTime) {
+    let format = format_description::parse("[hour]:[minute]:[second]").unwrap();
     add_entry(
         config.cfg_map_mut(),
         VergenKey::CommitTime,
-        Some(now.format("%H:%M:%S").to_string()),
+        Some(now.format(&format).unwrap()),
     );
 }
 
 #[cfg(feature = "git")]
-fn add_timestamp_entry<T>(config: &mut Config, now: &DateTime<T>)
-where
-    T: TimeZone,
-    T::Offset: std::fmt::Display,
-{
+fn add_timestamp_entry(config: &mut Config, now: &OffsetDateTime) {
+    use time::format_description::well_known::Rfc3339;
+
     add_entry(
         config.cfg_map_mut(),
         VergenKey::CommitTimestamp,
-        Some(now.to_rfc3339()),
+        Some(now.format(&Rfc3339).unwrap()),
     );
 }
 
