@@ -1,4 +1,3 @@
-// use chrono::Utc;
 use time::{format_description::well_known::Rfc3339, OffsetDateTime};
 
 pub fn main() {

@@ -225,15 +225,6 @@ where
 
                 if *git_config.commit_timestamp() {
                     let commit_time = OffsetDateTime::from_unix_timestamp(commit.time().seconds())?;
-                    // let offset = if commit.time().sign() == '-' {
-                    //     // FixedOffset::west(commit.time().offset_minutes() * 60)
-                    //     //     .timestamp(commit.time().seconds(), 0)
-                    //     UtcOffset::from_hms(0, -commit.time().offset_minutes(), 0).unwrap()
-                    // } else {
-                    //     // FixedOffset::east(commit.time().offset_minutes() * 60)
-                    //     //     .timestamp(commit.time().seconds(), 0)
-                    //     UtcOffset::from_hms(0, commit.time().offset_minutes(), 0).unwrap()
-                    // };
 
                     match git_config.commit_timestamp_timezone() {
                         crate::TimeZone::Utc => {
