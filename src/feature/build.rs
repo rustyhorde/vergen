@@ -44,6 +44,7 @@ use {
 /// # use anyhow::Result;
 /// use vergen::{vergen, Config};
 #[cfg_attr(feature = "build", doc = r##"use vergen::TimestampKind;"##)]
+#[cfg_attr(all(feature = "build", feature = "local_offset"), doc = r##"use vergen::TimeZone;"##)]
 ///
 /// # pub fn main() -> Result<()> {
 /// let mut config = Config::default();
@@ -52,6 +53,18 @@ use {
     doc = r##"
 // Generate all three date/time instructions
 *config.build_mut().kind_mut() = TimestampKind::All;
+
+// Generate the instructions
+vergen(config)?;
+"##
+)]
+#[cfg_attr(
+    all(feature = "build", feature = "local_offset"),
+    doc = r##"
+// Generate all three date/time instructions
+*config.build_mut().kind_mut() = TimestampKind::All;
+// Generate the output time in the local timezone
+*config.build_mut().timezone_mut() = TimeZone::Local;
 
 // Generate the instructions
 vergen(config)?;

@@ -53,6 +53,10 @@ use std::{
 /// ```
 /// use vergen::Config;
 #[cfg_attr(feature = "git", doc = r##"use vergen::ShaKind;"##)]
+#[cfg_attr(
+    all(feature = "git", feature = "local_offset"),
+    doc = r##"use vergen::TimeZone;"##
+)]
 ///
 /// let mut config = Config::default();
 #[cfg_attr(
@@ -67,6 +71,14 @@ use std::{
     doc = r##"
 // Change the SHA output to the short variant
 *config.git_mut().sha_kind_mut() = ShaKind::Short;
+"##
+)]
+#[cfg_attr(
+    all(feature = "git", feature = "local_offset"),
+    doc = r##"
+// Change the SHA output to the short variant
+*config.git_mut().sha_kind_mut() = ShaKind::Short;
+*config.git_mut().commit_timestamp_timezone_mut() = TimeZone::Local;
 "##
 )]
 #[cfg_attr(
