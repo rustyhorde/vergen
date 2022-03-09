@@ -60,6 +60,7 @@ pub(crate) fn add_entry(
 pub enum TimeZone {
     /// UTC
     Utc,
+    #[cfg(feature = "local_offset")]
     /// Local
     Local,
 }

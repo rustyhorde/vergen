@@ -542,7 +542,7 @@ mod test {
         assert!(!RUSTC_REGEX.is_match(&String::from_utf8_lossy(&stdout)));
     }
 
-    #[cfg(feature = "build")]
+    #[cfg(all(feature = "build", feature = "local_offset"))]
     #[test]
     fn build_local_timezone() {
         use super::config_from_instructions;
@@ -555,7 +555,7 @@ mod test {
         assert!(config_from_instructions(config, Some(repo_path), &mut stdout_buf,).is_ok());
     }
 
-    #[cfg(feature = "git")]
+    #[cfg(all(feature = "git", feature = "local_offset"))]
     #[test]
     fn git_local_timezone() {
         use super::config_from_instructions;
