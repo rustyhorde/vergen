@@ -13,29 +13,31 @@ repository = "https://github.com/rustyhorde/vergen"
 version = "6.0.2"
 
 [package.metadata.cargo-all-features]
-denylist = ["chrono","git2","rustc_version","sysinfo"]
+denylist = ["local_offset","time","git2","rustc_version","sysinfo"]
 
 [features]
 default = ["build", "cargo", "git", "rustc", "si"]
-build = ["chrono"]
+build = ["time"]
 cargo = []
-git = ["chrono", "git2"]
+git = ["time", "git2"]
 rustc = ["rustc_version"]
 si = ["sysinfo"]
+local_offset = ["time/local-offset"]
 
 [dependencies]
 anyhow = "1"
 cfg-if = "1"
-chrono = { version = "0", optional = true, default-features = false }
 enum-iterator = "0"
 getset = "0"
 git2 = { version = "0", optional = true, default-features = false }
 rustc_version = { version = "0.4.0", optional = true }
 sysinfo = { version = "=0.23", optional = true, default-features = false }
 thiserror = "1"
+time = { version = "0.3.7", optional = true }
 
 [build-dependencies]
-chrono = "0"
+anyhow = "1.0.56"
+time = { version = "0.3.7", features = ["formatting"] }
 rustversion = "1"
 
 [dev-dependencies]

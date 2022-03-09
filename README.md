@@ -5,6 +5,13 @@ Generate `build`, `git`, `rustc`, `cargo`, and `sysinfo` related [`cargo:rustc-e
 Special thanks to the sponsors of this project
 * [tyretool](https://github.com/tryretool)
 
+## Release 7.0 Breaking Changes
+* `chrono` has been replaced with `time`. The `time` crate is better maintained.
+* The local timezone support in the `build` and `git` features has been moved behind a `local_offset` feature flag.  This is
+due to a [potential segfault](https://github.com/rustsec/advisory-db/blob/main/crates/time/RUSTSEC-2020-0071.md) when using `localtime_r` as the `time` crate does.
+* To build with the `local_offset` feature, you must also explicitly delare that you are acknowledging the potential unsoundness by
+setting `RUSTFLAGS="--cfg unsound_local_offset"`.  Per the `time` docs this isn't tested, so use with extreme caution.
+
 ## Release 6.0 Breaking Changes
 * The `Copy` implementation was dropped from the [`Config`](https://github.com/rustyhorde/vergen/blob/24ed6bc2269320ab98962edc8b736fcc6e3c7d64/src/config.rs#L94-L148) struct to allow the base git directory to be specified.  This is a breaking API change necessitating a new major release.
 ## Current Release

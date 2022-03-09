@@ -9,15 +9,16 @@
 //! `vergen` build feature implementation
 
 use crate::config::{Config, Instructions};
+use anyhow::Result;
 #[cfg(feature = "build")]
 use {
     crate::{
         config::VergenKey,
         feature::{add_entry, TimeZone, TimestampKind},
     },
-    chrono::{DateTime, Local, Utc},
     getset::{Getters, MutGetters},
     std::env,
+    time::{format_description, OffsetDateTime},
 };
 
 /// Configuration for the `VERGEN_BUILD_*` instructions
@@ -42,7 +43,11 @@ use {
 /// ```
 /// # use anyhow::Result;
 /// use vergen::{vergen, Config};
-#[cfg_attr(feature = "build", doc = r##"use vergen::{TimestampKind, TimeZone};"##)]
+#[cfg_attr(feature = "build", doc = r##"use vergen::TimestampKind;"##)]
+#[cfg_attr(
+    all(feature = "build", feature = "local_offset"),
+    doc = r##"use vergen::TimeZone;"##
+)]
 ///
 /// # pub fn main() -> Result<()> {
 /// let mut config = Config::default();
@@ -51,7 +56,17 @@ use {
     doc = r##"
 // Generate all three date/time instructions
 *config.build_mut().kind_mut() = TimestampKind::All;
-// Change the date/time instructions to show `Local` time
+
+// Generate the instructions
+vergen(config)?;
+"##
+)]
+#[cfg_attr(
+    all(feature = "build", feature = "local_offset"),
+    doc = r##"
+// Generate all three date/time instructions
+*config.build_mut().kind_mut() = TimestampKind::All;
+// Generate the output time in the local timezone
 *config.build_mut().timezone_mut() = TimeZone::Local;
 
 // Generate the instructions
@@ -97,14 +112,19 @@ impl Build {
 }
 
 #[cfg(feature = "build")]
-pub(crate) fn configure_build(instructions: &Instructions, config: &mut Config) {
+pub(crate) fn configure_build(instructions: &Instructions, config: &mut Config) -> Result<()> {
     let build_config = instructions.build();
 
     if build_config.has_enabled() {
         if *build_config.timestamp() {
             match build_config.timezone() {
-                TimeZone::Utc => add_config_entries(config, *build_config, &Utc::now()),
-                TimeZone::Local => add_config_entries(config, *build_config, &Local::now()),
+                TimeZone::Utc => {
+                    add_config_entries(config, *build_config, &OffsetDateTime::now_utc())?;
+                }
+                #[cfg(feature = "local_offset")]
+                TimeZone::Local => {
+                    add_config_entries(config, *build_config, &OffsetDateTime::now_local()?)?;
+                }
             };
         }
 
@@ -116,71 +136,70 @@ pub(crate) fn configure_build(instructions: &Instructions, config: &mut Config) 
             );
         }
     }
+    Ok(())
 }
 
 #[cfg(feature = "build")]
-fn add_config_entries<T>(config: &mut Config, build_config: Build, now: &DateTime<T>)
-where
-    T: chrono::TimeZone,
-    T::Offset: std::fmt::Display,
-{
+fn add_config_entries(
+    config: &mut Config,
+    build_config: Build,
+    now: &OffsetDateTime,
+) -> Result<()> {
     match build_config.kind() {
-        TimestampKind::DateOnly => add_date_entry(config, now),
-        TimestampKind::TimeOnly => add_time_entry(config, now),
+        TimestampKind::DateOnly => add_date_entry(config, now)?,
+        TimestampKind::TimeOnly => add_time_entry(config, now)?,
         TimestampKind::DateAndTime => {
-            add_date_entry(config, now);
-            add_time_entry(config, now);
+            add_date_entry(config, now)?;
+            add_time_entry(config, now)?;
         }
-        TimestampKind::Timestamp => add_timestamp_entry(config, now),
+        TimestampKind::Timestamp => add_timestamp_entry(config, now)?,
         TimestampKind::All => {
-            add_date_entry(config, now);
-            add_time_entry(config, now);
-            add_timestamp_entry(config, now);
+            add_date_entry(config, now)?;
+            add_time_entry(config, now)?;
+            add_timestamp_entry(config, now)?;
         }
     }
+    Ok(())
 }
 
 #[cfg(feature = "build")]
-fn add_date_entry<T>(config: &mut Config, now: &DateTime<T>)
-where
-    T: chrono::TimeZone,
-    T::Offset: std::fmt::Display,
-{
+fn add_date_entry(config: &mut Config, now: &OffsetDateTime) -> Result<()> {
+    let format = format_description::parse("[year]-[month]-[day]")?;
     add_entry(
         config.cfg_map_mut(),
         VergenKey::BuildDate,
-        Some(now.format("%Y-%m-%d").to_string()),
+        Some(now.format(&format)?),
     );
+    Ok(())
 }
 
 #[cfg(feature = "build")]
-fn add_time_entry<T>(config: &mut Config, now: &DateTime<T>)
-where
-    T: chrono::TimeZone,
-    T::Offset: std::fmt::Display,
-{
+fn add_time_entry(config: &mut Config, now: &OffsetDateTime) -> Result<()> {
+    let format = format_description::parse("[hour]:[minute]:[second]")?;
     add_entry(
         config.cfg_map_mut(),
         VergenKey::BuildTime,
-        Some(now.format("%H:%M:%S").to_string()),
+        Some(now.format(&format)?),
     );
+    Ok(())
 }
 
 #[cfg(feature = "build")]
-fn add_timestamp_entry<T>(config: &mut Config, now: &DateTime<T>)
-where
-    T: chrono::TimeZone,
-    T::Offset: std::fmt::Display,
-{
+fn add_timestamp_entry(config: &mut Config, now: &OffsetDateTime) -> Result<()> {
+    use time::format_description::well_known::Rfc3339;
+
     add_entry(
         config.cfg_map_mut(),
         VergenKey::BuildTimestamp,
-        Some(now.to_rfc3339()),
+        Some(now.format(&Rfc3339)?),
     );
+    Ok(())
 }
 
 #[cfg(not(feature = "build"))]
-pub(crate) fn configure_build(_instructions: &Instructions, _config: &mut Config) {}
+pub(crate) fn configure_build(_instructions: &Instructions, _config: &mut Config) -> Result<()> {
+    Ok(())
+}
 
 #[cfg(all(test, feature = "build"))]
 mod test {
