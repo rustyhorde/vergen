@@ -231,7 +231,6 @@
         missing_debug_implementations,
         missing_docs,
         mixed_script_confusables,
-        mutable_borrow_reservation_conflict,
         no_mangle_generic_items,
         non_ascii_idents,
         non_camel_case_types,
