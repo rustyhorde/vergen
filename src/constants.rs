@@ -16,6 +16,7 @@ pub(crate) const BUILD_SEMVER_NAME: &str = "VERGEN_BUILD_SEMVER";
 
 // git Constants
 pub(crate) const GIT_BRANCH_NAME: &str = "VERGEN_GIT_BRANCH";
+pub(crate) const GIT_COMMIT_COUNT: &str = "VERGEN_GIT_COMMIT_COUNT";
 pub(crate) const GIT_COMMIT_DATE_NAME: &str = "VERGEN_GIT_COMMIT_DATE";
 pub(crate) const GIT_COMMIT_TIME_NAME: &str = "VERGEN_GIT_COMMIT_TIME";
 pub(crate) const GIT_COMMIT_TIMESTAMP_NAME: &str = "VERGEN_GIT_COMMIT_TIMESTAMP";
@@ -62,6 +63,7 @@ mod test {
         assert_eq!(GIT_BRANCH_NAME, "VERGEN_GIT_BRANCH");
         assert_eq!(GIT_SHA_NAME, "VERGEN_GIT_SHA");
         assert_eq!(GIT_SHA_SHORT_NAME, "VERGEN_GIT_SHA_SHORT");
+        assert_eq!(GIT_COMMIT_COUNT, "VERGEN_GIT_COMMIT_COUNT");
         assert_eq!(GIT_COMMIT_DATE_NAME, "VERGEN_GIT_COMMIT_DATE");
         assert_eq!(GIT_SEMVER_NAME, "VERGEN_GIT_SEMVER");
         assert_eq!(GIT_SEMVER_TAGS_NAME, "VERGEN_GIT_SEMVER_LIGHTWEIGHT");

@@ -57,6 +57,7 @@ pub enum ShaKind {
 /// | Instruction | Default |
 /// | ----------- | :-----: |
 /// | `cargo:rustc-env=VERGEN_GIT_BRANCH=feature/git2` | * |
+/// | `cargo:rustc-env=VERGEN_GIT_COMMIT_COUNT=330` | |
 /// | `cargo:rustc-env=VERGEN_GIT_COMMIT_DATE=2021-02-12` | |
 /// | `cargo:rustc-env=VERGEN_GIT_COMMIT_TIME=01:54:15` | |
 /// | `cargo:rustc-env=VERGEN_GIT_COMMIT_TIMESTAMP=2021-02-12T01:54:15.134750+00:00` | * |
@@ -68,6 +69,7 @@ pub enum ShaKind {
 /// | `cargo:rerun-if-changed=/Users/yoda/projects/rust-lang/vergen/.git/refs/heads/feature/git2` | * |
 ///
 /// * If the `branch` field is false, the `VERGEN_GIT_BRANCH` instruction will not be generated.
+/// * If the `commit_count` field is false, the `VERGEN_GIT_COMMIT_COUNT` instruction will not be generated.
 /// * If the `commit_timestamp` field is false, the date/time instructions will not be generated.
 /// * If the `rerun_on_head_changed` field is false, the `cargo:rerun-if-changed` instructions will not be generated.
 /// * If the `semver` field is false, the `VERGEN_GIT_SEMVER` instruction will not be generated.
@@ -113,6 +115,7 @@ vergen(config)?;
 /// [`CARGO_PKG_VERSION`]: https://doc.rust-lang.org/cargo/reference/environment-variables.html#environment-variables-cargo-sets-for-crates
 ///
 #[cfg(feature = "git")]
+#[allow(clippy::struct_excessive_bools)]
 #[derive(Clone, Debug, CopyGetters, Getters, MutGetters)]
 #[getset(get_mut = "pub")]
 pub struct Git {
@@ -125,6 +128,9 @@ pub struct Git {
     /// Enable/Disable the `VERGEN_GIT_BRANCH` instruction
     #[getset(get = "pub(crate)")]
     branch: bool,
+    /// Enable/Disable the `VERGEN_GIT_COMMIT_COUNT`
+    #[getset(get = "pub(crate)")]
+    commit_count: bool,
     /// Enable/Disable the `VERGEN_GIT_COMMIT_DATE`, `VERGEN_GIT_COMMIT_TIME`, and `VERGEN_GIT_COMMIT_TIMESTAMP` instructions
     #[getset(get = "pub(crate)")]
     commit_timestamp: bool,
@@ -166,6 +172,7 @@ impl Default for Git {
             enabled: true,
             base_dir,
             branch: true,
+            commit_count: true,
             commit_timestamp: true,
             commit_timestamp_timezone: feature::TimeZone::Utc,
             commit_timestamp_kind: TimestampKind::Timestamp,
@@ -298,6 +305,10 @@ where
                 }
             }
 
+            if *git_config.commit_count() {
+                add_commit_count(&repo, config);
+            }
+
             if let Ok(resolved) = ref_head.resolve() {
                 if let Some(name) = resolved.name() {
                     let path = repo_path.join(name);
@@ -417,6 +428,19 @@ fn add_semver(
     add_entry(config.cfg_map_mut(), key, semver);
 }
 
+#[cfg(feature = "git")]
+fn add_commit_count(repo: &Repository, config: &mut Config) {
+    if let Ok(mut revwalk) = repo.revwalk() {
+        if revwalk.push_head().is_ok() {
+            add_entry(
+                config.cfg_map_mut(),
+                VergenKey::CommitCount,
+                Some(revwalk.count().to_string()),
+            );
+        }
+    }
+}
+
 #[cfg(all(test, feature = "git"))]
 mod test {
     use super::{SemverKind, ShaKind};
@@ -429,6 +453,7 @@ mod test {
     fn git_config() {
         let mut config = Instructions::default();
         assert!(config.git().branch);
+        assert!(config.git().commit_count);
         assert!(config.git().commit_timestamp);
         assert_eq!(config.git().commit_timestamp_timezone, TimeZone::Utc);
         assert_eq!(config.git().commit_timestamp_kind, TimestampKind::Timestamp);
@@ -483,12 +508,24 @@ mod test {
     }
 
     #[test]
+    fn no_commit_count() {
+        let mut config = Instructions::default();
+        *config.git_mut().branch_mut() = false;
+        *config.git_mut().commit_timestamp_mut() = false;
+        *config.git_mut().rerun_on_head_change_mut() = false;
+        *config.git_mut().semver_mut() = false;
+        *config.git_mut().commit_count_mut() = false;
+        assert!(config.git().has_enabled());
+    }
+
+    #[test]
     fn nothing() {
         let mut config = Instructions::default();
         *config.git_mut().branch_mut() = false;
         *config.git_mut().commit_timestamp_mut() = false;
         *config.git_mut().rerun_on_head_change_mut() = false;
         *config.git_mut().semver_mut() = false;
+        *config.git_mut().commit_count_mut() = false;
         *config.git_mut().sha_mut() = false;
         assert!(!config.git().has_enabled());
     }
