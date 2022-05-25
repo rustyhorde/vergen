@@ -172,6 +172,8 @@ mod test {
     #[cfg(feature = "git")]
     lazy_static! {
         static ref GIT_BRANCH_RE_STR: &'static str = r#"cargo:rustc-env=VERGEN_GIT_BRANCH=.*"#;
+        static ref GIT_CAE_RE_STR: &'static str = r#"cargo:rustc-env=VERGEN_GIT_COMMIT_AUTHOR_EMAIL=\S+@\S+"#;
+        static ref GIT_CAN_RE_STR: &'static str = r#"cargo:rustc-env=VERGEN_GIT_COMMIT_AUTHOR_NAME=.*"#;
         static ref GIT_CC_RE_STR: &'static str =
             r#"cargo:rustc-env=VERGEN_GIT_COMMIT_COUNT=([0-9]+)"#;
         static ref GIT_CD_RE_STR: &'static str = r#"cargo:rustc-env=VERGEN_GIT_COMMIT_DATE=([0-9]+)-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])[Tt]([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9]|60)(\.[0-9]+)?(([Zz])|([\+|\-]([01][0-9]|2[0-3]):[0-5][0-9]))"#;
@@ -191,6 +193,8 @@ mod test {
         static ref GIT_REGEX_INST: Regex = {
             let re_str = vec![
                 *GIT_BRANCH_RE_STR,
+                *GIT_CAE_RE_STR,
+                *GIT_CAN_RE_STR,
                 *GIT_CC_RE_STR,
                 *GIT_CT_RE_STR,
                 *GIT_SEMVER_RE_STR,

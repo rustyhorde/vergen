@@ -128,12 +128,12 @@ pub struct Git {
     /// Enable/Disable the `VERGEN_GIT_BRANCH` instruction
     #[getset(get = "pub(crate)")]
     branch: bool,
+    /// Enable/Disable the `VERGEN_GIT_COMMIT_AUTHOR_NAME`, `VERGEN_GIT_COMMIT_AUTHOR_EMAIL`
+    #[getset(get = "pub(crate)")]
+    commit_author: bool,
     /// Enable/Disable the `VERGEN_GIT_COMMIT_COUNT`
     #[getset(get = "pub(crate)")]
     commit_count: bool,
-    /// Enable/Disable the `VERGEN_GIT_COMMIT_AUTHOR`
-    #[getset(get = "pub(crate)")]
-    commit_author: bool,
     /// Enable/Disable the `VERGEN_GIT_COMMIT_DATE`, `VERGEN_GIT_COMMIT_TIME`, and `VERGEN_GIT_COMMIT_TIMESTAMP` instructions
     #[getset(get = "pub(crate)")]
     commit_timestamp: bool,
@@ -175,8 +175,8 @@ impl Default for Git {
             enabled: true,
             base_dir,
             branch: true,
-            commit_count: true,
             commit_author: true,
+            commit_count: true,
             commit_timestamp: true,
             commit_timestamp_timezone: feature::TimeZone::Utc,
             commit_timestamp_kind: TimestampKind::Timestamp,
@@ -296,8 +296,13 @@ where
                 if *git_config.commit_author() {
                     add_entry(
                         config.cfg_map_mut(),
-                        VergenKey::CommitAuthor,
-                        Some(commit.author().to_string()),
+                        VergenKey::CommitAuthorName,
+                        Some(commit.author().name().unwrap().to_string()),
+                    );
+                    add_entry(
+                        config.cfg_map_mut(),
+                        VergenKey::CommitAuthorEmail,
+                        Some(commit.author().email().unwrap().to_string()),
                     );
                 }
             }
