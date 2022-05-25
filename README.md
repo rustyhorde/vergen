@@ -3,7 +3,7 @@ Generate `build`, `git`, `rustc`, `cargo`, and `sysinfo` related [`cargo:rustc-e
 
 ## Sponsors
 Special thanks to the sponsors of this project
-* [tyretool](https://github.com/tryretool)
+* [tryretool](https://github.com/tryretool)
 
 ## Release 7.0 Breaking Changes
 * `chrono` has been replaced with `time`. The `time` crate is better maintained.
