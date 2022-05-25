@@ -234,7 +234,7 @@ where
                 add_branch_name(&repo, config)?;
             }
 
-            if *git_config.commit_timestamp() || *git_config.sha() {
+            if *git_config.commit_timestamp() || *git_config.sha() || *git_config.commit_author() {
                 let commit = ref_head.peel_to_commit()?;
 
                 if *git_config.commit_timestamp() {
@@ -292,6 +292,14 @@ where
                         }
                     }
                 }
+
+                if *git_config.commit_author() {
+                    add_entry(
+                        config.cfg_map_mut(),
+                        VergenKey::CommitAuthor,
+                        Some(commit.author().to_string()),
+                    );
+                }
             }
 
             if *git_config.semver() {
@@ -311,10 +319,6 @@ where
 
             if *git_config.commit_count() {
                 add_commit_count(&repo, config);
-            }
-
-            if *git_config.commit_author() {
-                add_commit_author(&repo, config);
             }
 
             if let Ok(resolved) = ref_head.resolve() {
@@ -445,24 +449,6 @@ fn add_commit_count(repo: &Repository, config: &mut Config) {
                 VergenKey::CommitCount,
                 Some(revwalk.count().to_string()),
             );
-        }
-    }
-}
-
-#[cfg(feature = "git")]
-fn add_commit_author(repo: &Repository, config: &mut Config) {
-    if repo.head_detached().unwrap_or(false) {}
-    else {
-        let locals = repo.branches(Some(BranchType::Local)).unwrap();
-        for (local, _bt) in locals.filter_map(std::result::Result::ok) {
-            if local.is_head() {
-                let last_commit = local.get().peel_to_commit().unwrap();
-                add_entry(
-                    config.cfg_map_mut(),
-                    VergenKey::CommitAuthor,
-                    Some(last_commit.author().to_string()),
-                );
-            }
         }
     }
 }
