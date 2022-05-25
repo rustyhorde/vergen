@@ -16,11 +16,11 @@ pub(crate) const BUILD_SEMVER_NAME: &str = "VERGEN_BUILD_SEMVER";
 
 // git Constants
 pub(crate) const GIT_BRANCH_NAME: &str = "VERGEN_GIT_BRANCH";
+pub(crate) const GIT_COMMIT_AUTHOR: &str = "VERGEN_GIT_COMMIT_AUTHOR";
 pub(crate) const GIT_COMMIT_COUNT: &str = "VERGEN_GIT_COMMIT_COUNT";
 pub(crate) const GIT_COMMIT_DATE_NAME: &str = "VERGEN_GIT_COMMIT_DATE";
 pub(crate) const GIT_COMMIT_TIME_NAME: &str = "VERGEN_GIT_COMMIT_TIME";
 pub(crate) const GIT_COMMIT_TIMESTAMP_NAME: &str = "VERGEN_GIT_COMMIT_TIMESTAMP";
-pub(crate) const GIT_COMMIT_AUTHOR: &str = "VERGEN_GIT_COMMIT_AUTHOR";
 pub(crate) const GIT_SEMVER_NAME: &str = "VERGEN_GIT_SEMVER";
 pub(crate) const GIT_SEMVER_TAGS_NAME: &str = "VERGEN_GIT_SEMVER_LIGHTWEIGHT";
 pub(crate) const GIT_SHA_NAME: &str = "VERGEN_GIT_SHA";
