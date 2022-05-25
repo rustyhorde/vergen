@@ -21,7 +21,7 @@ use crate::feature::Sysinfo;
 use crate::{
     constants::{
         BUILD_DATE_NAME, BUILD_SEMVER_NAME, BUILD_TIMESTAMP_NAME, BUILD_TIME_NAME, CARGO_FEATURES,
-        CARGO_PROFILE, CARGO_TARGET_TRIPLE, GIT_BRANCH_NAME, GIT_COMMIT_COUNT,
+        CARGO_PROFILE, CARGO_TARGET_TRIPLE, GIT_BRANCH_NAME, GIT_COMMIT_COUNT, GIT_COMMIT_AUTHOR,
         GIT_COMMIT_DATE_NAME, GIT_COMMIT_TIMESTAMP_NAME, GIT_COMMIT_TIME_NAME, GIT_SEMVER_NAME,
         GIT_SEMVER_TAGS_NAME, GIT_SHA_NAME, GIT_SHA_SHORT_NAME, RUSTC_CHANNEL_NAME,
         RUSTC_COMMIT_DATE, RUSTC_COMMIT_HASH, RUSTC_HOST_TRIPLE_NAME, RUSTC_LLVM_VERSION,
@@ -181,6 +181,8 @@ pub(crate) enum VergenKey {
     CommitTime,
     /// The commit timestamp. (VERGEN_GIT_COMMIT_TIMESTAMP)
     CommitTimestamp,
+    /// The commit author. (VERGEN_GIT_COMMIT_AUTHOR)
+    CommitAuthor,
     /// The semver version from the last git tag. (VERGEN_GIT_SEMVER)
     Semver,
     /// The semver version from the last git tag, including lightweight.
@@ -241,6 +243,7 @@ impl VergenKey {
             VergenKey::CommitDate => GIT_COMMIT_DATE_NAME,
             VergenKey::CommitTime => GIT_COMMIT_TIME_NAME,
             VergenKey::CommitTimestamp => GIT_COMMIT_TIMESTAMP_NAME,
+            VergenKey::CommitAuthor => GIT_COMMIT_AUTHOR,
             VergenKey::Semver => GIT_SEMVER_NAME,
             VergenKey::SemverLightweight => GIT_SEMVER_TAGS_NAME,
             VergenKey::Sha => GIT_SHA_NAME,
