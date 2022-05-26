@@ -128,6 +128,9 @@ pub struct Git {
     /// Enable/Disable the `VERGEN_GIT_BRANCH` instruction
     #[getset(get = "pub(crate)")]
     branch: bool,
+    /// Enable/Disable the `VERGEN_GIT_COMMIT_AUTHOR_NAME`, `VERGEN_GIT_COMMIT_AUTHOR_EMAIL`
+    #[getset(get = "pub(crate)")]
+    commit_author: bool,
     /// Enable/Disable the `VERGEN_GIT_COMMIT_COUNT`
     #[getset(get = "pub(crate)")]
     commit_count: bool,
@@ -172,6 +175,7 @@ impl Default for Git {
             enabled: true,
             base_dir,
             branch: true,
+            commit_author: true,
             commit_count: true,
             commit_timestamp: true,
             commit_timestamp_timezone: feature::TimeZone::Utc,
@@ -211,6 +215,7 @@ where
 }
 
 #[cfg(feature = "git")]
+#[allow(clippy::too_many_lines)]
 pub(crate) fn configure_git<T>(
     instructions: &Instructions,
     repo_path_opt: Option<T>,
@@ -230,7 +235,7 @@ where
                 add_branch_name(&repo, config)?;
             }
 
-            if *git_config.commit_timestamp() || *git_config.sha() {
+            if *git_config.commit_timestamp() || *git_config.sha() || *git_config.commit_author() {
                 let commit = ref_head.peel_to_commit()?;
 
                 if *git_config.commit_timestamp() {
@@ -287,6 +292,19 @@ where
                             );
                         }
                     }
+                }
+
+                if *git_config.commit_author() {
+                    add_entry(
+                        config.cfg_map_mut(),
+                        VergenKey::CommitAuthorName,
+                        Some(commit.author().name().unwrap().to_string()),
+                    );
+                    add_entry(
+                        config.cfg_map_mut(),
+                        VergenKey::CommitAuthorEmail,
+                        Some(commit.author().email().unwrap().to_string()),
+                    );
                 }
             }
 
@@ -454,6 +472,7 @@ mod test {
         let mut config = Instructions::default();
         assert!(config.git().branch);
         assert!(config.git().commit_count);
+        assert!(config.git().commit_author);
         assert!(config.git().commit_timestamp);
         assert_eq!(config.git().commit_timestamp_timezone, TimeZone::Utc);
         assert_eq!(config.git().commit_timestamp_kind, TimestampKind::Timestamp);
@@ -526,6 +545,7 @@ mod test {
         *config.git_mut().rerun_on_head_change_mut() = false;
         *config.git_mut().semver_mut() = false;
         *config.git_mut().commit_count_mut() = false;
+        *config.git_mut().commit_author_mut() = false;
         *config.git_mut().sha_mut() = false;
         assert!(!config.git().has_enabled());
     }
