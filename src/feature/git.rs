@@ -215,6 +215,7 @@ where
 }
 
 #[cfg(feature = "git")]
+#[allow(clippy::too_many_lines)]
 pub(crate) fn configure_git<T>(
     instructions: &Instructions,
     repo_path_opt: Option<T>,
