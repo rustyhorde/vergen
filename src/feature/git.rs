@@ -134,6 +134,9 @@ pub struct Git {
     /// Enable/Disable the `VERGEN_GIT_COMMIT_COUNT`
     #[getset(get = "pub(crate)")]
     commit_count: bool,
+    /// Enable/Disable the `VERGEN_GIT_COMMIT_MESSAGE`
+    #[getset(get = "pub(crate)")]
+    commit_message: bool,
     /// Enable/Disable the `VERGEN_GIT_COMMIT_DATE`, `VERGEN_GIT_COMMIT_TIME`, and `VERGEN_GIT_COMMIT_TIMESTAMP` instructions
     #[getset(get = "pub(crate)")]
     commit_timestamp: bool,
@@ -177,6 +180,7 @@ impl Default for Git {
             branch: true,
             commit_author: true,
             commit_count: true,
+            commit_message: true,
             commit_timestamp: true,
             commit_timestamp_timezone: feature::TimeZone::Utc,
             commit_timestamp_kind: TimestampKind::Timestamp,
@@ -235,7 +239,11 @@ where
                 add_branch_name(&repo, config)?;
             }
 
-            if *git_config.commit_timestamp() || *git_config.sha() || *git_config.commit_author() {
+            if *git_config.commit_timestamp()
+                || *git_config.sha()
+                || *git_config.commit_author()
+                || *git_config.commit_message()
+            {
                 let commit = ref_head.peel_to_commit()?;
 
                 if *git_config.commit_timestamp() {
@@ -298,12 +306,20 @@ where
                     add_entry(
                         config.cfg_map_mut(),
                         VergenKey::CommitAuthorName,
-                        Some(commit.author().name().unwrap().to_string()),
+                        commit.author().name().map(&str::to_string),
                     );
                     add_entry(
                         config.cfg_map_mut(),
                         VergenKey::CommitAuthorEmail,
-                        Some(commit.author().email().unwrap().to_string()),
+                        commit.author().email().map(&str::to_string),
+                    );
+                }
+
+                if *git_config.commit_message() {
+                    add_entry(
+                        config.cfg_map_mut(),
+                        VergenKey::CommitMessage,
+                        commit.message().map(&str::to_string),
                     );
                 }
             }
@@ -473,6 +489,7 @@ mod test {
         assert!(config.git().branch);
         assert!(config.git().commit_count);
         assert!(config.git().commit_author);
+        assert!(config.git().commit_message);
         assert!(config.git().commit_timestamp);
         assert_eq!(config.git().commit_timestamp_timezone, TimeZone::Utc);
         assert_eq!(config.git().commit_timestamp_kind, TimestampKind::Timestamp);
@@ -538,6 +555,31 @@ mod test {
     }
 
     #[test]
+    fn no_commit_author() {
+        let mut config = Instructions::default();
+        *config.git_mut().branch_mut() = false;
+        *config.git_mut().commit_timestamp_mut() = false;
+        *config.git_mut().rerun_on_head_change_mut() = false;
+        *config.git_mut().semver_mut() = false;
+        *config.git_mut().commit_count_mut() = false;
+        *config.git_mut().commit_author_mut() = false;
+        assert!(config.git().has_enabled());
+    }
+
+    #[test]
+    fn no_commit_message() {
+        let mut config = Instructions::default();
+        *config.git_mut().branch_mut() = false;
+        *config.git_mut().commit_timestamp_mut() = false;
+        *config.git_mut().rerun_on_head_change_mut() = false;
+        *config.git_mut().semver_mut() = false;
+        *config.git_mut().commit_count_mut() = false;
+        *config.git_mut().commit_author_mut() = false;
+        *config.git_mut().commit_message_mut() = false;
+        assert!(config.git().has_enabled());
+    }
+
+    #[test]
     fn nothing() {
         let mut config = Instructions::default();
         *config.git_mut().branch_mut() = false;
@@ -546,6 +588,7 @@ mod test {
         *config.git_mut().semver_mut() = false;
         *config.git_mut().commit_count_mut() = false;
         *config.git_mut().commit_author_mut() = false;
+        *config.git_mut().commit_message_mut() = false;
         *config.git_mut().sha_mut() = false;
         assert!(!config.git().has_enabled());
     }
