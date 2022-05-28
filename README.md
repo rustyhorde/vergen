@@ -39,9 +39,8 @@ A full list of environment variables that can be generated are listed in the fol
 | `VERGEN_GIT_COMMIT_AUTHOR_EMAIL` | janedoe@email.com |
 | `VERGEN_GIT_COMMIT_AUTHOR_NAME` | Jane Doe |
 | `VERGEN_GIT_COMMIT_COUNT` | 330 |
-| `VERGEN_GIT_COMMIT_MESSAGE` | feat: add commit messages |
-| `VERGEN_GIT_COMMIT_COUNT` | 330 |
 | `VERGEN_GIT_COMMIT_DATE` | 2021-02-24 |
+| `VERGEN_GIT_COMMIT_MESSAGE` | feat: add commit messages |
 | `VERGEN_GIT_COMMIT_TIME` | 20:55:21 |
 | `VERGEN_GIT_COMMIT_TIMESTAMP` | 2021-02-24T20:55:21+00:00 |
 | `VERGEN_GIT_SEMVER` | 5.0.0-2-gf49246c |
