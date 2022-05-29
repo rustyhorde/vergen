@@ -200,6 +200,9 @@ impl Git {
         self.enabled
             && (self.branch
                 || self.commit_timestamp
+                || self.commit_count
+                || self.commit_author
+                || self.commit_message
                 || self.rerun_on_head_change
                 || self.semver
                 || self.sha)
