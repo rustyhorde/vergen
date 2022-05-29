@@ -338,6 +338,8 @@ mod test {
         let config = instructions.git();
         assert!(config.has_enabled());
         assert!(config.branch());
+        assert!(config.commit_author());
+        assert!(config.commit_message());
         assert!(config.commit_timestamp());
         assert_eq!(*config.commit_timestamp_timezone(), TimeZone::Utc);
         assert_eq!(*config.commit_timestamp_kind(), TimestampKind::Timestamp);
