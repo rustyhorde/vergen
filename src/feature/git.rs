@@ -583,6 +583,48 @@ mod test {
     }
 
     #[test]
+    fn only_commit_message() {
+        let mut config = Instructions::default();
+        *config.git_mut().branch_mut() = false;
+        *config.git_mut().commit_timestamp_mut() = false;
+        *config.git_mut().rerun_on_head_change_mut() = false;
+        *config.git_mut().semver_mut() = false;
+        *config.git_mut().commit_count_mut() = false;
+        *config.git_mut().commit_author_mut() = false;
+        *config.git_mut().sha_mut() = false;
+        *config.git_mut().commit_message_mut() = true;
+        assert!(config.git().has_enabled());
+    }
+
+    #[test]
+    fn only_commit_author() {
+        let mut config = Instructions::default();
+        *config.git_mut().branch_mut() = false;
+        *config.git_mut().commit_timestamp_mut() = false;
+        *config.git_mut().rerun_on_head_change_mut() = false;
+        *config.git_mut().semver_mut() = false;
+        *config.git_mut().commit_count_mut() = false;
+        *config.git_mut().commit_message_mut() = false;
+        *config.git_mut().sha_mut() = false;
+        *config.git_mut().commit_author_mut() = true;
+        assert!(config.git().has_enabled());
+    }
+
+    #[test]
+    fn only_commit_sha() {
+        let mut config = Instructions::default();
+        *config.git_mut().branch_mut() = false;
+        *config.git_mut().commit_timestamp_mut() = false;
+        *config.git_mut().rerun_on_head_change_mut() = false;
+        *config.git_mut().semver_mut() = false;
+        *config.git_mut().commit_count_mut() = false;
+        *config.git_mut().commit_message_mut() = false;
+        *config.git_mut().sha_mut() = true;
+        *config.git_mut().commit_author_mut() = false;
+        assert!(config.git().has_enabled());
+    }
+
+    #[test]
     fn nothing() {
         let mut config = Instructions::default();
         *config.git_mut().branch_mut() = false;
