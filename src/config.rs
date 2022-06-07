@@ -22,9 +22,9 @@ use crate::{
     constants::{
         BUILD_DATE_NAME, BUILD_SEMVER_NAME, BUILD_TIMESTAMP_NAME, BUILD_TIME_NAME, CARGO_FEATURES,
         CARGO_PROFILE, CARGO_TARGET_TRIPLE, GIT_BRANCH_NAME, GIT_COMMIT_AUTHOR_EMAIL,
-        GIT_COMMIT_AUTHOR_NAME, GIT_COMMIT_COUNT, GIT_COMMIT_DATE_NAME, GIT_COMMIT_TIMESTAMP_NAME,
-        GIT_COMMIT_TIME_NAME, GIT_SEMVER_NAME, GIT_SEMVER_TAGS_NAME, GIT_SHA_NAME,
-        GIT_SHA_SHORT_NAME, RUSTC_CHANNEL_NAME, RUSTC_COMMIT_DATE, RUSTC_COMMIT_HASH,
+        GIT_COMMIT_AUTHOR_NAME, GIT_COMMIT_COUNT, GIT_COMMIT_DATE_NAME, GIT_COMMIT_MESSAGE,
+        GIT_COMMIT_TIMESTAMP_NAME, GIT_COMMIT_TIME_NAME, GIT_SEMVER_NAME, GIT_SEMVER_TAGS_NAME,
+        GIT_SHA_NAME, GIT_SHA_SHORT_NAME, RUSTC_CHANNEL_NAME, RUSTC_COMMIT_DATE, RUSTC_COMMIT_HASH,
         RUSTC_HOST_TRIPLE_NAME, RUSTC_LLVM_VERSION, RUSTC_SEMVER_NAME, SYSINFO_CPU_BRAND,
         SYSINFO_CPU_CORE_COUNT, SYSINFO_CPU_FREQUENCY, SYSINFO_CPU_NAME, SYSINFO_CPU_VENDOR,
         SYSINFO_MEMORY, SYSINFO_NAME, SYSINFO_OS_VERSION, SYSINFO_USER,
@@ -181,6 +181,8 @@ pub(crate) enum VergenKey {
     CommitCount,
     /// The commit date. (VERGEN_GIT_COMMIT_DATE)
     CommitDate,
+    /// Commit message (VERGEN_GIT_COMMIT_MESSAGE)
+    CommitMessage,
     /// The commit time. (VERGEN_GIT_COMMIT_TIME)
     CommitTime,
     /// The commit timestamp. (VERGEN_GIT_COMMIT_TIMESTAMP)
@@ -245,6 +247,7 @@ impl VergenKey {
             VergenKey::CommitAuthorName => GIT_COMMIT_AUTHOR_NAME,
             VergenKey::CommitCount => GIT_COMMIT_COUNT,
             VergenKey::CommitDate => GIT_COMMIT_DATE_NAME,
+            VergenKey::CommitMessage => GIT_COMMIT_MESSAGE,
             VergenKey::CommitTime => GIT_COMMIT_TIME_NAME,
             VergenKey::CommitTimestamp => GIT_COMMIT_TIMESTAMP_NAME,
             VergenKey::Semver => GIT_SEMVER_NAME,
@@ -335,6 +338,8 @@ mod test {
         let config = instructions.git();
         assert!(config.has_enabled());
         assert!(config.branch());
+        assert!(config.commit_author());
+        assert!(config.commit_message());
         assert!(config.commit_timestamp());
         assert_eq!(*config.commit_timestamp_timezone(), TimeZone::Utc);
         assert_eq!(*config.commit_timestamp_kind(), TimestampKind::Timestamp);
