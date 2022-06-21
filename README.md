@@ -12,8 +12,9 @@ due to a [potential segfault](https://github.com/rustsec/advisory-db/blob/main/c
 * To build with the `local_offset` feature, you must also explicitly delare that you are acknowledging the potential unsoundness by
 setting `RUSTFLAGS="--cfg unsound_local_offset"`.  Per the `time` docs this isn't tested, so use with extreme caution.
 
-## Release 6.0 Breaking Changes
-* The `Copy` implementation was dropped from the [`Config`](https://github.com/rustyhorde/vergen/blob/24ed6bc2269320ab98962edc8b736fcc6e3c7d64/src/config.rs#L94-L148) struct to allow the base git directory to be specified.  This is a breaking API change necessitating a new major release.
+## MSRV
+The current minimum supported rust version is 1.57.0
+
 ## Current Release
 [![docs.rs](https://docs.rs/vergen/badge.svg)](https://docs.rs/vergen)
 [![Crates.io](https://img.shields.io/crates/v/vergen.svg)](https://crates.io/crates/vergen)
