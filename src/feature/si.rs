@@ -262,7 +262,9 @@ pub(crate) fn configure_sysinfo(_instructions: &Instructions, _config: &mut Conf
 
 #[cfg(all(feature = "si", not(target_os = "windows"), not(target_os = "macos")))]
 fn check_user(process: &Process, user: &User) -> bool {
-    *user.uid() == process.uid
+    use sysinfo::ProcessExt;
+
+    Some(user.id()) == process.user_id()
 }
 
 #[cfg(all(feature = "si", target_os = "windows"))]
