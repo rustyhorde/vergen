@@ -41,10 +41,10 @@ fn stable_lints() {
 #[rustversion::not(stable)]
 fn stable_lints() {}
 
-#[rustversion::before(1.58)]
+#[rustversion::before(1.62)]
 fn msrv_lints() {}
 
-#[rustversion::since(1.58)]
+#[rustversion::since(1.62)]
 fn msrv_lints() {
     println!("cargo:rustc-cfg=msrv");
 }

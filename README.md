@@ -13,7 +13,7 @@ due to a [potential segfault](https://github.com/rustsec/advisory-db/blob/main/c
 setting `RUSTFLAGS="--cfg unsound_local_offset"`.  Per the `time` docs this isn't tested, so use with extreme caution.
 
 ## MSRV
-The current minimum supported rust version is 1.58.0
+The current minimum supported rust version is 1.62.0
 
 ## Current Release
 [![docs.rs](https://docs.rs/vergen/badge.svg)](https://docs.rs/vergen)

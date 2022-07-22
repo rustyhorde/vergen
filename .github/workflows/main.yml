@@ -38,7 +38,7 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            rust: "1.58.0"
+            rust: "1.62.0"
           - os: ubuntu-latest
             rust: stable
           - os: ubuntu-latest
@@ -68,13 +68,13 @@ jobs:
       matrix:
         include:
         - os: ubuntu-latest
-          rust: "1.58.0"
+          rust: "1.62.0"
           target: i686-unknown-linux-gnu
         - os: ubuntu-latest
           rust: stable
           target: i686-unknown-linux-gnu
         - os: ubuntu-latest
-          rust: "1.58.0"
+          rust: "1.62.0"
           target: x86_64-unknown-linux-gnu
         - os: ubuntu-latest
           rust: stable
@@ -148,13 +148,13 @@ jobs:
       matrix:
         include:
         - os: macos-latest
-          rust: "1.58.0"
+          rust: "1.62.0"
           target: x86_64-apple-darwin
         - os: macos-latest
           rust: stable
           target: x86_64-apple-darwin
         - os: macos-latest
-          rust: "1.58.0"
+          rust: "1.62.0"
           target: x86_64-apple-ios
         - os: macos-latest
           rust: stable
@@ -214,13 +214,13 @@ jobs:
       matrix:
         include:
         - os: windows-latest
-          rust: 1.58.0-msvc
+          rust: 1.62.0-msvc
           target: i686-pc-windows-msvc
         - os: windows-latest
           rust: stable-msvc
           target: i686-pc-windows-msvc
         - os: windows-latest
-          rust: 1.58.0-msvc
+          rust: 1.62.0-msvc
           target: x86_64-pc-windows-msvc
         - os: windows-latest
           rust: stable-msvc
@@ -238,13 +238,13 @@ jobs:
           rust: nightly-msvc
           target: x86_64-pc-windows-msvc
         - os: windows-latest
-          rust: 1.58.0-gnu
+          rust: 1.62.0-gnu
           target: i686-pc-windows-gnu
         - os: windows-latest
           rust: stable-gnu
           target: i686-pc-windows-gnu
         - os: windows-latest
-          rust: 1.58.0-gnu
+          rust: 1.62.0-gnu
           target: x86_64-pc-windows-gnu
         - os: windows-latest
           rust: stable-gnu
