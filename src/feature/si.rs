@@ -19,7 +19,7 @@ use {
 use {
     crate::{config::VergenKey, feature::add_entry},
     getset::{Getters, MutGetters},
-    sysinfo::{ProcessorExt, System, SystemExt},
+    sysinfo::{CpuExt, System, SystemExt},
 };
 
 /// Configuration for the `VERGEN_SYSINFO_*` instructions
@@ -199,7 +199,7 @@ pub(crate) fn configure_sysinfo(instructions: &Instructions, config: &mut Config
                 config.cfg_map_mut(),
                 VergenKey::SysinfoCpuVendor,
                 system
-                    .processors()
+                    .cpus()
                     .get(0)
                     .map(|processor| processor.vendor_id().to_string()),
             );
@@ -219,9 +219,9 @@ pub(crate) fn configure_sysinfo(instructions: &Instructions, config: &mut Config
                 VergenKey::SysinfoCpuName,
                 Some(
                     system
-                        .processors()
+                        .cpus()
                         .iter()
-                        .map(ProcessorExt::name)
+                        .map(CpuExt::name)
                         .collect::<Vec<&str>>()
                         .join(","),
                 ),
@@ -233,7 +233,7 @@ pub(crate) fn configure_sysinfo(instructions: &Instructions, config: &mut Config
                 config.cfg_map_mut(),
                 VergenKey::SysinfoCpuBrand,
                 system
-                    .processors()
+                    .cpus()
                     .get(0)
                     .map(|processor| processor.brand().to_string()),
             );
@@ -244,7 +244,7 @@ pub(crate) fn configure_sysinfo(instructions: &Instructions, config: &mut Config
                 config.cfg_map_mut(),
                 VergenKey::SysinfoCpuFrequency,
                 system
-                    .processors()
+                    .cpus()
                     .get(0)
                     .map(|processor| processor.frequency().to_string()),
             );

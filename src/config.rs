@@ -34,7 +34,7 @@ use crate::{
     },
 };
 use anyhow::Result;
-use enum_iterator::IntoEnumIterator;
+use enum_iterator::{all, Sequence};
 use getset::{Getters, MutGetters};
 use std::{
     collections::BTreeMap,
@@ -161,7 +161,7 @@ impl Instructions {
 }
 
 /// Build information keys.
-#[derive(Clone, Copy, Debug, IntoEnumIterator, Hash, Eq, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd, Sequence)]
 pub(crate) enum VergenKey {
     /// The build date. (VERGEN_BUILD_DATE)
     BuildDate,
@@ -288,7 +288,12 @@ pub(crate) struct Config {
 impl Default for Config {
     fn default() -> Config {
         Self {
-            cfg_map: VergenKey::into_enum_iter().map(|x| (x, None)).collect(),
+            cfg_map: all::<VergenKey>()
+                .collect::<Vec<_>>()
+                .iter()
+                .copied()
+                .map(|x| (x, None))
+                .collect(),
             head_path: Option::default(),
             ref_path: Option::default(),
         }
