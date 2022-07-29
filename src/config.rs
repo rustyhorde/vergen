@@ -321,6 +321,7 @@ mod test {
         assert_eq!(*config.timezone(), TimeZone::Utc);
         assert_eq!(*config.kind(), TimestampKind::Timestamp);
         assert!(config.semver());
+        assert!(!config.skip_if_error());
     }
 
     #[cfg(not(feature = "build"))]
