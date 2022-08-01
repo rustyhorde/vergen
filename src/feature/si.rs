@@ -88,6 +88,8 @@ pub struct Sysinfo {
     cpu_brand: bool,
     /// Enable/Disable the `VERGEN_SYSINFO_CPU_FREQUENCY` instruction
     cpu_frequency: bool,
+    /// Enable/Disable skipping [`Sysinfo`] if an Error occurs.
+    skip_if_error: bool,
 }
 
 #[cfg(feature = "si")]
@@ -104,6 +106,7 @@ impl Default for Sysinfo {
             cpu_name: true,
             cpu_brand: true,
             cpu_frequency: true,
+            skip_if_error: false,
         }
     }
 }
@@ -143,7 +146,8 @@ fn setup_system() -> System {
 #[allow(clippy::unnecessary_wraps, clippy::too_many_lines)]
 pub(crate) fn configure_sysinfo(instructions: &Instructions, config: &mut Config) -> Result<()> {
     let sysinfo_config = instructions.sysinfo();
-    if sysinfo_config.has_enabled() {
+
+    let mut add_entries = || {
         let system = setup_system();
 
         if *sysinfo_config.name() {
@@ -249,9 +253,28 @@ pub(crate) fn configure_sysinfo(instructions: &Instructions, config: &mut Config
                     .map(|processor| processor.frequency().to_string()),
             );
         }
-    }
+        Ok(())
+    };
 
-    Ok(())
+    if sysinfo_config.has_enabled() {
+        if sysinfo_config.skip_if_error {
+            // hide errors, but emit a warning
+            let result = add_entries();
+            if result.is_err() {
+                let warning = format!(
+                    "An Error occurred during processing of {}. \
+                    VERGEN_{}_* may be incomplete.",
+                    "Sysinfo", "SYSINFO"
+                );
+                config.warnings_mut().push(warning);
+            }
+            Ok(())
+        } else {
+            add_entries()
+        }
+    } else {
+        Ok(())
+    }
 }
 
 #[cfg(not(feature = "si"))]

@@ -386,6 +386,7 @@ mod test {
         assert!(config.memory());
         assert!(config.cpu_vendor());
         assert!(config.cpu_core_count());
+        assert!(!config.skip_if_error());
     }
 
     #[cfg(not(feature = "si"))]
