@@ -133,6 +133,9 @@ mod test {
     use regex::Regex;
     use std::{io, path::PathBuf};
 
+    #[cfg(feature = "git")]
+    use tempfile::TempDir;
+
     lazy_static! {
         static ref VBD_REGEX: Regex = Regex::new(r".*VERGEN_BUILD_TIMESTAMP.*").unwrap();
     }
@@ -342,6 +345,30 @@ mod test {
         let mut inst = Instructions::default();
         *inst.git_mut().enabled_mut() = false;
         assert!(vergen(inst).is_ok());
+        teardown();
+        Ok(())
+    }
+
+    #[test]
+    #[cfg(feature = "git")]
+    fn skip_if_error() -> Result<()> {
+        setup();
+
+        let tmp_dir = TempDir::new()?;
+        let not_git_path = tmp_dir.path();
+        let mut inst = Instructions::default();
+        *inst.git_mut().enabled_mut() = true;
+        *inst.git_mut().base_dir_mut() = Some(not_git_path.to_owned());
+        assert!(vergen(inst.clone()).is_err());
+
+        *inst.git_mut().skip_if_error_mut() = true;
+        assert!(vergen(inst.clone()).is_ok());
+
+        let mut stdout_buf = vec![];
+        config_from_instructions(inst, Some(not_git_path), &mut stdout_buf)?;
+        let stdout = String::from_utf8_lossy(&stdout_buf);
+        assert!(stdout.contains("cargo:warning"));
+
         teardown();
         Ok(())
     }

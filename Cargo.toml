@@ -44,4 +44,5 @@ rustversion = "1"
 lazy_static = "1"
 regex = "1"
 serial_test = "0"
+tempfile = "3"
 
