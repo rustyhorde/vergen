@@ -356,6 +356,7 @@ mod test {
         assert_eq!(*config.semver_kind(), SemverKind::Normal);
         assert!(config.sha());
         assert_eq!(*config.sha_kind(), ShaKind::Normal);
+        assert!(!config.skip_if_error());
     }
 
     #[cfg(not(feature = "git"))]
