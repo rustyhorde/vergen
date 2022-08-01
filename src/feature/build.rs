@@ -37,6 +37,8 @@ use {
 /// * If the `semver` field is false, the semver instruction will not be generated.
 /// * **NOTE** - By default, the date/time related instructions will use [`UTC`](TimeZone::Utc).
 /// * **NOTE** - The date/time instruction output is determined by the [`kind`](TimestampKind) field and can be any combination of the three.
+/// * **NOTE** - To keep processing other sections if an Error occurs in this one, set
+///     [`Build::skip_if_error`](Build::skip_if_error_mut()) to true.
 ///
 /// # Example
 ///
@@ -90,6 +92,7 @@ pub struct Build {
     /// Enable/Disable the `VERGEN_BUILD_SEMVER` instruction.
     semver: bool,
     /// Enable/Disable skipping [`Build`] if an Error occurs.
+    /// Use [`option_env!`](std::option_env!) to read the generated environment variables.
     skip_if_error: bool,
 }
 

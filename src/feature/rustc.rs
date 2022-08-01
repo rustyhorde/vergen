@@ -39,6 +39,8 @@ use {
 /// * If the `sha` field is false, the `VERGEN_RUSTC_COMMIT_HASH` instruction will not be generated.
 /// * **NOTE** - The `commit_date` filed is only a date, as we are restricted to the output from `rustc_version`
 /// * **NOTE** - The `VERGEN_RUSTC_LLVM_VERSION` instruction will only be generated on the `nightly` channel, regardless of the `llvm_version` field.
+/// * **NOTE** - To keep processing other sections if an Error occurs in this one, set
+///     [`Rustc::skip_if_error`](Rustc::skip_if_error_mut()) to true.
 ///
 /// # Example
 ///
@@ -80,6 +82,7 @@ pub struct Rustc {
     /// Enable/Disable the `VERGEN_RUSTC_COMMIT_HASH` instruction
     sha: bool,
     /// Enable/Disable skipping [`Rustc`] if an Error occurs.
+    /// Use [`option_env!`](std::option_env!) to read the generated environment variables.
     skip_if_error: bool,
 }
 

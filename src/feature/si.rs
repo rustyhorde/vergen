@@ -42,6 +42,8 @@ use {
 /// * If the `memory` field is false, the `VERGEN_SYSINFO_TOTAL_MEMORY` instruction will not be generated.
 /// * If the `cpu_vendor` field is false, the `VERGEN_SYSINFO_CPU_VENDOR` instruction will not be generated.
 /// * If the `cpu_core_count` field is false, the `VERGEN_SYSINFO_CPU_CORE_COUNT` instruction will not be generated.
+/// * **NOTE** - To keep processing other sections if an Error occurs in this one, set
+///     [`Sysinfo::skip_if_error`](Sysinfo::skip_if_error_mut()) to true.
 ///
 /// # Example
 ///
@@ -89,6 +91,7 @@ pub struct Sysinfo {
     /// Enable/Disable the `VERGEN_SYSINFO_CPU_FREQUENCY` instruction
     cpu_frequency: bool,
     /// Enable/Disable skipping [`Sysinfo`] if an Error occurs.
+    /// Use [`option_env!`](std::option_env!) to read the generated environment variables.
     skip_if_error: bool,
 }
 

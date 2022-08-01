@@ -82,6 +82,10 @@ pub enum ShaKind {
 /// * **NOTE** - By default, the date/time related instructions will use [`UTC`](crate::TimeZone::Utc).
 /// * **NOTE** - The date/time instruction output is determined by the [`kind`](crate::TimestampKind) field and can be any combination of the three.
 /// * **NOTE** - If the `rerun_on_head_chaged` instructions are enabled, cargo` will re-run the build script when either `&lt;gitpath&gt;/HEAD` or the file that `&lt;gitpath&gt;/HEAD` points at changes.
+/// * **NOTE** - Even if a project is developed in a git repository, the repository is not always
+///     present with the source code, e.g. in a source tarball. By default,
+///     [`vergen`](crate::vergen) returns an Error in this case. To keep processing other
+///     sections, set [`Git::skip_if_error`](Git::skip_if_error_mut()) to true.
 ///
 /// # Example
 ///
@@ -165,6 +169,7 @@ pub struct Git {
     #[getset(get = "pub(crate)")]
     sha_kind: ShaKind,
     /// Enable/Disable skipping [`Git`] if an Error occurs.
+    /// Use [`option_env!`](std::option_env!) to read the generated environment variables.
     #[getset(get = "pub(crate)")]
     skip_if_error: bool,
 }

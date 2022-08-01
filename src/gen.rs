@@ -23,6 +23,8 @@ use std::{
 /// * [I/O](std::io::Error) errors may be generated.
 /// * Errors may be generated from the `rustc_version` library.
 /// * [env](std::env::VarError) errors may be generated.
+/// * To ignore Errors generated in a specific section, set `skip_if_error` to true for that
+///   section, e.g. [`Build::skip_if_error`](crate::Build::skip_if_error_mut()).
 ///
 /// # Usage
 ///
@@ -50,6 +52,8 @@ pub fn vergen(config: crate::Config) -> Result<()> {
 /// * [I/O](std::io::Error) errors may be generated.
 /// * Errors may be generated from the `rustc_version` library.
 /// * [env](std::env::VarError) errors may be generated.
+/// * To ignore Errors generated in a specific section, set `skip_if_error` to true for that
+///   section, e.g. [`Build::skip_if_error`](crate::Build::skip_if_error_mut()).
 ///
 /// # Usage
 ///
