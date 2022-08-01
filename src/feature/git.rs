@@ -73,7 +73,7 @@ pub enum ShaKind {
 /// * If the `commit_timestamp` field is false, the date/time instructions will not be generated.
 /// * If the `rerun_on_head_changed` field is false, the `cargo:rerun-if-changed` instructions will not be generated.
 /// * If the `semver` field is false, the `VERGEN_GIT_SEMVER` instruction will not be generated.
-/// * If the `sha` field is fale, the `VERGEN_GIT_SHA` instruction will not be generated.
+/// * If the `sha` field is false, the `VERGEN_GIT_SHA` instruction will not be generated.
 /// * **NOTE** - The SHA defaults to the [`Normal`](ShaKind::Normal) variant, but can be changed via the `sha_kind` field.
 /// * **NOTE** - The [SemVer] defaults to the [`Normal`](SemverKind::Normal) variant, but can be changed via the `semver_kind` field.
 /// * **NOTE** - The [SemVer] is only useful if you have tags on your repository.  If your repository has no tags, this will default to [`CARGO_PKG_VERSION`].
@@ -81,7 +81,7 @@ pub enum ShaKind {
 /// * **NOTE** - The [`Lightweight`](SemverKind::Lightweight) variant will only differ from the [`Normal`](SemverKind::Normal) variant if you use [lightweight] tags in your repository.
 /// * **NOTE** - By default, the date/time related instructions will use [`UTC`](crate::TimeZone::Utc).
 /// * **NOTE** - The date/time instruction output is determined by the [`kind`](crate::TimestampKind) field and can be any combination of the three.
-/// * **NOTE** - If the `rerun_on_head_chaged` instructions are enabled, cargo` will re-run the build script when either `&lt;gitpath&gt;/HEAD` or the file that `&lt;gitpath&gt;/HEAD` points at changes.
+/// * **NOTE** - If the `rerun_on_head_chaged` instructions are enabled, cargo will re-run the build script when either `<gitpath>/HEAD` or the file that `<gitpath>/HEAD` points at changes.
 /// * **NOTE** - Even if a project is developed in a git repository, the repository is not always
 ///     present with the source code, e.g. in a source tarball. By default,
 ///     [`vergen`](crate::vergen) returns an Error in this case. To keep processing other
