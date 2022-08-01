@@ -283,6 +283,7 @@ pub(crate) struct Config {
     cfg_map: BTreeMap<VergenKey, Option<String>>,
     head_path: Option<PathBuf>,
     ref_path: Option<PathBuf>,
+    warnings: Vec<String>,
 }
 
 impl Default for Config {
@@ -296,6 +297,7 @@ impl Default for Config {
                 .collect(),
             head_path: Option::default(),
             ref_path: Option::default(),
+            warnings: Vec::new(),
         }
     }
 }

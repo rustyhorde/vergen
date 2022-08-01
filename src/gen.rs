@@ -105,6 +105,11 @@ where
         writeln!(stdout, "cargo:rerun-if-changed={}", ref_path.display())?;
     }
 
+    // Emit a cargo:warning if a section was skipped over
+    for w in config.warnings() {
+        writeln!(stdout, "cargo:warning={}", w)?;
+    }
+
     Ok(())
 }
 
