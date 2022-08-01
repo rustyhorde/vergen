@@ -79,6 +79,8 @@ pub struct Rustc {
     semver: bool,
     /// Enable/Disable the `VERGEN_RUSTC_COMMIT_HASH` instruction
     sha: bool,
+    /// Enable/Disable skipping [`Rustc`] if an Error occurs.
+    skip_if_error: bool,
 }
 
 #[cfg(feature = "rustc")]
@@ -92,6 +94,7 @@ impl Default for Rustc {
             llvm_version: true,
             semver: true,
             sha: true,
+            skip_if_error: false,
         }
     }
 }
@@ -111,7 +114,8 @@ impl Rustc {
 #[cfg(feature = "rustc")]
 pub(crate) fn configure_rustc(instructions: &Instructions, config: &mut Config) -> Result<()> {
     let rustc_config = instructions.rustc();
-    if rustc_config.has_enabled() {
+
+    let mut add_entries = || {
         let rustc = version_meta()?;
 
         if *rustc_config.channel() {
@@ -171,8 +175,28 @@ pub(crate) fn configure_rustc(instructions: &Instructions, config: &mut Config) 
                 );
             }
         }
+        Ok(())
+    };
+
+    if rustc_config.has_enabled() {
+        if rustc_config.skip_if_error {
+            // hide errors, but emit a warning
+            let result = add_entries();
+            if result.is_err() {
+                let warning = format!(
+                    "An Error occurred during processing of {}. \
+                    VERGEN_{}_* may be incomplete.",
+                    "Rustc", "RUSTC"
+                );
+                config.warnings_mut().push(warning);
+            }
+            Ok(())
+        } else {
+            add_entries()
+        }
+    } else {
+        Ok(())
     }
-    Ok(())
 }
 
 #[cfg(not(feature = "rustc"))]

@@ -371,6 +371,7 @@ mod test {
         assert!(config.host_triple());
         assert!(config.llvm_version());
         assert!(config.sha());
+        assert!(!config.skip_if_error());
     }
 
     #[cfg(not(feature = "rustc"))]
