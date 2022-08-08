@@ -73,7 +73,7 @@ pub enum ShaKind {
 /// * If the `commit_timestamp` field is false, the date/time instructions will not be generated.
 /// * If the `rerun_on_head_changed` field is false, the `cargo:rerun-if-changed` instructions will not be generated.
 /// * If the `semver` field is false, the `VERGEN_GIT_SEMVER` instruction will not be generated.
-/// * If the `sha` field is fale, the `VERGEN_GIT_SHA` instruction will not be generated.
+/// * If the `sha` field is false, the `VERGEN_GIT_SHA` instruction will not be generated.
 /// * **NOTE** - The SHA defaults to the [`Normal`](ShaKind::Normal) variant, but can be changed via the `sha_kind` field.
 /// * **NOTE** - The [SemVer] defaults to the [`Normal`](SemverKind::Normal) variant, but can be changed via the `semver_kind` field.
 /// * **NOTE** - The [SemVer] is only useful if you have tags on your repository.  If your repository has no tags, this will default to [`CARGO_PKG_VERSION`].
@@ -81,7 +81,11 @@ pub enum ShaKind {
 /// * **NOTE** - The [`Lightweight`](SemverKind::Lightweight) variant will only differ from the [`Normal`](SemverKind::Normal) variant if you use [lightweight] tags in your repository.
 /// * **NOTE** - By default, the date/time related instructions will use [`UTC`](crate::TimeZone::Utc).
 /// * **NOTE** - The date/time instruction output is determined by the [`kind`](crate::TimestampKind) field and can be any combination of the three.
-/// * **NOTE** - If the `rerun_on_head_chaged` instructions are enabled, cargo` will re-run the build script when either `&lt;gitpath&gt;/HEAD` or the file that `&lt;gitpath&gt;/HEAD` points at changes.
+/// * **NOTE** - If the `rerun_on_head_chaged` instructions are enabled, cargo will re-run the build script when either `<gitpath>/HEAD` or the file that `<gitpath>/HEAD` points at changes.
+/// * **NOTE** - Even if a project is developed in a git repository, the repository is not always
+///     present with the source code, e.g. in a source tarball. By default,
+///     [`vergen`](crate::vergen) returns an Error in this case. To keep processing other
+///     sections, set [`Git::skip_if_error`](Git::skip_if_error_mut()) to true.
 ///
 /// # Example
 ///
@@ -164,6 +168,10 @@ pub struct Git {
     /// The kind of SHA instruction to output.
     #[getset(get = "pub(crate)")]
     sha_kind: ShaKind,
+    /// Enable/Disable skipping [`Git`] if an Error occurs.
+    /// Use [`option_env!`](std::option_env!) to read the generated environment variables.
+    #[getset(get = "pub(crate)")]
+    skip_if_error: bool,
 }
 
 #[cfg(feature = "git")]
@@ -190,6 +198,7 @@ impl Default for Git {
             semver_dirty: None,
             sha: true,
             sha_kind: ShaKind::Normal,
+            skip_if_error: false,
         }
     }
 }
@@ -231,134 +240,158 @@ pub(crate) fn configure_git<T>(
 where
     T: AsRef<Path>,
 {
-    if let Some(repo_path) = repo_path_opt {
-        let git_config = instructions.git();
-        if git_config.has_enabled() {
-            let repo = Repository::discover(repo_path)?;
-            let ref_head = repo.find_reference("HEAD")?;
-            let repo_path = repo.path().to_path_buf();
+    let repo_path = match repo_path_opt {
+        Some(repo_path) => repo_path,
+        None => return Ok(()),
+    };
 
-            if *git_config.branch() {
-                add_branch_name(&repo, config)?;
-            }
+    let git_config = instructions.git();
 
-            if *git_config.commit_timestamp()
-                || *git_config.sha()
-                || *git_config.commit_author()
-                || *git_config.commit_message()
-            {
-                let commit = ref_head.peel_to_commit()?;
+    let add_entries = || {
+        let repo = Repository::discover(repo_path)?;
+        let ref_head = repo.find_reference("HEAD")?;
+        let repo_path = repo.path().to_path_buf();
 
-                if *git_config.commit_timestamp() {
-                    let commit_time = OffsetDateTime::from_unix_timestamp(commit.time().seconds())?;
-
-                    match git_config.commit_timestamp_timezone() {
-                        crate::TimeZone::Utc => {
-                            add_config_entries(
-                                config,
-                                git_config,
-                                &commit_time.to_offset(UtcOffset::UTC),
-                            )?;
-                        }
-                        #[cfg(feature = "local_offset")]
-                        crate::TimeZone::Local => {
-                            add_config_entries(
-                                config,
-                                git_config,
-                                &commit_time.to_offset(UtcOffset::current_local_offset()?),
-                            )?;
-                        }
-                    }
-                }
-
-                if *git_config.sha() {
-                    match git_config.sha_kind() {
-                        crate::ShaKind::Normal => {
-                            add_entry(
-                                config.cfg_map_mut(),
-                                VergenKey::Sha,
-                                Some(commit.id().to_string()),
-                            );
-                        }
-                        crate::ShaKind::Short => {
-                            let obj = repo.revparse_single("HEAD")?;
-                            add_entry(
-                                config.cfg_map_mut(),
-                                VergenKey::ShortSha,
-                                obj.short_id()?.as_str().map(str::to_string),
-                            );
-                        }
-                        crate::ShaKind::Both => {
-                            add_entry(
-                                config.cfg_map_mut(),
-                                VergenKey::Sha,
-                                Some(commit.id().to_string()),
-                            );
-
-                            let obj = repo.revparse_single("HEAD")?;
-                            add_entry(
-                                config.cfg_map_mut(),
-                                VergenKey::ShortSha,
-                                obj.short_id()?.as_str().map(str::to_string),
-                            );
-                        }
-                    }
-                }
-
-                if *git_config.commit_author() {
-                    add_entry(
-                        config.cfg_map_mut(),
-                        VergenKey::CommitAuthorName,
-                        commit.author().name().map(&str::to_string),
-                    );
-                    add_entry(
-                        config.cfg_map_mut(),
-                        VergenKey::CommitAuthorEmail,
-                        commit.author().email().map(&str::to_string),
-                    );
-                }
-
-                if *git_config.commit_message() {
-                    add_entry(
-                        config.cfg_map_mut(),
-                        VergenKey::CommitMessage,
-                        commit.message().map(&str::to_string),
-                    );
-                }
-            }
-
-            if *git_config.semver() {
-                let dirty = git_config.semver_dirty();
-                match *git_config.semver_kind() {
-                    crate::SemverKind::Normal => {
-                        add_semver(&repo, &DescribeOptions::new(), false, dirty, config);
-                    }
-                    crate::SemverKind::Lightweight => {
-                        let mut opts = DescribeOptions::new();
-                        let _ = opts.describe_tags();
-
-                        add_semver(&repo, &opts, true, dirty, config);
-                    }
-                }
-            }
-
-            if *git_config.commit_count() {
-                add_commit_count(&repo, config);
-            }
-
-            if let Ok(resolved) = ref_head.resolve() {
-                if let Some(name) = resolved.name() {
-                    let path = repo_path.join(name);
-                    // Check whether the path exists in the filesystem before emitting it
-                    if path.exists() {
-                        *config.ref_path_mut() = Some(path);
-                    }
-                }
-            }
-            *config.head_path_mut() = Some(repo_path.join("HEAD"));
+        if *git_config.branch() {
+            add_branch_name(&repo, config)?;
         }
+
+        if *git_config.commit_timestamp()
+            || *git_config.sha()
+            || *git_config.commit_author()
+            || *git_config.commit_message()
+        {
+            let commit = ref_head.peel_to_commit()?;
+
+            if *git_config.commit_timestamp() {
+                let commit_time = OffsetDateTime::from_unix_timestamp(commit.time().seconds())?;
+
+                match git_config.commit_timestamp_timezone() {
+                    crate::TimeZone::Utc => {
+                        add_config_entries(
+                            config,
+                            git_config,
+                            &commit_time.to_offset(UtcOffset::UTC),
+                        )?;
+                    }
+                    #[cfg(feature = "local_offset")]
+                    crate::TimeZone::Local => {
+                        add_config_entries(
+                            config,
+                            git_config,
+                            &commit_time.to_offset(UtcOffset::current_local_offset()?),
+                        )?;
+                    }
+                }
+            }
+
+            if *git_config.sha() {
+                match git_config.sha_kind() {
+                    crate::ShaKind::Normal => {
+                        add_entry(
+                            config.cfg_map_mut(),
+                            VergenKey::Sha,
+                            Some(commit.id().to_string()),
+                        );
+                    }
+                    crate::ShaKind::Short => {
+                        let obj = repo.revparse_single("HEAD")?;
+                        add_entry(
+                            config.cfg_map_mut(),
+                            VergenKey::ShortSha,
+                            obj.short_id()?.as_str().map(str::to_string),
+                        );
+                    }
+                    crate::ShaKind::Both => {
+                        add_entry(
+                            config.cfg_map_mut(),
+                            VergenKey::Sha,
+                            Some(commit.id().to_string()),
+                        );
+
+                        let obj = repo.revparse_single("HEAD")?;
+                        add_entry(
+                            config.cfg_map_mut(),
+                            VergenKey::ShortSha,
+                            obj.short_id()?.as_str().map(str::to_string),
+                        );
+                    }
+                }
+            }
+
+            if *git_config.commit_author() {
+                add_entry(
+                    config.cfg_map_mut(),
+                    VergenKey::CommitAuthorName,
+                    commit.author().name().map(&str::to_string),
+                );
+                add_entry(
+                    config.cfg_map_mut(),
+                    VergenKey::CommitAuthorEmail,
+                    commit.author().email().map(&str::to_string),
+                );
+            }
+
+            if *git_config.commit_message() {
+                add_entry(
+                    config.cfg_map_mut(),
+                    VergenKey::CommitMessage,
+                    commit.message().map(&str::to_string),
+                );
+            }
+        }
+
+        if *git_config.semver() {
+            let dirty = git_config.semver_dirty();
+            match *git_config.semver_kind() {
+                crate::SemverKind::Normal => {
+                    add_semver(&repo, &DescribeOptions::new(), false, dirty, config);
+                }
+                crate::SemverKind::Lightweight => {
+                    let mut opts = DescribeOptions::new();
+                    let _ = opts.describe_tags();
+
+                    add_semver(&repo, &opts, true, dirty, config);
+                }
+            }
+        }
+
+        if *git_config.commit_count() {
+            add_commit_count(&repo, config);
+        }
+
+        if let Ok(resolved) = ref_head.resolve() {
+            if let Some(name) = resolved.name() {
+                let path = repo_path.join(name);
+                // Check whether the path exists in the filesystem before emitting it
+                if path.exists() {
+                    *config.ref_path_mut() = Some(path);
+                }
+            }
+        }
+        *config.head_path_mut() = Some(repo_path.join("HEAD"));
+        Ok(())
+    };
+
+    if git_config.has_enabled() {
+        if git_config.skip_if_error {
+            // hide errors, but emit a warning
+            let result = add_entries();
+            if result.is_err() {
+                let warning = format!(
+                    "An Error occurred during processing of {}. \
+                    VERGEN_{}_* may be incomplete.",
+                    "Git", "GIT"
+                );
+                config.warnings_mut().push(warning);
+            }
+            Ok(())
+        } else {
+            add_entries()
+        }
+    } else {
+        Ok(())
     }
-    Ok(())
 }
 
 #[cfg(feature = "git")]

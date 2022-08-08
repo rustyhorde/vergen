@@ -283,6 +283,7 @@ pub(crate) struct Config {
     cfg_map: BTreeMap<VergenKey, Option<String>>,
     head_path: Option<PathBuf>,
     ref_path: Option<PathBuf>,
+    warnings: Vec<String>,
 }
 
 impl Default for Config {
@@ -296,6 +297,7 @@ impl Default for Config {
                 .collect(),
             head_path: Option::default(),
             ref_path: Option::default(),
+            warnings: Vec::new(),
         }
     }
 }
@@ -319,6 +321,7 @@ mod test {
         assert_eq!(*config.timezone(), TimeZone::Utc);
         assert_eq!(*config.kind(), TimestampKind::Timestamp);
         assert!(config.semver());
+        assert!(!config.skip_if_error());
     }
 
     #[cfg(not(feature = "build"))]
@@ -353,6 +356,7 @@ mod test {
         assert_eq!(*config.semver_kind(), SemverKind::Normal);
         assert!(config.sha());
         assert_eq!(*config.sha_kind(), ShaKind::Normal);
+        assert!(!config.skip_if_error());
     }
 
     #[cfg(not(feature = "git"))]
@@ -367,6 +371,7 @@ mod test {
         assert!(config.host_triple());
         assert!(config.llvm_version());
         assert!(config.sha());
+        assert!(!config.skip_if_error());
     }
 
     #[cfg(not(feature = "rustc"))]
@@ -382,6 +387,7 @@ mod test {
         assert!(config.memory());
         assert!(config.cpu_vendor());
         assert!(config.cpu_core_count());
+        assert!(!config.skip_if_error());
     }
 
     #[cfg(not(feature = "si"))]

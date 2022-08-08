@@ -37,6 +37,8 @@ use {
 /// * If the `semver` field is false, the semver instruction will not be generated.
 /// * **NOTE** - By default, the date/time related instructions will use [`UTC`](TimeZone::Utc).
 /// * **NOTE** - The date/time instruction output is determined by the [`kind`](TimestampKind) field and can be any combination of the three.
+/// * **NOTE** - To keep processing other sections if an Error occurs in this one, set
+///     [`Build::skip_if_error`](Build::skip_if_error_mut()) to true.
 ///
 /// # Example
 ///
@@ -89,6 +91,9 @@ pub struct Build {
     kind: TimestampKind,
     /// Enable/Disable the `VERGEN_BUILD_SEMVER` instruction.
     semver: bool,
+    /// Enable/Disable skipping [`Build`] if an Error occurs.
+    /// Use [`option_env!`](std::option_env!) to read the generated environment variables.
+    skip_if_error: bool,
 }
 
 #[cfg(feature = "build")]
@@ -100,6 +105,7 @@ impl Default for Build {
             timezone: TimeZone::Utc,
             kind: TimestampKind::Timestamp,
             semver: true,
+            skip_if_error: false,
         }
     }
 }
@@ -115,7 +121,7 @@ impl Build {
 pub(crate) fn configure_build(instructions: &Instructions, config: &mut Config) -> Result<()> {
     let build_config = instructions.build();
 
-    if build_config.has_enabled() {
+    let mut add_entries = || {
         if *build_config.timestamp() {
             match build_config.timezone() {
                 TimeZone::Utc => {
@@ -135,8 +141,28 @@ pub(crate) fn configure_build(instructions: &Instructions, config: &mut Config) 
                 env::var("CARGO_PKG_VERSION").ok(),
             );
         }
+        Ok(())
+    };
+
+    if build_config.has_enabled() {
+        if build_config.skip_if_error {
+            // hide errors, but emit a warning
+            let result = add_entries();
+            if result.is_err() {
+                let warning = format!(
+                    "An Error occurred during processing of {}. \
+                    VERGEN_{}_* may be incomplete.",
+                    "Build", "BUILD"
+                );
+                config.warnings_mut().push(warning);
+            }
+            Ok(())
+        } else {
+            add_entries()
+        }
+    } else {
+        Ok(())
     }
-    Ok(())
 }
 
 #[cfg(feature = "build")]
