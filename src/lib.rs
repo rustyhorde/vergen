@@ -280,7 +280,6 @@
         unused_attributes,
         unused_braces,
         unused_comparisons,
-        unused_crate_dependencies,
         unused_doc_comments,
         unused_extern_crates,
         unused_features,
