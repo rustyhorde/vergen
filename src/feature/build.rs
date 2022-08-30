@@ -40,6 +40,9 @@ use {
 /// * **NOTE** - The date/time instruction output is determined by the [`kind`](TimestampKind) field and can be any combination of the three.
 /// * **NOTE** - To keep processing other sections if an Error occurs in this one, set
 ///     [`Build::skip_if_error`](Build::skip_if_error_mut()) to true.
+/// * **NOTE** - If the
+///     [`SOURCE_BUILD_EPOCH`](https://reproducible-builds.org/docs/source-date-epoch/) environment
+///     variable is set, vergen will use the value of that variable in place of the current time.
 ///
 /// # Example
 ///
