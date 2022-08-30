@@ -18,6 +18,7 @@ use {
     },
     getset::{Getters, MutGetters},
     std::env,
+    std::str::FromStr,
     time::{format_description, OffsetDateTime},
 };
 
@@ -123,13 +124,19 @@ pub(crate) fn configure_build(instructions: &Instructions, config: &mut Config) 
 
     let mut add_entries = || {
         if *build_config.timestamp() {
+            let ts = match env::var("SOURCE_DATE_EPOCH") {
+                Ok(v) => OffsetDateTime::from_unix_timestamp(i64::from_str(&v)?)?,
+                Err(std::env::VarError::NotPresent) => OffsetDateTime::now_utc(),
+                Err(e) => return Err(e.into()),
+            };
             match build_config.timezone() {
                 TimeZone::Utc => {
-                    add_config_entries(config, *build_config, &OffsetDateTime::now_utc())?;
+                    add_config_entries(config, *build_config, &ts)?;
                 }
                 #[cfg(feature = "local_offset")]
                 TimeZone::Local => {
-                    add_config_entries(config, *build_config, &OffsetDateTime::now_local()?)?;
+                    let local_offset = time::UtcOffset::local_offset_at(ts)?;
+                    add_config_entries(config, *build_config, &ts.to_offset(local_offset))?;
                 }
             };
         }
