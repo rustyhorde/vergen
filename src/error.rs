@@ -27,6 +27,7 @@ impl fmt::Display for ErrKind {
 
 /// An error generated from the `vergen` library
 #[derive(Debug, thiserror::Error)]
+#[allow(variant_size_differences)]
 pub(crate) enum Error {
     /// An error from the `git2` library
     #[cfg(feature = "git")]
