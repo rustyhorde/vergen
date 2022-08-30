@@ -2,9 +2,9 @@
 authors = ["Jason Ozias <jason.g.ozias@gmail.com>"]
 categories = ["development-tools", "development-tools::build-utils"]
 description = "Generate 'cargo:rustc-env' instructions via 'build.rs' for use in your code via the env! macro"
-documentation = "http://docs.rs/vergen"
+documentation = "https://docs.rs/vergen"
 edition = "2021"
-homepage = "http://github.com/rustyhorde/vergen"
+homepage = "https://github.com/rustyhorde/vergen"
 keywords = ["cargo", "instructions", "build", "tool"]
 license = "MIT OR Apache-2.0"
 name = "vergen"
