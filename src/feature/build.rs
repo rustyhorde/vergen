@@ -18,6 +18,7 @@ use {
     },
     getset::{Getters, MutGetters},
     std::env,
+    std::str::FromStr,
     time::{format_description, OffsetDateTime},
 };
 
@@ -39,6 +40,9 @@ use {
 /// * **NOTE** - The date/time instruction output is determined by the [`kind`](TimestampKind) field and can be any combination of the three.
 /// * **NOTE** - To keep processing other sections if an Error occurs in this one, set
 ///     [`Build::skip_if_error`](Build::skip_if_error_mut()) to true.
+/// * **NOTE** - If the
+///     [`SOURCE_BUILD_EPOCH`](https://reproducible-builds.org/docs/source-date-epoch/) environment
+///     variable is set, vergen will use the value of that variable in place of the current time.
 ///
 /// # Example
 ///
@@ -123,13 +127,19 @@ pub(crate) fn configure_build(instructions: &Instructions, config: &mut Config) 
 
     let mut add_entries = || {
         if *build_config.timestamp() {
+            let ts = match env::var("SOURCE_DATE_EPOCH") {
+                Ok(v) => OffsetDateTime::from_unix_timestamp(i64::from_str(&v)?)?,
+                Err(std::env::VarError::NotPresent) => OffsetDateTime::now_utc(),
+                Err(e) => return Err(e.into()),
+            };
             match build_config.timezone() {
                 TimeZone::Utc => {
-                    add_config_entries(config, *build_config, &OffsetDateTime::now_utc())?;
+                    add_config_entries(config, *build_config, &ts)?;
                 }
                 #[cfg(feature = "local_offset")]
                 TimeZone::Local => {
-                    add_config_entries(config, *build_config, &OffsetDateTime::now_local()?)?;
+                    let local_offset = time::UtcOffset::local_offset_at(ts)?;
+                    add_config_entries(config, *build_config, &ts.to_offset(local_offset))?;
                 }
             };
         }
