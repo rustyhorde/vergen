@@ -11,7 +11,7 @@ name = "vergen"
 readme = "README.md"
 repository = "https://github.com/rustyhorde/vergen"
 resolver = "2"
-version = "7.4.1"
+version = "7.4.2"
 
 [package.metadata.cargo-all-features]
 denylist = ["local_offset","time","git2","rustc_version","sysinfo"]
