@@ -323,12 +323,12 @@ where
                 add_entry(
                     config.cfg_map_mut(),
                     VergenKey::CommitAuthorName,
-                    commit.author().name().map(&str::to_string),
+                    commit.author().name().map(str::to_string),
                 );
                 add_entry(
                     config.cfg_map_mut(),
                     VergenKey::CommitAuthorEmail,
-                    commit.author().email().map(&str::to_string),
+                    commit.author().email().map(str::to_string),
                 );
             }
 
@@ -336,7 +336,7 @@ where
                 add_entry(
                     config.cfg_map_mut(),
                     VergenKey::CommitMessage,
-                    commit.message().map(&str::to_string),
+                    commit.message().map(str::to_string),
                 );
             }
         }
