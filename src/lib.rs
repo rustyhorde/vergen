@@ -327,7 +327,7 @@
     rustdoc::invalid_codeblock_attributes,
     rustdoc::invalid_html_tags,
     rustdoc::missing_crate_level_docs,
-    rustdoc::missing_doc_code_examples,
+    // rustdoc::missing_doc_code_examples,
     // rustdoc::private_doc_tests,
     rustdoc::private_intra_doc_links,
 ))]
