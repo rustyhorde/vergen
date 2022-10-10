@@ -174,7 +174,7 @@ pub(crate) fn configure_rustc(instructions: &Instructions, config: &mut Config) 
                 add_entry(
                     config.cfg_map_mut(),
                     VergenKey::RustcLlvmVersion,
-                    Some(format!("{}", llvmver)),
+                    Some(format!("{llvmver}")),
                 );
             }
         }

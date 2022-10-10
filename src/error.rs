@@ -21,7 +21,7 @@ impl fmt::Display for ErrKind {
             Self::Protocol => "protocol",
             Self::Env => "env",
         };
-        write!(f, "{}", err_kind)
+        write!(f, "{err_kind}")
     }
 }
 

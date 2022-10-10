@@ -197,7 +197,7 @@ pub(crate) fn configure_sysinfo(instructions: &Instructions, config: &mut Config
             add_entry(
                 config.cfg_map_mut(),
                 VergenKey::SysinfoMemory,
-                Some(format!("{} {}", curr_memory, suffix(count))),
+                Some(format!("{curr_memory} {}", suffix(count))),
             );
         }
 

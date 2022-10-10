@@ -95,7 +95,7 @@ where
 {
     // Generate the 'cargo:' instruction output
     for (k, v) in config.cfg_map().iter().filter_map(some_vals) {
-        writeln!(stdout, "cargo:rustc-env={}={}", k.name(), v)?;
+        writeln!(stdout, "cargo:rustc-env={}={v}", k.name())?;
     }
 
     // Add the HEAD path to cargo:rerun-if-changed
@@ -110,7 +110,7 @@ where
 
     // Emit a cargo:warning if a section was skipped over
     for w in config.warnings() {
-        writeln!(stdout, "cargo:warning={}", w)?;
+        writeln!(stdout, "cargo:warning={w}")?;
     }
 
     Ok(())
