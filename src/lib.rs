@@ -245,7 +245,6 @@
         pointer_structural_match,
         private_in_public,
         proc_macro_back_compat,
-        proc_macro_derive_resolution_fallback,
         redundant_semicolons,
         renamed_and_removed_lints,
         rust_2021_incompatible_closure_captures,
@@ -305,11 +304,7 @@
 // nightly or beta only lints
 #![cfg_attr(
     all(msrv, any(beta_lints, nightly_lints)),
-    deny(
-        deref_into_dyn_supertrait,
-        proc_macro_back_compat,
-        proc_macro_derive_resolution_fallback
-    )
+    deny(deref_into_dyn_supertrait, proc_macro_back_compat)
 )]
 // beta only lints
 // #![cfg_attr(all(msrv, beta_lints), deny())]
