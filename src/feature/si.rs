@@ -301,9 +301,11 @@ fn check_user(_process: &Process, _user: &User) -> bool {
 #[cfg(feature = "si")]
 fn suffix(val: usize) -> &'static str {
     match val {
-        0 => "KB",
-        1 => "MB",
-        2 => "GB",
+        0 => "B",
+        1 => "KB",
+        2 => "MB",
+        3 => "GB",
+        4 => "TB",
         _ => "xB",
     }
 }
@@ -354,10 +356,12 @@ mod test {
 
     #[test]
     fn suffix_works() {
-        assert_eq!("KB", suffix(0));
-        assert_eq!("MB", suffix(1));
-        assert_eq!("GB", suffix(2));
-        assert_eq!("xB", suffix(3));
+        assert_eq!("B", suffix(0));
+        assert_eq!("KB", suffix(1));
+        assert_eq!("MB", suffix(2));
+        assert_eq!("GB", suffix(3));
+        assert_eq!("TB", suffix(4));
+        assert_eq!("xB", suffix(5));
     }
 
     #[test]
