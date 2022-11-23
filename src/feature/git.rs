@@ -240,10 +240,7 @@ pub(crate) fn configure_git<T>(
 where
     T: AsRef<Path>,
 {
-    let repo_path = match repo_path_opt {
-        Some(repo_path) => repo_path,
-        None => return Ok(()),
-    };
+    let Some(repo_path) = repo_path_opt else { return Ok(()) };
 
     let git_config = instructions.git();
 
