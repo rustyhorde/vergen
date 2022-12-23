@@ -12,6 +12,13 @@ due to a [potential segfault](https://github.com/rustsec/advisory-db/blob/main/c
 * To build with the `local_offset` feature, you must also explicitly delare that you are acknowledging the potential unsoundness by
 setting `RUSTFLAGS="--cfg unsound_local_offset"`.  Per the `time` docs this isn't tested, so use with extreme caution.
 
+## Notes about `git 0.15`
+This update to git picked up some [security related features](https://github.blog/2022-04-12-git-security-vulnerability-announced/).  In docker environments especially, this requires a `safe.directory` configuration.   There are a couple methods for achieving this.
+1.  If you control the build, you can add `git config --global --add safe.directory /workspace` to the build file.
+2.  If you do not control the docker build, you can add `git config --global --add safe.directory /workspace &&` before the actual command you are running when using docker run.   I use this method myself when building static binaries with clux/muslrust.
+
+See https://github.com/rustyhorde/vergen/pull/126 for more discussion on the topic.   If the solutions above do not work for your usecase, you can pin your `vergen` version to 7.4.3.   Feel free to open issues about this.   If it comes up enough, I could support a version of `vergen` with the older `git2` dependency.
+
 ## MSRV
 The current minimum supported rust version is 1.62.0
 
