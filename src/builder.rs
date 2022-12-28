@@ -20,6 +20,8 @@ use crate::feature::build::Config as BuildConfig;
 use crate::feature::cargo::Config as CargoConfig;
 #[cfg(feature = "rustc")]
 use crate::feature::rustc::Config as RustcConfig;
+#[cfg(feature = "si")]
+use crate::feature::si::Config as SysinfoConfig;
 
 pub(crate) type RustcEnvMap = BTreeMap<VergenKey, String>;
 
@@ -33,12 +35,12 @@ pub(crate) struct CargoOutput {
 impl CargoOutput {
     #[cfg(feature = "build")]
     fn add_build_entries(&mut self, builder: &Builder) -> Result<()> {
-        let bc = builder.build_config;
+        let config = builder.build_config;
         let skip = builder.skip_if_error;
         let idem = builder.idempotent;
         builder
             .add_build_map_entries(idem, &mut self.cargo_rustc_env_map, &mut self.warnings)
-            .or_else(|e| bc.add_warnings(skip, e, &mut self.warnings))
+            .or_else(|e| config.add_warnings(skip, e, &mut self.warnings))
     }
 
     #[cfg(not(feature = "build"))]
@@ -53,11 +55,11 @@ impl CargoOutput {
 
     #[cfg(feature = "rustc")]
     fn add_rustc_entries(&mut self, builder: &Builder) -> Result<()> {
-        let rc = builder.rustc_config;
+        let config = builder.rustc_config;
         let skip = builder.skip_if_error;
         builder
             .add_rustc_map_entries(&mut self.cargo_rustc_env_map)
-            .or_else(|e| rc.add_warnings(skip, e, &mut self.warnings))
+            .or_else(|e| config.add_warnings(skip, e, &mut self.warnings))
     }
 
     #[cfg(not(feature = "rustc"))]
@@ -72,11 +74,11 @@ impl CargoOutput {
 
     #[cfg(feature = "cargo")]
     fn add_cargo_entries(&mut self, builder: &Builder) -> Result<()> {
-        let rc = builder.cargo_config;
+        let config = builder.cargo_config;
         let skip = builder.skip_if_error;
         builder
             .add_cargo_map_entries(&mut self.cargo_rustc_env_map)
-            .or_else(|e| rc.add_warnings(skip, e, &mut self.warnings))
+            .or_else(|e| config.add_warnings(skip, e, &mut self.warnings))
     }
 
     #[cfg(not(feature = "cargo"))]
@@ -86,6 +88,26 @@ impl CargoOutput {
         clippy::unused_self
     )]
     fn add_cargo_entries(&mut self, _builder: &Builder) -> Result<()> {
+        Ok(())
+    }
+
+    #[cfg(feature = "si")]
+    fn add_si_entries(&mut self, builder: &Builder) -> Result<()> {
+        let config = builder.sysinfo_config;
+        let idem = builder.idempotent;
+        let skip = builder.skip_if_error;
+        builder
+            .add_sysinfo_map_entries(idem, &mut self.cargo_rustc_env_map, &mut self.warnings)
+            .or_else(|e| config.add_warnings(skip, e, &mut self.warnings))
+    }
+
+    #[cfg(not(feature = "si"))]
+    #[allow(
+        clippy::unnecessary_wraps,
+        clippy::trivially_copy_pass_by_ref,
+        clippy::unused_self
+    )]
+    fn add_si_entries(&mut self, _builder: &Builder) -> Result<()> {
         Ok(())
     }
 
@@ -114,10 +136,12 @@ pub struct Builder {
     skip_if_error: bool,
     #[cfg(feature = "build")]
     pub(crate) build_config: BuildConfig,
-    #[cfg(feature = "rustc")]
-    pub(crate) rustc_config: RustcConfig,
     #[cfg(feature = "cargo")]
     pub(crate) cargo_config: CargoConfig,
+    #[cfg(feature = "rustc")]
+    pub(crate) rustc_config: RustcConfig,
+    #[cfg(feature = "si")]
+    pub(crate) sysinfo_config: SysinfoConfig,
 }
 
 impl Default for Builder {
@@ -128,11 +152,13 @@ impl Default for Builder {
             idempotent,
             skip_if_error,
             #[cfg(feature = "build")]
-            build_config: Default::default(),
-            #[cfg(feature = "rustc")]
-            rustc_config: Default::default(),
+            build_config: BuildConfig::default(),
             #[cfg(feature = "cargo")]
-            cargo_config: Default::default(),
+            cargo_config: CargoConfig::default(),
+            #[cfg(feature = "rustc")]
+            rustc_config: RustcConfig::default(),
+            #[cfg(feature = "si")]
+            sysinfo_config: SysinfoConfig::default(),
         }
     }
 }
@@ -277,7 +303,12 @@ Vergen::default().all_build().gen()?;
     /// #
     /// # fn main() -> Result<()> {
     #[cfg_attr(
-        all(feature = "build", feature = "cargo", feature = "rustc"),
+        all(
+            feature = "build",
+            feature = "cargo",
+            feature = "rustc",
+            feature = "si"
+        ),
         doc = r##"
 # env::set_var("TARGET", "x86_64-unknown-linux-gnu");
 # env::set_var("PROFILE", "build,rustc");
@@ -286,6 +317,7 @@ Vergen::default()
   .all_build()
   .all_cargo()
   .all_rustc()
+  .all_sysinfo()
   .gen()?;
 # env::remove_var("TARGET");
 # env::remove_var("PROFILE");
@@ -299,18 +331,27 @@ Vergen::default()
     /// # Sample Output
     /// ```text
     /// cargo:rustc-env=VERGEN_BUILD_DATE=2022-12-28
-    /// cargo:rustc-env=VERGEN_BUILD_TIME=19:57:03
-    /// cargo:rustc-env=VERGEN_BUILD_TIMESTAMP=2022-12-28T19:57:03.403056777Z
+    /// cargo:rustc-env=VERGEN_BUILD_TIME=21:56:23
+    /// cargo:rustc-env=VERGEN_BUILD_TIMESTAMP=2022-12-28T21:56:23.764785796Z
     /// cargo:rustc-env=VERGEN_BUILD_SEMVER=8.0.0
     /// cargo:rustc-env=VERGEN_CARGO_TARGET_TRIPLE=x86_64-unknown-linux-gnu
-    /// cargo:rustc-env=VERGEN_CARGO_PROFILE=build,rustc
-    /// cargo:rustc-env=VERGEN_CARGO_FEATURES=build
+    /// cargo:rustc-env=VERGEN_CARGO_PROFILE=debug
+    /// cargo:rustc-env=VERGEN_CARGO_FEATURES=git,build
     /// cargo:rustc-env=VERGEN_RUSTC_CHANNEL=nightly
     /// cargo:rustc-env=VERGEN_RUSTC_COMMIT_DATE=2022-12-27
     /// cargo:rustc-env=VERGEN_RUSTC_COMMIT_HASH=92c1937a90e5b6f20fa6e87016d6869da363972e
     /// cargo:rustc-env=VERGEN_RUSTC_HOST_TRIPLE=x86_64-unknown-linux-gnu
     /// cargo:rustc-env=VERGEN_RUSTC_LLVM_VERSION=15.0
     /// cargo:rustc-env=VERGEN_RUSTC_SEMVER=1.68.0-nightly
+    /// cargo:rustc-env=VERGEN_SYSINFO_NAME=Arch Linux
+    /// cargo:rustc-env=VERGEN_SYSINFO_OS_VERSION=Linux  Arch Linux
+    /// cargo:rustc-env=VERGEN_SYSINFO_USER=jozias
+    /// cargo:rustc-env=VERGEN_SYSINFO_TOTAL_MEMORY=31 GiB
+    /// cargo:rustc-env=VERGEN_SYSINFO_CPU_VENDOR=AuthenticAMD
+    /// cargo:rustc-env=VERGEN_SYSINFO_CPU_CORE_COUNT=8
+    /// cargo:rustc-env=VERGEN_SYSINFO_CPU_NAME=cpu0,cpu1,cpu2,cpu3,cpu4,cpu5,cpu6,cpu7
+    /// cargo:rustc-env=VERGEN_SYSINFO_CPU_BRAND=AMD Ryzen Threadripper 1900X 8-Core Processor
+    /// cargo:rustc-env=VERGEN_SYSINFO_CPU_FREQUENCY=3792
     /// ```
     ///
     pub fn gen(self) -> Result<()> {
@@ -324,7 +365,12 @@ Vergen::default()
     }
 
     #[doc(hidden)]
-    #[cfg(any(feature = "build", feature = "rustc", feature = "cargo"))]
+    #[cfg(any(
+        feature = "build",
+        feature = "rustc",
+        feature = "cargo",
+        feature = "si"
+    ))]
     pub fn test_gen_output<T>(self, stdout: &mut T) -> Result<()>
     where
         T: Write,
@@ -335,8 +381,9 @@ Vergen::default()
     fn inner_gen(self) -> Result<CargoOutput> {
         let mut config = CargoOutput::default();
         config.add_build_entries(&self)?;
-        config.add_rustc_entries(&self)?;
         config.add_cargo_entries(&self)?;
+        config.add_rustc_entries(&self)?;
+        config.add_si_entries(&self)?;
         Ok(config)
     }
 }
@@ -345,10 +392,20 @@ Vergen::default()
 pub(crate) mod test {
     use super::Builder;
     use anyhow::Result;
-    #[cfg(any(feature = "build", feature = "rustc", feature = "cargo"))]
+    #[cfg(any(
+        feature = "build",
+        feature = "rustc",
+        feature = "cargo",
+        feature = "si"
+    ))]
     use {super::RustcEnvMap, crate::constants::VERGEN_IDEMPOTENT_DEFAULT};
 
-    #[cfg(any(feature = "build", feature = "rustc", feature = "cargo"))]
+    #[cfg(any(
+        feature = "build",
+        feature = "rustc",
+        feature = "cargo",
+        feature = "si"
+    ))]
     pub(crate) fn count_idempotent(map: RustcEnvMap) -> usize {
         map.values()
             .filter(|x| *x == VERGEN_IDEMPOTENT_DEFAULT)
@@ -363,7 +420,12 @@ pub(crate) mod test {
         Ok(())
     }
 
-    #[cfg(all(feature = "build", feature = "rustc", feature = "cargo"))]
+    #[cfg(all(
+        feature = "build",
+        feature = "rustc",
+        feature = "cargo",
+        feature = "si"
+    ))]
     #[test]
     fn all_output() -> Result<()> {
         use crate::utils::testutils::{setup, teardown};
@@ -374,6 +436,7 @@ pub(crate) mod test {
             .all_build()
             .all_cargo()
             .all_rustc()
+            .all_sysinfo()
             .test_gen_output(&mut stdout_buf)?;
         println!("{}", String::from_utf8_lossy(&stdout_buf));
         teardown();

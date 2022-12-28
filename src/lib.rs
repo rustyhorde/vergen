@@ -202,7 +202,7 @@
         bad_asm_style,
         bare_trait_objects,
         bindings_with_variant_name,
-        // box_pointers,
+        box_pointers,
         break_with_label_and_loop,
         clashing_extern_declarations,
         coherence_leak_check,
@@ -317,7 +317,8 @@
         variant_size_differences,
         where_clauses_object_safety,
         while_true,
-))]
+    )
+)]
 // If nightly and unstable, allow `unstable_features`
 #![cfg_attr(all(msrv, feature = "unstable", nightly), allow(unstable_features))]
 // The unstable lints

@@ -11,6 +11,7 @@
 // Idempotent Constant
 #[cfg(any(
     feature = "build",
+    feature = "si",
     all(test, any(feature = "rustc", feature = "cargo"))
 ))]
 pub(crate) const VERGEN_IDEMPOTENT_DEFAULT: &str = "VERGEN_IDEMPOTENT_OUTPUT";

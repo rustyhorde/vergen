@@ -68,26 +68,14 @@ jobs:
       matrix:
         include:
         - os: ubuntu-latest
-          rust: "1.63.0"
-          target: i686-unknown-linux-gnu
-        - os: ubuntu-latest
-          rust: stable
-          target: i686-unknown-linux-gnu
-        - os: ubuntu-latest
-          rust: "1.63.0"
+          rust: "1.62.0"
           target: x86_64-unknown-linux-gnu
         - os: ubuntu-latest
           rust: stable
           target: x86_64-unknown-linux-gnu
         - os: ubuntu-latest
           rust: beta
-          target: i686-unknown-linux-gnu
-        - os: ubuntu-latest
-          rust: beta
           target: x86_64-unknown-linux-gnu
-        - os: ubuntu-latest
-          rust: nightly
-          target: i686-unknown-linux-gnu
         - os: ubuntu-latest
           rust: nightly
           target: x86_64-unknown-linux-gnu
@@ -135,7 +123,7 @@ jobs:
       - name: 🧪 Test 🧪
         run: cargo test-all-features
       - name: 🙊 Code Coverage 🙊
-        run: cargo tarpaulin --out Xml
+        run: cargo tarpaulin --all-features --out Xml
       - name: 🙊 Upload Code Coverage 🙊
         uses: codecov/codecov-action@v1
         with:
@@ -154,23 +142,11 @@ jobs:
           rust: stable
           target: x86_64-apple-darwin
         - os: macos-latest
-          rust: "1.63.0"
-          target: x86_64-apple-ios
-        - os: macos-latest
-          rust: stable
-          target: x86_64-apple-ios
-        - os: macos-latest
           rust: beta
           target: x86_64-apple-darwin
         - os: macos-latest
-          rust: beta
-          target: x86_64-apple-ios
-        - os: macos-latest
           rust: nightly
           target: x86_64-apple-darwin
-        - os: macos-latest
-          rust: nightly
-          target: x86_64-apple-ios
     steps:
       - name: ✔️ Checkout ✔️
         uses: actions/checkout@v2
@@ -214,50 +190,26 @@ jobs:
       matrix:
         include:
         - os: windows-latest
-          rust: 1.63.0-msvc
-          target: i686-pc-windows-msvc
-        - os: windows-latest
-          rust: stable-msvc
-          target: i686-pc-windows-msvc
-        - os: windows-latest
-          rust: 1.63.0-msvc
+          rust: 1.62.0-msvc
           target: x86_64-pc-windows-msvc
         - os: windows-latest
           rust: stable-msvc
           target: x86_64-pc-windows-msvc
         - os: windows-latest
           rust: beta-msvc
-          target: i686-pc-windows-msvc
-        - os: windows-latest
-          rust: beta-msvc
           target: x86_64-pc-windows-msvc
-        - os: windows-latest
-          rust: nightly-msvc
-          target: i686-pc-windows-msvc
         - os: windows-latest
           rust: nightly-msvc
           target: x86_64-pc-windows-msvc
         - os: windows-latest
-          rust: 1.63.0-gnu
-          target: i686-pc-windows-gnu
-        - os: windows-latest
-          rust: stable-gnu
-          target: i686-pc-windows-gnu
-        - os: windows-latest
-          rust: 1.63.0-gnu
+          rust: 1.62.0-gnu
           target: x86_64-pc-windows-gnu
         - os: windows-latest
           rust: stable-gnu
           target: x86_64-pc-windows-gnu
         - os: windows-latest
           rust: beta-gnu
-          target: i686-pc-windows-gnu
-        - os: windows-latest
-          rust: beta-gnu
           target: x86_64-pc-windows-gnu
-        - os: windows-latest
-          rust: nightly-gnu
-          target: i686-pc-windows-gnu
         - os: windows-latest
           rust: nightly-gnu
           target: x86_64-pc-windows-gnu

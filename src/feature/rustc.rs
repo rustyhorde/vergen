@@ -1,7 +1,9 @@
-use crate::{builder::Builder, key::VergenKey};
+use crate::{
+    builder::{Builder, RustcEnvMap},
+    key::VergenKey,
+};
 use anyhow::{Error, Result};
 use rustc_version::{version_meta, Channel};
-use std::collections::BTreeMap;
 
 #[derive(Clone, Copy, Debug, Default)]
 pub(crate) struct Config {
@@ -134,10 +136,7 @@ impl Builder {
         self
     }
 
-    pub(crate) fn add_rustc_map_entries(
-        &self,
-        map: &mut BTreeMap<VergenKey, String>,
-    ) -> Result<()> {
+    pub(crate) fn add_rustc_map_entries(&self, map: &mut RustcEnvMap) -> Result<()> {
         let rustc = version_meta()?;
 
         if self.rustc_config.rustc_channel {
