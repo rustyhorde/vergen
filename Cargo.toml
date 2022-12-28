@@ -14,25 +14,25 @@ resolver = "2"
 version = "8.0.0"
 
 [package.metadata.cargo-all-features]
-denylist = ["local_offset","time","git2","git_cmd","git-repository","gix","rustc_version","sysinfo"]
+denylist = ["rustc_version","time","unstable"]
 
 [features]
 default = []
 build = ["time"]
-# cargo = []
+cargo = []
 # git = ["time", "git2"]
 # gix = ["time", "git-repository"]
 # git_cmd = []
 rustc = ["rustc_version"]
+unstable = []
 # si = ["sysinfo"]
-# local_offset = ["time/local-offset"]
 
 [dependencies]
 anyhow = "1.0.60"
-git2 = { version = "0.15.0", optional = true, default-features = false }
-git-repository = { version = "0.30.2", optional = true, default-features = false }
+# git2 = { version = "0.15.0", optional = true, default-features = false }
+# git-repository = { version = "0.30.2", optional = true, default-features = false }
 rustc_version = { version = "0.4.0", optional = true }
-sysinfo = { version = "0.27.0", optional = true, default-features = false }
+# sysinfo = { version = "0.27.0", optional = true, default-features = false }
 time = { version = "0.3.12", features = ["formatting"], optional = true }
 
 [build-dependencies]
@@ -42,7 +42,6 @@ rustversion = "1.0.9"
 lazy_static = "1.4.0"
 regex = "1.6.0"
 serial_test = "0.10.0"
-tempfile = "3.3.0"
 
 [package.metadata.docs.rs]
 all-features = true

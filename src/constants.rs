@@ -1,4 +1,4 @@
-// Copyright (c) 2016, 2018, 2021 vergen developers
+// Copyright (c) 2022 vergen developers
 //
 // Licensed under the Apache License, Version 2.0
 // <LICENSE-APACHE or https://www.apache.org/licenses/LICENSE-2.0> or the MIT
@@ -9,7 +9,10 @@
 //! Internal Constants
 
 // Idempotent Constant
-#[cfg(any(feature = "build", all(test, feature = "rustc")))]
+#[cfg(any(
+    feature = "build",
+    all(test, any(feature = "rustc", feature = "cargo"))
+))]
 pub(crate) const VERGEN_IDEMPOTENT_DEFAULT: &str = "VERGEN_IDEMPOTENT_OUTPUT";
 
 // Build Constants

@@ -1,38 +1,39 @@
 pub fn main() {
-    nightly_lints();
-    beta_lints();
-    stable_lints();
-    msrv_lints();
+    println!("cargo:rerun-if-changed=build.rs");
+    nightly();
+    beta();
+    stable();
+    msrv();
 }
 
 #[rustversion::nightly]
-fn nightly_lints() {
-    println!("cargo:rustc-cfg=nightly_lints");
+fn nightly() {
+    println!("cargo:rustc-cfg=nightly");
 }
 
 #[rustversion::not(nightly)]
-fn nightly_lints() {}
+fn nightly() {}
 
 #[rustversion::beta]
-fn beta_lints() {
-    println!("cargo:rustc-cfg=beta_lints");
+fn beta() {
+    println!("cargo:rustc-cfg=beta");
 }
 
 #[rustversion::not(beta)]
-fn beta_lints() {}
+fn beta() {}
 
 #[rustversion::stable]
-fn stable_lints() {
-    println!("cargo:rustc-cfg=stable_lints");
+fn stable() {
+    println!("cargo:rustc-cfg=stable");
 }
 
 #[rustversion::not(stable)]
-fn stable_lints() {}
+fn stable() {}
 
-#[rustversion::before(1.63)]
-fn msrv_lints() {}
+#[rustversion::before(1.65)]
+fn msrv() {}
 
-#[rustversion::since(1.63)]
-fn msrv_lints() {
+#[rustversion::since(1.65)]
+fn msrv() {
     println!("cargo:rustc-cfg=msrv");
 }

@@ -82,54 +82,54 @@ impl Config {
 /// # use vergen::Vergen;
 /// #
 /// # fn main() -> Result<()> {
-/// Vergen::default().enable_all_rustc().gen()?;
+/// Vergen::default().all_rustc().gen()?;
 /// #   Ok(())
 /// # }
 /// ```
 #[cfg_attr(docsrs, doc(cfg(feature = "rustc")))]
 impl Builder {
     /// Enable all of the `VERGEN_RUSTC_*` options
-    pub fn enable_all_rustc(&mut self) -> &mut Self {
-        self.enable_rustc_channel()
-            .enable_rustc_commit_date()
-            .enable_rustc_host_triple()
-            .enable_rustc_llvm_version()
-            .enable_rustc_semver()
-            .enable_rustc_sha()
+    pub fn all_rustc(&mut self) -> &mut Self {
+        self.rustc_channel()
+            .rustc_commit_date()
+            .rustc_host_triple()
+            .rustc_llvm_version()
+            .rustc_semver()
+            .rustc_sha()
     }
 
     /// Enable the rustc channel
-    pub fn enable_rustc_channel(&mut self) -> &mut Self {
+    pub fn rustc_channel(&mut self) -> &mut Self {
         self.rustc_config.rustc_channel = true;
         self
     }
 
     /// Enable the rustc commit date
-    pub fn enable_rustc_commit_date(&mut self) -> &mut Self {
+    pub fn rustc_commit_date(&mut self) -> &mut Self {
         self.rustc_config.rustc_commit_date = true;
         self
     }
 
     /// Enable rustc host triple
-    pub fn enable_rustc_host_triple(&mut self) -> &mut Self {
+    pub fn rustc_host_triple(&mut self) -> &mut Self {
         self.rustc_config.rustc_host_triple = true;
         self
     }
 
     /// Enable rustc LLVM version
-    pub fn enable_rustc_llvm_version(&mut self) -> &mut Self {
+    pub fn rustc_llvm_version(&mut self) -> &mut Self {
         self.rustc_config.rustc_llvm_version = true;
         self
     }
 
     /// Enable the rustc semver
-    pub fn enable_rustc_semver(&mut self) -> &mut Self {
+    pub fn rustc_semver(&mut self) -> &mut Self {
         self.rustc_config.rustc_semver = true;
         self
     }
 
     /// Enable the rustc SHA
-    pub fn enable_rustc_sha(&mut self) -> &mut Self {
+    pub fn rustc_sha(&mut self) -> &mut Self {
         self.rustc_config.rustc_sha = true;
         self
     }
@@ -141,7 +141,7 @@ impl Builder {
         let rustc = version_meta()?;
 
         if self.rustc_config.rustc_channel {
-            let _ = map.insert(
+            let _old = map.insert(
                 VergenKey::RustcChannel,
                 match rustc.channel {
                     Channel::Dev => "dev",
@@ -154,18 +154,18 @@ impl Builder {
         }
 
         if self.rustc_config.rustc_commit_date {
-            let _ = map.insert(
+            let _old = map.insert(
                 VergenKey::RustcCommitDate,
                 rustc.commit_date.unwrap_or_default(),
             );
         }
 
         if self.rustc_config.rustc_host_triple {
-            let _ = map.insert(VergenKey::RustcHostTriple, rustc.host);
+            let _old = map.insert(VergenKey::RustcHostTriple, rustc.host);
         }
 
         if self.rustc_config.rustc_llvm_version {
-            let _ = map.insert(
+            let _old = map.insert(
                 VergenKey::RustcLlvmVersion,
                 if let Some(llvmver) = rustc.llvm_version {
                     format!("{llvmver}")
@@ -176,11 +176,11 @@ impl Builder {
         }
 
         if self.rustc_config.rustc_semver {
-            let _ = map.insert(VergenKey::RustcSemver, format!("{}", rustc.semver));
+            let _old = map.insert(VergenKey::RustcSemver, format!("{}", rustc.semver));
         }
 
         if self.rustc_config.rustc_sha {
-            let _ = map.insert(
+            let _old = map.insert(
                 VergenKey::RustcCommitHash,
                 rustc.commit_hash.unwrap_or_default(),
             );
@@ -198,10 +198,7 @@ mod test {
     #[test]
     #[serial_test::parallel]
     fn rustc_all_idempotent() -> Result<()> {
-        let config = Vergen::default()
-            .enable_idempotent()
-            .enable_all_rustc()
-            .test_gen()?;
+        let config = Vergen::default().idempotent().all_rustc().test_gen()?;
         assert_eq!(6, config.cargo_rustc_env_map.len());
         assert_eq!(0, count_idempotent(config.cargo_rustc_env_map));
         assert_eq!(0, config.warnings.len());
@@ -211,7 +208,7 @@ mod test {
     #[test]
     #[serial_test::parallel]
     fn rustc_all() -> Result<()> {
-        let config = Vergen::default().enable_all_rustc().test_gen()?;
+        let config = Vergen::default().all_rustc().test_gen()?;
         assert_eq!(6, config.cargo_rustc_env_map.len());
         assert_eq!(0, count_idempotent(config.cargo_rustc_env_map));
         assert_eq!(0, config.warnings.len());

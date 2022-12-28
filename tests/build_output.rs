@@ -54,7 +54,7 @@ mod test_build {
     fn build_all_output() -> Result<()> {
         let mut stdout_buf = vec![];
         Vergen::default()
-            .enable_all_build()
+            .all_build()
             .test_gen_output(&mut stdout_buf)?;
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(BUILD_REGEX_INST.is_match(&output));
@@ -65,8 +65,8 @@ mod test_build {
     fn build_all_idempotent_output() -> Result<()> {
         let mut stdout_buf = vec![];
         Vergen::default()
-            .enable_idempotent()
-            .enable_all_build()
+            .idempotent()
+            .all_build()
             .test_gen_output(&mut stdout_buf)?;
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(BUILD_IDEM_REGEX_INST.is_match(&output));

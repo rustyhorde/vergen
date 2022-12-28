@@ -1,3 +1,11 @@
+// Copyright (c) 2022 vergen developers
+//
+// Licensed under the Apache License, Version 2.0
+// <LICENSE-APACHE or https://www.apache.org/licenses/LICENSE-2.0> or the MIT
+// license <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
+// option. All files in the project carrying such notice may not be copied,
+// modified, or distributed except according to those terms.
+
 use crate::constants::{
     BUILD_DATE_NAME, BUILD_SEMVER_NAME, BUILD_TIMESTAMP_NAME, BUILD_TIME_NAME, CARGO_FEATURES,
     CARGO_PROFILE, CARGO_TARGET_TRIPLE, GIT_BRANCH_NAME, GIT_COMMIT_AUTHOR_EMAIL,
@@ -21,6 +29,12 @@ pub(crate) enum VergenKey {
     BuildTimestamp,
     /// The build semver. (VERGEN_BUILD_SEMVER)
     BuildSemver,
+    /// The cargo target triple (VERGEN_CARGO_TARGET_TRIPLE)
+    CargoTargetTriple,
+    /// The cargo profile (VERGEN_CARGO_PROFILE)
+    CargoProfile,
+    /// The cargo features (VERGEN_CARGO_FEATURES)
+    CargoFeatures,
     /// The current working branch name (VERGEN_GIT_BRANCH)
     Branch,
     /// The commit author's email. (VERGEN_GIT_COMMIT_AUTHOR_EMAIL)
@@ -58,12 +72,6 @@ pub(crate) enum VergenKey {
     RustcLlvmVersion,
     /// The version information of the rust compiler. (VERGEN_RUSTC_SEMVER)
     RustcSemver,
-    /// The cargo target triple (VERGEN_CARGO_TARGET_TRIPLE)
-    CargoTargetTriple,
-    /// The cargo profile (VERGEN_CARGO_PROFILE)
-    CargoProfile,
-    /// The cargo features (VERGEN_CARGO_FEATURES)
-    CargoFeatures,
     /// The sysinfo system name (VERGEN_SYSINFO_NAME)
     SysinfoName,
     /// The sysinfo os version (VERGEN_SYSINFO_OS_VERSION)
@@ -92,6 +100,9 @@ impl VergenKey {
             VergenKey::BuildTime => BUILD_TIME_NAME,
             VergenKey::BuildTimestamp => BUILD_TIMESTAMP_NAME,
             VergenKey::BuildSemver => BUILD_SEMVER_NAME,
+            VergenKey::CargoTargetTriple => CARGO_TARGET_TRIPLE,
+            VergenKey::CargoProfile => CARGO_PROFILE,
+            VergenKey::CargoFeatures => CARGO_FEATURES,
             VergenKey::Branch => GIT_BRANCH_NAME,
             VergenKey::CommitAuthorEmail => GIT_COMMIT_AUTHOR_EMAIL,
             VergenKey::CommitAuthorName => GIT_COMMIT_AUTHOR_NAME,
@@ -110,9 +121,6 @@ impl VergenKey {
             VergenKey::RustcHostTriple => RUSTC_HOST_TRIPLE_NAME,
             VergenKey::RustcLlvmVersion => RUSTC_LLVM_VERSION,
             VergenKey::RustcSemver => RUSTC_SEMVER_NAME,
-            VergenKey::CargoTargetTriple => CARGO_TARGET_TRIPLE,
-            VergenKey::CargoProfile => CARGO_PROFILE,
-            VergenKey::CargoFeatures => CARGO_FEATURES,
             VergenKey::SysinfoName => SYSINFO_NAME,
             VergenKey::SysinfoOsVersion => SYSINFO_OS_VERSION,
             VergenKey::SysinfoUser => SYSINFO_USER,

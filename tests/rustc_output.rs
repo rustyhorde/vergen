@@ -34,7 +34,7 @@ mod test_rustc {
     fn rustc_all_output() -> Result<()> {
         let mut stdout_buf = vec![];
         Vergen::default()
-            .enable_all_rustc()
+            .all_rustc()
             .test_gen_output(&mut stdout_buf)?;
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(RUSTC_REGEX.is_match(&output));
@@ -45,8 +45,8 @@ mod test_rustc {
     fn rustc_all_idempotent_output() -> Result<()> {
         let mut stdout_buf = vec![];
         Vergen::default()
-            .enable_idempotent()
-            .enable_all_rustc()
+            .idempotent()
+            .all_rustc()
             .test_gen_output(&mut stdout_buf)?;
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(RUSTC_REGEX.is_match(&output));

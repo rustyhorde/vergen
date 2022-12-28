@@ -1,4 +1,4 @@
-// Copyright (c) 2016, 2018, 2021 vergen developers
+// Copyright (c) 2022 vergen developers
 //
 // Licensed under the Apache License, Version 2.0
 // <LICENSE-APACHE or https://www.apache.org/licenses/LICENSE-2.0> or the MIT
@@ -6,90 +6,122 @@
 // option. All files in the project carrying such notice may not be copied,
 // modified, or distributed except according to those terms.
 
-//! `vergen` cargo feature
-
-use crate::config::{Config, Instructions};
-#[cfg(feature = "cargo")]
-use {
-    crate::{config::VergenKey, feature::add_entry},
-    getset::{Getters, MutGetters},
-    std::env,
+use crate::{
+    builder::{Builder, RustcEnvMap},
+    key::VergenKey,
 };
+use anyhow::{Error, Result};
+use std::env;
 
-/// Configuration for the `VERGEN_CARGO_*` instructions
+#[derive(Clone, Copy, Debug, Default)]
+pub(crate) struct Config {
+    pub(crate) cargo_features: bool,
+    pub(crate) cargo_profile: bool,
+    pub(crate) cargo_target_triple: bool,
+}
+
+impl Config {
+    pub(crate) fn add_warnings(
+        self,
+        skip_if_error: bool,
+        e: Error,
+        warnings: &mut Vec<String>,
+    ) -> Result<()> {
+        if skip_if_error {
+            if self.cargo_features {
+                warnings.push(format!(
+                    "Unable to add {} to output",
+                    VergenKey::CargoFeatures.name()
+                ));
+            }
+            if self.cargo_profile {
+                warnings.push(format!(
+                    "Unable to add {} to output",
+                    VergenKey::CargoProfile.name()
+                ));
+            }
+            if self.cargo_target_triple {
+                warnings.push(format!(
+                    "Unable to add {} to output",
+                    VergenKey::CargoTargetTriple.name()
+                ));
+            }
+            Ok(())
+        } else {
+            Err(e)
+        }
+    }
+}
+
+/// The `VERGEN_CARGO_*` configuration features
 ///
-/// # Instructions
-/// The following instructions can be generated:
-///
-/// | Instruction | Default |
-/// | ----------- | :-----: |
-/// | `cargo:rustc-env=VERGEN_CARGO_TARGET_TRIPLE=x86_64-unknown-linux-gnu` | * |
-/// | `cargo:rustc-env=VERGEN_CARGO_PROFILE=debug` | * |
-/// | `cargo:rustc-env=VERGEN_CARGO_FEATURES=git,build` | * |
-///
-/// * If the `features` field is false, the features instruction will not be generated.
-/// * If the `profile` field is false, the profile instruction will not be generated.
-/// * If the `target_triple` field is false, the target triple instruction will not be generated.
-/// * **NOTE** - the `target_triple` instruction can differ from the `host_triple` instruction, i.e. during cross compilation
+/// | Variable | Sample |
+/// | -------  | ------ |
+/// | `VERGEN_CARGO_FEATURES` | git,build |
+/// | `VERGEN_CARGO_PROFILE` | debug |
+/// | `VERGEN_CARGO_TARGET_TRIPLE` | x86_64-unknown-linux-gnu |
 ///
 /// # Example
 ///
 /// ```
 /// # use anyhow::Result;
-/// use vergen::{vergen, Config};
-///
-/// # pub fn main() -> Result<()> {
-/// let mut config = Config::default();
-#[cfg_attr(
-    feature = "cargo",
-    doc = r##"
-// Turn off the features instruction
-*config.cargo_mut().features_mut() = false;
-
-// Generate the instructions
-vergen(config)?;
-"##
-)]
-/// # Ok(())
+/// # use std::env;
+/// # use vergen::Vergen;
+/// #
+/// # fn main() -> Result<()> {
+/// # env::set_var("TARGET", "x86_64-unknown-linux-gnu");
+/// # env::set_var("PROFILE", "build,rustc");
+/// # env::set_var("CARGO_FEATURE_BUILD", "");
+/// Vergen::default().all_cargo().gen()?;
+/// # env::remove_var("TARGET");
+/// # env::remove_var("PROFILE");
+/// # env::remove_var("CARGO_FEATURE_BUILD");
+/// #   Ok(())
 /// # }
-#[cfg(feature = "cargo")]
-#[derive(Clone, Copy, Debug, Getters, MutGetters)]
-#[getset(get = "pub(crate)", get_mut = "pub")]
-#[deprecated(
-    since = "8.0.0",
-    note = "This has been replaced with [`vergen::VergenBuilder`]"
-)]
-pub struct Cargo {
-    /// Enable/Disable the cargo output
-    enabled: bool,
-    /// Enable/Disable the `VERGEN_CARGO_FEATURES` instruction
-    features: bool,
-    /// Enable/Disable the `VERGEN_CARGO_PROFILE` instruction
-    profile: bool,
-    /// Enable/Disable the `VERGEN_CARGO_TARGET_TRIPLE` instruction
-    target_triple: bool,
-}
+/// ```
+#[cfg_attr(docsrs, doc(cfg(feature = "cargo")))]
+impl Builder {
+    /// Enable all of the `VERGEN_CARGO_*` options
+    pub fn all_cargo(&mut self) -> &mut Self {
+        self.cargo_features().cargo_profile().cargo_target_triple()
+    }
 
-#[cfg(feature = "cargo")]
-impl Default for Cargo {
-    fn default() -> Self {
-        Self {
-            enabled: true,
-            features: true,
-            profile: true,
-            target_triple: true,
+    /// Enable the cargo features
+    pub fn cargo_features(&mut self) -> &mut Self {
+        self.cargo_config.cargo_features = true;
+        self
+    }
+
+    /// Enable the cargo profile
+    pub fn cargo_profile(&mut self) -> &mut Self {
+        self.cargo_config.cargo_profile = true;
+        self
+    }
+
+    /// Enable cargo target triple
+    pub fn cargo_target_triple(&mut self) -> &mut Self {
+        self.cargo_config.cargo_target_triple = true;
+        self
+    }
+
+    pub(crate) fn add_cargo_map_entries(&self, map: &mut RustcEnvMap) -> Result<()> {
+        if self.cargo_config.cargo_target_triple {
+            let _old = map.insert(VergenKey::CargoTargetTriple, env::var("TARGET")?);
         }
+
+        if self.cargo_config.cargo_profile {
+            let _old = map.insert(VergenKey::CargoProfile, env::var("PROFILE")?);
+        }
+
+        if self.cargo_config.cargo_features {
+            let features: Vec<String> = env::vars().filter_map(is_cargo_feature).collect();
+            let feature_str = features.as_slice().join(",");
+            let _old = map.insert(VergenKey::CargoFeatures, feature_str);
+        }
+        Ok(())
     }
 }
 
-#[cfg(feature = "cargo")]
-impl Cargo {
-    pub(crate) fn has_enabled(self) -> bool {
-        self.enabled && (self.features || self.profile || self.target_triple)
-    }
-}
-
-#[cfg(feature = "cargo")]
 fn is_cargo_feature(var: (String, String)) -> Option<String> {
     let (k, _) = var;
     if k.starts_with("CARGO_FEATURE_") {
@@ -99,111 +131,36 @@ fn is_cargo_feature(var: (String, String)) -> Option<String> {
     }
 }
 
-#[cfg(feature = "cargo")]
-pub(crate) fn configure_cargo(instructions: &Instructions, config: &mut Config) {
-    let cargo_config = instructions.cargo();
-
-    if cargo_config.has_enabled() {
-        if *cargo_config.target_triple() {
-            add_entry(
-                config.cfg_map_mut(),
-                VergenKey::CargoTargetTriple,
-                env::var("TARGET").ok(),
-            );
-        }
-
-        if *cargo_config.profile() {
-            add_entry(
-                config.cfg_map_mut(),
-                VergenKey::CargoProfile,
-                env::var("PROFILE").ok(),
-            );
-        }
-
-        if *cargo_config.features() {
-            let features: Vec<String> = env::vars().filter_map(is_cargo_feature).collect();
-            let feature_str = features.as_slice().join(",");
-            let value = if feature_str.is_empty() {
-                Some("default".to_string())
-            } else {
-                Some(feature_str)
-            };
-            add_entry(config.cfg_map_mut(), VergenKey::CargoFeatures, value);
-        }
-    }
-}
-
-#[cfg(not(feature = "cargo"))]
-#[allow(clippy::trivially_copy_pass_by_ref)]
-pub(crate) fn configure_cargo(_instructions: &Instructions, _config: &mut Config) {}
-
-#[cfg(all(test, feature = "cargo"))]
+#[cfg(test)]
 mod test {
     use crate::{
-        config::Instructions,
-        testutils::{setup, teardown},
+        builder::test::count_idempotent,
+        utils::testutils::{setup, teardown},
+        Vergen,
     };
-    use std::env;
+    use anyhow::Result;
 
     #[test]
     #[serial_test::serial]
-    fn cargo_config() {
+    fn build_all_idempotent() -> Result<()> {
         setup();
-        let mut config = Instructions::default();
-        assert!(config.cargo().features);
-        assert!(config.cargo().profile);
-        assert!(config.cargo().target_triple);
-        config.cargo_mut().features = false;
-        assert!(!config.cargo().features);
+        let config = Vergen::default().idempotent().all_cargo().test_gen()?;
+        assert_eq!(3, config.cargo_rustc_env_map.len());
+        assert_eq!(0, count_idempotent(config.cargo_rustc_env_map));
+        assert_eq!(0, config.warnings.len());
         teardown();
+        Ok(())
     }
 
     #[test]
     #[serial_test::serial]
-    fn config_default_feature_works() {
+    fn build_all() -> Result<()> {
         setup();
-        env::remove_var("CARGO_FEATURE_GIT");
-        env::remove_var("CARGO_FEATURE_BUILD");
-        let mut config = Instructions::default();
-        assert!(config.cargo().features);
-        assert!(config.cargo().profile);
-        assert!(config.cargo().target_triple);
-        config.cargo_mut().features = false;
-        assert!(!config.cargo().features);
+        let config = Vergen::default().all_cargo().test_gen()?;
+        assert_eq!(3, config.cargo_rustc_env_map.len());
+        assert_eq!(0, count_idempotent(config.cargo_rustc_env_map));
+        assert_eq!(0, config.warnings.len());
         teardown();
-    }
-
-    #[test]
-    fn not_enabled() {
-        let mut config = Instructions::default();
-        *config.cargo_mut().enabled_mut() = false;
-        assert!(!config.cargo().has_enabled());
-    }
-
-    #[test]
-    fn no_features() {
-        let mut config = Instructions::default();
-        *config.cargo_mut().features_mut() = false;
-        assert!(config.cargo().has_enabled());
-    }
-
-    #[test]
-    fn no_profile() {
-        let mut config = Instructions::default();
-        *config.cargo_mut().features_mut() = false;
-        *config.cargo_mut().profile_mut() = false;
-        assert!(config.cargo().has_enabled());
-    }
-
-    #[test]
-    fn nothing() {
-        let mut config = Instructions::default();
-        *config.cargo_mut().features_mut() = false;
-        *config.cargo_mut().profile_mut() = false;
-        *config.cargo_mut().target_triple_mut() = false;
-        assert!(!config.cargo().has_enabled());
+        Ok(())
     }
 }
-
-#[cfg(all(test, not(feature = "cargo")))]
-mod test {}

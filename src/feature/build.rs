@@ -73,40 +73,40 @@ impl Config {
 /// # use vergen::Vergen;
 /// #
 /// # fn main() -> Result<()> {
-/// Vergen::default().enable_all_build().gen()?;
+/// Vergen::default().all_build().gen()?;
 /// #   Ok(())
 /// # }
 /// ```
 #[cfg_attr(docsrs, doc(cfg(feature = "build")))]
 impl Builder {
     /// Enable all of the `VERGEN_BUILD_*` options
-    pub fn enable_all_build(&mut self) -> &mut Self {
-        self.enable_build_date()
-            .enable_build_semver()
-            .enable_build_time()
-            .enable_build_timestamp()
+    pub fn all_build(&mut self) -> &mut Self {
+        self.build_date()
+            .build_semver()
+            .build_time()
+            .build_timestamp()
     }
 
     /// Enable the `VERGEN_BUILD_DATE` date output
-    pub fn enable_build_date(&mut self) -> &mut Self {
+    pub fn build_date(&mut self) -> &mut Self {
         self.build_config.build_date = true;
         self
     }
 
     /// Enable the `VERGEN_BUILD_TIME` date output
-    pub fn enable_build_time(&mut self) -> &mut Self {
+    pub fn build_time(&mut self) -> &mut Self {
         self.build_config.build_time = true;
         self
     }
 
     /// Enable the `VERGEN_BUILD_TIMESTAMP` date output
-    pub fn enable_build_timestamp(&mut self) -> &mut Self {
+    pub fn build_timestamp(&mut self) -> &mut Self {
         self.build_config.build_timestamp = true;
         self
     }
 
     /// Enable the `VERGEN_BUILD_SEMVER` date output
-    pub fn enable_build_semver(&mut self) -> &mut Self {
+    pub fn build_semver(&mut self) -> &mut Self {
         self.build_config.build_semver = true;
         self
     }
@@ -124,7 +124,7 @@ impl Builder {
 
     fn add_semver_entry(&self, map: &mut RustcEnvMap) -> Result<()> {
         if self.build_config.build_semver {
-            let _ = map.insert(VergenKey::BuildSemver, env::var("CARGO_PKG_VERSION")?);
+            let _old = map.insert(VergenKey::BuildSemver, env::var("CARGO_PKG_VERSION")?);
         }
         Ok(())
     }
@@ -164,10 +164,10 @@ impl Builder {
                     "{} set to idempotent default",
                     VergenKey::BuildDate.name()
                 ));
-                let _ = map.insert(VergenKey::BuildDate, VERGEN_IDEMPOTENT_DEFAULT.to_string());
+                let _old = map.insert(VergenKey::BuildDate, VERGEN_IDEMPOTENT_DEFAULT.to_string());
             } else {
                 let format = format_description::parse("[year]-[month]-[day]")?;
-                let _ = map.insert(VergenKey::BuildDate, ts.format(&format)?);
+                let _old = map.insert(VergenKey::BuildDate, ts.format(&format)?);
             }
         }
         Ok(())
@@ -187,10 +187,10 @@ impl Builder {
                     "{} set to idempotent default",
                     VergenKey::BuildTime.name()
                 ));
-                let _ = map.insert(VergenKey::BuildTime, VERGEN_IDEMPOTENT_DEFAULT.to_string());
+                let _old = map.insert(VergenKey::BuildTime, VERGEN_IDEMPOTENT_DEFAULT.to_string());
             } else {
                 let format = format_description::parse("[hour]:[minute]:[second]")?;
-                let _ = map.insert(VergenKey::BuildTime, ts.format(&format)?);
+                let _old = map.insert(VergenKey::BuildTime, ts.format(&format)?);
             }
         }
         Ok(())
@@ -210,12 +210,12 @@ impl Builder {
                     "{} set to idempotent default",
                     VergenKey::BuildTimestamp.name()
                 ));
-                let _ = map.insert(
+                let _old = map.insert(
                     VergenKey::BuildTimestamp,
                     VERGEN_IDEMPOTENT_DEFAULT.to_string(),
                 );
             } else {
-                let _ = map.insert(VergenKey::BuildTimestamp, ts.format(&Rfc3339)?);
+                let _old = map.insert(VergenKey::BuildTimestamp, ts.format(&Rfc3339)?);
             }
         }
         Ok(())
@@ -231,10 +231,7 @@ mod test {
     #[test]
     #[serial_test::parallel]
     fn build_all_idempotent() -> Result<()> {
-        let config = Vergen::default()
-            .enable_idempotent()
-            .enable_all_build()
-            .test_gen()?;
+        let config = Vergen::default().idempotent().all_build().test_gen()?;
         assert_eq!(4, config.cargo_rustc_env_map.len());
         assert_eq!(3, count_idempotent(config.cargo_rustc_env_map));
         assert_eq!(3, config.warnings.len());
@@ -244,7 +241,7 @@ mod test {
     #[test]
     #[serial_test::parallel]
     fn build_all() -> Result<()> {
-        let config = Vergen::default().enable_all_build().test_gen()?;
+        let config = Vergen::default().all_build().test_gen()?;
         assert_eq!(4, config.cargo_rustc_env_map.len());
         assert_eq!(0, count_idempotent(config.cargo_rustc_env_map));
         assert_eq!(0, config.warnings.len());
@@ -257,8 +254,8 @@ mod test {
         env::set_var("SOURCE_DATE_EPOCH", "1671809360");
         let mut stdout_buf = vec![];
         Vergen::default()
-            .enable_idempotent()
-            .enable_all_build()
+            .idempotent()
+            .all_build()
             .test_gen_output(&mut stdout_buf)?;
         let output = String::from_utf8_lossy(&stdout_buf);
         for (idx, line) in output.lines().enumerate() {
