@@ -69,6 +69,10 @@ vergen(config)?;
 #[derive(Clone, Copy, Debug, Getters, MutGetters)]
 #[getset(get = "pub(crate)", get_mut = "pub")]
 #[allow(clippy::struct_excessive_bools)]
+#[deprecated(
+    since = "8.0.0",
+    note = "This has been replaced with [`vergen::VergenBuilder`]"
+)]
 pub struct Sysinfo {
     /// Enable/Disable the sysinfo output
     enabled: bool,
@@ -146,7 +150,7 @@ fn setup_system() -> System {
 }
 
 #[cfg(feature = "si")]
-#[allow(clippy::unnecessary_wraps, clippy::too_many_lines)]
+#[allow(clippy::unnecessary_wraps, clippy::too_many_lines, deprecated)]
 pub(crate) fn configure_sysinfo(instructions: &Instructions, config: &mut Config) -> Result<()> {
     let sysinfo_config = instructions.sysinfo();
 
@@ -281,7 +285,11 @@ pub(crate) fn configure_sysinfo(instructions: &Instructions, config: &mut Config
 }
 
 #[cfg(not(feature = "si"))]
-#[allow(clippy::unnecessary_wraps)]
+#[allow(
+    clippy::unnecessary_wraps,
+    clippy::trivially_copy_pass_by_ref,
+    deprecated
+)]
 pub(crate) fn configure_sysinfo(_instructions: &Instructions, _config: &mut Config) -> Result<()> {
     Ok(())
 }

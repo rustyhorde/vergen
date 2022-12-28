@@ -1,20 +1,8 @@
-use anyhow::Result;
-use time::{format_description::well_known::Rfc3339, OffsetDateTime};
-
-pub fn main() -> Result<()> {
-    println!("cargo:rerun-if-changed=build.rs");
-    // These are here so some doc tests work
-    let now = OffsetDateTime::now_utc();
-    println!(
-        "cargo:rustc-env=VERGEN_BUILD_TIMESTAMP={}",
-        now.format(&Rfc3339)?
-    );
-    println!("cargo:rustc-env=VERGEN_GIT_SEMVER=v3.2.0-86-g95fc0f5");
+pub fn main() {
     nightly_lints();
     beta_lints();
     stable_lints();
     msrv_lints();
-    Ok(())
 }
 
 #[rustversion::nightly]

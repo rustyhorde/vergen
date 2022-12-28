@@ -8,6 +8,10 @@
 
 //! Internal Constants
 
+// Idempotent Constant
+#[cfg(any(feature = "build", all(test, feature = "rustc")))]
+pub(crate) const VERGEN_IDEMPOTENT_DEFAULT: &str = "VERGEN_IDEMPOTENT_OUTPUT";
+
 // Build Constants
 pub(crate) const BUILD_TIMESTAMP_NAME: &str = "VERGEN_BUILD_TIMESTAMP";
 pub(crate) const BUILD_DATE_NAME: &str = "VERGEN_BUILD_DATE";

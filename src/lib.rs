@@ -67,9 +67,9 @@
 //! **NOTE** - All five features are enabled by default.
 //!
 //! ## Sample Output
-//! If all features are enabled and the default [`Config`] is used the build script will generate instructions for cargo similar to below.
+//! If all features are enabled and the default TODO is used the build script will generate instructions for cargo similar to below.
 //!
-//! Please see [`Config`](crate::Config) for more details on instruction generation.
+//! Please see TODO for more details on instruction generation.
 //!
 //! ```text, no_run
 //! cargo:rustc-env=VERGEN_BUILD_TIMESTAMP=2021-02-25T23:28:39.493201+00:00
@@ -99,12 +99,12 @@
 //!
 //! | Variable | Sample |
 //! | -------  | ------ |
-//! | See [`Build`](crate::Build) to configure the following |
+//! | See TODO |
 //! | `VERGEN_BUILD_DATE` | 2021-02-25 |
 //! | `VERGEN_BUILD_TIME` | 23:28:39.493201 |
 //! | `VERGEN_BUILD_TIMESTAMP` | 2021-02-25T23:28:39.493201+00:00 |
 //! | `VERGEN_BUILD_SEMVER` | 5.0.0 |
-//! | See [`Git`](crate::Git) to configure the following |
+//! | See TODO |
 //! | `VERGEN_GIT_BRANCH` | feature/fun |
 //! | `VERGEN_GIT_COMMIT_DATE` | 2021-02-24 |
 //! | `VERGEN_GIT_COMMIT_TIME` | 20:55:21 |
@@ -113,18 +113,18 @@
 //! | `VERGEN_GIT_SEMVER_LIGHTWEIGHT` | feature-test |
 //! | `VERGEN_GIT_SHA` | f49246ce334567bff9f950bfd0f3078184a2738a |
 //! | `VERGEN_GIT_SHA_SHORT` | f49246c |
-//! | See [`Rustc`](crate::Rustc) to configure the following |
+//! | See TODO |
 //! | `VERGEN_RUSTC_CHANNEL` | nightly |
 //! | `VERGEN_RUSTC_COMMIT_DATE` | 2021-02-24 |
 //! | `VERGEN_RUSTC_COMMIT_HASH` | a8486b64b0c87dabd045453b6c81500015d122d6 |
 //! | `VERGEN_RUSTC_HOST_TRIPLE` | x86_64-apple-darwin |
 //! | `VERGEN_RUSTC_LLVM_VERSION` | 11.0 |
 //! | `VERGEN_RUSTC_SEMVER` | 1.52.0-nightly |
-//! | See [`Cargo`](crate::Cargo) to configure the following |
+//! | See TODO |
 //! | `VERGEN_CARGO_FEATURES` | git,build |
 //! | `VERGEN_CARGO_PROFILE` | debug |
 //! | `VERGEN_CARGO_TARGET_TRIPLE` | x86_64-unknown-linux-gnu |
-//! | See [`Sysinfo`](crate::Sysinfo) to configure the following |
+//! | See TODO |
 //! | `VERGEN_SYSINFO_NAME` | Manjaro Linux |
 //! | `VERGEN_SYSINFO_OS_VERSION` | Linux  Manjaro Linux |
 //! | `VERGEN_SYSINFO_USER` | Yoda |
@@ -159,19 +159,18 @@
 //! ```
 //!
 //! ### build.rs
-//! **NOTE** - Individual instruction generation can be toggled on or off via [`Config`](crate::Config)
+//! **NOTE** - Individual instruction generation can be toggled on or off via TODO
 //! ```
-//! use anyhow::Result;
-//! use vergen::{Config, vergen};
-//!
-//! fn main() -> Result<()> {
-//!   // Generate the default 'cargo:' instruction output
-//!   vergen(Config::default())
-//! }
+//! # use anyhow::Result;
+//! # use vergen::Vergen;
+//! # fn main() -> Result<()> {
+//! Vergen::default().gen()?;
+//! #   Ok(())
+//! # }
 //! ```
 //!
 //! ### Use in code
-//! ```
+//! ```compile_fail
 //! println!("Build Timestamp: {}", env!("VERGEN_BUILD_TIMESTAMP"));
 //! println!("git semver: {}", env!("VERGEN_GIT_SEMVER"));
 //! ```
@@ -180,6 +179,7 @@
 //! [cargo:rustc-env]: https://doc.rust-lang.org/cargo/reference/build-scripts.html#rustc-env
 //! [cargo:rerun-if-changed]: https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed
 //!
+#![cfg_attr(docsrs, feature(doc_cfg))]
 // rustc lints
 #![cfg_attr(
     msrv,
@@ -200,7 +200,6 @@
         const_evaluatable_unchecked,
         const_item_mutation,
         dead_code,
-        deprecated,
         deprecated_in_future,
         deref_nullptr,
         drop_bounds,
@@ -327,53 +326,12 @@
     rustdoc::private_intra_doc_links,
 ))]
 
-mod config;
-mod constants;
-mod error;
-mod feature;
-mod gen;
-
-pub use crate::config::Instructions as Config;
 #[cfg(feature = "build")]
-pub use crate::feature::Build;
-#[cfg(feature = "cargo")]
-pub use crate::feature::Cargo;
-#[cfg(feature = "git")]
-pub use crate::feature::Git;
+mod build;
+mod builder;
+mod constants;
+mod key;
 #[cfg(feature = "rustc")]
-pub use crate::feature::Rustc;
-#[cfg(feature = "git")]
-pub use crate::feature::SemverKind;
-#[cfg(feature = "git")]
-pub use crate::feature::ShaKind;
-#[cfg(feature = "si")]
-pub use crate::feature::Sysinfo;
-#[cfg(any(feature = "git", feature = "build"))]
-pub use crate::feature::TimeZone;
-#[cfg(any(feature = "git", feature = "build"))]
-pub use crate::feature::TimestampKind;
-pub use crate::gen::vergen;
+mod rustc;
 
-#[cfg(not(feature = "si"))]
-use cfg_if as _;
-#[cfg(all(test, not(feature = "cargo")))]
-use serial_test as _;
-
-#[cfg(test)]
-pub(crate) mod testutils {
-    use std::env;
-
-    pub(crate) fn setup() {
-        env::set_var("TARGET", "x86_64-unknown-linux-gnu");
-        env::set_var("PROFILE", "debug");
-        env::set_var("CARGO_FEATURE_GIT", "git");
-        env::set_var("CARGO_FEATURE_BUILD", "build");
-    }
-
-    pub(crate) fn teardown() {
-        env::remove_var("TARGET");
-        env::remove_var("PROFILE");
-        env::remove_var("CARGO_FEATURE_GIT");
-        env::remove_var("CARGO_FEATURE_BUILD");
-    }
-}
+pub use crate::builder::Builder as Vergen;

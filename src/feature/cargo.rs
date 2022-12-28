@@ -55,6 +55,10 @@ vergen(config)?;
 #[cfg(feature = "cargo")]
 #[derive(Clone, Copy, Debug, Getters, MutGetters)]
 #[getset(get = "pub(crate)", get_mut = "pub")]
+#[deprecated(
+    since = "8.0.0",
+    note = "This has been replaced with [`vergen::VergenBuilder`]"
+)]
 pub struct Cargo {
     /// Enable/Disable the cargo output
     enabled: bool,
@@ -130,6 +134,7 @@ pub(crate) fn configure_cargo(instructions: &Instructions, config: &mut Config) 
 }
 
 #[cfg(not(feature = "cargo"))]
+#[allow(clippy::trivially_copy_pass_by_ref)]
 pub(crate) fn configure_cargo(_instructions: &Instructions, _config: &mut Config) {}
 
 #[cfg(all(test, feature = "cargo"))]

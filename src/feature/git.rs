@@ -30,6 +30,10 @@ use {
 /// The semver kind to output
 #[cfg(feature = "git")]
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[deprecated(
+    since = "8.0.0",
+    note = "This has been replaced with [`vergen::VergenBuilder`]"
+)]
 pub enum SemverKind {
     /// Output the `git describe` kind
     Normal,
@@ -40,6 +44,10 @@ pub enum SemverKind {
 /// The SHA kind to output
 #[cfg(feature = "git")]
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[deprecated(
+    since = "8.0.0",
+    note = "This has been replaced with [`vergen::VergenBuilder`]"
+)]
 pub enum ShaKind {
     /// Output the normal 40 digit SHA: `VERGEN_GIT_SHA`
     Normal,
@@ -122,6 +130,10 @@ vergen(config)?;
 #[allow(clippy::struct_excessive_bools)]
 #[derive(Clone, Debug, CopyGetters, Getters, MutGetters)]
 #[getset(get_mut = "pub")]
+#[deprecated(
+    since = "8.0.0",
+    note = "This has been replaced with [`vergen::VergenBuilder`]"
+)]
 pub struct Git {
     /// Enable/Disable the git output
     #[getset(get = "pub(crate)")]
@@ -219,6 +231,12 @@ impl Git {
 }
 
 #[cfg(not(feature = "git"))]
+#[allow(
+    clippy::unnecessary_wraps,
+    clippy::trivially_copy_pass_by_ref,
+    clippy::needless_pass_by_value,
+    deprecated
+)]
 pub(crate) fn configure_git<T>(
     _instructions: &Instructions,
     _repo: Option<T>,
@@ -231,7 +249,7 @@ where
 }
 
 #[cfg(feature = "git")]
-#[allow(clippy::too_many_lines)]
+#[allow(clippy::too_many_lines, deprecated)]
 pub(crate) fn configure_git<T>(
     instructions: &Instructions,
     repo_path_opt: Option<T>,
