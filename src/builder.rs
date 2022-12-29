@@ -18,6 +18,11 @@ use std::{
 use crate::feature::build::Config as BuildConfig;
 #[cfg(feature = "cargo")]
 use crate::feature::cargo::Config as CargoConfig;
+#[cfg(all(
+    feature = "git",
+    any(feature = "git2", feature = "gitcl", feature = "gix")
+))]
+use crate::feature::git::Config as GitConfig;
 #[cfg(feature = "rustc")]
 use crate::feature::rustc::Config as RustcConfig;
 #[cfg(feature = "si")]
@@ -91,6 +96,31 @@ impl CargoOutput {
         Ok(())
     }
 
+    #[cfg(all(
+        feature = "git",
+        any(feature = "git2", feature = "gitcl", feature = "gix")
+    ))]
+    fn add_git_entries(&mut self, builder: &Builder) -> Result<()> {
+        let config = builder.git_config;
+        let skip = builder.skip_if_error;
+        builder
+            .add_git_map_entries(&mut self.cargo_rustc_env_map)
+            .or_else(|e| config.add_warnings(skip, e, &mut self.warnings))
+    }
+
+    #[cfg(not(all(
+        feature = "git",
+        any(any(feature = "git2", feature = "gitcl", feature = "gix"))
+    )))]
+    #[allow(
+        clippy::unnecessary_wraps,
+        clippy::trivially_copy_pass_by_ref,
+        clippy::unused_self
+    )]
+    fn add_git_entries(&mut self, _builder: &Builder) -> Result<()> {
+        Ok(())
+    }
+
     #[cfg(feature = "si")]
     fn add_si_entries(&mut self, builder: &Builder) -> Result<()> {
         let config = builder.sysinfo_config;
@@ -138,6 +168,11 @@ pub struct Builder {
     pub(crate) build_config: BuildConfig,
     #[cfg(feature = "cargo")]
     pub(crate) cargo_config: CargoConfig,
+    #[cfg(all(
+        feature = "git",
+        any(feature = "git2", feature = "gitcl", feature = "gix")
+    ))]
+    pub(crate) git_config: GitConfig,
     #[cfg(feature = "rustc")]
     pub(crate) rustc_config: RustcConfig,
     #[cfg(feature = "si")]
@@ -155,6 +190,11 @@ impl Default for Builder {
             build_config: BuildConfig::default(),
             #[cfg(feature = "cargo")]
             cargo_config: CargoConfig::default(),
+            #[cfg(all(
+                feature = "git",
+                any(feature = "git2", feature = "gitcl", feature = "gix")
+            ))]
+            git_config: GitConfig::default(),
             #[cfg(feature = "rustc")]
             rustc_config: RustcConfig::default(),
             #[cfg(feature = "si")]
@@ -382,6 +422,7 @@ Vergen::default()
         let mut config = CargoOutput::default();
         config.add_build_entries(&self)?;
         config.add_cargo_entries(&self)?;
+        config.add_git_entries(&self)?;
         config.add_rustc_entries(&self)?;
         config.add_si_entries(&self)?;
         Ok(config)
@@ -394,17 +435,25 @@ pub(crate) mod test {
     use anyhow::Result;
     #[cfg(any(
         feature = "build",
-        feature = "rustc",
         feature = "cargo",
-        feature = "si"
+        all(
+            feature = "git",
+            any(feature = "git2", feature = "gitcl", feature = "gix")
+        ),
+        feature = "rustc",
+        feature = "si",
     ))]
     use {super::RustcEnvMap, crate::constants::VERGEN_IDEMPOTENT_DEFAULT};
 
     #[cfg(any(
         feature = "build",
-        feature = "rustc",
         feature = "cargo",
-        feature = "si"
+        all(
+            feature = "git",
+            any(feature = "git2", feature = "gitcl", feature = "gix")
+        ),
+        feature = "rustc",
+        feature = "si",
     ))]
     pub(crate) fn count_idempotent(map: RustcEnvMap) -> usize {
         map.values()

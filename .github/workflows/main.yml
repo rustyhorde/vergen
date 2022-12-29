@@ -106,8 +106,14 @@ jobs:
         continue-on-error: true
       - name: 🧪 Test 🧪
         run: cargo test-all-features
+      - name: 🧪 Test gitcl 🧪
+        run: cargo test -F git,gitcl
+      - name: 🧪 Test git2 🧪
+        run: cargo test -F git,git2
+      - name: 🧪 Test gix 🧪
+        run: cargo test -F git,gix
       - name: 🙊 Code Coverage 🙊
-        run: cargo tarpaulin --all-features --exclude-files src/lib.rs --exclude-files legacy/git.rs --out Xml
+        run: cargo tarpaulin --exclude-files src/lib.rs --exclude-files legacy/git.rs --out Xml
       - name: 🙊 Upload Code Coverage 🙊
         uses: codecov/codecov-action@v1
         with:
@@ -156,6 +162,12 @@ jobs:
         continue-on-error: true
       - name: 🧪 Test 🧪
         run: cargo test-all-features
+      - name: 🧪 Test gitcl 🧪
+        run: cargo test -F git,gitcl
+      - name: 🧪 Test git2 🧪
+        run: cargo test -F git,git2
+      - name: 🧪 Test gix 🧪
+        run: cargo test -F git,gix
   test-windows:
     name: 🧪 Windows 🧪
     needs: lints
@@ -212,3 +224,9 @@ jobs:
         continue-on-error: true
       - name: 🧪 Test 🧪
         run: cargo test-all-features
+      - name: 🧪 Test gitcl 🧪
+        run: cargo test -F git,gitcl
+      - name: 🧪 Test git2 🧪
+        run: cargo test -F git,git2
+      - name: 🧪 Test gix 🧪
+        run: cargo test -F git,gix

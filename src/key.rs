@@ -10,11 +10,11 @@ use crate::constants::{
     BUILD_DATE_NAME, BUILD_SEMVER_NAME, BUILD_TIMESTAMP_NAME, BUILD_TIME_NAME, CARGO_FEATURES,
     CARGO_PROFILE, CARGO_TARGET_TRIPLE, GIT_BRANCH_NAME, GIT_COMMIT_AUTHOR_EMAIL,
     GIT_COMMIT_AUTHOR_NAME, GIT_COMMIT_COUNT, GIT_COMMIT_DATE_NAME, GIT_COMMIT_MESSAGE,
-    GIT_COMMIT_TIMESTAMP_NAME, GIT_COMMIT_TIME_NAME, GIT_SEMVER_NAME, GIT_SEMVER_TAGS_NAME,
-    GIT_SHA_NAME, GIT_SHA_SHORT_NAME, RUSTC_CHANNEL_NAME, RUSTC_COMMIT_DATE, RUSTC_COMMIT_HASH,
-    RUSTC_HOST_TRIPLE_NAME, RUSTC_LLVM_VERSION, RUSTC_SEMVER_NAME, SYSINFO_CPU_BRAND,
-    SYSINFO_CPU_CORE_COUNT, SYSINFO_CPU_FREQUENCY, SYSINFO_CPU_NAME, SYSINFO_CPU_VENDOR,
-    SYSINFO_MEMORY, SYSINFO_NAME, SYSINFO_OS_VERSION, SYSINFO_USER,
+    GIT_COMMIT_TIMESTAMP_NAME, GIT_DESCRIBE_NAME, GIT_SHA_NAME, RUSTC_CHANNEL_NAME,
+    RUSTC_COMMIT_DATE, RUSTC_COMMIT_HASH, RUSTC_HOST_TRIPLE_NAME, RUSTC_LLVM_VERSION,
+    RUSTC_SEMVER_NAME, SYSINFO_CPU_BRAND, SYSINFO_CPU_CORE_COUNT, SYSINFO_CPU_FREQUENCY,
+    SYSINFO_CPU_NAME, SYSINFO_CPU_VENDOR, SYSINFO_MEMORY, SYSINFO_NAME, SYSINFO_OS_VERSION,
+    SYSINFO_USER,
 };
 
 /// Build information keys.
@@ -36,30 +36,23 @@ pub(crate) enum VergenKey {
     /// The cargo features (VERGEN_CARGO_FEATURES)
     CargoFeatures,
     /// The current working branch name (VERGEN_GIT_BRANCH)
-    Branch,
+    GitBranch,
     /// The commit author's email. (VERGEN_GIT_COMMIT_AUTHOR_EMAIL)
-    CommitAuthorEmail,
+    GitCommitAuthorEmail,
     /// The commit author's name. (VERGEN_GIT_COMMIT_AUTHOR_NAME)
-    CommitAuthorName,
+    GitCommitAuthorName,
     /// Number of commits in current branch. (VERGEN_GIT_COMMIT_COUNT)
-    CommitCount,
+    GitCommitCount,
     /// The commit date. (VERGEN_GIT_COMMIT_DATE)
-    CommitDate,
+    GitCommitDate,
     /// Commit message (VERGEN_GIT_COMMIT_MESSAGE)
-    CommitMessage,
-    /// The commit time. (VERGEN_GIT_COMMIT_TIME)
-    CommitTime,
+    GitCommitMessage,
     /// The commit timestamp. (VERGEN_GIT_COMMIT_TIMESTAMP)
-    CommitTimestamp,
+    GitCommitTimestamp,
     /// The semver version from the last git tag. (VERGEN_GIT_SEMVER)
-    Semver,
-    /// The semver version from the last git tag, including lightweight.
-    /// (VERGEN_GIT_SEMVER_LIGHTWEIGHT)
-    SemverLightweight,
+    GitDescribe,
     /// The latest commit SHA. (VERGEN_GIT_SHA)
-    Sha,
-    /// The latest commit short SHA. (VERGEN_GIT_SHA_SHORT)
-    ShortSha,
+    GitSha,
     /// The release channel of the rust compiler. (VERGEN_RUSTC_CHANNEL)
     RustcChannel,
     /// The rustc commit date. (VERGEN_RUSTC_COMMIT_DATE)
@@ -103,18 +96,15 @@ impl VergenKey {
             VergenKey::CargoTargetTriple => CARGO_TARGET_TRIPLE,
             VergenKey::CargoProfile => CARGO_PROFILE,
             VergenKey::CargoFeatures => CARGO_FEATURES,
-            VergenKey::Branch => GIT_BRANCH_NAME,
-            VergenKey::CommitAuthorEmail => GIT_COMMIT_AUTHOR_EMAIL,
-            VergenKey::CommitAuthorName => GIT_COMMIT_AUTHOR_NAME,
-            VergenKey::CommitCount => GIT_COMMIT_COUNT,
-            VergenKey::CommitDate => GIT_COMMIT_DATE_NAME,
-            VergenKey::CommitMessage => GIT_COMMIT_MESSAGE,
-            VergenKey::CommitTime => GIT_COMMIT_TIME_NAME,
-            VergenKey::CommitTimestamp => GIT_COMMIT_TIMESTAMP_NAME,
-            VergenKey::Semver => GIT_SEMVER_NAME,
-            VergenKey::SemverLightweight => GIT_SEMVER_TAGS_NAME,
-            VergenKey::Sha => GIT_SHA_NAME,
-            VergenKey::ShortSha => GIT_SHA_SHORT_NAME,
+            VergenKey::GitBranch => GIT_BRANCH_NAME,
+            VergenKey::GitCommitAuthorEmail => GIT_COMMIT_AUTHOR_EMAIL,
+            VergenKey::GitCommitAuthorName => GIT_COMMIT_AUTHOR_NAME,
+            VergenKey::GitCommitCount => GIT_COMMIT_COUNT,
+            VergenKey::GitCommitDate => GIT_COMMIT_DATE_NAME,
+            VergenKey::GitCommitMessage => GIT_COMMIT_MESSAGE,
+            VergenKey::GitCommitTimestamp => GIT_COMMIT_TIMESTAMP_NAME,
+            VergenKey::GitDescribe => GIT_DESCRIBE_NAME,
+            VergenKey::GitSha => GIT_SHA_NAME,
             VergenKey::RustcChannel => RUSTC_CHANNEL_NAME,
             VergenKey::RustcCommitDate => RUSTC_COMMIT_DATE,
             VergenKey::RustcCommitHash => RUSTC_COMMIT_HASH,

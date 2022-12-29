@@ -12,7 +12,17 @@
 #[cfg(any(
     feature = "build",
     feature = "si",
-    all(test, any(feature = "rustc", feature = "cargo"))
+    all(
+        test,
+        any(
+            feature = "cargo",
+            all(
+                feature = "git",
+                any(feature = "git2", feature = "gitcl", feature = "gix")
+            ),
+            feature = "rustc"
+        )
+    )
 ))]
 pub(crate) const VERGEN_IDEMPOTENT_DEFAULT: &str = "VERGEN_IDEMPOTENT_OUTPUT";
 
@@ -29,12 +39,9 @@ pub(crate) const GIT_COMMIT_AUTHOR_NAME: &str = "VERGEN_GIT_COMMIT_AUTHOR_NAME";
 pub(crate) const GIT_COMMIT_COUNT: &str = "VERGEN_GIT_COMMIT_COUNT";
 pub(crate) const GIT_COMMIT_MESSAGE: &str = "VERGEN_GIT_COMMIT_MESSAGE";
 pub(crate) const GIT_COMMIT_DATE_NAME: &str = "VERGEN_GIT_COMMIT_DATE";
-pub(crate) const GIT_COMMIT_TIME_NAME: &str = "VERGEN_GIT_COMMIT_TIME";
 pub(crate) const GIT_COMMIT_TIMESTAMP_NAME: &str = "VERGEN_GIT_COMMIT_TIMESTAMP";
-pub(crate) const GIT_SEMVER_NAME: &str = "VERGEN_GIT_SEMVER";
-pub(crate) const GIT_SEMVER_TAGS_NAME: &str = "VERGEN_GIT_SEMVER_LIGHTWEIGHT";
+pub(crate) const GIT_DESCRIBE_NAME: &str = "VERGEN_GIT_DESCRIBE";
 pub(crate) const GIT_SHA_NAME: &str = "VERGEN_GIT_SHA";
-pub(crate) const GIT_SHA_SHORT_NAME: &str = "VERGEN_GIT_SHA_SHORT";
 
 // rustc Constants
 pub(crate) const RUSTC_CHANNEL_NAME: &str = "VERGEN_RUSTC_CHANNEL";
@@ -73,11 +80,9 @@ mod test {
         // git Constants
         assert_eq!(GIT_BRANCH_NAME, "VERGEN_GIT_BRANCH");
         assert_eq!(GIT_SHA_NAME, "VERGEN_GIT_SHA");
-        assert_eq!(GIT_SHA_SHORT_NAME, "VERGEN_GIT_SHA_SHORT");
         assert_eq!(GIT_COMMIT_COUNT, "VERGEN_GIT_COMMIT_COUNT");
         assert_eq!(GIT_COMMIT_DATE_NAME, "VERGEN_GIT_COMMIT_DATE");
-        assert_eq!(GIT_SEMVER_NAME, "VERGEN_GIT_SEMVER");
-        assert_eq!(GIT_SEMVER_TAGS_NAME, "VERGEN_GIT_SEMVER_LIGHTWEIGHT");
+        assert_eq!(GIT_DESCRIBE_NAME, "VERGEN_GIT_DESCRIBE");
 
         // rustc Constants
         assert_eq!(RUSTC_SEMVER_NAME, "VERGEN_RUSTC_SEMVER");

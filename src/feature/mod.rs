@@ -10,6 +10,8 @@
 pub(crate) mod build;
 #[cfg(feature = "cargo")]
 pub(crate) mod cargo;
+#[cfg(feature = "git")]
+pub(crate) mod git;
 #[cfg(feature = "rustc")]
 pub(crate) mod rustc;
 #[cfg(feature = "si")]
