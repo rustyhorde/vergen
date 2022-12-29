@@ -90,7 +90,6 @@ mod test_sysinfo {
         };
     }
 
-    #[cfg(target_os = "macos")]
     const IDEM_OUTPUT: &str = r#"cargo:rustc-env=VERGEN_SYSINFO_NAME=VERGEN_IDEMPOTENT_OUTPUT
 cargo:rustc-env=VERGEN_SYSINFO_OS_VERSION=VERGEN_IDEMPOTENT_OUTPUT
 cargo:rustc-env=VERGEN_SYSINFO_USER=VERGEN_IDEMPOTENT_OUTPUT
@@ -158,20 +157,6 @@ cargo:warning=VERGEN_SYSINFO_CPU_FREQUENCY set to idempotent default
     }
 
     #[test]
-    #[cfg(not(target_os = "macos"))]
-    fn sysinfo_all_idempotent_output() -> Result<()> {
-        let mut stdout_buf = vec![];
-        Vergen::default()
-            .idempotent()
-            .all_sysinfo()
-            .test_gen_output(&mut stdout_buf)?;
-        let output = String::from_utf8_lossy(&stdout_buf);
-        assert!(SYSINFO_IDEM_REGEX_INST.is_match(&output));
-        Ok(())
-    }
-
-    #[test]
-    #[cfg(target_os = "macos")]
     fn sysinfo_all_idempotent_output() -> Result<()> {
         let mut stdout_buf = vec![];
         Vergen::default()
