@@ -288,6 +288,16 @@ fn add_git_cmd_entry(cmd: &str, key: VergenKey, map: &mut RustcEnvMap) -> Result
     Ok(())
 }
 
+#[cfg(target_env = "msvc")]
+fn run_cmd(command: &str) -> Result<Output> {
+    let mut cmd = Command::new("cmd");
+    let _ = cmd.arg("/c");
+    let _ = cmd.arg(command);
+    let _ = cmd.stdout(Stdio::piped());
+    let _ = cmd.stderr(Stdio::piped());
+    Ok(cmd.output()?)
+}
+
 #[cfg(test)]
 mod test {
     use super::{add_git_cmd_entry, Config};
