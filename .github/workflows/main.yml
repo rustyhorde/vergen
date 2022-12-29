@@ -76,6 +76,8 @@ jobs:
           rust: nightly
           target: x86_64-unknown-linux-gnu
     steps:
+      - name: Path
+        run: echo "$PATH"
       - name: ✔️ Checkout ✔️
         uses: actions/checkout@v2
       - name: 💵 Cache 💵
