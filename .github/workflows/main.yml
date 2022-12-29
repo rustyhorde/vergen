@@ -21,8 +21,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-        with:
-          submodules: recursive
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
@@ -51,8 +49,6 @@ jobs:
             rust: stable
     steps:
       - uses: actions/checkout@v2
-        with:
-          submodules: recursive
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
@@ -82,8 +78,6 @@ jobs:
     steps:
       - name: ✔️ Checkout ✔️
         uses: actions/checkout@v2
-        with:
-          submodules: recursive
       - name: 💵 Cache 💵
         uses: actions/cache@v2
         with:
@@ -98,14 +92,6 @@ jobs:
           toolchain: ${{ matrix.rust }}
           target: ${{ matrix.target }}
           override: true
-      - name: ✔️ Checkout (notagsrepo master) ✔️
-        run: cd testdata/notagsrepo && git checkout master && cd ..
-      - name: ✔️ Checkout (tagsrepo master) ✔️
-        run: cd testdata/tagsrepo && git checkout master && cd ..
-      - name: ✔️ Checkout (detachedhead v0.0.1) ✔️
-        run: cd testdata/detachedhead && git checkout v0.0.1 && cd ..
-      - name: 🐕 Fetch 🐕
-        run: git submodule foreach --recursive 'git fetch --tags'
       - name: 💾 Install (cargo-tarpaulin) 💾
         uses: actions-rs/install@v0.1
         with:
@@ -150,8 +136,6 @@ jobs:
     steps:
       - name: ✔️ Checkout ✔️
         uses: actions/checkout@v2
-        with:
-          submodules: recursive
       - name: 💵 Cache 💵
         uses: actions/cache@v2
         with:
@@ -165,14 +149,6 @@ jobs:
           toolchain: ${{ matrix.rust }}
           target: ${{ matrix.target }}
           override: true
-      - name: ✔️ Checkout (notagsrepo master) ✔️
-        run: cd testdata/notagsrepo && git checkout master && cd ..
-      - name: ✔️ Checkout (tagsrepo master) ✔️
-        run: cd testdata/tagsrepo && git checkout master && cd ..
-      - name: ✔️ Checkout (detachedhead v0.0.1) ✔️
-        run: cd testdata/detachedhead && git checkout v0.0.1 && cd ..
-      - name: 🐕 Fetch 🐕
-        run: git submodule foreach --recursive 'git fetch --tags'
       - name: 💾 Install (cargo-all-features) 💾
         uses: actions-rs/install@v0.1
         with:
@@ -216,8 +192,6 @@ jobs:
     steps:
       - name: ✔️ Checkout ✔️
         uses: actions/checkout@v2
-        with:
-          submodules: recursive
       - name: 💵 Cache 💵
         uses: actions/cache@v2
         with:
@@ -231,14 +205,6 @@ jobs:
           toolchain: ${{ matrix.rust }}
           target: ${{ matrix.target }}
           override: true
-      - name: ✔️ Checkout (notagsrepo master) ✔️
-        run: cd testdata/notagsrepo && git checkout master && cd ..
-      - name: ✔️ Checkout (tagsrepo master) ✔️
-        run: cd testdata/tagsrepo && git checkout master && cd ..
-      - name: ✔️ Checkout (detachedhead v0.0.1) ✔️
-        run: cd testdata/detachedhead && git checkout v0.0.1 && cd ..
-      - name: 🐕 Fetch 🐕
-        run: git submodule foreach --recursive 'git fetch --tags'
       - name: 💾 Install (cargo-all-features) 💾
         uses: actions-rs/install@v0.1
         with:
