@@ -115,12 +115,12 @@ impl CargoOutput {
     where
         T: Write,
     {
-        // Generate the 'cargo:' instruction output
+        // Emit the 'cargo:rustc-env' instructions
         for (k, v) in &self.cargo_rustc_env_map {
             writeln!(stdout, "cargo:rustc-env={}={v}", k.name())?;
         }
 
-        // Emit a cargo:warning if a section was skipped over
+        // Emit the `cargo:warning` instructions
         for warning in &self.warnings {
             writeln!(stdout, "cargo:warning={warning}")?;
         }

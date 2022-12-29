@@ -19,6 +19,14 @@ pub(crate) struct Config {
 }
 
 impl Config {
+    #[cfg(test)]
+    fn enable_all(&mut self) {
+        self.build_date = true;
+        self.build_time = true;
+        self.build_timestamp = true;
+        self.build_semver = true;
+    }
+
     pub(crate) fn add_warnings(
         self,
         skip_if_error: bool,
@@ -224,9 +232,33 @@ impl Builder {
 
 #[cfg(test)]
 mod test {
+    use super::Config;
     use crate::{builder::test::count_idempotent, Vergen};
-    use anyhow::Result;
+    use anyhow::{anyhow, Result};
     use std::env;
+
+    #[test]
+    fn add_warnings_is_err() -> Result<()> {
+        let config = Config::default();
+        let mut warnings = vec![];
+        assert!(config
+            .add_warnings(false, anyhow!("test"), &mut warnings)
+            .is_err());
+        Ok(())
+    }
+
+    #[test]
+    fn add_warnings_adds_warnings() -> Result<()> {
+        let mut config = Config::default();
+        config.enable_all();
+
+        let mut warnings = vec![];
+        assert!(config
+            .add_warnings(true, anyhow!("test"), &mut warnings)
+            .is_ok());
+        assert_eq!(4, warnings.len());
+        Ok(())
+    }
 
     #[test]
     #[serial_test::parallel]

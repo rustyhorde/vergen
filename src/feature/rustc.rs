@@ -16,6 +16,16 @@ pub(crate) struct Config {
 }
 
 impl Config {
+    #[cfg(test)]
+    fn enable_all(&mut self) {
+        self.rustc_channel = true;
+        self.rustc_commit_date = true;
+        self.rustc_host_triple = true;
+        self.rustc_llvm_version = true;
+        self.rustc_semver = true;
+        self.rustc_sha = true;
+    }
+
     pub(crate) fn add_warnings(
         self,
         skip_if_error: bool,
@@ -191,8 +201,32 @@ impl Builder {
 
 #[cfg(test)]
 mod test {
+    use super::Config;
     use crate::{builder::test::count_idempotent, Vergen};
-    use anyhow::Result;
+    use anyhow::{anyhow, Result};
+
+    #[test]
+    fn add_warnings_is_err() -> Result<()> {
+        let config = Config::default();
+        let mut warnings = vec![];
+        assert!(config
+            .add_warnings(false, anyhow!("test"), &mut warnings)
+            .is_err());
+        Ok(())
+    }
+
+    #[test]
+    fn add_warnings_adds_warnings() -> Result<()> {
+        let mut config = Config::default();
+        config.enable_all();
+
+        let mut warnings = vec![];
+        assert!(config
+            .add_warnings(true, anyhow!("test"), &mut warnings)
+            .is_ok());
+        assert_eq!(6, warnings.len());
+        Ok(())
+    }
 
     #[test]
     #[serial_test::parallel]

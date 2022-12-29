@@ -30,6 +30,19 @@ pub(crate) struct Config {
 }
 
 impl Config {
+    #[cfg(test)]
+    fn enable_all(&mut self) {
+        self.si_name = true;
+        self.si_os_version = true;
+        self.si_user = true;
+        self.si_memory = true;
+        self.si_cpu_vendor = true;
+        self.si_cpu_core_count = true;
+        self.si_cpu_name = true;
+        self.si_cpu_brand = true;
+        self.si_cpu_frequency = true;
+    }
+
     pub(crate) fn add_warnings(
         self,
         skip_if_error: bool,
@@ -402,13 +415,37 @@ fn add_idempotent_entry(key: VergenKey, map: &mut RustcEnvMap, warnings: &mut Ve
 
 #[cfg(test)]
 mod test {
+    use super::Config;
     use crate::{builder::test::count_idempotent, Vergen};
-    use anyhow::Result;
+    use anyhow::{anyhow, Result};
 
     #[cfg(any(target_os = "macos", target_os = "windows"))]
     const SYSINFO_COUNT: usize = 8;
     #[cfg(not(any(target_os = "macos", target_os = "windows")))]
     const SYSINFO_COUNT: usize = 9;
+
+    #[test]
+    fn add_warnings_is_err() -> Result<()> {
+        let config = Config::default();
+        let mut warnings = vec![];
+        assert!(config
+            .add_warnings(false, anyhow!("test"), &mut warnings)
+            .is_err());
+        Ok(())
+    }
+
+    #[test]
+    fn add_warnings_adds_warnings() -> Result<()> {
+        let mut config = Config::default();
+        config.enable_all();
+
+        let mut warnings = vec![];
+        assert!(config
+            .add_warnings(true, anyhow!("test"), &mut warnings)
+            .is_ok());
+        assert_eq!(9, warnings.len());
+        Ok(())
+    }
 
     #[test]
     #[serial_test::parallel]
