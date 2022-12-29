@@ -8,7 +8,9 @@
 
 use crate::builder::{Builder, RustcEnvMap};
 use anyhow::{Error, Result};
+// remove these when impl complete
 use git_repository as _;
+use time as _;
 
 #[derive(Clone, Copy, Debug, Default)]
 pub(crate) struct Config {

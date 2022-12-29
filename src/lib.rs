@@ -376,8 +376,6 @@ mod key;
 mod utils;
 
 // This is here to appease the `unused_crate_dependencies` lint
-#[cfg(feature = "git2")]
-use git2 as _;
 #[cfg(test)]
 use {lazy_static as _, regex as _, serial_test as _};
 
