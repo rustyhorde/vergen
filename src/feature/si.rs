@@ -425,6 +425,7 @@ mod test {
     const SYSINFO_COUNT: usize = 9;
 
     #[test]
+    #[serial_test::parallel]
     fn add_warnings_is_err() -> Result<()> {
         let config = Config::default();
         let mut warnings = vec![];
@@ -435,6 +436,7 @@ mod test {
     }
 
     #[test]
+    #[serial_test::parallel]
     fn add_warnings_adds_warnings() -> Result<()> {
         let mut config = Config::default();
         config.enable_all();
@@ -468,6 +470,7 @@ mod test {
     }
 
     #[test]
+    #[serial_test::parallel]
     fn suffix_works() {
         assert_eq!(suffix(1023), "1023 B");
         assert_eq!(suffix(1024), "1 KiB");

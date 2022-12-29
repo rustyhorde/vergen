@@ -238,6 +238,7 @@ mod test {
     use std::env;
 
     #[test]
+    #[serial_test::parallel]
     fn add_warnings_is_err() -> Result<()> {
         let config = Config::default();
         let mut warnings = vec![];
@@ -248,6 +249,7 @@ mod test {
     }
 
     #[test]
+    #[serial_test::parallel]
     fn add_warnings_adds_warnings() -> Result<()> {
         let mut config = Config::default();
         config.enable_all();

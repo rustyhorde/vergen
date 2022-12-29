@@ -413,10 +413,18 @@ pub(crate) mod test {
     }
 
     #[test]
+    #[serial_test::parallel]
     fn default_is_disabled() -> Result<()> {
         let config = Builder::default().test_gen()?;
         assert!(config.cargo_rustc_env_map.is_empty());
         assert!(config.warnings.is_empty());
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::parallel]
+    fn gen_is_ok() -> Result<()> {
+        assert!(Builder::default().gen().is_ok());
         Ok(())
     }
 
@@ -427,6 +435,7 @@ pub(crate) mod test {
         feature = "si"
     ))]
     #[test]
+    #[serial_test::parallel]
     fn everything_enabled() -> Result<()> {
         use crate::utils::testutils::{setup, teardown};
 
@@ -452,6 +461,7 @@ pub(crate) mod test {
         feature = "si"
     ))]
     #[test]
+    #[serial_test::parallel]
     fn all_output() -> Result<()> {
         use crate::utils::testutils::{setup, teardown};
 

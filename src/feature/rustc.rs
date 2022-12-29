@@ -3,7 +3,7 @@ use crate::{
     key::VergenKey,
 };
 use anyhow::{Error, Result};
-use rustc_version::{version_meta, Channel};
+use rustc_version::{version_meta, Channel, VersionMeta};
 
 #[derive(Clone, Copy, Debug, Default)]
 pub(crate) struct Config {
@@ -147,8 +147,10 @@ impl Builder {
     }
 
     pub(crate) fn add_rustc_map_entries(&self, map: &mut RustcEnvMap) -> Result<()> {
-        let rustc = version_meta()?;
+        self.add_rustc_to_map(map, version_meta()?)
+    }
 
+    fn add_rustc_to_map(&self, map: &mut RustcEnvMap, rustc: VersionMeta) -> Result<()> {
         if self.rustc_config.rustc_channel {
             let _old = map.insert(
                 VergenKey::RustcChannel,
@@ -201,11 +203,15 @@ impl Builder {
 
 #[cfg(test)]
 mod test {
+    use std::collections::BTreeMap;
+
     use super::Config;
     use crate::{builder::test::count_idempotent, Vergen};
     use anyhow::{anyhow, Result};
+    use rustc_version::version_meta_for;
 
     #[test]
+    #[serial_test::parallel]
     fn add_warnings_is_err() -> Result<()> {
         let config = Config::default();
         let mut warnings = vec![];
@@ -216,6 +222,7 @@ mod test {
     }
 
     #[test]
+    #[serial_test::parallel]
     fn add_warnings_adds_warnings() -> Result<()> {
         let mut config = Config::default();
         config.enable_all();
@@ -245,6 +252,52 @@ mod test {
         assert_eq!(6, config.cargo_rustc_env_map.len());
         assert_eq!(0, count_idempotent(config.cargo_rustc_env_map));
         assert_eq!(0, config.warnings.len());
+        Ok(())
+    }
+
+    const NO_LLVM: &str = r#"rustc 1.68.0-nightly (270c94e48 2022-12-28)
+binary: rustc
+commit-hash: 270c94e484e19764a2832ef918c95224eb3f17c7
+commit-date: 2022-12-28
+host: x86_64-unknown-linux-gnu
+release: 1.68.0-nightly
+"#;
+
+    #[test]
+    #[serial_test::parallel]
+    fn no_llvm_in_rustc() -> Result<()> {
+        let mut map = BTreeMap::new();
+        let vm = version_meta_for(NO_LLVM)?;
+        let mut config = Vergen::default();
+        let _ = config.all_rustc();
+        config.add_rustc_to_map(&mut map, vm)?;
+        let blah = config.test_gen()?;
+        assert_eq!(6, blah.cargo_rustc_env_map.len());
+        assert_eq!(0, count_idempotent(blah.cargo_rustc_env_map));
+        assert_eq!(0, blah.warnings.len());
+        Ok(())
+    }
+
+    const DEV_BUILD: &str = r#"rustc 1.68.0-nightly (270c94e48 2022-12-28)
+binary: rustc
+commit-hash: 270c94e484e19764a2832ef918c95224eb3f17c7
+commit-date: 2022-12-28
+host: x86_64-unknown-linux-gnu
+release: 1.68.0-dev
+"#;
+
+    #[test]
+    #[serial_test::parallel]
+    fn rustc_dev_build() -> Result<()> {
+        let mut map = BTreeMap::new();
+        let vm = version_meta_for(DEV_BUILD)?;
+        let mut config = Vergen::default();
+        let _ = config.all_rustc();
+        config.add_rustc_to_map(&mut map, vm)?;
+        let blah = config.test_gen()?;
+        assert_eq!(6, blah.cargo_rustc_env_map.len());
+        assert_eq!(0, count_idempotent(blah.cargo_rustc_env_map));
+        assert_eq!(0, blah.warnings.len());
         Ok(())
     }
 }
