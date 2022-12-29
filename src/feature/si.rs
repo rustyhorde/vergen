@@ -251,17 +251,9 @@ impl Builder {
             if idempotent {
                 add_idempotent_entry(VergenKey::SysinfoMemory, map, warnings);
             } else {
-                let mut curr_memory = system.total_memory();
-                let mut count = 0;
-
-                while curr_memory > 1024 {
-                    curr_memory /= 1024;
-                    count += 1;
-                }
-
                 let _old = map.insert(
                     VergenKey::SysinfoMemory,
-                    format!("{curr_memory} {}", suffix(count)),
+                    format!("{}", suffix(system.total_memory())),
                 );
             }
         }
@@ -393,19 +385,27 @@ fn check_user(_process: &Process, _user: &User) -> bool {
     false
 }
 
-fn suffix(val: usize) -> &'static str {
-    match val {
-        0 => "B",
-        1 => "KiB",
-        2 => "MiB",
-        3 => "GiB",
-        4 => "TiB",
-        5 => "PiB",
-        6 => "EiB",
-        7 => "ZiB",
-        8 => "YiB",
-        _ => "xiB",
+fn suffix(mut curr_memory: u64) -> String {
+    let mut count = 0;
+
+    while curr_memory >= 1024 {
+        curr_memory /= 1024;
+        count += 1;
     }
+    format!(
+        "{curr_memory} {}",
+        match count {
+            0 => "B",
+            1 => "KiB",
+            2 => "MiB",
+            3 => "GiB",
+            4 => "TiB",
+            5 => "PiB",
+            // This is the highest we can reach
+            // at u64::MAX
+            _ => "EiB",
+        }
+    )
 }
 
 fn add_idempotent_entry(key: VergenKey, map: &mut RustcEnvMap, warnings: &mut Vec<String>) {
@@ -415,7 +415,7 @@ fn add_idempotent_entry(key: VergenKey, map: &mut RustcEnvMap, warnings: &mut Ve
 
 #[cfg(test)]
 mod test {
-    use super::Config;
+    use super::{suffix, Config};
     use crate::{builder::test::count_idempotent, Vergen};
     use anyhow::{anyhow, Result};
 
@@ -465,5 +465,22 @@ mod test {
         assert_eq!(0, count_idempotent(config.cargo_rustc_env_map));
         assert_eq!(0, config.warnings.len());
         Ok(())
+    }
+
+    #[test]
+    fn suffix_works() {
+        assert_eq!(suffix(1023), "1023 B");
+        assert_eq!(suffix(1024), "1 KiB");
+        assert_eq!(suffix(1_048_575), "1023 KiB");
+        assert_eq!(suffix(1_048_576), "1 MiB");
+        assert_eq!(suffix(1_073_741_823), "1023 MiB");
+        assert_eq!(suffix(1_073_741_824), "1 GiB");
+        assert_eq!(suffix(1_099_511_627_775), "1023 GiB");
+        assert_eq!(suffix(1_099_511_627_776), "1 TiB");
+        assert_eq!(suffix(1_125_899_906_842_623), "1023 TiB");
+        assert_eq!(suffix(1_125_899_906_842_624), "1 PiB");
+        assert_eq!(suffix((1_125_899_906_842_624 * 1024) - 1), "1023 PiB");
+        assert_eq!(suffix(1_125_899_906_842_624 * 1024), "1 EiB");
+        assert_eq!(suffix(u64::MAX), "15 EiB");
     }
 }
