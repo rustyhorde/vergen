@@ -142,6 +142,7 @@ jobs:
         shell: bash
         run: |
           echo "$PATH"
+          env | grep SHELL
           cargo test -F git,gitcl
       - name: 🧪 Test git2 🧪
         run: cargo test -F git,git2
