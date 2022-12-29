@@ -284,10 +284,6 @@ fn check_git() -> Result<()> {
 fn git_cmd_exists() -> bool {
     run_cmd("git -v")
         .map(|output| output.status.success())
-        .map_err(|e| {
-            eprintln!("{e}");
-            e
-        })
         .unwrap_or(false)
 }
 
@@ -301,17 +297,18 @@ fn inside_git_worktree() -> bool {
 }
 
 fn run_cmd(command: &str) -> Result<Output> {
-    if let Some(shell_path) = env::var_os("SHELL") {
-        let shell = shell_path.to_string_lossy().to_string();
-        let mut cmd = Command::new(shell);
-        let _ = cmd.arg("-c");
-        let _ = cmd.arg(command);
-        let _ = cmd.stdout(Stdio::piped());
-        let _ = cmd.stderr(Stdio::piped());
-        Ok(cmd.output()?)
+    let shell = if let Some(shell_path) = env::var_os("SHELL") {
+        shell_path.to_string_lossy().into_owned()
     } else {
-        Err(anyhow!("cannot find suitable shell"))
-    }
+        // Fallback to sh if SHELL not defined
+        "sh".to_string()
+    };
+    let mut cmd = Command::new(shell);
+    let _ = cmd.arg("-c");
+    let _ = cmd.arg(command);
+    let _ = cmd.stdout(Stdio::piped());
+    let _ = cmd.stderr(Stdio::piped());
+    Ok(cmd.output()?)
 }
 
 #[cfg(test)]
