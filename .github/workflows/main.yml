@@ -136,10 +136,10 @@ jobs:
           crate: cargo-all-features
           version: latest
         continue-on-error: true
-      - name: 🧪 Test gitcl 🧪
-        run: cargo test -F git,gitcl
       - name: 🧪 Test 🧪
         run: cargo test-all-features
+      - name: 🧪 Test gitcl 🧪
+        run: cargo test -F git,gitcl
       - name: 🧪 Test git2 🧪
         run: cargo test -F git,git2
       - name: 🧪 Test gix 🧪

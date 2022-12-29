@@ -416,8 +416,12 @@ Vergen::default()
     #[doc(hidden)]
     #[cfg(any(
         feature = "build",
-        feature = "rustc",
         feature = "cargo",
+        all(
+            feature = "git",
+            any(feature = "git2", feature = "gitcl", feature = "gix")
+        ),
+        feature = "rustc",
         feature = "si"
     ))]
     pub fn test_gen_output<T>(self, stdout: &mut T) -> Result<()>
