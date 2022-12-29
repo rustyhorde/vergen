@@ -277,6 +277,16 @@ fn run_cmd(command: &str) -> Result<Output> {
     Ok(cmd.output()?)
 }
 
+#[cfg(target_env = "msvc")]
+fn run_cmd(command: &str) -> Result<Output> {
+    let mut cmd = Command::new("cmd");
+    let _ = cmd.arg("/c");
+    let _ = cmd.arg(command);
+    let _ = cmd.stdout(Stdio::piped());
+    let _ = cmd.stderr(Stdio::piped());
+    Ok(cmd.output()?)
+}
+
 fn add_git_cmd_entry(cmd: &str, key: VergenKey, map: &mut RustcEnvMap) -> Result<()> {
     let output = run_cmd(cmd)?;
     if output.status.success() {
@@ -286,16 +296,6 @@ fn add_git_cmd_entry(cmd: &str, key: VergenKey, map: &mut RustcEnvMap) -> Result
         return Err(anyhow!("Failed to run '{cmd}'!"));
     }
     Ok(())
-}
-
-#[cfg(target_env = "msvc")]
-fn run_cmd(command: &str) -> Result<Output> {
-    let mut cmd = Command::new("cmd");
-    let _ = cmd.arg("/c");
-    let _ = cmd.arg(command);
-    let _ = cmd.stdout(Stdio::piped());
-    let _ = cmd.stderr(Stdio::piped());
-    Ok(cmd.output()?)
 }
 
 #[cfg(test)]
