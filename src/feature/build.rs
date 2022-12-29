@@ -332,7 +332,7 @@ mod test {
     #[cfg(windows)]
     fn bad_source_date_epoch_fails() -> Result<()> {
         use std::ffi::OsString;
-        use std::os::windows::prelude::OsStrExt;
+        use std::os::windows::prelude::OsStringExt;
 
         let source = [0x0066, 0x006f, 0xD800, 0x006f];
         let os_string = OsString::from_wide(&source[..]);
