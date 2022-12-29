@@ -284,6 +284,10 @@ fn check_git() -> Result<()> {
 fn git_cmd_exists() -> bool {
     run_cmd("git -v")
         .map(|output| output.status.success())
+        .map_err(|e| {
+            eprintln!("{e}");
+            e
+        })
         .unwrap_or(false)
 }
 

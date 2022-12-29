@@ -29,7 +29,7 @@ jobs:
           components: rustfmt
       - run: cargo fmt --all -- --check
   lints-linux:
-    name: 🕳️ Lints 🕳️
+    name: 🕳️ Lints Linux 🕳️
     needs: rustfmt
     runs-on: ${{ matrix.os }}
     strategy:
