@@ -11,8 +11,10 @@ use crate::{
     constants::VERGEN_IDEMPOTENT_DEFAULT,
     key::VergenKey,
 };
-use anyhow::{anyhow, Error, Result};
-use sysinfo::{CpuExt, Process, System, SystemExt, User};
+use anyhow::{Error, Result};
+use sysinfo::{CpuExt, System, SystemExt};
+#[cfg(not(target_os = "macos"))]
+use sysinfo::{Process, User};
 
 #[derive(Clone, Copy, Debug, Default)]
 pub(crate) struct Config {
@@ -345,8 +347,9 @@ fn setup_system() -> System {
     system
 }
 
-#[cfg(not(target = "macos"))]
+#[cfg(not(target_os = "macos"))]
 fn add_user_entry(system: &System, map: &mut RustcEnvMap) -> Result<()> {
+    use anyhow::anyhow;
     use sysinfo::{get_current_pid, UserExt};
 
     let pid = get_current_pid().map_err(|e| anyhow!("{e}"))?;
@@ -360,7 +363,7 @@ fn add_user_entry(system: &System, map: &mut RustcEnvMap) -> Result<()> {
     Ok(())
 }
 
-#[cfg(target = "macos")]
+#[cfg(target_os = "macos")]
 fn add_user_entry(_system: &System, _map: &mut RustcEnvMap) -> Result<()> {
     Ok(())
 }
@@ -402,6 +405,11 @@ mod test {
     use crate::{builder::test::count_idempotent, Vergen};
     use anyhow::Result;
 
+    #[cfg(target_os = "macos")]
+    const SYSINFO_COUNT: usize = 8;
+    #[cfg(not(target_os = "macos"))]
+    const SYSINFO_COUNT: usize = 9;
+
     #[test]
     #[serial_test::parallel]
     fn sysinfo_all_idempotent() -> Result<()> {
@@ -416,7 +424,7 @@ mod test {
     #[serial_test::parallel]
     fn sysinfo_all() -> Result<()> {
         let config = Vergen::default().all_sysinfo().test_gen()?;
-        assert_eq!(9, config.cargo_rustc_env_map.len());
+        assert_eq!(SYSINFO_COUNT, config.cargo_rustc_env_map.len());
         assert_eq!(0, count_idempotent(config.cargo_rustc_env_map));
         assert_eq!(0, config.warnings.len());
         Ok(())

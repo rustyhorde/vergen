@@ -427,6 +427,31 @@ pub(crate) mod test {
         feature = "si"
     ))]
     #[test]
+    fn everything_enabled() -> Result<()> {
+        use crate::utils::testutils::{setup, teardown};
+
+        setup();
+        let mut stdout_buf = vec![];
+        Builder::default()
+            .idempotent()
+            .skip_if_error()
+            .all_build()
+            .all_cargo()
+            .all_rustc()
+            .all_sysinfo()
+            .test_gen_output(&mut stdout_buf)?;
+        println!("{}", String::from_utf8_lossy(&stdout_buf));
+        teardown();
+        Ok(())
+    }
+
+    #[cfg(all(
+        feature = "build",
+        feature = "rustc",
+        feature = "cargo",
+        feature = "si"
+    ))]
+    #[test]
     fn all_output() -> Result<()> {
         use crate::utils::testutils::{setup, teardown};
 
