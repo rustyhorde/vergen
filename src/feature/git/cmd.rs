@@ -164,73 +164,51 @@ impl Builder {
     pub(crate) fn add_git_map_entries(&self, map: &mut RustcEnvMap) -> Result<()> {
         check_git()?;
         if self.git_config.git_branch {
-            let output = run_cmd("git rev-parse --abbrev-ref --symbolic-full-name HEAD")?;
-            if output.status.success() {
-                let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
-                let _old = map.insert(VergenKey::GitBranch, stdout);
-            } else {
-                return Err(anyhow!("'git rev-parse' command failed!"));
-            }
+            add_git_cmd_entry(
+                "git rev-parse --abbrev-ref --symbolic-full-name HEAD",
+                VergenKey::GitBranch,
+                map,
+            )?;
         }
 
         if self.git_config.git_commit_author_email {
-            let output = run_cmd("git log -1 --pretty=format:'%ae'")?;
-            if output.status.success() {
-                let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
-                let _old = map.insert(VergenKey::GitCommitAuthorEmail, stdout);
-            } else {
-                return Err(anyhow!("'git log' command failed!"));
-            }
+            add_git_cmd_entry(
+                "git log -1 --pretty=format:'%ae'",
+                VergenKey::GitCommitAuthorEmail,
+                map,
+            )?;
         }
 
         if self.git_config.git_commit_author_name {
-            let output = run_cmd("git log -1 --pretty=format:'%an'")?;
-            if output.status.success() {
-                let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
-                let _old = map.insert(VergenKey::GitCommitAuthorName, stdout);
-            } else {
-                return Err(anyhow!("'git log' command failed!"));
-            }
+            add_git_cmd_entry(
+                "git log -1 --pretty=format:'%an'",
+                VergenKey::GitCommitAuthorName,
+                map,
+            )?;
         }
 
         if self.git_config.git_commit_count {
-            let output = run_cmd("git rev-list --count HEAD")?;
-            if output.status.success() {
-                let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
-                let _old = map.insert(VergenKey::GitCommitCount, stdout);
-            } else {
-                return Err(anyhow!("'git rev-list' command failed!"));
-            }
+            add_git_cmd_entry("git rev-list --count HEAD", VergenKey::GitCommitCount, map)?;
         }
 
         if self.git_config.git_commit_date {
-            let output = run_cmd("git log -1 --pretty=format:'%cs'")?;
-            if output.status.success() {
-                let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
-                let _old = map.insert(VergenKey::GitCommitDate, stdout);
-            } else {
-                return Err(anyhow!("'git log' command failed!"));
-            }
+            add_git_cmd_entry(
+                "git log -1 --pretty=format:'%cs'",
+                VergenKey::GitCommitDate,
+                map,
+            )?;
         }
 
         if self.git_config.git_commit_message {
-            let output = run_cmd("git log -1 --format=%s")?;
-            if output.status.success() {
-                let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
-                let _old = map.insert(VergenKey::GitCommitMessage, stdout);
-            } else {
-                return Err(anyhow!("'git log' command failed!"));
-            }
+            add_git_cmd_entry("git log -1 --format=%s", VergenKey::GitCommitMessage, map)?;
         }
 
         if self.git_config.git_commit_timestamp {
-            let output = run_cmd("git log -1 --pretty=format:'%cI'")?;
-            if output.status.success() {
-                let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
-                let _old = map.insert(VergenKey::GitCommitTimestamp, stdout);
-            } else {
-                return Err(anyhow!("'git log' command failed!"));
-            }
+            add_git_cmd_entry(
+                "git log -1 --pretty=format:'%cI'",
+                VergenKey::GitCommitTimestamp,
+                map,
+            )?;
         }
 
         if self.git_config.git_describe {
@@ -241,13 +219,7 @@ impl Builder {
             if self.git_config.git_describe_tags {
                 describe_cmd.push_str(" --tags");
             }
-            let output = run_cmd(&describe_cmd)?;
-            if output.status.success() {
-                let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
-                let _old = map.insert(VergenKey::GitDescribe, stdout);
-            } else {
-                return Err(anyhow!("'git describe' command failed!"));
-            }
+            add_git_cmd_entry(&describe_cmd, VergenKey::GitDescribe, map)?;
         }
 
         if self.git_config.git_sha {
@@ -256,13 +228,7 @@ impl Builder {
                 sha_cmd.push_str(" --short");
             }
             sha_cmd.push_str(" HEAD");
-            let output = run_cmd(&sha_cmd)?;
-            if output.status.success() {
-                let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
-                let _old = map.insert(VergenKey::GitSha, stdout);
-            } else {
-                return Err(anyhow!("'git rev-parse' command failed!"));
-            }
+            add_git_cmd_entry(&sha_cmd, VergenKey::GitSha, map)?;
         }
         Ok(())
     }
@@ -311,21 +277,47 @@ fn run_cmd(command: &str) -> Result<Output> {
     Ok(cmd.output()?)
 }
 
-#[cfg(target_env = "msvc")]
-fn run_cmd(command: &str) -> Result<Output> {
-    let mut cmd = Command::new("cmd");
-    let _ = cmd.arg("/c");
-    let _ = cmd.arg(command);
-    let _ = cmd.stdout(Stdio::piped());
-    let _ = cmd.stderr(Stdio::piped());
-    Ok(cmd.output()?)
+fn add_git_cmd_entry(cmd: &str, key: VergenKey, map: &mut RustcEnvMap) -> Result<()> {
+    let output = run_cmd(cmd)?;
+    if output.status.success() {
+        let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        let _old = map.insert(key, stdout);
+    } else {
+        return Err(anyhow!("Failed to run '{cmd}'!"));
+    }
+    Ok(())
 }
 
 #[cfg(test)]
 mod test {
-    use super::Config;
-    use crate::{builder::test::count_idempotent, Vergen};
+    use super::{add_git_cmd_entry, Config};
+    use crate::{builder::test::count_idempotent, key::VergenKey, Vergen};
     use anyhow::{anyhow, Result};
+    use std::{collections::BTreeMap, env};
+
+    #[test]
+    #[serial_test::parallel]
+    fn bad_command_is_error() -> Result<()> {
+        let mut map = BTreeMap::new();
+        assert!(
+            add_git_cmd_entry("such_a_terrible_cmd", VergenKey::GitCommitMessage, &mut map)
+                .is_err()
+        );
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn shell_env_works() -> Result<()> {
+        let curr_shell = env::var("SHELL");
+        env::set_var("SHELL", "bash");
+        let mut map = BTreeMap::new();
+        assert!(add_git_cmd_entry("git -v", VergenKey::GitCommitMessage, &mut map).is_ok());
+        if let Ok(curr_shell) = curr_shell {
+            env::set_var("SHELL", curr_shell);
+        }
+        Ok(())
+    }
 
     #[test]
     #[serial_test::parallel]
