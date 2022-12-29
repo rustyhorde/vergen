@@ -97,19 +97,17 @@ jobs:
         with:
           crate: cargo-tarpaulin
           version: latest
-          use-tool-cache: true
         continue-on-error: true
       - name: 💾 Install (cargo-all-features) 💾
         uses: actions-rs/install@v0.1
         with:
           crate: cargo-all-features
           version: latest
-          use-tool-cache: true
         continue-on-error: true
       - name: 🧪 Test 🧪
         run: cargo test-all-features
       - name: 🙊 Code Coverage 🙊
-        run: cargo tarpaulin --all-features --out Xml
+        run: cargo tarpaulin --all-features --exclude-files src/lib.rs --exclude-files legacy/git.rs --out Xml
       - name: 🙊 Upload Code Coverage 🙊
         uses: codecov/codecov-action@v1
         with:
