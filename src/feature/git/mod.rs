@@ -30,6 +30,23 @@ pub(crate) use self::git2::Config;
 pub(crate) use self::gix::Config;
 
 #[cfg(all(
+    test,
+    feature = "git",
+    any(feature = "git2", feature = "gitcl", feature = "gix")
+))]
+fn enable_all(config: &mut Config) {
+    config.git_branch = true;
+    config.git_commit_author_name = true;
+    config.git_commit_author_email = true;
+    config.git_commit_count = true;
+    config.git_commit_message = true;
+    config.git_commit_date = true;
+    config.git_commit_timestamp = true;
+    config.git_describe = true;
+    config.git_sha = true;
+}
+
+#[cfg(all(
     feature = "git",
     any(feature = "git2", feature = "gitcl", feature = "gix")
 ))]

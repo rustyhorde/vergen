@@ -170,9 +170,9 @@
 //! ```
 //!
 //! ### Use in code
-//! ```compile_fail
+//! ```
 //! println!("Build Timestamp: {}", env!("VERGEN_BUILD_TIMESTAMP"));
-//! println!("git semver: {}", env!("VERGEN_GIT_SEMVER"));
+//! println!("git describe: {}", env!("VERGEN_GIT_DESCRIBE"));
 //! ```
 //!
 //! [build scripts]: https://doc.rust-lang.org/cargo/reference/build-scripts.html

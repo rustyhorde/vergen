@@ -377,6 +377,15 @@ Vergen::default()
     /// cargo:rustc-env=VERGEN_CARGO_TARGET_TRIPLE=x86_64-unknown-linux-gnu
     /// cargo:rustc-env=VERGEN_CARGO_PROFILE=debug
     /// cargo:rustc-env=VERGEN_CARGO_FEATURES=git,build
+    /// cargo:rustc-env=VERGEN_GIT_BRANCH=feature/version8
+    /// cargo:rustc-env=VERGEN_GIT_COMMIT_AUTHOR_EMAIL=your@email.com
+    /// cargo:rustc-env=VERGEN_GIT_COMMIT_AUTHOR_NAME=Yoda
+    /// cargo:rustc-env=VERGEN_GIT_COMMIT_COUNT=389
+    /// cargo:rustc-env=VERGEN_GIT_COMMIT_DATE=2022-12-29
+    /// cargo:rustc-env=VERGEN_GIT_COMMIT_MESSAGE=Fix git framework
+    /// cargo:rustc-env=VERGEN_GIT_COMMIT_TIMESTAMP=2022-12-29T10:48:31-05:00
+    /// cargo:rustc-env=VERGEN_GIT_DESCRIBE=7.4.4-16-g2f35555
+    /// cargo:rustc-env=VERGEN_GIT_SHA=2f35555f4d02dc44a60bf5854d5aad8b36494230
     /// cargo:rustc-env=VERGEN_RUSTC_CHANNEL=nightly
     /// cargo:rustc-env=VERGEN_RUSTC_COMMIT_DATE=2022-12-27
     /// cargo:rustc-env=VERGEN_RUSTC_COMMIT_HASH=92c1937a90e5b6f20fa6e87016d6869da363972e

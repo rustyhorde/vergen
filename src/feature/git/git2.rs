@@ -37,15 +37,7 @@ pub(crate) struct Config {
 impl Config {
     #[cfg(test)]
     fn enable_all(&mut self) {
-        self.git_branch = true;
-        self.git_commit_author_name = true;
-        self.git_commit_author_email = true;
-        self.git_commit_count = true;
-        self.git_commit_message = true;
-        self.git_commit_date = true;
-        self.git_commit_timestamp = true;
-        self.git_describe = true;
-        self.git_sha = true;
+        super::enable_all(self);
     }
 
     pub(crate) fn add_warnings(

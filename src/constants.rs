@@ -12,15 +12,12 @@
 #[cfg(any(
     feature = "build",
     feature = "si",
+    all(test, any(feature = "cargo", feature = "rustc")),
     all(
         test,
-        any(
-            feature = "cargo",
-            all(
-                feature = "git",
-                any(feature = "git2", feature = "gitcl", feature = "gix")
-            ),
-            feature = "rustc"
+        all(
+            feature = "git",
+            any(feature = "git2", feature = "gitcl", feature = "gix")
         )
     )
 ))]
