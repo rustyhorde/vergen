@@ -11,10 +11,9 @@ use crate::{
     key::VergenKey,
 };
 use anyhow::{anyhow, Error, Result};
-use std::{
-    env,
-    process::{Command, Output, Stdio},
-};
+#[cfg(not(target_env = "msvc"))]
+use std::env;
+use std::process::{Command, Output, Stdio};
 
 #[derive(Clone, Copy, Debug, Default)]
 pub(crate) struct Config {
@@ -296,6 +295,7 @@ fn inside_git_worktree() -> bool {
         .unwrap_or(false)
 }
 
+#[cfg(not(target_env = "msvc"))]
 fn run_cmd(command: &str) -> Result<Output> {
     let shell = if let Some(shell_path) = env::var_os("SHELL") {
         shell_path.to_string_lossy().into_owned()
@@ -305,6 +305,16 @@ fn run_cmd(command: &str) -> Result<Output> {
     };
     let mut cmd = Command::new(shell);
     let _ = cmd.arg("-c");
+    let _ = cmd.arg(command);
+    let _ = cmd.stdout(Stdio::piped());
+    let _ = cmd.stderr(Stdio::piped());
+    Ok(cmd.output()?)
+}
+
+#[cfg(target_env = "msvc")]
+fn run_cmd(command: &str) -> Result<Output> {
+    let mut cmd = Command::new("cmd");
+    let _ = cmd.arg("/c");
     let _ = cmd.arg(command);
     let _ = cmd.stdout(Stdio::piped());
     let _ = cmd.stderr(Stdio::piped());
