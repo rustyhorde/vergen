@@ -348,7 +348,7 @@ mod test {
         assert!(EmitBuilder::builder()
             .idempotent()
             .all_build()
-            .test_gen_output(&mut stdout_buf)
+            .emit_to(&mut stdout_buf)
             .is_err());
         env::remove_var("SOURCE_DATE_EPOCH");
         Ok(())
