@@ -34,6 +34,7 @@ pub(crate) type RustcEnvMap = BTreeMap<VergenKey, String>;
 #[derive(Clone, Debug, Default)]
 pub(crate) struct CargoOutput {
     pub(crate) cargo_rustc_env_map: RustcEnvMap,
+    pub(crate) rerun_if_changed: Vec<String>,
     pub(crate) warnings: Vec<String>,
 }
 
@@ -104,13 +105,13 @@ impl CargoOutput {
         let config = builder.git_config;
         let skip = builder.skip_if_error;
         builder
-            .add_git_map_entries(&mut self.cargo_rustc_env_map)
+            .add_git_map_entries(&mut self.cargo_rustc_env_map, &mut self.rerun_if_changed)
             .or_else(|e| config.add_warnings(skip, e, &mut self.warnings))
     }
 
     #[cfg(not(all(
         feature = "git",
-        any(any(feature = "git2", feature = "gitcl", feature = "gix"))
+        any(feature = "git2", feature = "gitcl", feature = "gix")
     )))]
     #[allow(
         clippy::unnecessary_wraps,
@@ -153,6 +154,11 @@ impl CargoOutput {
         // Emit the `cargo:warning` instructions
         for warning in &self.warnings {
             writeln!(stdout, "cargo:warning={warning}")?;
+        }
+
+        // Emit the 'cargo:rerun-if-changed' instructions for the git paths (if added)
+        for path in &self.rerun_if_changed {
+            writeln!(stdout, "cargo:rerun-if-changed={path}")?;
         }
 
         // Emit the 'cargo:rerun-if-changed' instructions

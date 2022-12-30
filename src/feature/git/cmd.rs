@@ -13,7 +13,10 @@ use crate::{
 use anyhow::{anyhow, Error, Result};
 #[cfg(not(target_env = "msvc"))]
 use std::env;
-use std::process::{Command, Output, Stdio};
+use std::{
+    path::PathBuf,
+    process::{Command, Output, Stdio},
+};
 
 #[derive(Clone, Copy, Debug, Default)]
 pub(crate) struct Config {
@@ -161,8 +164,14 @@ impl Builder {
         self
     }
 
-    pub(crate) fn add_git_map_entries(&self, map: &mut RustcEnvMap) -> Result<()> {
-        check_git("git -v")?;
+    pub(crate) fn add_git_map_entries(
+        &self,
+        map: &mut RustcEnvMap,
+        rerun_if_changed: &mut Vec<String>,
+    ) -> Result<()> {
+        check_git("git -v").and_then(check_inside_git_worktree)?;
+        add_rerun_if_changed(rerun_if_changed)?;
+
         if self.git_config.git_branch {
             add_git_cmd_entry(
                 "git rev-parse --abbrev-ref --symbolic-full-name HEAD",
@@ -236,13 +245,17 @@ impl Builder {
 
 fn check_git(cmd: &str) -> Result<()> {
     if git_cmd_exists(cmd) {
-        if inside_git_worktree() {
-            Ok(())
-        } else {
-            Err(anyhow!("not within a suitable 'git' worktree!"))
-        }
+        Ok(())
     } else {
         Err(anyhow!("no suitable 'git' command found!"))
+    }
+}
+
+fn check_inside_git_worktree(_: ()) -> Result<()> {
+    if inside_git_worktree() {
+        Ok(())
+    } else {
+        Err(anyhow!("not within a suitable 'git' worktree!"))
     }
 }
 
@@ -301,9 +314,37 @@ fn add_git_cmd_entry(cmd: &str, key: VergenKey, map: &mut RustcEnvMap) -> Result
     Ok(())
 }
 
+fn add_rerun_if_changed(rerun_if_changed: &mut Vec<String>) -> Result<()> {
+    let git_path = run_cmd("git rev-parse --git-dir")?;
+    if git_path.status.success() {
+        let git_path_str = String::from_utf8_lossy(&git_path.stdout).trim().to_string();
+        let git_path = PathBuf::from(&git_path_str);
+
+        // Setup the head path
+        let mut head_path = git_path.clone();
+        head_path.push("HEAD");
+
+        if head_path.exists() {
+            rerun_if_changed.push(format!("{}", head_path.display()));
+        }
+
+        // Setup the ref path
+        let refp = run_cmd("git symbolic-ref HEAD")?;
+        if refp.status.success() {
+            let ref_path_str = String::from_utf8_lossy(&refp.stdout).trim().to_string();
+            let mut ref_path = git_path.clone();
+            ref_path.push(ref_path_str);
+            if ref_path.exists() {
+                rerun_if_changed.push(format!("{}", ref_path.display()));
+            }
+        }
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 mod test {
-    use super::{add_git_cmd_entry, check_git, Config};
+    use super::{add_git_cmd_entry, check_git, check_inside_git_worktree, Config};
     use crate::{builder::test::count_idempotent, key::VergenKey, Vergen};
     use anyhow::{anyhow, Result};
     use std::{collections::BTreeMap, env};
@@ -324,7 +365,7 @@ mod test {
     fn non_working_tree_is_error() -> Result<()> {
         let curr_dir = env::current_dir()?;
         env::set_current_dir("..")?;
-        assert!(check_git("git -v").is_err());
+        assert!(check_inside_git_worktree(()).is_err());
         env::set_current_dir(curr_dir)?;
         Ok(())
     }
