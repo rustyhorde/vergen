@@ -1,6 +1,6 @@
 use crate::{
-    builder::{Builder, RustcEnvMap},
     constants::VERGEN_IDEMPOTENT_DEFAULT,
+    emitter::{EmitBuilder, RustcEnvMap},
     key::VergenKey,
 };
 use anyhow::{Error, Result};
@@ -78,15 +78,15 @@ impl Config {
 ///
 /// ```
 /// # use anyhow::Result;
-/// # use vergen::Vergen;
+/// # use vergen::EmitBuilder;
 /// #
 /// # fn main() -> Result<()> {
-/// Vergen::default().all_build().gen()?;
+/// EmitBuilder::builder().all_build().emit()?;
 /// #   Ok(())
 /// # }
 /// ```
 #[cfg_attr(docsrs, doc(cfg(feature = "build")))]
-impl Builder {
+impl EmitBuilder {
     /// Enable all of the `VERGEN_BUILD_*` options
     pub fn all_build(&mut self) -> &mut Self {
         self.build_date()
@@ -233,7 +233,7 @@ impl Builder {
 #[cfg(test)]
 mod test {
     use super::Config;
-    use crate::{builder::test::count_idempotent, Vergen};
+    use crate::{emitter::test::count_idempotent, EmitBuilder};
     use anyhow::{anyhow, Result};
     use std::env;
 
@@ -265,7 +265,10 @@ mod test {
     #[test]
     #[serial_test::parallel]
     fn build_all_idempotent() -> Result<()> {
-        let config = Vergen::default().idempotent().all_build().test_gen()?;
+        let config = EmitBuilder::builder()
+            .idempotent()
+            .all_build()
+            .test_emit()?;
         assert_eq!(4, config.cargo_rustc_env_map.len());
         assert_eq!(3, count_idempotent(config.cargo_rustc_env_map));
         assert_eq!(3, config.warnings.len());
@@ -275,7 +278,7 @@ mod test {
     #[test]
     #[serial_test::parallel]
     fn build_all() -> Result<()> {
-        let config = Vergen::default().all_build().test_gen()?;
+        let config = EmitBuilder::builder().all_build().test_emit()?;
         assert_eq!(4, config.cargo_rustc_env_map.len());
         assert_eq!(0, count_idempotent(config.cargo_rustc_env_map));
         assert_eq!(0, config.warnings.len());
@@ -287,10 +290,10 @@ mod test {
     fn source_date_epoch_works() -> Result<()> {
         env::set_var("SOURCE_DATE_EPOCH", "1671809360");
         let mut stdout_buf = vec![];
-        Vergen::default()
+        EmitBuilder::builder()
             .idempotent()
             .all_build()
-            .test_gen_output(&mut stdout_buf)?;
+            .emit_to(&mut stdout_buf)?;
         let output = String::from_utf8_lossy(&stdout_buf);
         for (idx, line) in output.lines().enumerate() {
             if idx == 0 {
@@ -320,10 +323,10 @@ mod test {
         env::set_var("SOURCE_DATE_EPOCH", os_str);
 
         let mut stdout_buf = vec![];
-        assert!(Vergen::default()
+        assert!(EmitBuilder::builder()
             .idempotent()
             .all_build()
-            .test_gen_output(&mut stdout_buf)
+            .emit_to(&mut stdout_buf)
             .is_err());
         env::remove_var("SOURCE_DATE_EPOCH");
         Ok(())
@@ -342,7 +345,7 @@ mod test {
         env::set_var("SOURCE_DATE_EPOCH", os_str);
 
         let mut stdout_buf = vec![];
-        assert!(Vergen::default()
+        assert!(EmitBuilder::builder()
             .idempotent()
             .all_build()
             .test_gen_output(&mut stdout_buf)

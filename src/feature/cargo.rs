@@ -7,7 +7,7 @@
 // modified, or distributed except according to those terms.
 
 use crate::{
-    builder::{Builder, RustcEnvMap},
+    emitter::{EmitBuilder, RustcEnvMap},
     key::VergenKey,
 };
 use anyhow::{Error, Result};
@@ -73,13 +73,13 @@ impl Config {
 /// ```
 /// # use anyhow::Result;
 /// # use std::env;
-/// # use vergen::Vergen;
+/// # use vergen::EmitBuilder;
 /// #
 /// # fn main() -> Result<()> {
 /// # env::set_var("TARGET", "x86_64-unknown-linux-gnu");
 /// # env::set_var("PROFILE", "build,rustc");
 /// # env::set_var("CARGO_FEATURE_BUILD", "");
-/// Vergen::default().all_cargo().gen()?;
+/// EmitBuilder::builder().all_cargo().emit()?;
 /// # env::remove_var("TARGET");
 /// # env::remove_var("PROFILE");
 /// # env::remove_var("CARGO_FEATURE_BUILD");
@@ -87,7 +87,7 @@ impl Config {
 /// # }
 /// ```
 #[cfg_attr(docsrs, doc(cfg(feature = "cargo")))]
-impl Builder {
+impl EmitBuilder {
     /// Enable all of the `VERGEN_CARGO_*` options
     pub fn all_cargo(&mut self) -> &mut Self {
         self.cargo_features().cargo_profile().cargo_target_triple()
@@ -142,9 +142,9 @@ fn is_cargo_feature(var: (String, String)) -> Option<String> {
 mod test {
     use super::Config;
     use crate::{
-        builder::test::count_idempotent,
+        emitter::test::count_idempotent,
         utils::testutils::{setup, teardown},
-        Vergen,
+        EmitBuilder,
     };
     use anyhow::{anyhow, Result};
 
@@ -177,7 +177,10 @@ mod test {
     #[serial_test::serial]
     fn build_all_idempotent() -> Result<()> {
         setup();
-        let config = Vergen::default().idempotent().all_cargo().test_gen()?;
+        let config = EmitBuilder::builder()
+            .idempotent()
+            .all_cargo()
+            .test_emit()?;
         assert_eq!(3, config.cargo_rustc_env_map.len());
         assert_eq!(0, count_idempotent(config.cargo_rustc_env_map));
         assert_eq!(0, config.warnings.len());
@@ -189,7 +192,7 @@ mod test {
     #[serial_test::serial]
     fn build_all() -> Result<()> {
         setup();
-        let config = Vergen::default().all_cargo().test_gen()?;
+        let config = EmitBuilder::builder().all_cargo().test_emit()?;
         assert_eq!(3, config.cargo_rustc_env_map.len());
         assert_eq!(0, count_idempotent(config.cargo_rustc_env_map));
         assert_eq!(0, config.warnings.len());

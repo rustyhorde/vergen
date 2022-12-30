@@ -7,7 +7,7 @@
 // modified, or distributed except according to those terms.
 
 use crate::{
-    builder::{Builder, RustcEnvMap},
+    emitter::{EmitBuilder, RustcEnvMap},
     key::VergenKey,
 };
 use anyhow::{anyhow, Error, Result};
@@ -59,6 +59,13 @@ impl Config {
     }
 }
 
+macro_rules! branch_cmd {
+    () => {
+        "git rev-parse --abbrev-ref --symbolic-full-name HEAD"
+    };
+}
+const BRANCH_CMD: &str = branch_cmd!();
+
 /// The `VERGEN_GIT_*` configuration features
 ///
 /// | Variable | Sample |
@@ -77,15 +84,15 @@ impl Config {
 ///
 /// ```
 /// # use anyhow::Result;
-/// # use vergen::Vergen;
+/// # use vergen::EmitBuilder;
 /// #
 /// # fn main() -> Result<()> {
-/// Vergen::default().all_git().gen()?;
+/// EmitBuilder::builder().all_git().emit()?;
 /// #   Ok(())
 /// # }
 /// ```
 #[cfg_attr(docsrs, doc(cfg(feature = "git")))]
-impl Builder {
+impl EmitBuilder {
     /// Enable all of the `VERGEN_GIT_*` options
     pub fn all_git(&mut self) -> &mut Self {
         self.git_branch()
@@ -100,6 +107,8 @@ impl Builder {
     }
 
     /// Emit the git branch instruction
+    ///
+    #[doc = concat!("Runs **'", branch_cmd!(), "'**")]
     pub fn git_branch(&mut self) -> &mut Self {
         self.git_config.git_branch = true;
         self
@@ -166,18 +175,18 @@ impl Builder {
 
     pub(crate) fn add_git_map_entries(
         &self,
+        idempotent: bool,
         map: &mut RustcEnvMap,
         rerun_if_changed: &mut Vec<String>,
     ) -> Result<()> {
         check_git("git -v").and_then(check_inside_git_worktree)?;
-        add_rerun_if_changed(rerun_if_changed)?;
+
+        if !idempotent {
+            add_rerun_if_changed(rerun_if_changed)?;
+        }
 
         if self.git_config.git_branch {
-            add_git_cmd_entry(
-                "git rev-parse --abbrev-ref --symbolic-full-name HEAD",
-                VergenKey::GitBranch,
-                map,
-            )?;
+            add_git_cmd_entry(BRANCH_CMD, VergenKey::GitBranch, map)?;
         }
 
         if self.git_config.git_commit_author_email {
@@ -345,7 +354,7 @@ fn add_rerun_if_changed(rerun_if_changed: &mut Vec<String>) -> Result<()> {
 #[cfg(test)]
 mod test {
     use super::{add_git_cmd_entry, check_git, check_inside_git_worktree, Config};
-    use crate::{builder::test::count_idempotent, key::VergenKey, Vergen};
+    use crate::{emitter::test::count_idempotent, key::VergenKey, EmitBuilder};
     use anyhow::{anyhow, Result};
     use std::{collections::BTreeMap, env};
 
@@ -419,7 +428,7 @@ mod test {
     #[test]
     #[serial_test::parallel]
     fn git_all_idempotent() -> Result<()> {
-        let config = Vergen::default().idempotent().all_git().test_gen()?;
+        let config = EmitBuilder::builder().idempotent().all_git().test_emit()?;
         assert_eq!(9, config.cargo_rustc_env_map.len());
         assert_eq!(0, count_idempotent(config.cargo_rustc_env_map));
         assert_eq!(0, config.warnings.len());
@@ -429,7 +438,7 @@ mod test {
     #[test]
     #[serial_test::parallel]
     fn git_all() -> Result<()> {
-        let config = Vergen::default().all_git().test_gen()?;
+        let config = EmitBuilder::builder().all_git().test_emit()?;
         assert_eq!(9, config.cargo_rustc_env_map.len());
         assert_eq!(0, count_idempotent(config.cargo_rustc_env_map));
         assert_eq!(0, config.warnings.len());
@@ -439,11 +448,11 @@ mod test {
     #[test]
     #[serial_test::parallel]
     fn git_all_dirty_tags_short() -> Result<()> {
-        let config = Vergen::default()
+        let config = EmitBuilder::builder()
             .all_git()
             .git_describe(true, true)
             .git_sha(true)
-            .test_gen()?;
+            .test_emit()?;
         assert_eq!(9, config.cargo_rustc_env_map.len());
         assert_eq!(0, count_idempotent(config.cargo_rustc_env_map));
         assert_eq!(0, config.warnings.len());

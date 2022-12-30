@@ -162,9 +162,9 @@
 //! **NOTE** - Individual instruction generation can be toggled on or off via TODO
 //! ```
 //! # use anyhow::Result;
-//! # use vergen::Vergen;
+//! # use vergen::EmitBuilder;
 //! # fn main() -> Result<()> {
-//! Vergen::default().gen()?;
+//! EmitBuilder::builder().emit()?;
 //! #   Ok(())
 //! # }
 //! ```
@@ -369,8 +369,8 @@
     deny(rustdoc::missing_doc_code_examples)
 )]
 
-mod builder;
 mod constants;
+mod emitter;
 mod feature;
 mod key;
 mod utils;
@@ -379,4 +379,4 @@ mod utils;
 #[cfg(test)]
 use {lazy_static as _, regex as _, serial_test as _};
 
-pub use crate::builder::Builder as Vergen;
+pub use crate::emitter::EmitBuilder;

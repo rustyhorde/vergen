@@ -3,7 +3,7 @@ mod test_rustc {
     use anyhow::Result;
     use lazy_static::lazy_static;
     use regex::Regex;
-    use vergen::Vergen;
+    use vergen::EmitBuilder;
 
     lazy_static! {
         static ref RUSTC_CHANNEL_RE_STR: &'static str =
@@ -33,9 +33,9 @@ mod test_rustc {
     #[test]
     fn rustc_all_output() -> Result<()> {
         let mut stdout_buf = vec![];
-        Vergen::default()
+        EmitBuilder::builder()
             .all_rustc()
-            .test_gen_output(&mut stdout_buf)?;
+            .emit_to(&mut stdout_buf)?;
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(RUSTC_REGEX.is_match(&output));
         Ok(())
@@ -44,10 +44,10 @@ mod test_rustc {
     #[test]
     fn rustc_all_idempotent_output() -> Result<()> {
         let mut stdout_buf = vec![];
-        Vergen::default()
+        EmitBuilder::builder()
             .idempotent()
             .all_rustc()
-            .test_gen_output(&mut stdout_buf)?;
+            .emit_to(&mut stdout_buf)?;
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(RUSTC_REGEX.is_match(&output));
         Ok(())

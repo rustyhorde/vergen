@@ -6,120 +6,273 @@
 // option. All files in the project carrying such notice may not be copied,
 // modified, or distributed except according to those terms.
 
-use crate::constants::{
-    BUILD_DATE_NAME, BUILD_SEMVER_NAME, BUILD_TIMESTAMP_NAME, BUILD_TIME_NAME, CARGO_FEATURES,
-    CARGO_PROFILE, CARGO_TARGET_TRIPLE, GIT_BRANCH_NAME, GIT_COMMIT_AUTHOR_EMAIL,
-    GIT_COMMIT_AUTHOR_NAME, GIT_COMMIT_COUNT, GIT_COMMIT_DATE_NAME, GIT_COMMIT_MESSAGE,
-    GIT_COMMIT_TIMESTAMP_NAME, GIT_DESCRIBE_NAME, GIT_SHA_NAME, RUSTC_CHANNEL_NAME,
-    RUSTC_COMMIT_DATE, RUSTC_COMMIT_HASH, RUSTC_HOST_TRIPLE_NAME, RUSTC_LLVM_VERSION,
-    RUSTC_SEMVER_NAME, SYSINFO_CPU_BRAND, SYSINFO_CPU_CORE_COUNT, SYSINFO_CPU_FREQUENCY,
-    SYSINFO_CPU_NAME, SYSINFO_CPU_VENDOR, SYSINFO_MEMORY, SYSINFO_NAME, SYSINFO_OS_VERSION,
-    SYSINFO_USER,
-};
+pub(crate) use self::keys::VergenKey;
 
-/// Build information keys.
-#[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
-#[allow(dead_code)]
-pub(crate) enum VergenKey {
-    /// The build date. (VERGEN_BUILD_DATE)
-    BuildDate,
-    /// The build time. (VERGEN_BUILD_TIME)
-    BuildTime,
-    /// The build timestamp. (VERGEN_BUILD_TIMESTAMP)
-    BuildTimestamp,
-    /// The build semver. (VERGEN_BUILD_SEMVER)
-    BuildSemver,
-    /// The cargo target triple (VERGEN_CARGO_TARGET_TRIPLE)
-    CargoTargetTriple,
-    /// The cargo profile (VERGEN_CARGO_PROFILE)
-    CargoProfile,
-    /// The cargo features (VERGEN_CARGO_FEATURES)
-    CargoFeatures,
-    /// The current working branch name (VERGEN_GIT_BRANCH)
-    GitBranch,
-    /// The commit author's email. (VERGEN_GIT_COMMIT_AUTHOR_EMAIL)
-    GitCommitAuthorEmail,
-    /// The commit author's name. (VERGEN_GIT_COMMIT_AUTHOR_NAME)
-    GitCommitAuthorName,
-    /// Number of commits in current branch. (VERGEN_GIT_COMMIT_COUNT)
-    GitCommitCount,
-    /// The commit date. (VERGEN_GIT_COMMIT_DATE)
-    GitCommitDate,
-    /// Commit message (VERGEN_GIT_COMMIT_MESSAGE)
-    GitCommitMessage,
-    /// The commit timestamp. (VERGEN_GIT_COMMIT_TIMESTAMP)
-    GitCommitTimestamp,
-    /// The semver version from the last git tag. (VERGEN_GIT_SEMVER)
-    GitDescribe,
-    /// The latest commit SHA. (VERGEN_GIT_SHA)
-    GitSha,
-    /// The release channel of the rust compiler. (VERGEN_RUSTC_CHANNEL)
-    RustcChannel,
-    /// The rustc commit date. (VERGEN_RUSTC_COMMIT_DATE)
-    RustcCommitDate,
-    /// The rustc commit hash. (VERGEN_RUSTC_COMMIT_HASH)
-    RustcCommitHash,
-    /// The host triple. (VERGEN_HOST_TRIPLE)
-    RustcHostTriple,
-    /// The rustc LLVM version. (VERGEN_RUSTC_LLVM_VERSION)
-    RustcLlvmVersion,
-    /// The version information of the rust compiler. (VERGEN_RUSTC_SEMVER)
-    RustcSemver,
-    /// The sysinfo system name (VERGEN_SYSINFO_NAME)
-    SysinfoName,
-    /// The sysinfo os version (VERGEN_SYSINFO_OS_VERSION)
-    SysinfoOsVersion,
-    /// The sysinfo user name (VERGEN_SYSINFO_USER)
-    SysinfoUser,
-    /// The sysinfo total memory (VERGEN_SYSINFO_TOTAL_MEMORY)
-    SysinfoMemory,
-    /// The sysinfo cpu vendor (VERGEN_SYSINFO_CPU_VENDOR)
-    SysinfoCpuVendor,
-    /// The sysinfo cpu core count (VERGEN_SYSINFO_CPU_CORE_COUNT)
-    SysinfoCpuCoreCount,
-    /// The sysinfo cpu core count (VERGEN_SYSINFO_CPU_NAME)
-    SysinfoCpuName,
-    /// The sysinfo cpu core count (VERGEN_SYSINFO_CPU_BRAND)
-    SysinfoCpuBrand,
-    /// The sysinfo cpu core count (VERGEN_SYSINFO_CPU_FREQUENCY)
-    SysinfoCpuFrequency,
-}
+#[cfg(any(
+    feature = "build",
+    feature = "cargo",
+    feature = "git",
+    feature = "rustc",
+    feature = "si"
+))]
+mod keys {
+    #[cfg(feature = "build")]
+    use crate::constants::{
+        BUILD_DATE_NAME, BUILD_SEMVER_NAME, BUILD_TIMESTAMP_NAME, BUILD_TIME_NAME,
+    };
+    #[cfg(feature = "cargo")]
+    use crate::constants::{CARGO_FEATURES, CARGO_PROFILE, CARGO_TARGET_TRIPLE};
+    #[cfg(all(
+        feature = "git",
+        any(feature = "gitcl", feature = "git2", feature = "gix")
+    ))]
+    use crate::constants::{
+        GIT_BRANCH_NAME, GIT_COMMIT_AUTHOR_EMAIL, GIT_COMMIT_AUTHOR_NAME, GIT_COMMIT_COUNT,
+        GIT_COMMIT_DATE_NAME, GIT_COMMIT_MESSAGE, GIT_COMMIT_TIMESTAMP_NAME, GIT_DESCRIBE_NAME,
+        GIT_SHA_NAME,
+    };
+    #[cfg(feature = "rustc")]
+    use crate::constants::{
+        RUSTC_CHANNEL_NAME, RUSTC_COMMIT_DATE, RUSTC_COMMIT_HASH, RUSTC_HOST_TRIPLE_NAME,
+        RUSTC_LLVM_VERSION, RUSTC_SEMVER_NAME,
+    };
+    #[cfg(feature = "si")]
+    use crate::constants::{
+        SYSINFO_CPU_BRAND, SYSINFO_CPU_CORE_COUNT, SYSINFO_CPU_FREQUENCY, SYSINFO_CPU_NAME,
+        SYSINFO_CPU_VENDOR, SYSINFO_MEMORY, SYSINFO_NAME, SYSINFO_OS_VERSION, SYSINFO_USER,
+    };
 
-impl VergenKey {
-    /// Get the name for the given key.
-    pub(crate) fn name(self) -> &'static str {
-        match self {
-            VergenKey::BuildDate => BUILD_DATE_NAME,
-            VergenKey::BuildTime => BUILD_TIME_NAME,
-            VergenKey::BuildTimestamp => BUILD_TIMESTAMP_NAME,
-            VergenKey::BuildSemver => BUILD_SEMVER_NAME,
-            VergenKey::CargoTargetTriple => CARGO_TARGET_TRIPLE,
-            VergenKey::CargoProfile => CARGO_PROFILE,
-            VergenKey::CargoFeatures => CARGO_FEATURES,
-            VergenKey::GitBranch => GIT_BRANCH_NAME,
-            VergenKey::GitCommitAuthorEmail => GIT_COMMIT_AUTHOR_EMAIL,
-            VergenKey::GitCommitAuthorName => GIT_COMMIT_AUTHOR_NAME,
-            VergenKey::GitCommitCount => GIT_COMMIT_COUNT,
-            VergenKey::GitCommitDate => GIT_COMMIT_DATE_NAME,
-            VergenKey::GitCommitMessage => GIT_COMMIT_MESSAGE,
-            VergenKey::GitCommitTimestamp => GIT_COMMIT_TIMESTAMP_NAME,
-            VergenKey::GitDescribe => GIT_DESCRIBE_NAME,
-            VergenKey::GitSha => GIT_SHA_NAME,
-            VergenKey::RustcChannel => RUSTC_CHANNEL_NAME,
-            VergenKey::RustcCommitDate => RUSTC_COMMIT_DATE,
-            VergenKey::RustcCommitHash => RUSTC_COMMIT_HASH,
-            VergenKey::RustcHostTriple => RUSTC_HOST_TRIPLE_NAME,
-            VergenKey::RustcLlvmVersion => RUSTC_LLVM_VERSION,
-            VergenKey::RustcSemver => RUSTC_SEMVER_NAME,
-            VergenKey::SysinfoName => SYSINFO_NAME,
-            VergenKey::SysinfoOsVersion => SYSINFO_OS_VERSION,
-            VergenKey::SysinfoUser => SYSINFO_USER,
-            VergenKey::SysinfoMemory => SYSINFO_MEMORY,
-            VergenKey::SysinfoCpuVendor => SYSINFO_CPU_VENDOR,
-            VergenKey::SysinfoCpuCoreCount => SYSINFO_CPU_CORE_COUNT,
-            VergenKey::SysinfoCpuName => SYSINFO_CPU_NAME,
-            VergenKey::SysinfoCpuBrand => SYSINFO_CPU_BRAND,
-            VergenKey::SysinfoCpuFrequency => SYSINFO_CPU_FREQUENCY,
+    /// Build information keys.
+    #[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
+    pub(crate) enum VergenKey {
+        /// The build date. (VERGEN_BUILD_DATE)
+        #[cfg(feature = "build")]
+        BuildDate,
+        /// The build time. (VERGEN_BUILD_TIME)
+        #[cfg(feature = "build")]
+        BuildTime,
+        /// The build timestamp. (VERGEN_BUILD_TIMESTAMP)
+        #[cfg(feature = "build")]
+        BuildTimestamp,
+        /// The build semver. (VERGEN_BUILD_SEMVER)
+        #[cfg(feature = "build")]
+        BuildSemver,
+        /// The cargo target triple (VERGEN_CARGO_TARGET_TRIPLE)
+        #[cfg(feature = "cargo")]
+        CargoTargetTriple,
+        /// The cargo profile (VERGEN_CARGO_PROFILE)
+        #[cfg(feature = "cargo")]
+        CargoProfile,
+        /// The cargo features (VERGEN_CARGO_FEATURES)
+        #[cfg(feature = "cargo")]
+        CargoFeatures,
+        /// The current working branch name (VERGEN_GIT_BRANCH)
+        #[cfg(all(
+            feature = "git",
+            any(feature = "gitcl", feature = "git2", feature = "gix")
+        ))]
+        GitBranch,
+        /// The commit author's email. (VERGEN_GIT_COMMIT_AUTHOR_EMAIL)
+        #[cfg(all(
+            feature = "git",
+            any(feature = "gitcl", feature = "git2", feature = "gix")
+        ))]
+        GitCommitAuthorEmail,
+        /// The commit author's name. (VERGEN_GIT_COMMIT_AUTHOR_NAME)
+        #[cfg(all(
+            feature = "git",
+            any(feature = "gitcl", feature = "git2", feature = "gix")
+        ))]
+        GitCommitAuthorName,
+        /// Number of commits in current branch. (VERGEN_GIT_COMMIT_COUNT)
+        #[cfg(all(
+            feature = "git",
+            any(feature = "gitcl", feature = "git2", feature = "gix")
+        ))]
+        GitCommitCount,
+        /// The commit date. (VERGEN_GIT_COMMIT_DATE)
+        #[cfg(all(
+            feature = "git",
+            any(feature = "gitcl", feature = "git2", feature = "gix")
+        ))]
+        GitCommitDate,
+        /// Commit message (VERGEN_GIT_COMMIT_MESSAGE)
+        #[cfg(all(
+            feature = "git",
+            any(feature = "gitcl", feature = "git2", feature = "gix")
+        ))]
+        GitCommitMessage,
+        /// The commit timestamp. (VERGEN_GIT_COMMIT_TIMESTAMP)
+        #[cfg(all(
+            feature = "git",
+            any(feature = "gitcl", feature = "git2", feature = "gix")
+        ))]
+        GitCommitTimestamp,
+        /// The semver version from the last git tag. (VERGEN_GIT_SEMVER)
+        #[cfg(all(
+            feature = "git",
+            any(feature = "gitcl", feature = "git2", feature = "gix")
+        ))]
+        GitDescribe,
+        /// The latest commit SHA. (VERGEN_GIT_SHA)
+        #[cfg(all(
+            feature = "git",
+            any(feature = "gitcl", feature = "git2", feature = "gix")
+        ))]
+        GitSha,
+        /// The release channel of the rust compiler. (VERGEN_RUSTC_CHANNEL)
+        #[cfg(feature = "rustc")]
+        RustcChannel,
+        /// The rustc commit date. (VERGEN_RUSTC_COMMIT_DATE)
+        #[cfg(feature = "rustc")]
+        RustcCommitDate,
+        /// The rustc commit hash. (VERGEN_RUSTC_COMMIT_HASH)
+        #[cfg(feature = "rustc")]
+        RustcCommitHash,
+        /// The host triple. (VERGEN_HOST_TRIPLE)
+        #[cfg(feature = "rustc")]
+        RustcHostTriple,
+        /// The rustc LLVM version. (VERGEN_RUSTC_LLVM_VERSION)
+        #[cfg(feature = "rustc")]
+        RustcLlvmVersion,
+        /// The version information of the rust compiler. (VERGEN_RUSTC_SEMVER)
+        #[cfg(feature = "rustc")]
+        RustcSemver,
+        /// The sysinfo system name (VERGEN_SYSINFO_NAME)
+        #[cfg(feature = "si")]
+        SysinfoName,
+        /// The sysinfo os version (VERGEN_SYSINFO_OS_VERSION)
+        #[cfg(feature = "si")]
+        SysinfoOsVersion,
+        /// The sysinfo user name (VERGEN_SYSINFO_USER)
+        #[cfg(feature = "si")]
+        SysinfoUser,
+        /// The sysinfo total memory (VERGEN_SYSINFO_TOTAL_MEMORY)
+        #[cfg(feature = "si")]
+        SysinfoMemory,
+        /// The sysinfo cpu vendor (VERGEN_SYSINFO_CPU_VENDOR)
+        #[cfg(feature = "si")]
+        SysinfoCpuVendor,
+        /// The sysinfo cpu core count (VERGEN_SYSINFO_CPU_CORE_COUNT)
+        #[cfg(feature = "si")]
+        SysinfoCpuCoreCount,
+        /// The sysinfo cpu core count (VERGEN_SYSINFO_CPU_NAME)
+        #[cfg(feature = "si")]
+        SysinfoCpuName,
+        /// The sysinfo cpu core count (VERGEN_SYSINFO_CPU_BRAND)
+        #[cfg(feature = "si")]
+        SysinfoCpuBrand,
+        /// The sysinfo cpu core count (VERGEN_SYSINFO_CPU_FREQUENCY)
+        #[cfg(feature = "si")]
+        SysinfoCpuFrequency,
+    }
+
+    impl VergenKey {
+        /// Get the name for the given key.
+        pub(crate) fn name(self) -> &'static str {
+            match self {
+                #[cfg(feature = "build")]
+                VergenKey::BuildDate => BUILD_DATE_NAME,
+                #[cfg(feature = "build")]
+                VergenKey::BuildTime => BUILD_TIME_NAME,
+                #[cfg(feature = "build")]
+                VergenKey::BuildTimestamp => BUILD_TIMESTAMP_NAME,
+                #[cfg(feature = "build")]
+                VergenKey::BuildSemver => BUILD_SEMVER_NAME,
+                #[cfg(feature = "cargo")]
+                VergenKey::CargoTargetTriple => CARGO_TARGET_TRIPLE,
+                #[cfg(feature = "cargo")]
+                VergenKey::CargoProfile => CARGO_PROFILE,
+                #[cfg(feature = "cargo")]
+                VergenKey::CargoFeatures => CARGO_FEATURES,
+                #[cfg(all(
+                    feature = "git",
+                    any(feature = "gitcl", feature = "git2", feature = "gix")
+                ))]
+                VergenKey::GitBranch => GIT_BRANCH_NAME,
+                #[cfg(all(
+                    feature = "git",
+                    any(feature = "gitcl", feature = "git2", feature = "gix")
+                ))]
+                VergenKey::GitCommitAuthorEmail => GIT_COMMIT_AUTHOR_EMAIL,
+                #[cfg(all(
+                    feature = "git",
+                    any(feature = "gitcl", feature = "git2", feature = "gix")
+                ))]
+                VergenKey::GitCommitAuthorName => GIT_COMMIT_AUTHOR_NAME,
+                #[cfg(all(
+                    feature = "git",
+                    any(feature = "gitcl", feature = "git2", feature = "gix")
+                ))]
+                VergenKey::GitCommitCount => GIT_COMMIT_COUNT,
+                #[cfg(all(
+                    feature = "git",
+                    any(feature = "gitcl", feature = "git2", feature = "gix")
+                ))]
+                VergenKey::GitCommitDate => GIT_COMMIT_DATE_NAME,
+                #[cfg(all(
+                    feature = "git",
+                    any(feature = "gitcl", feature = "git2", feature = "gix")
+                ))]
+                VergenKey::GitCommitMessage => GIT_COMMIT_MESSAGE,
+                #[cfg(all(
+                    feature = "git",
+                    any(feature = "gitcl", feature = "git2", feature = "gix")
+                ))]
+                VergenKey::GitCommitTimestamp => GIT_COMMIT_TIMESTAMP_NAME,
+                #[cfg(all(
+                    feature = "git",
+                    any(feature = "gitcl", feature = "git2", feature = "gix")
+                ))]
+                VergenKey::GitDescribe => GIT_DESCRIBE_NAME,
+                #[cfg(all(
+                    feature = "git",
+                    any(feature = "gitcl", feature = "git2", feature = "gix")
+                ))]
+                VergenKey::GitSha => GIT_SHA_NAME,
+                #[cfg(feature = "rustc")]
+                VergenKey::RustcChannel => RUSTC_CHANNEL_NAME,
+                #[cfg(feature = "rustc")]
+                VergenKey::RustcCommitDate => RUSTC_COMMIT_DATE,
+                #[cfg(feature = "rustc")]
+                VergenKey::RustcCommitHash => RUSTC_COMMIT_HASH,
+                #[cfg(feature = "rustc")]
+                VergenKey::RustcHostTriple => RUSTC_HOST_TRIPLE_NAME,
+                #[cfg(feature = "rustc")]
+                VergenKey::RustcLlvmVersion => RUSTC_LLVM_VERSION,
+                #[cfg(feature = "rustc")]
+                VergenKey::RustcSemver => RUSTC_SEMVER_NAME,
+                #[cfg(feature = "si")]
+                VergenKey::SysinfoName => SYSINFO_NAME,
+                #[cfg(feature = "si")]
+                VergenKey::SysinfoOsVersion => SYSINFO_OS_VERSION,
+                #[cfg(feature = "si")]
+                VergenKey::SysinfoUser => SYSINFO_USER,
+                #[cfg(feature = "si")]
+                VergenKey::SysinfoMemory => SYSINFO_MEMORY,
+                #[cfg(feature = "si")]
+                VergenKey::SysinfoCpuVendor => SYSINFO_CPU_VENDOR,
+                #[cfg(feature = "si")]
+                VergenKey::SysinfoCpuCoreCount => SYSINFO_CPU_CORE_COUNT,
+                #[cfg(feature = "si")]
+                VergenKey::SysinfoCpuName => SYSINFO_CPU_NAME,
+                #[cfg(feature = "si")]
+                VergenKey::SysinfoCpuBrand => SYSINFO_CPU_BRAND,
+                #[cfg(feature = "si")]
+                VergenKey::SysinfoCpuFrequency => SYSINFO_CPU_FREQUENCY,
+            }
         }
     }
+}
+
+#[cfg(not(any(
+    feature = "build",
+    feature = "cargo",
+    feature = "git",
+    feature = "rustc",
+    feature = "si"
+)))]
+mod keys {
+    #[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
+    pub(crate) enum VergenKey {}
 }

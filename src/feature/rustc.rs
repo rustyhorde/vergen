@@ -1,5 +1,5 @@
 use crate::{
-    builder::{Builder, RustcEnvMap},
+    emitter::{EmitBuilder, RustcEnvMap},
     key::VergenKey,
 };
 use anyhow::{Error, Result};
@@ -91,15 +91,15 @@ impl Config {
 ///
 /// ```
 /// # use anyhow::Result;
-/// # use vergen::Vergen;
+/// # use vergen::EmitBuilder;
 /// #
 /// # fn main() -> Result<()> {
-/// Vergen::default().all_rustc().gen()?;
+/// EmitBuilder::builder().all_rustc().emit()?;
 /// #   Ok(())
 /// # }
 /// ```
 #[cfg_attr(docsrs, doc(cfg(feature = "rustc")))]
-impl Builder {
+impl EmitBuilder {
     /// Enable all of the `VERGEN_RUSTC_*` options
     pub fn all_rustc(&mut self) -> &mut Self {
         self.rustc_channel()
@@ -206,7 +206,7 @@ mod test {
     use std::collections::BTreeMap;
 
     use super::Config;
-    use crate::{builder::test::count_idempotent, Vergen};
+    use crate::{emitter::test::count_idempotent, EmitBuilder};
     use anyhow::{anyhow, Result};
     use rustc_version::version_meta_for;
 
@@ -238,7 +238,10 @@ mod test {
     #[test]
     #[serial_test::parallel]
     fn rustc_all_idempotent() -> Result<()> {
-        let config = Vergen::default().idempotent().all_rustc().test_gen()?;
+        let config = EmitBuilder::builder()
+            .idempotent()
+            .all_rustc()
+            .test_emit()?;
         assert_eq!(6, config.cargo_rustc_env_map.len());
         assert_eq!(0, count_idempotent(config.cargo_rustc_env_map));
         assert_eq!(0, config.warnings.len());
@@ -248,7 +251,7 @@ mod test {
     #[test]
     #[serial_test::parallel]
     fn rustc_all() -> Result<()> {
-        let config = Vergen::default().all_rustc().test_gen()?;
+        let config = EmitBuilder::builder().all_rustc().test_emit()?;
         assert_eq!(6, config.cargo_rustc_env_map.len());
         assert_eq!(0, count_idempotent(config.cargo_rustc_env_map));
         assert_eq!(0, config.warnings.len());
@@ -268,10 +271,10 @@ release: 1.68.0-nightly
     fn no_llvm_in_rustc() -> Result<()> {
         let mut map = BTreeMap::new();
         let vm = version_meta_for(NO_LLVM)?;
-        let mut config = Vergen::default();
+        let mut config = EmitBuilder::builder();
         let _ = config.all_rustc();
         config.add_rustc_to_map(&mut map, vm)?;
-        let blah = config.test_gen()?;
+        let blah = config.test_emit()?;
         assert_eq!(6, blah.cargo_rustc_env_map.len());
         assert_eq!(0, count_idempotent(blah.cargo_rustc_env_map));
         assert_eq!(0, blah.warnings.len());
@@ -291,10 +294,10 @@ release: 1.68.0-dev
     fn rustc_dev_build() -> Result<()> {
         let mut map = BTreeMap::new();
         let vm = version_meta_for(DEV_BUILD)?;
-        let mut config = Vergen::default();
+        let mut config = EmitBuilder::builder();
         let _ = config.all_rustc();
         config.add_rustc_to_map(&mut map, vm)?;
-        let blah = config.test_gen()?;
+        let blah = config.test_emit()?;
         assert_eq!(6, blah.cargo_rustc_env_map.len());
         assert_eq!(0, count_idempotent(blah.cargo_rustc_env_map));
         assert_eq!(0, blah.warnings.len());

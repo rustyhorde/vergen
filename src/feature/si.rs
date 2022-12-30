@@ -7,8 +7,8 @@
 // modified, or distributed except according to those terms.
 
 use crate::{
-    builder::{Builder, RustcEnvMap},
     constants::VERGEN_IDEMPOTENT_DEFAULT,
+    emitter::{EmitBuilder, RustcEnvMap},
     key::VergenKey,
 };
 use anyhow::{Error, Result};
@@ -129,15 +129,15 @@ impl Config {
 ///
 /// ```
 /// # use anyhow::Result;
-/// # use vergen::Vergen;
+/// # use vergen::EmitBuilder;
 /// #
 /// # fn main() -> Result<()> {
-/// Vergen::default().all_sysinfo().gen()?;
+/// EmitBuilder::builder().all_sysinfo().emit()?;
 /// #   Ok(())
 /// # }
 /// ```
 #[cfg_attr(docsrs, doc(cfg(feature = "si")))]
-impl Builder {
+impl EmitBuilder {
     /// Enable all of the `VERGEN_SYSINFO_*` options
     pub fn all_sysinfo(&mut self) -> &mut Self {
         self.sysinfo_name()
@@ -416,7 +416,7 @@ fn add_idempotent_entry(key: VergenKey, map: &mut RustcEnvMap, warnings: &mut Ve
 #[cfg(test)]
 mod test {
     use super::{suffix, Config};
-    use crate::{builder::test::count_idempotent, Vergen};
+    use crate::{emitter::test::count_idempotent, EmitBuilder};
     use anyhow::{anyhow, Result};
 
     #[cfg(any(target_os = "macos", target_os = "windows"))]
@@ -452,7 +452,10 @@ mod test {
     #[test]
     #[serial_test::parallel]
     fn sysinfo_all_idempotent() -> Result<()> {
-        let config = Vergen::default().idempotent().all_sysinfo().test_gen()?;
+        let config = EmitBuilder::builder()
+            .idempotent()
+            .all_sysinfo()
+            .test_emit()?;
         assert_eq!(9, config.cargo_rustc_env_map.len());
         assert_eq!(9, count_idempotent(config.cargo_rustc_env_map));
         assert_eq!(9, config.warnings.len());
@@ -462,7 +465,7 @@ mod test {
     #[test]
     #[serial_test::parallel]
     fn sysinfo_all() -> Result<()> {
-        let config = Vergen::default().all_sysinfo().test_gen()?;
+        let config = EmitBuilder::builder().all_sysinfo().test_emit()?;
         assert_eq!(SYSINFO_COUNT, config.cargo_rustc_env_map.len());
         assert_eq!(0, count_idempotent(config.cargo_rustc_env_map));
         assert_eq!(0, config.warnings.len());

@@ -4,7 +4,7 @@ mod test_build {
     use lazy_static::lazy_static;
     use regex::Regex;
     use std::env;
-    use vergen::Vergen;
+    use vergen::EmitBuilder;
 
     lazy_static! {
         static ref CARGO_TT_RE_STR: &'static str =
@@ -38,9 +38,9 @@ mod test_build {
     fn cargo_all_output() -> Result<()> {
         setup();
         let mut stdout_buf = vec![];
-        Vergen::default()
+        EmitBuilder::builder()
             .all_cargo()
-            .test_gen_output(&mut stdout_buf)?;
+            .emit_to(&mut stdout_buf)?;
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(CARGO_REGEX.is_match(&output));
         teardown();
@@ -52,10 +52,10 @@ mod test_build {
     fn cargo_all_idempotent_output() -> Result<()> {
         setup();
         let mut stdout_buf = vec![];
-        Vergen::default()
+        EmitBuilder::builder()
             .idempotent()
             .all_cargo()
-            .test_gen_output(&mut stdout_buf)?;
+            .emit_to(&mut stdout_buf)?;
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(CARGO_REGEX.is_match(&output));
         teardown();

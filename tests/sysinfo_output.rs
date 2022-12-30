@@ -3,7 +3,7 @@ mod test_sysinfo {
     use anyhow::Result;
     use lazy_static::lazy_static;
     use regex::Regex;
-    use vergen::Vergen;
+    use vergen::EmitBuilder;
 
     #[cfg(all(not(target_os = "windows"), not(target_os = "macos")))]
     lazy_static! {
@@ -152,9 +152,9 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     #[test]
     fn sysinfo_all_output() -> Result<()> {
         let mut stdout_buf = vec![];
-        Vergen::default()
+        EmitBuilder::builder()
             .all_sysinfo()
-            .test_gen_output(&mut stdout_buf)?;
+            .emit_to(&mut stdout_buf)?;
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(SYSINFO_REGEX_INST.is_match(&output));
         Ok(())
@@ -163,10 +163,10 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     #[test]
     fn sysinfo_all_idempotent_output() -> Result<()> {
         let mut stdout_buf = vec![];
-        Vergen::default()
+        EmitBuilder::builder()
             .idempotent()
             .all_sysinfo()
-            .test_gen_output(&mut stdout_buf)?;
+            .emit_to(&mut stdout_buf)?;
         let output = String::from_utf8_lossy(&stdout_buf);
         assert_eq!(IDEM_OUTPUT, output);
         Ok(())

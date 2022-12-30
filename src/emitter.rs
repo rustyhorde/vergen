@@ -32,15 +32,15 @@ pub(crate) type RustcEnvMap = BTreeMap<VergenKey, String>;
 
 // Holds the base cargo instructions
 #[derive(Clone, Debug, Default)]
-pub(crate) struct CargoOutput {
+pub(crate) struct Emitter {
     pub(crate) cargo_rustc_env_map: RustcEnvMap,
     pub(crate) rerun_if_changed: Vec<String>,
     pub(crate) warnings: Vec<String>,
 }
 
-impl CargoOutput {
+impl Emitter {
     #[cfg(feature = "build")]
-    fn add_build_entries(&mut self, builder: &Builder) -> Result<()> {
+    fn add_build_entries(&mut self, builder: &EmitBuilder) -> Result<()> {
         let config = builder.build_config;
         let skip = builder.skip_if_error;
         let idem = builder.idempotent;
@@ -55,12 +55,12 @@ impl CargoOutput {
         clippy::trivially_copy_pass_by_ref,
         clippy::unused_self
     )]
-    fn add_build_entries(&mut self, _builder: &Builder) -> Result<()> {
+    fn add_build_entries(&mut self, _builder: &EmitBuilder) -> Result<()> {
         Ok(())
     }
 
     #[cfg(feature = "rustc")]
-    fn add_rustc_entries(&mut self, builder: &Builder) -> Result<()> {
+    fn add_rustc_entries(&mut self, builder: &EmitBuilder) -> Result<()> {
         let config = builder.rustc_config;
         let skip = builder.skip_if_error;
         builder
@@ -74,12 +74,12 @@ impl CargoOutput {
         clippy::trivially_copy_pass_by_ref,
         clippy::unused_self
     )]
-    fn add_rustc_entries(&mut self, _builder: &Builder) -> Result<()> {
+    fn add_rustc_entries(&mut self, _builder: &EmitBuilder) -> Result<()> {
         Ok(())
     }
 
     #[cfg(feature = "cargo")]
-    fn add_cargo_entries(&mut self, builder: &Builder) -> Result<()> {
+    fn add_cargo_entries(&mut self, builder: &EmitBuilder) -> Result<()> {
         let config = builder.cargo_config;
         let skip = builder.skip_if_error;
         builder
@@ -93,7 +93,7 @@ impl CargoOutput {
         clippy::trivially_copy_pass_by_ref,
         clippy::unused_self
     )]
-    fn add_cargo_entries(&mut self, _builder: &Builder) -> Result<()> {
+    fn add_cargo_entries(&mut self, _builder: &EmitBuilder) -> Result<()> {
         Ok(())
     }
 
@@ -101,11 +101,16 @@ impl CargoOutput {
         feature = "git",
         any(feature = "git2", feature = "gitcl", feature = "gix")
     ))]
-    fn add_git_entries(&mut self, builder: &Builder) -> Result<()> {
+    fn add_git_entries(&mut self, builder: &EmitBuilder) -> Result<()> {
         let config = builder.git_config;
+        let idem = builder.idempotent;
         let skip = builder.skip_if_error;
         builder
-            .add_git_map_entries(&mut self.cargo_rustc_env_map, &mut self.rerun_if_changed)
+            .add_git_map_entries(
+                idem,
+                &mut self.cargo_rustc_env_map,
+                &mut self.rerun_if_changed,
+            )
             .or_else(|e| config.add_warnings(skip, e, &mut self.warnings))
     }
 
@@ -118,12 +123,12 @@ impl CargoOutput {
         clippy::trivially_copy_pass_by_ref,
         clippy::unused_self
     )]
-    fn add_git_entries(&mut self, _builder: &Builder) -> Result<()> {
+    fn add_git_entries(&mut self, _builder: &EmitBuilder) -> Result<()> {
         Ok(())
     }
 
     #[cfg(feature = "si")]
-    fn add_si_entries(&mut self, builder: &Builder) -> Result<()> {
+    fn add_si_entries(&mut self, builder: &EmitBuilder) -> Result<()> {
         let config = builder.sysinfo_config;
         let idem = builder.idempotent;
         let skip = builder.skip_if_error;
@@ -138,11 +143,48 @@ impl CargoOutput {
         clippy::trivially_copy_pass_by_ref,
         clippy::unused_self
     )]
-    fn add_si_entries(&mut self, _builder: &Builder) -> Result<()> {
+    fn add_si_entries(&mut self, _builder: &EmitBuilder) -> Result<()> {
         Ok(())
     }
 
-    fn gen_output<T>(&self, stdout: &mut T) -> Result<()>
+    fn emit_output<T>(&self, stdout: &mut T) -> Result<()>
+    where
+        T: Write,
+    {
+        self.emit_instructions(stdout)
+    }
+
+    #[cfg(not(any(
+        feature = "build",
+        feature = "cargo",
+        feature = "git",
+        feature = "rustc",
+        feature = "si"
+    )))]
+    #[allow(clippy::unused_self, clippy::unnecessary_wraps)]
+    fn emit_instructions<T>(&self, _stdout: &mut T) -> Result<()>
+    where
+        T: Write,
+    {
+        // Emit the 'cargo:rustc-env' instructions
+        for _v in self.cargo_rustc_env_map.values() {}
+
+        // Emit the `cargo:warning` instructions
+        for _warning in &self.warnings {}
+
+        // Emit the 'cargo:rerun-if-changed' instructions for the git paths (if added)
+        for _path in &self.rerun_if_changed {}
+        Ok(())
+    }
+
+    #[cfg(any(
+        feature = "build",
+        feature = "cargo",
+        feature = "git",
+        feature = "rustc",
+        feature = "si"
+    ))]
+    fn emit_instructions<T>(&self, stdout: &mut T) -> Result<()>
     where
         T: Write,
     {
@@ -166,7 +208,6 @@ impl CargoOutput {
         writeln!(stdout, "cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT")?;
         writeln!(stdout, "cargo:rerun-if-env-changed=VERGEN_SKIP_IF_ERROR")?;
         writeln!(stdout, "cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH")?;
-
         Ok(())
     }
 }
@@ -174,7 +215,7 @@ impl CargoOutput {
 /// Build the `vergen` configuration to enable specific cargo instruction
 /// output
 #[derive(Clone, Copy, Debug)]
-pub struct Builder {
+pub struct EmitBuilder {
     idempotent: bool,
     skip_if_error: bool,
     #[cfg(feature = "build")]
@@ -192,8 +233,10 @@ pub struct Builder {
     pub(crate) sysinfo_config: SysinfoConfig,
 }
 
-impl Default for Builder {
-    fn default() -> Self {
+impl EmitBuilder {
+    /// Construct a new [`EmitBuilder`] builder to configure the cargo instruction emits
+    #[must_use]
+    pub fn builder() -> Self {
         let idempotent = matches!(env::var("VERGEN_IDEMPOTENT"), Ok(_val));
         let skip_if_error = matches!(env::var("VERGEN_SKIP_IF_ERROR"), Ok(_val));
         Self {
@@ -214,8 +257,7 @@ impl Default for Builder {
             sysinfo_config: SysinfoConfig::default(),
         }
     }
-}
-impl Builder {
+
     /// Enable the `idempotent` feature
     ///
     /// **NOTE** - This feature can also be enabled via the `VERGEN_IDEMPOTENT`
@@ -225,7 +267,7 @@ impl Builder {
     /// will be set to an idempotent default.  This will allow systems that
     /// depend on reproducible builds to override user requested vergen
     /// impurities.  This will mainly allow for package maintainers to build
-    /// packages that depende on vergen in a reproducible manner.
+    /// packages that depend on vergen in a reproducible manner.
     ///
     /// See [this issue](https://github.com/rustyhorde/vergen/issues/141) for
     /// more details
@@ -242,13 +284,13 @@ impl Builder {
     /// ```
     /// # use anyhow::Result;
     /// # use std::env;
-    /// # use vergen::Vergen;
+    /// # use vergen::EmitBuilder;
     /// #
     /// # fn main() -> Result<()> {
     #[cfg_attr(
         feature = "build",
         doc = r##"
-Vergen::default().idempotent().all_build().gen()?;
+EmitBuilder::builder().idempotent().all_build().emit()?;
 "##
     )]
     /// // or
@@ -256,7 +298,7 @@ Vergen::default().idempotent().all_build().gen()?;
     #[cfg_attr(
         feature = "build",
         doc = r##"
-Vergen::default().all_build().gen()?;
+EmitBuilder::builder().all_build().emit()?;
 "##
     )]
     /// # env::remove_var("VERGEN_IDEMPOTENT");
@@ -273,14 +315,14 @@ Vergen::default().all_build().gen()?;
     /// ```
     /// # use anyhow::Result;
     /// # use std::env;
-    /// # use vergen::Vergen;
+    /// # use vergen::EmitBuilder;
     /// #
     /// # fn main() -> Result<()> {
     /// env::set_var("SOURCE_DATE_EPOCH", "1671809360");
     #[cfg_attr(
         feature = "build",
         doc = r##"
-Vergen::default().idempotent().all_build().gen()?;
+EmitBuilder::builder().idempotent().all_build().emit()?;
 "##
     )]
     /// # env::remove_var("SOURCE_DATE_EPOCH");
@@ -297,7 +339,7 @@ Vergen::default().idempotent().all_build().gen()?;
     /// **NOTE** - This feature can also be enabled via the `VERGEN_SKIP_IF_ERROR`
     /// environment variable.
     ///
-    /// **NOTE** - The [`gen`](Self::gen) function can still potentially fail
+    /// **NOTE** - The [`gen`](Self::emit) function can still potentially fail
     /// with an [`io`](std::io::Error) error writing to stdout, so the library
     /// still returns a [`Result`](anyhow::Result) that should be handled.
     ///
@@ -312,13 +354,13 @@ Vergen::default().idempotent().all_build().gen()?;
     /// ```
     /// # use anyhow::Result;
     /// # use std::env;
-    /// # use vergen::Vergen;
+    /// # use vergen::EmitBuilder;
     /// #
     /// # fn main() -> Result<()> {
     #[cfg_attr(
         feature = "build",
         doc = r##"
-Vergen::default().skip_if_error().all_build().gen()?;
+EmitBuilder::builder().skip_if_error().all_build().emit()?;
 "##
     )]
     /// // or
@@ -326,7 +368,7 @@ Vergen::default().skip_if_error().all_build().gen()?;
     #[cfg_attr(
         feature = "build",
         doc = r##"
-Vergen::default().all_build().gen()?;
+EmitBuilder::builder().all_build().emit()?;
 "##
     )]
     /// # env::remove_var("VERGEN_SKIP_IF_ERROR");
@@ -338,21 +380,21 @@ Vergen::default().all_build().gen()?;
         self
     }
 
-    /// Generate the [`cargo:rustc-env=VAR=VALUE`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#cargorustc-envvarvalue)
+    /// Emit the [`cargo:rustc-env=VAR=VALUE`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#cargorustc-envvarvalue)
     /// [build script](https://doc.rust-lang.org/cargo/reference/build-scripts.html#outputs-of-the-build-script) outputs.
     ///
     /// **NOTE** - [`cargo:warning`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#cargo-warning) outputs
-    /// may also be generated if the [`skip_if_error`](Self::skip_if_error) feature is enabled.
+    /// may also be emitted if the [`skip_if_error`](Self::skip_if_error) feature is enabled.
     ///
     /// # Errors
-    /// * The [`writeln!`](std::writeln!) macro can generate a [`std::io::Error`]
+    /// * The [`writeln!`](std::writeln!) macro can throw a [`std::io::Error`]
     ///
     /// # Example
     ///
     /// ```
     /// # use anyhow::Result;
     /// # use std::env;
-    /// # use vergen::Vergen;
+    /// # use vergen::EmitBuilder;
     /// #
     /// # fn main() -> Result<()> {
     #[cfg_attr(
@@ -366,12 +408,12 @@ Vergen::default().all_build().gen()?;
 # env::set_var("TARGET", "x86_64-unknown-linux-gnu");
 # env::set_var("PROFILE", "build,rustc");
 # env::set_var("CARGO_FEATURE_BUILD", "");
-Vergen::default()
+EmitBuilder::builder()
   .all_build()
   .all_cargo()
   .all_rustc()
   .all_sysinfo()
-  .gen()?;
+  .emit()?;
 # env::remove_var("TARGET");
 # env::remove_var("PROFILE");
 # env::remove_var("CARGO_FEATURE_BUILD");
@@ -416,36 +458,33 @@ Vergen::default()
     /// cargo:rustc-env=VERGEN_SYSINFO_CPU_FREQUENCY=3792
     /// ```
     ///
-    pub fn gen(self) -> Result<()> {
-        self.inner_gen()
-            .and_then(|x| x.gen_output(&mut io::stdout()))
+    pub fn emit(self) -> Result<()> {
+        self.inner_emit()
+            .and_then(|x| x.emit_output(&mut io::stdout()))
     }
 
     #[cfg(test)]
-    pub(crate) fn test_gen(self) -> Result<CargoOutput> {
-        self.inner_gen()
+    pub(crate) fn test_emit(self) -> Result<Emitter> {
+        self.inner_emit()
     }
 
-    #[doc(hidden)]
-    #[cfg(any(
-        feature = "build",
-        feature = "cargo",
-        all(
-            feature = "git",
-            any(feature = "git2", feature = "gitcl", feature = "gix")
-        ),
-        feature = "rustc",
-        feature = "si"
-    ))]
-    pub fn test_gen_output<T>(self, stdout: &mut T) -> Result<()>
+    /// Emit the cargo build script instructions to the given [`Write`](std::io::Write).
+    ///
+    /// **NOTE** - This is genarally only used for testing and probably shouldn't be used
+    /// withing a `build.rs` file.
+    ///
+    /// # Errors
+    /// * The [`writeln!`](std::writeln!) macro can throw a [`std::io::Error`]
+    ///
+    pub fn emit_to<T>(self, stdout: &mut T) -> Result<()>
     where
         T: Write,
     {
-        self.inner_gen().and_then(|x| x.gen_output(stdout))
+        self.inner_emit().and_then(|x| x.emit_output(stdout))
     }
 
-    fn inner_gen(self) -> Result<CargoOutput> {
-        let mut config = CargoOutput::default();
+    fn inner_emit(self) -> Result<Emitter> {
+        let mut config = Emitter::default();
         config.add_build_entries(&self)?;
         config.add_cargo_entries(&self)?;
         config.add_git_entries(&self)?;
@@ -457,7 +496,7 @@ Vergen::default()
 
 #[cfg(test)]
 pub(crate) mod test {
-    use super::Builder;
+    use super::EmitBuilder;
     use anyhow::Result;
     #[cfg(any(
         feature = "build",
@@ -490,7 +529,7 @@ pub(crate) mod test {
     #[test]
     #[serial_test::parallel]
     fn default_is_disabled() -> Result<()> {
-        let config = Builder::default().test_gen()?;
+        let config = EmitBuilder::builder().test_emit()?;
         assert!(config.cargo_rustc_env_map.is_empty());
         assert!(config.warnings.is_empty());
         Ok(())
@@ -499,7 +538,7 @@ pub(crate) mod test {
     #[test]
     #[serial_test::parallel]
     fn gen_is_ok() -> Result<()> {
-        assert!(Builder::default().gen().is_ok());
+        assert!(EmitBuilder::builder().emit().is_ok());
         Ok(())
     }
 
@@ -516,14 +555,14 @@ pub(crate) mod test {
 
         setup();
         let mut stdout_buf = vec![];
-        Builder::default()
+        EmitBuilder::builder()
             .idempotent()
             .skip_if_error()
             .all_build()
             .all_cargo()
             .all_rustc()
             .all_sysinfo()
-            .test_gen_output(&mut stdout_buf)?;
+            .emit_to(&mut stdout_buf)?;
         println!("{}", String::from_utf8_lossy(&stdout_buf));
         teardown();
         Ok(())
@@ -542,12 +581,12 @@ pub(crate) mod test {
 
         setup();
         let mut stdout_buf = vec![];
-        Builder::default()
+        EmitBuilder::builder()
             .all_build()
             .all_cargo()
             .all_rustc()
             .all_sysinfo()
-            .test_gen_output(&mut stdout_buf)?;
+            .emit_to(&mut stdout_buf)?;
         println!("{}", String::from_utf8_lossy(&stdout_buf));
         teardown();
         Ok(())

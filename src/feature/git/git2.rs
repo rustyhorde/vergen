@@ -6,7 +6,7 @@
 // option. All files in the project carrying such notice may not be copied,
 // modified, or distributed except according to those terms.
 
-use crate::builder::{Builder, RustcEnvMap};
+use crate::emitter::{EmitBuilder, RustcEnvMap};
 use anyhow::{Error, Result};
 // remove these when impl complete
 use git2_rs as _;
@@ -68,15 +68,15 @@ impl Config {
 ///
 /// ```
 /// # use anyhow::Result;
-/// # use vergen::Vergen;
+/// # use vergen::EmitBuilder;
 /// #
 /// # fn main() -> Result<()> {
-/// Vergen::default().all_git().gen()?;
+/// EmitBuilder::builder().all_git().emit()?;
 /// #   Ok(())
 /// # }
 /// ```
 #[cfg_attr(docsrs, doc(cfg(feature = "git")))]
-impl Builder {
+impl EmitBuilder {
     /// Enable all of the `VERGEN_GIT_*` options
     pub fn all_git(&mut self) -> &mut Self {
         self.git_branch()
@@ -90,6 +90,7 @@ impl Builder {
 
     pub(crate) fn add_git_map_entries(
         &self,
+        _idempotent: bool,
         _map: &mut RustcEnvMap,
         _rerun_if_changed: &mut Vec<String>,
     ) -> Result<()> {
@@ -100,7 +101,7 @@ impl Builder {
 #[cfg(test)]
 mod test {
     use super::Config;
-    use crate::{builder::test::count_idempotent, Vergen};
+    use crate::{emitter::test::count_idempotent, EmitBuilder};
     use anyhow::{anyhow, Result};
 
     #[test]
@@ -131,7 +132,7 @@ mod test {
     #[test]
     #[serial_test::parallel]
     fn git_all_idempotent() -> Result<()> {
-        let config = Vergen::default().idempotent().all_git().test_gen()?;
+        let config = EmitBuilder::builder().idempotent().all_git().test_emit()?;
         assert_eq!(0, config.cargo_rustc_env_map.len());
         assert_eq!(0, count_idempotent(config.cargo_rustc_env_map));
         assert_eq!(0, config.warnings.len());
@@ -141,7 +142,7 @@ mod test {
     #[test]
     #[serial_test::parallel]
     fn git_all() -> Result<()> {
-        let config = Vergen::default().all_git().test_gen()?;
+        let config = EmitBuilder::builder().all_git().test_emit()?;
         assert_eq!(0, config.cargo_rustc_env_map.len());
         assert_eq!(0, count_idempotent(config.cargo_rustc_env_map));
         assert_eq!(0, config.warnings.len());
