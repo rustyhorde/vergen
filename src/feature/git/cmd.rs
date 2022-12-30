@@ -290,7 +290,7 @@ fn run_cmd(command: &str) -> Result<Output> {
 fn add_git_cmd_entry(cmd: &str, key: VergenKey, map: &mut RustcEnvMap) -> Result<()> {
     let output = run_cmd(cmd)?;
     if output.status.success() {
-        let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        let stdout = String::from_utf8_lossy(&output.stdout).trim().trim_matches('\'').to_string();
         let _old = map.insert(key, stdout);
     } else {
         return Err(anyhow!("Failed to run '{cmd}'!"));
