@@ -88,7 +88,11 @@ impl Builder {
         self
     }
 
-    pub(crate) fn add_git_map_entries(&self, _map: &mut RustcEnvMap) -> Result<()> {
+    pub(crate) fn add_git_map_entries(
+        &self,
+        _map: &mut RustcEnvMap,
+        _rerun_if_changed: &mut Vec<String>,
+    ) -> Result<()> {
         Ok(())
     }
 }
