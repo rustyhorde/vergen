@@ -319,6 +319,7 @@ mod test {
         Ok(())
     }
 
+    #[cfg(not(target_family = "windows"))]
     #[test]
     #[serial_test::serial]
     fn shell_env_works() -> Result<()> {
