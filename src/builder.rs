@@ -154,6 +154,13 @@ impl CargoOutput {
         for warning in &self.warnings {
             writeln!(stdout, "cargo:warning={warning}")?;
         }
+
+        // Emit the 'cargo:rerun-if-changed' instructions
+        writeln!(stdout, "cargo:rerun-if-changed=build.rs")?;
+        writeln!(stdout, "cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT")?;
+        writeln!(stdout, "cargo:rerun-if-env-changed=VERGEN_SKIP_IF_ERROR")?;
+        writeln!(stdout, "cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH")?;
+
         Ok(())
     }
 }
