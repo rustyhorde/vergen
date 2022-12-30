@@ -375,9 +375,20 @@ mod test {
     fn git_all() -> Result<()> {
         let config = Vergen::default().all_git().test_gen()?;
         assert_eq!(9, config.cargo_rustc_env_map.len());
-        for (k, v) in &config.cargo_rustc_env_map {
-            println!("cargo:rustc-env={}={v}", k.name());
-        }
+        assert_eq!(0, count_idempotent(config.cargo_rustc_env_map));
+        assert_eq!(0, config.warnings.len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::parallel]
+    fn git_all_dirty_tags_short() -> Result<()> {
+        let config = Vergen::default()
+            .all_git()
+            .git_describe(true, true)
+            .git_sha(true)
+            .test_gen()?;
+        assert_eq!(9, config.cargo_rustc_env_map.len());
         assert_eq!(0, count_idempotent(config.cargo_rustc_env_map));
         assert_eq!(0, config.warnings.len());
         Ok(())
