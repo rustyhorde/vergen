@@ -51,10 +51,6 @@ mod features {
     pub(crate) const BUILD_TIMESTAMP_NAME: &str = "VERGEN_BUILD_TIMESTAMP";
     #[cfg(feature = "build")]
     pub(crate) const BUILD_DATE_NAME: &str = "VERGEN_BUILD_DATE";
-    #[cfg(feature = "build")]
-    pub(crate) const BUILD_TIME_NAME: &str = "VERGEN_BUILD_TIME";
-    #[cfg(feature = "build")]
-    pub(crate) const BUILD_SEMVER_NAME: &str = "VERGEN_BUILD_SEMVER";
 
     // git Constants
     #[cfg(all(
@@ -168,8 +164,6 @@ mod test {
         // Build Constants
         assert_eq!(BUILD_TIMESTAMP_NAME, "VERGEN_BUILD_TIMESTAMP");
         assert_eq!(BUILD_DATE_NAME, "VERGEN_BUILD_DATE");
-        assert_eq!(BUILD_TIME_NAME, "VERGEN_BUILD_TIME");
-        assert_eq!(BUILD_SEMVER_NAME, "VERGEN_BUILD_SEMVER");
     }
 
     #[cfg(feature = "cargo")]

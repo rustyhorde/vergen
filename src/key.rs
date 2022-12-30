@@ -17,9 +17,7 @@ pub(crate) use self::keys::VergenKey;
 ))]
 mod keys {
     #[cfg(feature = "build")]
-    use crate::constants::{
-        BUILD_DATE_NAME, BUILD_SEMVER_NAME, BUILD_TIMESTAMP_NAME, BUILD_TIME_NAME,
-    };
+    use crate::constants::{BUILD_DATE_NAME, BUILD_TIMESTAMP_NAME};
     #[cfg(feature = "cargo")]
     use crate::constants::{CARGO_FEATURES, CARGO_PROFILE, CARGO_TARGET_TRIPLE};
     #[cfg(all(
@@ -48,15 +46,9 @@ mod keys {
         /// The build date. (VERGEN_BUILD_DATE)
         #[cfg(feature = "build")]
         BuildDate,
-        /// The build time. (VERGEN_BUILD_TIME)
-        #[cfg(feature = "build")]
-        BuildTime,
         /// The build timestamp. (VERGEN_BUILD_TIMESTAMP)
         #[cfg(feature = "build")]
         BuildTimestamp,
-        /// The build semver. (VERGEN_BUILD_SEMVER)
-        #[cfg(feature = "build")]
-        BuildSemver,
         /// The cargo target triple (VERGEN_CARGO_TARGET_TRIPLE)
         #[cfg(feature = "cargo")]
         CargoTargetTriple,
@@ -174,11 +166,7 @@ mod keys {
                 #[cfg(feature = "build")]
                 VergenKey::BuildDate => BUILD_DATE_NAME,
                 #[cfg(feature = "build")]
-                VergenKey::BuildTime => BUILD_TIME_NAME,
-                #[cfg(feature = "build")]
                 VergenKey::BuildTimestamp => BUILD_TIMESTAMP_NAME,
-                #[cfg(feature = "build")]
-                VergenKey::BuildSemver => BUILD_SEMVER_NAME,
                 #[cfg(feature = "cargo")]
                 VergenKey::CargoTargetTriple => CARGO_TARGET_TRIPLE,
                 #[cfg(feature = "cargo")]

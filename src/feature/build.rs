@@ -13,18 +13,14 @@ use time::{
 #[derive(Clone, Copy, Debug, Default)]
 pub(crate) struct Config {
     pub(crate) build_date: bool,
-    pub(crate) build_time: bool,
     pub(crate) build_timestamp: bool,
-    pub(crate) build_semver: bool,
 }
 
 impl Config {
     #[cfg(test)]
     fn enable_all(&mut self) {
         self.build_date = true;
-        self.build_time = true;
         self.build_timestamp = true;
-        self.build_semver = true;
     }
 
     pub(crate) fn add_warnings(
@@ -40,22 +36,10 @@ impl Config {
                     VergenKey::BuildDate.name()
                 ));
             }
-            if self.build_time {
-                warnings.push(format!(
-                    "Unable to add {} to output",
-                    VergenKey::BuildTime.name()
-                ));
-            }
             if self.build_timestamp {
                 warnings.push(format!(
                     "Unable to add {} to output",
                     VergenKey::BuildTimestamp.name()
-                ));
-            }
-            if self.build_semver {
-                warnings.push(format!(
-                    "Unable to add {} to output",
-                    VergenKey::BuildSemver.name()
                 ));
             }
             Ok(())
@@ -70,9 +54,7 @@ impl Config {
 /// | Variable | Sample |
 /// | -------  | ------ |
 /// | `VERGEN_BUILD_DATE` | 2021-02-25 |
-/// | `VERGEN_BUILD_TIME` | 23:28:39 |
 /// | `VERGEN_BUILD_TIMESTAMP` | 2021-02-25T23:28:39.493201+00:00 |
-/// | `VERGEN_BUILD_SEMVER` | 8.0.0 |
 ///
 /// # Example
 ///
@@ -89,21 +71,12 @@ impl Config {
 impl EmitBuilder {
     /// Enable all of the `VERGEN_BUILD_*` options
     pub fn all_build(&mut self) -> &mut Self {
-        self.build_date()
-            .build_semver()
-            .build_time()
-            .build_timestamp()
+        self.build_date().build_timestamp()
     }
 
     /// Enable the `VERGEN_BUILD_DATE` date output
     pub fn build_date(&mut self) -> &mut Self {
         self.build_config.build_date = true;
-        self
-    }
-
-    /// Enable the `VERGEN_BUILD_TIME` date output
-    pub fn build_time(&mut self) -> &mut Self {
-        self.build_config.build_time = true;
         self
     }
 
@@ -113,27 +86,13 @@ impl EmitBuilder {
         self
     }
 
-    /// Enable the `VERGEN_BUILD_SEMVER` date output
-    pub fn build_semver(&mut self) -> &mut Self {
-        self.build_config.build_semver = true;
-        self
-    }
-
     pub(crate) fn add_build_map_entries(
         &self,
         idempotent: bool,
         map: &mut RustcEnvMap,
         warnings: &mut Vec<String>,
     ) -> Result<()> {
-        self.add_semver_entry(map)?;
         self.add_timestamp_entries(idempotent, map, warnings)?;
-        Ok(())
-    }
-
-    fn add_semver_entry(&self, map: &mut RustcEnvMap) -> Result<()> {
-        if self.build_config.build_semver {
-            let _old = map.insert(VergenKey::BuildSemver, env::var("CARGO_PKG_VERSION")?);
-        }
         Ok(())
     }
 
@@ -153,7 +112,6 @@ impl EmitBuilder {
         };
 
         self.add_date_entry(idempotent, sde, &ts, map, warnings)?;
-        self.add_time_entry(idempotent, sde, &ts, map, warnings)?;
         self.add_timestamp_entry(idempotent, sde, &ts, map, warnings)?;
         Ok(())
     }
@@ -181,29 +139,6 @@ impl EmitBuilder {
         Ok(())
     }
 
-    fn add_time_entry(
-        &self,
-        idempotent: bool,
-        source_date_epoch: bool,
-        ts: &OffsetDateTime,
-        map: &mut RustcEnvMap,
-        warnings: &mut Vec<String>,
-    ) -> Result<()> {
-        if self.build_config.build_time {
-            if idempotent && !source_date_epoch {
-                warnings.push(format!(
-                    "{} set to idempotent default",
-                    VergenKey::BuildTime.name()
-                ));
-                let _old = map.insert(VergenKey::BuildTime, VERGEN_IDEMPOTENT_DEFAULT.to_string());
-            } else {
-                let format = format_description::parse("[hour]:[minute]:[second]")?;
-                let _old = map.insert(VergenKey::BuildTime, ts.format(&format)?);
-            }
-        }
-        Ok(())
-    }
-
     fn add_timestamp_entry(
         &self,
         idempotent: bool,
@@ -212,7 +147,7 @@ impl EmitBuilder {
         map: &mut RustcEnvMap,
         warnings: &mut Vec<String>,
     ) -> Result<()> {
-        if self.build_config.build_time {
+        if self.build_config.build_timestamp {
             if idempotent && !source_date_epoch {
                 warnings.push(format!(
                     "{} set to idempotent default",
@@ -258,7 +193,7 @@ mod test {
         assert!(config
             .add_warnings(true, anyhow!("test"), &mut warnings)
             .is_ok());
-        assert_eq!(4, warnings.len());
+        assert_eq!(2, warnings.len());
         Ok(())
     }
 
@@ -269,9 +204,9 @@ mod test {
             .idempotent()
             .all_build()
             .test_emit()?;
-        assert_eq!(4, config.cargo_rustc_env_map.len());
-        assert_eq!(3, count_idempotent(config.cargo_rustc_env_map));
-        assert_eq!(3, config.warnings.len());
+        assert_eq!(2, config.cargo_rustc_env_map.len());
+        assert_eq!(2, count_idempotent(config.cargo_rustc_env_map));
+        assert_eq!(2, config.warnings.len());
         Ok(())
     }
 
@@ -279,7 +214,7 @@ mod test {
     #[serial_test::parallel]
     fn build_all() -> Result<()> {
         let config = EmitBuilder::builder().all_build().test_emit()?;
-        assert_eq!(4, config.cargo_rustc_env_map.len());
+        assert_eq!(2, config.cargo_rustc_env_map.len());
         assert_eq!(0, count_idempotent(config.cargo_rustc_env_map));
         assert_eq!(0, config.warnings.len());
         Ok(())
@@ -299,8 +234,6 @@ mod test {
             if idx == 0 {
                 assert_eq!("cargo:rustc-env=VERGEN_BUILD_DATE=2022-12-23", line);
             } else if idx == 1 {
-                assert_eq!("cargo:rustc-env=VERGEN_BUILD_TIME=15:29:20", line);
-            } else if idx == 2 {
                 assert_eq!(
                     "cargo:rustc-env=VERGEN_BUILD_TIMESTAMP=2022-12-23T15:29:20Z",
                     line
