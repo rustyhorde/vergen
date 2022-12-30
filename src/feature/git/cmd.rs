@@ -162,7 +162,7 @@ impl Builder {
     }
 
     pub(crate) fn add_git_map_entries(&self, map: &mut RustcEnvMap) -> Result<()> {
-        check_git()?;
+        check_git("git -v")?;
         if self.git_config.git_branch {
             add_git_cmd_entry(
                 "git rev-parse --abbrev-ref --symbolic-full-name HEAD",
@@ -234,8 +234,8 @@ impl Builder {
     }
 }
 
-fn check_git() -> Result<()> {
-    if git_cmd_exists() {
+fn check_git(cmd: &str) -> Result<()> {
+    if git_cmd_exists(cmd) {
         if inside_git_worktree() {
             Ok(())
         } else {
@@ -246,8 +246,8 @@ fn check_git() -> Result<()> {
     }
 }
 
-fn git_cmd_exists() -> bool {
-    run_cmd("git -v")
+fn git_cmd_exists(cmd: &str) -> bool {
+    run_cmd(cmd)
         .map(|output| output.status.success())
         .unwrap_or(false)
 }
@@ -303,7 +303,7 @@ fn add_git_cmd_entry(cmd: &str, key: VergenKey, map: &mut RustcEnvMap) -> Result
 
 #[cfg(test)]
 mod test {
-    use super::{add_git_cmd_entry, Config};
+    use super::{add_git_cmd_entry, check_git, Config};
     use crate::{builder::test::count_idempotent, key::VergenKey, Vergen};
     use anyhow::{anyhow, Result};
     use std::collections::BTreeMap;
@@ -318,6 +318,23 @@ mod test {
             add_git_cmd_entry("such_a_terrible_cmd", VergenKey::GitCommitMessage, &mut map)
                 .is_err()
         );
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn non_working_tree_is_error() -> Result<()> {
+        let curr_dir = env::current_dir()?;
+        env::set_current_dir("..")?;
+        assert!(check_git("git -v").is_err());
+        env::set_current_dir(curr_dir)?;
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::parallel]
+    fn invalid_git_is_error() -> Result<()> {
+        assert!(check_git("such_a_terrible_cmd -v").is_err());
         Ok(())
     }
 
