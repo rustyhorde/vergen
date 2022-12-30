@@ -306,7 +306,9 @@ mod test {
     use super::{add_git_cmd_entry, Config};
     use crate::{builder::test::count_idempotent, key::VergenKey, Vergen};
     use anyhow::{anyhow, Result};
-    use std::{collections::BTreeMap, env};
+    use std::collections::BTreeMap;
+    #[cfg(not(target_family = "windows"))]
+    use std::env;
 
     #[test]
     #[serial_test::parallel]
