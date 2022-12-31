@@ -268,7 +268,7 @@ impl EmitBuilder {
         get_current_pid().map_err(|e| anyhow!(format!("{e}")))
     }
 
-    #[cfg(test)]
+    #[cfg(all(test, not(target_os = "macos")))]
     fn get_pid(&self) -> Result<Pid> {
         use sysinfo::get_current_pid;
 
