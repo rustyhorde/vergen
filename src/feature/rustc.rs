@@ -14,6 +14,8 @@ pub(crate) struct Config {
     pub(crate) rustc_host_triple: bool,
     pub(crate) rustc_llvm_version: bool,
     pub(crate) rustc_semver: bool,
+    #[cfg(test)]
+    rustc_str_to_test: Option<&'static str>,
 }
 
 /// The `VERGEN_RUSTC_*` configuration features
@@ -119,20 +121,38 @@ impl EmitBuilder {
         }
     }
 
+    #[cfg(not(test))]
     pub(crate) fn add_rustc_map_entries(
         &self,
         map: &mut RustcEnvMap,
         warnings: &mut Vec<String>,
     ) -> Result<()> {
-        self.add_rustc_to_map(version_meta()?, map, warnings)
+        self.add_rustc_to_map(version_meta(), map, warnings)
+    }
+
+    #[cfg(test)]
+    pub(crate) fn add_rustc_map_entries(
+        &self,
+        map: &mut RustcEnvMap,
+        warnings: &mut Vec<String>,
+    ) -> Result<()> {
+        use rustc_version::version_meta_for;
+
+        let vm = if let Some(rustc_str) = self.rustc_config.rustc_str_to_test {
+            version_meta_for(rustc_str)
+        } else {
+            version_meta()
+        };
+        self.add_rustc_to_map(vm, map, warnings)
     }
 
     fn add_rustc_to_map(
         &self,
-        rustc: VersionMeta,
+        rustc_res: std::result::Result<VersionMeta, rustc_version::Error>,
         map: &mut RustcEnvMap,
         warnings: &mut Vec<String>,
     ) -> Result<()> {
+        let rustc = rustc_res?;
         if self.rustc_config.rustc_channel {
             let channel = match rustc.channel {
                 Channel::Dev => "dev",
@@ -183,8 +203,6 @@ impl EmitBuilder {
 mod test {
     use crate::{emitter::test::count_idempotent, EmitBuilder};
     use anyhow::Result;
-    use rustc_version::version_meta_for;
-    use std::collections::BTreeMap;
 
     #[test]
     #[serial_test::parallel]
@@ -220,16 +238,14 @@ release: 1.68.0-nightly
     #[test]
     #[serial_test::parallel]
     fn no_llvm_in_rustc() -> Result<()> {
-        let mut map = BTreeMap::new();
-        let mut warnings = vec![];
-        let vm = version_meta_for(NO_LLVM)?;
         let mut config = EmitBuilder::builder();
+        let _ = config.fail_on_error();
         let _ = config.all_rustc();
-        config.add_rustc_to_map(vm, &mut map, &mut warnings)?;
-        let blah = config.test_emit()?;
-        assert_eq!(6, blah.cargo_rustc_env_map.len());
-        assert_eq!(0, count_idempotent(blah.cargo_rustc_env_map));
-        assert_eq!(0, blah.warnings.len());
+        config.rustc_config.rustc_str_to_test = Some(NO_LLVM);
+        let emitter = config.test_emit()?;
+        assert_eq!(6, emitter.cargo_rustc_env_map.len());
+        assert_eq!(1, count_idempotent(emitter.cargo_rustc_env_map));
+        assert_eq!(1, emitter.warnings.len());
         Ok(())
     }
 
@@ -239,21 +255,67 @@ commit-hash: 270c94e484e19764a2832ef918c95224eb3f17c7
 commit-date: 2022-12-28
 host: x86_64-unknown-linux-gnu
 release: 1.68.0-dev
+LLVM version: 15.0.6
 "#;
 
     #[test]
     #[serial_test::parallel]
     fn rustc_dev_build() -> Result<()> {
-        let mut map = BTreeMap::new();
-        let mut warnings = vec![];
-        let vm = version_meta_for(DEV_BUILD)?;
+        let mut config = EmitBuilder::builder();
+        let _ = config.fail_on_error();
+        let _ = config.all_rustc();
+        config.rustc_config.rustc_str_to_test = Some(DEV_BUILD);
+        let emitter = config.test_emit()?;
+        assert_eq!(6, emitter.cargo_rustc_env_map.len());
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map));
+        assert_eq!(0, emitter.warnings.len());
+        Ok(())
+    }
+
+    const UNKNOWN_BITS: &str = r#"rustc 1.68.0-nightly (270c94e48 2022-12-28)
+binary: rustc
+commit-hash: unknown
+commit-date: unknown
+host: x86_64-unknown-linux-gnu
+release: 1.68.0-dev
+LLVM version: 15.0.6
+"#;
+
+    #[test]
+    #[serial_test::parallel]
+    fn rustc_unknown_bits() -> Result<()> {
+        let mut config = EmitBuilder::builder();
+        let _ = config.fail_on_error();
+        let _ = config.all_rustc();
+        config.rustc_config.rustc_str_to_test = Some(UNKNOWN_BITS);
+        let emitter = config.test_emit()?;
+        assert_eq!(6, emitter.cargo_rustc_env_map.len());
+        assert_eq!(2, count_idempotent(emitter.cargo_rustc_env_map));
+        assert_eq!(2, emitter.warnings.len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::parallel]
+    fn rustc_fails_on_bad_input() -> Result<()> {
+        let mut config = EmitBuilder::builder();
+        let _ = config.fail_on_error();
+        let _ = config.all_rustc();
+        config.rustc_config.rustc_str_to_test = Some("a_bad_rustcvv_string");
+        assert!(config.test_emit().is_err());
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::parallel]
+    fn rustc_defaults_on_bad_input() -> Result<()> {
         let mut config = EmitBuilder::builder();
         let _ = config.all_rustc();
-        config.add_rustc_to_map(vm, &mut map, &mut warnings)?;
-        let blah = config.test_emit()?;
-        assert_eq!(6, blah.cargo_rustc_env_map.len());
-        assert_eq!(0, count_idempotent(blah.cargo_rustc_env_map));
-        assert_eq!(0, blah.warnings.len());
+        config.rustc_config.rustc_str_to_test = Some("a_bad_rustcvv_string");
+        let emitter = config.test_emit()?;
+        assert_eq!(6, emitter.cargo_rustc_env_map.len());
+        assert_eq!(6, count_idempotent(emitter.cargo_rustc_env_map));
+        assert_eq!(6, emitter.warnings.len());
         Ok(())
     }
 }
