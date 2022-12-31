@@ -200,7 +200,7 @@ mod test {
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn bad_env_fails() {
         assert!(EmitBuilder::builder()
             .fail_on_error()
@@ -210,7 +210,7 @@ mod test {
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn bad_env_emits_default() -> Result<()> {
         let emit_res = EmitBuilder::builder().all_cargo().test_emit();
         assert!(emit_res.is_ok());
