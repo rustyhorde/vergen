@@ -583,7 +583,7 @@ pub(crate) mod test {
     #[serial_test::serial]
     fn everything_enabled() -> Result<()> {
         use crate::utils::testutils::{setup, teardown};
-        
+
         setup();
         let mut stdout_buf = vec![];
         EmitBuilder::builder()
