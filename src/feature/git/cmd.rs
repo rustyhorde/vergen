@@ -59,12 +59,61 @@ impl Config {
     }
 }
 
+// This funkiness allows the command to be output in the docs
 macro_rules! branch_cmd {
     () => {
         "git rev-parse --abbrev-ref --symbolic-full-name HEAD"
     };
 }
 const BRANCH_CMD: &str = branch_cmd!();
+macro_rules! author_email {
+    () => {
+        "git log -1 --pretty=format:'%ae'"
+    };
+}
+const COMMIT_AUTHOR_EMAIL: &str = author_email!();
+macro_rules! author_name {
+    () => {
+        "git log -1 --pretty=format:'%an'"
+    };
+}
+const COMMIT_AUTHOR_NAME: &str = author_name!();
+macro_rules! commit_count {
+    () => {
+        "git rev-list --count HEAD"
+    };
+}
+const COMMIT_COUNT: &str = commit_count!();
+macro_rules! commit_date {
+    () => {
+        "git log -1 --pretty=format:'%cs'"
+    };
+}
+const COMMIT_DATE: &str = commit_date!();
+macro_rules! commit_message {
+    () => {
+        "git log -1 --format=%s"
+    };
+}
+const COMMIT_MESSAGE: &str = commit_message!();
+macro_rules! commit_timestamp {
+    () => {
+        "git log -1 --pretty=format:'%cI'"
+    };
+}
+const COMMIT_TIMESTAMP: &str = commit_timestamp!();
+macro_rules! describe {
+    () => {
+        "git describe --always"
+    };
+}
+const DESCRIBE: &str = describe!();
+macro_rules! sha {
+    () => {
+        "git rev-parse"
+    };
+}
+const SHA: &str = sha!();
 
 /// The `VERGEN_GIT_*` configuration features
 ///
@@ -135,43 +184,106 @@ impl EmitBuilder {
         self
     }
 
-    /// Emit the git commit author email instruction
+    /// Emit the author email of the most recent commit
+    ///
+    /// ```text
+    /// cargo:rustc-env=VERGEN_GIT_COMMIT_AUTHOR_EMAIL=<AUTHOR_EMAIL>
+    /// ```
+    ///
+    /// The following command outputs the commit author email
+    /// ```text
+    #[doc = concat!(author_email!())]
+    /// ```
     pub fn git_commit_author_email(&mut self) -> &mut Self {
         self.git_config.git_commit_author_email = true;
         self
     }
 
-    /// Emit the git commit author name instruction
+    /// Emit the author name of the most recent commit
+    ///
+    /// ```text
+    /// cargo:rustc-env=VERGEN_GIT_COMMIT_AUTHOR_NAME=<AUTHOR_NAME>
+    /// ```
+    ///
+    /// The following command outputs the commit author name
+    /// ```text
+    #[doc = concat!(author_name!())]
+    /// ```
     pub fn git_commit_author_name(&mut self) -> &mut Self {
         self.git_config.git_commit_author_name = true;
         self
     }
 
-    /// Emit the git commit count instruction
+    /// Emit the total commit count to HEAD
+    ///
+    /// ```text
+    /// cargo:rustc-env=VERGEN_GIT_COMMIT_COUNT=<COUNT>
+    /// ```
+    ///
+    /// The following command outputs the commit count
+    /// ```text
+    #[doc = concat!(commit_count!())]
+    /// ```
     pub fn git_commit_count(&mut self) -> &mut Self {
         self.git_config.git_commit_count = true;
         self
     }
 
-    /// Emit the git commit date instruction
+    /// Emit the commit date of the latest commit
+    ///
+    /// ```text
+    /// cargo:rustc-env=VERGEN_GIT_COMMIT_DATE=<YYYY-MM-DD>
+    /// ```
+    ///
+    /// The following command outputs the commit date
+    /// ```text
+    #[doc = concat!(commit_date!())]
+    /// ```
     pub fn git_commit_date(&mut self) -> &mut Self {
         self.git_config.git_commit_date = true;
         self
     }
 
-    /// Emit the git commit message instruction
+    /// Emit the commit message of the latest commit
+    ///
+    /// ```text
+    /// cargo:rustc-env=VERGEN_GIT_COMMIT_MESSAGE=<MESSAGE>
+    /// ```
+    ///
+    /// The following command outputs the commit message
+    /// ```text
+    #[doc = concat!(commit_message!())]
+    /// ```
     pub fn git_commit_message(&mut self) -> &mut Self {
         self.git_config.git_commit_message = true;
         self
     }
 
-    /// Emit the git commit timestamp instruction
+    /// Emit the commit timestamp of the latest commit
+    ///
+    /// ```text
+    /// cargo:rustc-env=VERGEN_GIT_COMMIT_TIMESTAMP=<YYYY-MM-DDThh:mm:ssZ>
+    /// ```
+    ///
+    /// The following command outputs the commit timestamp
+    /// ```text
+    #[doc = concat!(commit_message!())]
+    /// ```
     pub fn git_commit_timestamp(&mut self) -> &mut Self {
         self.git_config.git_commit_timestamp = true;
         self
     }
 
-    /// Emit the git describe instruction
+    /// Emit the describe output
+    ///
+    /// ```text
+    /// cargo:rustc-env=VERGEN_GIT_DESCRIBE=<DESCRIBE>
+    /// ```
+    ///
+    /// The following command outputs describe
+    /// ```text
+    #[doc = concat!(describe!())]
+    /// ```
     ///
     /// Optionally, add the `dirty` or `tags` flag to describe.
     /// See [`git describe`](https://git-scm.com/docs/git-describe#_options) for more details
@@ -183,7 +295,16 @@ impl EmitBuilder {
         self
     }
 
-    /// Emit the git SHA instruction
+    /// Emit the SHA of the latest commit
+    ///
+    /// ```text
+    /// cargo:rustc-env=VERGEN_GIT_SHA=<SHA>
+    /// ```
+    ///
+    /// The following command outputs the SHA
+    /// ```text
+    #[doc = concat!(sha!(), " HEAD")]
+    /// ```
     ///
     /// Optionally, add the `short` flag to rev-parse.
     /// See [`git rev-parse`](https://git-scm.com/docs/git-rev-parse#_options_for_output) for more details.
@@ -211,47 +332,31 @@ impl EmitBuilder {
         }
 
         if self.git_config.git_commit_author_email {
-            add_git_cmd_entry(
-                "git log -1 --pretty=format:'%ae'",
-                VergenKey::GitCommitAuthorEmail,
-                map,
-            )?;
+            add_git_cmd_entry(COMMIT_AUTHOR_EMAIL, VergenKey::GitCommitAuthorEmail, map)?;
         }
 
         if self.git_config.git_commit_author_name {
-            add_git_cmd_entry(
-                "git log -1 --pretty=format:'%an'",
-                VergenKey::GitCommitAuthorName,
-                map,
-            )?;
+            add_git_cmd_entry(COMMIT_AUTHOR_NAME, VergenKey::GitCommitAuthorName, map)?;
         }
 
         if self.git_config.git_commit_count {
-            add_git_cmd_entry("git rev-list --count HEAD", VergenKey::GitCommitCount, map)?;
+            add_git_cmd_entry(COMMIT_COUNT, VergenKey::GitCommitCount, map)?;
         }
 
         if self.git_config.git_commit_date {
-            add_git_cmd_entry(
-                "git log -1 --pretty=format:'%cs'",
-                VergenKey::GitCommitDate,
-                map,
-            )?;
+            add_git_cmd_entry(COMMIT_DATE, VergenKey::GitCommitDate, map)?;
         }
 
         if self.git_config.git_commit_message {
-            add_git_cmd_entry("git log -1 --format=%s", VergenKey::GitCommitMessage, map)?;
+            add_git_cmd_entry(COMMIT_MESSAGE, VergenKey::GitCommitMessage, map)?;
         }
 
         if self.git_config.git_commit_timestamp {
-            add_git_cmd_entry(
-                "git log -1 --pretty=format:'%cI'",
-                VergenKey::GitCommitTimestamp,
-                map,
-            )?;
+            add_git_cmd_entry(COMMIT_TIMESTAMP, VergenKey::GitCommitTimestamp, map)?;
         }
 
         if self.git_config.git_describe {
-            let mut describe_cmd = String::from("git describe --always");
+            let mut describe_cmd = String::from(DESCRIBE);
             if self.git_config.git_describe_dirty {
                 describe_cmd.push_str(" --dirty");
             }
@@ -262,7 +367,7 @@ impl EmitBuilder {
         }
 
         if self.git_config.git_sha {
-            let mut sha_cmd = String::from("git rev-parse");
+            let mut sha_cmd = String::from(SHA);
             if self.git_config.git_sha_short {
                 sha_cmd.push_str(" --short");
             }

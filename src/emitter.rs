@@ -30,7 +30,7 @@ use crate::feature::si::Config as SysinfoConfig;
 
 pub(crate) type RustcEnvMap = BTreeMap<VergenKey, String>;
 
-// Holds the base cargo instructions
+// Everything that can be emitted as cargo build instructions
 #[derive(Clone, Debug, Default)]
 pub(crate) struct Emitter {
     pub(crate) cargo_rustc_env_map: RustcEnvMap,
