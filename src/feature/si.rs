@@ -11,9 +11,11 @@ use crate::{
     key::VergenKey,
     utils::fns::{add_default_map_entry, add_map_entry},
 };
+#[cfg(not(target_os = "macos"))]
+use anyhow::{anyhow, Result};
 use sysinfo::{CpuExt, System, SystemExt};
 #[cfg(not(target_os = "macos"))]
-use sysinfo::{Process, User};
+use sysinfo::{Pid, Process, User};
 
 #[derive(Clone, Copy, Debug, Default)]
 pub(crate) struct Config {
@@ -26,6 +28,8 @@ pub(crate) struct Config {
     pub(crate) si_cpu_name: bool,
     pub(crate) si_cpu_brand: bool,
     pub(crate) si_cpu_frequency: bool,
+    #[cfg(test)]
+    fail_pid: bool,
 }
 
 /// The `VERGEN_SYSINFO_*` configuration features
@@ -154,7 +158,7 @@ impl EmitBuilder {
             add_sysinfo_map_entry(
                 VergenKey::SysinfoUser,
                 idempotent,
-                get_user(&system),
+                self.get_user(&system),
                 map,
                 warnings,
             );
@@ -236,6 +240,44 @@ impl EmitBuilder {
             );
         }
     }
+
+    #[cfg(target_os = "macos")]
+    fn get_user(&self, _system: &System) -> Option<String> {
+        None
+    }
+
+    #[cfg(not(target_os = "macos"))]
+    fn get_user(&self, system: &System) -> Option<String> {
+        use sysinfo::UserExt;
+
+        if let Ok(pid) = self.get_pid() {
+            if let Some(process) = system.process(pid) {
+                for user in system.users() {
+                    if check_user(process, user) {
+                        return Some(user.name().to_string());
+                    }
+                }
+            }
+        }
+        None
+    }
+    #[cfg(all(not(test), not(target_os = "macos")))]
+    fn get_pid(&self) -> Result<Pid> {
+        use sysinfo::get_current_pid;
+
+        get_current_pid().map_err(|e| anyhow!(format!("{e}")))
+    }
+
+    #[cfg(test)]
+    fn get_pid(&self) -> Result<Pid> {
+        use sysinfo::get_current_pid;
+
+        if self.sysinfo_config.fail_pid {
+            Err(anyhow!("unable to determine pid"))
+        } else {
+            get_current_pid().map_err(|e| anyhow!(format!("{e}")))
+        }
+    }
 }
 
 fn add_sysinfo_map_entry(
@@ -269,27 +311,6 @@ fn setup_system() -> System {
     system.refresh_memory();
     system.refresh_cpu();
     system
-}
-
-#[cfg(not(target_os = "macos"))]
-fn get_user(system: &System) -> Option<String> {
-    use sysinfo::{get_current_pid, UserExt};
-
-    if let Ok(pid) = get_current_pid() {
-        if let Some(process) = system.process(pid) {
-            for user in system.users() {
-                if check_user(process, user) {
-                    return Some(user.name().to_string());
-                }
-            }
-        }
-    }
-    None
-}
-
-#[cfg(target_os = "macos")]
-fn get_user(_system: &System) -> Option<String> {
-    None
 }
 
 #[cfg(all(not(target_os = "windows"), not(target_os = "macos")))]
@@ -329,9 +350,10 @@ fn suffix(mut curr_memory: u64) -> String {
 
 #[cfg(test)]
 mod test {
-    use super::suffix;
-    use crate::{emitter::test::count_idempotent, EmitBuilder};
+    use super::{add_sysinfo_map_entry, suffix};
+    use crate::{emitter::test::count_idempotent, key::VergenKey, EmitBuilder};
     use anyhow::Result;
+    use std::collections::BTreeMap;
 
     #[cfg(any(target_os = "macos", target_os = "windows"))]
     const IDEM_COUNT: usize = 1;
@@ -364,6 +386,21 @@ mod test {
 
     #[test]
     #[serial_test::parallel]
+    fn adding_none_defaults() -> Result<()> {
+        let mut map = BTreeMap::new();
+        let mut warnings = vec![];
+        add_sysinfo_map_entry(
+            VergenKey::SysinfoCpuBrand,
+            false,
+            None,
+            &mut map,
+            &mut warnings,
+        );
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::parallel]
     fn suffix_works() {
         assert_eq!(suffix(1023), "1023 B");
         assert_eq!(suffix(1024), "1 KiB");
@@ -378,5 +415,18 @@ mod test {
         assert_eq!(suffix((1_125_899_906_842_624 * 1024) - 1), "1023 PiB");
         assert_eq!(suffix(1_125_899_906_842_624 * 1024), "1 EiB");
         assert_eq!(suffix(u64::MAX), "15 EiB");
+    }
+
+    #[test]
+    #[serial_test::parallel]
+    fn pid_lookup_fails() -> Result<()> {
+        let mut config = EmitBuilder::builder();
+        let _ = config.all_sysinfo();
+        config.sysinfo_config.fail_pid = true;
+        let emitter = config.test_emit()?;
+        assert_eq!(SYSINFO_COUNT, emitter.cargo_rustc_env_map.len());
+        assert_eq!(1, count_idempotent(emitter.cargo_rustc_env_map));
+        assert_eq!(1, emitter.warnings.len());
+        Ok(())
     }
 }
