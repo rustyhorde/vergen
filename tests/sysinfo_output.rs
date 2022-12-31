@@ -99,15 +99,15 @@ cargo:rustc-env=VERGEN_SYSINFO_CPU_CORE_COUNT=VERGEN_IDEMPOTENT_OUTPUT
 cargo:rustc-env=VERGEN_SYSINFO_CPU_NAME=VERGEN_IDEMPOTENT_OUTPUT
 cargo:rustc-env=VERGEN_SYSINFO_CPU_BRAND=VERGEN_IDEMPOTENT_OUTPUT
 cargo:rustc-env=VERGEN_SYSINFO_CPU_FREQUENCY=VERGEN_IDEMPOTENT_OUTPUT
-cargo:warning=VERGEN_SYSINFO_NAME set to idempotent default
-cargo:warning=VERGEN_SYSINFO_OS_VERSION set to idempotent default
-cargo:warning=VERGEN_SYSINFO_USER set to idempotent default
-cargo:warning=VERGEN_SYSINFO_TOTAL_MEMORY set to idempotent default
-cargo:warning=VERGEN_SYSINFO_CPU_VENDOR set to idempotent default
-cargo:warning=VERGEN_SYSINFO_CPU_CORE_COUNT set to idempotent default
-cargo:warning=VERGEN_SYSINFO_CPU_NAME set to idempotent default
-cargo:warning=VERGEN_SYSINFO_CPU_BRAND set to idempotent default
-cargo:warning=VERGEN_SYSINFO_CPU_FREQUENCY set to idempotent default
+cargo:warning=VERGEN_SYSINFO_NAME set to default
+cargo:warning=VERGEN_SYSINFO_OS_VERSION set to default
+cargo:warning=VERGEN_SYSINFO_USER set to default
+cargo:warning=VERGEN_SYSINFO_TOTAL_MEMORY set to default
+cargo:warning=VERGEN_SYSINFO_CPU_VENDOR set to default
+cargo:warning=VERGEN_SYSINFO_CPU_CORE_COUNT set to default
+cargo:warning=VERGEN_SYSINFO_CPU_NAME set to default
+cargo:warning=VERGEN_SYSINFO_CPU_BRAND set to default
+cargo:warning=VERGEN_SYSINFO_CPU_FREQUENCY set to default
 cargo:rerun-if-changed=build.rs
 cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT
 cargo:rerun-if-env-changed=VERGEN_SKIP_IF_ERROR

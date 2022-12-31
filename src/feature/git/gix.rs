@@ -6,7 +6,11 @@
 // option. All files in the project carrying such notice may not be copied,
 // modified, or distributed except according to those terms.
 
-use crate::emitter::{EmitBuilder, RustcEnvMap};
+use crate::{
+    emitter::{EmitBuilder, RustcEnvMap},
+    key::VergenKey,
+    utils::fns::{add_default_map_entry, add_map_entry},
+};
 use anyhow::{Error, Result};
 // remove these when impl complete
 use git_repository as _;
@@ -32,22 +36,6 @@ pub(crate) struct Config {
     pub(crate) git_describe: bool,
     // git rev-parse HEAD (optionally with --short)
     pub(crate) git_sha: bool,
-}
-
-impl Config {
-    #[cfg(test)]
-    fn enable_all(&mut self) {
-        super::enable_all(self);
-    }
-
-    pub(crate) fn add_warnings(
-        self,
-        skip_if_error: bool,
-        e: Error,
-        warnings: &mut Vec<String>,
-    ) -> Result<()> {
-        super::add_warnings(self, skip_if_error, e, warnings)
-    }
 }
 
 /// The `VERGEN_GIT_*` configuration features
@@ -88,52 +76,70 @@ impl EmitBuilder {
         self
     }
 
+    pub(crate) fn add_git_default(
+        &self,
+        e: Error,
+        fail_on_error: bool,
+        map: &mut RustcEnvMap,
+        warnings: &mut Vec<String>,
+    ) -> Result<()> {
+        if fail_on_error {
+            Err(e)
+        } else {
+            if self.git_config.git_branch {
+                add_default_map_entry(VergenKey::GitBranch, map, warnings);
+            }
+            if self.git_config.git_commit_author_email {
+                add_default_map_entry(VergenKey::GitCommitAuthorEmail, map, warnings);
+            }
+            if self.git_config.git_commit_author_name {
+                add_default_map_entry(VergenKey::GitCommitAuthorName, map, warnings);
+            }
+            if self.git_config.git_commit_count {
+                add_default_map_entry(VergenKey::GitCommitCount, map, warnings);
+            }
+            if self.git_config.git_commit_date {
+                add_default_map_entry(VergenKey::GitCommitDate, map, warnings);
+            }
+            if self.git_config.git_commit_message {
+                add_default_map_entry(VergenKey::GitCommitMessage, map, warnings);
+            }
+            if self.git_config.git_commit_timestamp {
+                add_default_map_entry(VergenKey::GitCommitTimestamp, map, warnings);
+            }
+            if self.git_config.git_describe {
+                add_default_map_entry(VergenKey::GitDescribe, map, warnings);
+            }
+            if self.git_config.git_sha {
+                add_default_map_entry(VergenKey::GitSha, map, warnings);
+            }
+            Ok(())
+        }
+    }
+
     pub(crate) fn add_git_map_entries(
         &self,
         _idempotent: bool,
-        _map: &mut RustcEnvMap,
+        map: &mut RustcEnvMap,
         _rerun_if_changed: &mut Vec<String>,
     ) -> Result<()> {
+        if self.git_config.git_branch {
+            add_map_entry(VergenKey::GitBranch, "stuff", map);
+        }
         Ok(())
     }
 }
 
 #[cfg(test)]
 mod test {
-    use super::Config;
     use crate::{emitter::test::count_idempotent, EmitBuilder};
-    use anyhow::{anyhow, Result};
-
-    #[test]
-    #[serial_test::parallel]
-    fn add_warnings_is_err() -> Result<()> {
-        let config = Config::default();
-        let mut warnings = vec![];
-        assert!(config
-            .add_warnings(false, anyhow!("test"), &mut warnings)
-            .is_err());
-        Ok(())
-    }
-
-    #[test]
-    #[serial_test::parallel]
-    fn add_warnings_adds_warnings() -> Result<()> {
-        let mut config = Config::default();
-        config.enable_all();
-
-        let mut warnings = vec![];
-        assert!(config
-            .add_warnings(true, anyhow!("test"), &mut warnings)
-            .is_ok());
-        assert_eq!(9, warnings.len());
-        Ok(())
-    }
+    use anyhow::Result;
 
     #[test]
     #[serial_test::parallel]
     fn git_all_idempotent() -> Result<()> {
         let config = EmitBuilder::builder().idempotent().all_git().test_emit()?;
-        assert_eq!(0, config.cargo_rustc_env_map.len());
+        assert_eq!(1, config.cargo_rustc_env_map.len());
         assert_eq!(0, count_idempotent(config.cargo_rustc_env_map));
         assert_eq!(0, config.warnings.len());
         Ok(())
@@ -143,7 +149,7 @@ mod test {
     #[serial_test::parallel]
     fn git_all() -> Result<()> {
         let config = EmitBuilder::builder().all_git().test_emit()?;
-        assert_eq!(0, config.cargo_rustc_env_map.len());
+        assert_eq!(1, config.cargo_rustc_env_map.len());
         assert_eq!(0, count_idempotent(config.cargo_rustc_env_map));
         assert_eq!(0, config.warnings.len());
         Ok(())

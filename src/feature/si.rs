@@ -7,9 +7,9 @@
 // modified, or distributed except according to those terms.
 
 use crate::{
-    constants::VERGEN_IDEMPOTENT_DEFAULT,
     emitter::{EmitBuilder, RustcEnvMap},
     key::VergenKey,
+    utils::fns::{add_default_map_entry, add_map_entry},
 };
 use anyhow::{Error, Result};
 use sysinfo::{CpuExt, System, SystemExt};
@@ -27,88 +27,6 @@ pub(crate) struct Config {
     pub(crate) si_cpu_name: bool,
     pub(crate) si_cpu_brand: bool,
     pub(crate) si_cpu_frequency: bool,
-}
-
-impl Config {
-    #[cfg(test)]
-    fn enable_all(&mut self) {
-        self.si_name = true;
-        self.si_os_version = true;
-        self.si_user = true;
-        self.si_memory = true;
-        self.si_cpu_vendor = true;
-        self.si_cpu_core_count = true;
-        self.si_cpu_name = true;
-        self.si_cpu_brand = true;
-        self.si_cpu_frequency = true;
-    }
-
-    pub(crate) fn add_warnings(
-        self,
-        skip_if_error: bool,
-        e: Error,
-        warnings: &mut Vec<String>,
-    ) -> Result<()> {
-        if skip_if_error {
-            if self.si_name {
-                warnings.push(format!(
-                    "Unable to add {} to output",
-                    VergenKey::SysinfoName.name()
-                ));
-            }
-            if self.si_os_version {
-                warnings.push(format!(
-                    "Unable to add {} to output",
-                    VergenKey::SysinfoOsVersion.name()
-                ));
-            }
-            if self.si_user {
-                warnings.push(format!(
-                    "Unable to add {} to output",
-                    VergenKey::SysinfoUser.name()
-                ));
-            }
-            if self.si_memory {
-                warnings.push(format!(
-                    "Unable to add {} to output",
-                    VergenKey::SysinfoMemory.name()
-                ));
-            }
-            if self.si_cpu_vendor {
-                warnings.push(format!(
-                    "Unable to add {} to output",
-                    VergenKey::SysinfoCpuVendor.name()
-                ));
-            }
-            if self.si_cpu_core_count {
-                warnings.push(format!(
-                    "Unable to add {} to output",
-                    VergenKey::SysinfoCpuCoreCount.name()
-                ));
-            }
-            if self.si_cpu_name {
-                warnings.push(format!(
-                    "Unable to add {} to output",
-                    VergenKey::SysinfoCpuName.name()
-                ));
-            }
-            if self.si_cpu_brand {
-                warnings.push(format!(
-                    "Unable to add {} to output",
-                    VergenKey::SysinfoCpuBrand.name()
-                ));
-            }
-            if self.si_cpu_frequency {
-                warnings.push(format!(
-                    "Unable to add {} to output",
-                    VergenKey::SysinfoCpuFrequency.name()
-                ));
-            }
-            Ok(())
-        } else {
-            Err(e)
-        }
-    }
 }
 
 /// The `VERGEN_SYSINFO_*` configuration features
@@ -205,6 +123,47 @@ impl EmitBuilder {
         self
     }
 
+    pub(crate) fn add_sysinfo_default(
+        &self,
+        e: Error,
+        fail_on_error: bool,
+        map: &mut RustcEnvMap,
+        warnings: &mut Vec<String>,
+    ) -> Result<()> {
+        if fail_on_error {
+            Err(e)
+        } else {
+            if self.sysinfo_config.si_cpu_brand {
+                add_default_map_entry(VergenKey::SysinfoCpuBrand, map, warnings);
+            }
+            if self.sysinfo_config.si_cpu_core_count {
+                add_default_map_entry(VergenKey::SysinfoCpuCoreCount, map, warnings);
+            }
+            if self.sysinfo_config.si_cpu_frequency {
+                add_default_map_entry(VergenKey::SysinfoCpuFrequency, map, warnings);
+            }
+            if self.sysinfo_config.si_cpu_name {
+                add_default_map_entry(VergenKey::SysinfoCpuName, map, warnings);
+            }
+            if self.sysinfo_config.si_cpu_vendor {
+                add_default_map_entry(VergenKey::SysinfoCpuVendor, map, warnings);
+            }
+            if self.sysinfo_config.si_memory {
+                add_default_map_entry(VergenKey::SysinfoMemory, map, warnings);
+            }
+            if self.sysinfo_config.si_name {
+                add_default_map_entry(VergenKey::SysinfoName, map, warnings);
+            }
+            if self.sysinfo_config.si_os_version {
+                add_default_map_entry(VergenKey::SysinfoOsVersion, map, warnings);
+            }
+            if self.sysinfo_config.si_user {
+                add_default_map_entry(VergenKey::SysinfoUser, map, warnings);
+            }
+            Ok(())
+        }
+    }
+
     pub(crate) fn add_sysinfo_map_entries(
         &self,
         idempotent: bool,
@@ -214,126 +173,129 @@ impl EmitBuilder {
         let system = setup_system();
 
         if self.sysinfo_config.si_name {
-            if idempotent {
-                add_idempotent_entry(VergenKey::SysinfoName, map, warnings);
-            } else {
-                let _old = map.insert(
-                    VergenKey::SysinfoName,
-                    system
-                        .name()
-                        .unwrap_or(VERGEN_IDEMPOTENT_DEFAULT.to_string()),
-                );
-            }
+            add_sysinfo_map_entry(
+                VergenKey::SysinfoName,
+                idempotent,
+                system.name(),
+                map,
+                warnings,
+            );
         }
 
         if self.sysinfo_config.si_os_version {
-            if idempotent {
-                add_idempotent_entry(VergenKey::SysinfoOsVersion, map, warnings);
-            } else {
-                let _old = map.insert(
-                    VergenKey::SysinfoOsVersion,
-                    system
-                        .long_os_version()
-                        .unwrap_or(VERGEN_IDEMPOTENT_DEFAULT.to_string()),
-                );
-            }
+            add_sysinfo_map_entry(
+                VergenKey::SysinfoOsVersion,
+                idempotent,
+                system.long_os_version(),
+                map,
+                warnings,
+            );
         }
 
         if self.sysinfo_config.si_user {
-            if idempotent {
-                add_idempotent_entry(VergenKey::SysinfoUser, map, warnings);
-            } else {
-                add_user_entry(&system, map)?;
-            }
+            add_sysinfo_map_entry(
+                VergenKey::SysinfoUser,
+                idempotent,
+                get_user(&system),
+                map,
+                warnings,
+            );
         }
 
         if self.sysinfo_config.si_memory {
-            if idempotent {
-                add_idempotent_entry(VergenKey::SysinfoMemory, map, warnings);
-            } else {
-                let _old = map.insert(
-                    VergenKey::SysinfoMemory,
-                    format!("{}", suffix(system.total_memory())),
-                );
-            }
+            add_sysinfo_map_entry(
+                VergenKey::SysinfoMemory,
+                idempotent,
+                Some(format!("{}", suffix(system.total_memory()))),
+                map,
+                warnings,
+            );
         }
 
         if self.sysinfo_config.si_cpu_vendor {
-            if idempotent {
-                add_idempotent_entry(VergenKey::SysinfoCpuVendor, map, warnings);
-            } else {
-                let _old = map.insert(
-                    VergenKey::SysinfoCpuVendor,
-                    system
-                        .cpus()
-                        .get(0)
-                        .map(|proc| proc.vendor_id().to_string())
-                        .unwrap_or(VERGEN_IDEMPOTENT_DEFAULT.to_string()),
-                );
-            }
+            add_sysinfo_map_entry(
+                VergenKey::SysinfoCpuVendor,
+                idempotent,
+                system
+                    .cpus()
+                    .get(0)
+                    .map(|proc| proc.vendor_id().to_string()),
+                map,
+                warnings,
+            );
         }
 
         if self.sysinfo_config.si_cpu_core_count {
-            if idempotent {
-                add_idempotent_entry(VergenKey::SysinfoCpuCoreCount, map, warnings);
-            } else {
-                let _old = map.insert(
-                    VergenKey::SysinfoCpuCoreCount,
-                    system
-                        .physical_core_count()
-                        .as_ref()
-                        .map(usize::to_string)
-                        .unwrap_or(VERGEN_IDEMPOTENT_DEFAULT.to_string()),
-                );
-            }
+            add_sysinfo_map_entry(
+                VergenKey::SysinfoCpuCoreCount,
+                idempotent,
+                system.physical_core_count().as_ref().map(usize::to_string),
+                map,
+                warnings,
+            );
         }
 
         if self.sysinfo_config.si_cpu_name {
-            if idempotent {
-                add_idempotent_entry(VergenKey::SysinfoCpuName, map, warnings);
-            } else {
-                let _old = map.insert(
-                    VergenKey::SysinfoCpuName,
+            add_sysinfo_map_entry(
+                VergenKey::SysinfoCpuName,
+                idempotent,
+                Some(
                     system
                         .cpus()
                         .iter()
                         .map(CpuExt::name)
                         .collect::<Vec<&str>>()
                         .join(","),
-                );
-            }
+                ),
+                map,
+                warnings,
+            );
         }
 
         if self.sysinfo_config.si_cpu_brand {
-            if idempotent {
-                add_idempotent_entry(VergenKey::SysinfoCpuBrand, map, warnings);
-            } else {
-                let _old = map.insert(
-                    VergenKey::SysinfoCpuBrand,
-                    system
-                        .cpus()
-                        .get(0)
-                        .map(|processor| processor.brand().to_string())
-                        .unwrap_or(VERGEN_IDEMPOTENT_DEFAULT.to_string()),
-                );
-            }
+            add_sysinfo_map_entry(
+                VergenKey::SysinfoCpuBrand,
+                idempotent,
+                system
+                    .cpus()
+                    .get(0)
+                    .map(|processor| processor.brand().to_string()),
+                map,
+                warnings,
+            );
         }
 
         if self.sysinfo_config.si_cpu_frequency {
-            if idempotent {
-                add_idempotent_entry(VergenKey::SysinfoCpuFrequency, map, warnings);
-            } else {
-                let _old = map.insert(
-                    VergenKey::SysinfoCpuFrequency,
-                    system
-                        .cpus()
-                        .get(0)
-                        .map(|proc| proc.frequency().to_string())
-                        .unwrap_or(VERGEN_IDEMPOTENT_DEFAULT.to_string()),
-                );
-            }
+            add_sysinfo_map_entry(
+                VergenKey::SysinfoCpuFrequency,
+                idempotent,
+                system
+                    .cpus()
+                    .get(0)
+                    .map(|proc| proc.frequency().to_string()),
+                map,
+                warnings,
+            );
         }
         Ok(())
+    }
+}
+
+fn add_sysinfo_map_entry(
+    key: VergenKey,
+    idempotent: bool,
+    value: Option<String>,
+    map: &mut RustcEnvMap,
+    warnings: &mut Vec<String>,
+) {
+    if idempotent {
+        add_default_map_entry(key, map, warnings);
+    } else {
+        if let Some(val) = value {
+            add_map_entry(key, val, map);
+        } else {
+            add_default_map_entry(key, map, warnings);
+        }
     }
 }
 
@@ -353,24 +315,24 @@ fn setup_system() -> System {
 }
 
 #[cfg(not(target_os = "macos"))]
-fn add_user_entry(system: &System, map: &mut RustcEnvMap) -> Result<()> {
-    use anyhow::anyhow;
+fn get_user(system: &System) -> Option<String> {
     use sysinfo::{get_current_pid, UserExt};
 
-    let pid = get_current_pid().map_err(|e| anyhow!("{e}"))?;
-    if let Some(process) = system.process(pid) {
-        for user in system.users() {
-            if check_user(process, user) {
-                let _old = map.insert(VergenKey::SysinfoUser, user.name().to_string());
+    if let Ok(pid) = get_current_pid() {
+        if let Some(process) = system.process(pid) {
+            for user in system.users() {
+                if check_user(process, user) {
+                    return Some(user.name().to_string());
+                }
             }
         }
     }
-    Ok(())
+    None
 }
 
 #[cfg(target_os = "macos")]
-fn add_user_entry(_system: &System, _map: &mut RustcEnvMap) -> Result<()> {
-    Ok(())
+fn get_user(_system: &System) -> Option<String> {
+    None
 }
 
 #[cfg(all(not(target_os = "windows"), not(target_os = "macos")))]
@@ -408,46 +370,16 @@ fn suffix(mut curr_memory: u64) -> String {
     )
 }
 
-fn add_idempotent_entry(key: VergenKey, map: &mut RustcEnvMap, warnings: &mut Vec<String>) {
-    let _old = map.insert(key, VERGEN_IDEMPOTENT_DEFAULT.to_string());
-    warnings.push(format!("{} set to idempotent default", key.name()));
-}
-
 #[cfg(test)]
 mod test {
-    use super::{suffix, Config};
+    use super::suffix;
     use crate::{emitter::test::count_idempotent, EmitBuilder};
-    use anyhow::{anyhow, Result};
+    use anyhow::Result;
 
     #[cfg(any(target_os = "macos", target_os = "windows"))]
     const SYSINFO_COUNT: usize = 8;
     #[cfg(not(any(target_os = "macos", target_os = "windows")))]
     const SYSINFO_COUNT: usize = 9;
-
-    #[test]
-    #[serial_test::parallel]
-    fn add_warnings_is_err() -> Result<()> {
-        let config = Config::default();
-        let mut warnings = vec![];
-        assert!(config
-            .add_warnings(false, anyhow!("test"), &mut warnings)
-            .is_err());
-        Ok(())
-    }
-
-    #[test]
-    #[serial_test::parallel]
-    fn add_warnings_adds_warnings() -> Result<()> {
-        let mut config = Config::default();
-        config.enable_all();
-
-        let mut warnings = vec![];
-        assert!(config
-            .add_warnings(true, anyhow!("test"), &mut warnings)
-            .is_ok());
-        assert_eq!(9, warnings.len());
-        Ok(())
-    }
 
     #[test]
     #[serial_test::parallel]

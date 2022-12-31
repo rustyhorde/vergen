@@ -9,6 +9,7 @@
 use crate::{
     emitter::{EmitBuilder, RustcEnvMap},
     key::VergenKey,
+    utils::fns::{add_default_map_entry, add_map_entry},
 };
 use anyhow::{Error, Result};
 use std::env;
@@ -19,53 +20,6 @@ pub(crate) struct Config {
     pub(crate) cargo_features: bool,
     pub(crate) cargo_opt_level: bool,
     pub(crate) cargo_target_triple: bool,
-}
-
-impl Config {
-    #[cfg(test)]
-    fn enable_all(&mut self) {
-        self.cargo_debug = true;
-        self.cargo_features = true;
-        self.cargo_opt_level = true;
-        self.cargo_target_triple = true;
-    }
-
-    pub(crate) fn add_warnings(
-        self,
-        skip_if_error: bool,
-        e: Error,
-        warnings: &mut Vec<String>,
-    ) -> Result<()> {
-        if skip_if_error {
-            if self.cargo_debug {
-                warnings.push(format!(
-                    "Unable to add {} to output",
-                    VergenKey::CargoDebug.name()
-                ));
-            }
-            if self.cargo_features {
-                warnings.push(format!(
-                    "Unable to add {} to output",
-                    VergenKey::CargoFeatures.name()
-                ));
-            }
-            if self.cargo_opt_level {
-                warnings.push(format!(
-                    "Unable to add {} to output",
-                    VergenKey::CargoOptLevel.name()
-                ));
-            }
-            if self.cargo_target_triple {
-                warnings.push(format!(
-                    "Unable to add {} to output",
-                    VergenKey::CargoTargetTriple.name()
-                ));
-            }
-            Ok(())
-        } else {
-            Err(e)
-        }
-    }
 }
 
 /// Copnfigure the emission of `VERGEN_CARGO_*` instructions
@@ -151,23 +105,49 @@ impl EmitBuilder {
         self
     }
 
+    pub(crate) fn add_cargo_default(
+        &self,
+        e: Error,
+        fail_on_error: bool,
+        map: &mut RustcEnvMap,
+        warnings: &mut Vec<String>,
+    ) -> Result<()> {
+        if fail_on_error {
+            Err(e)
+        } else {
+            if self.cargo_config.cargo_debug {
+                add_default_map_entry(VergenKey::CargoDebug, map, warnings);
+            }
+            if self.cargo_config.cargo_features {
+                add_default_map_entry(VergenKey::CargoFeatures, map, warnings);
+            }
+            if self.cargo_config.cargo_opt_level {
+                add_default_map_entry(VergenKey::CargoOptLevel, map, warnings);
+            }
+            if self.cargo_config.cargo_target_triple {
+                add_default_map_entry(VergenKey::CargoTargetTriple, map, warnings);
+            }
+            Ok(())
+        }
+    }
+
     pub(crate) fn add_cargo_map_entries(&self, map: &mut RustcEnvMap) -> Result<()> {
         if self.cargo_config.cargo_debug {
-            let _old = map.insert(VergenKey::CargoDebug, env::var("DEBUG")?);
+            add_map_entry(VergenKey::CargoDebug, env::var("DEBUG")?, map);
         }
 
         if self.cargo_config.cargo_features {
             let features: Vec<String> = env::vars().filter_map(is_cargo_feature).collect();
             let feature_str = features.as_slice().join(",");
-            let _old = map.insert(VergenKey::CargoFeatures, feature_str);
+            add_map_entry(VergenKey::CargoFeatures, feature_str, map);
         }
 
         if self.cargo_config.cargo_opt_level {
-            let _old = map.insert(VergenKey::CargoOptLevel, env::var("OPT_LEVEL")?);
+            add_map_entry(VergenKey::CargoOptLevel, env::var("OPT_LEVEL")?, map);
         }
 
         if self.cargo_config.cargo_target_triple {
-            let _old = map.insert(VergenKey::CargoTargetTriple, env::var("TARGET")?);
+            add_map_entry(VergenKey::CargoTargetTriple, env::var("TARGET")?, map);
         }
 
         Ok(())
@@ -185,38 +165,12 @@ fn is_cargo_feature(var: (String, String)) -> Option<String> {
 
 #[cfg(test)]
 mod test {
-    use super::Config;
     use crate::{
         emitter::test::count_idempotent,
         utils::testutils::{setup, teardown},
         EmitBuilder,
     };
-    use anyhow::{anyhow, Result};
-
-    #[test]
-    #[serial_test::parallel]
-    fn add_warnings_is_err() -> Result<()> {
-        let config = Config::default();
-        let mut warnings = vec![];
-        assert!(config
-            .add_warnings(false, anyhow!("test"), &mut warnings)
-            .is_err());
-        Ok(())
-    }
-
-    #[test]
-    #[serial_test::parallel]
-    fn add_warnings_adds_warnings() -> Result<()> {
-        let mut config = Config::default();
-        config.enable_all();
-
-        let mut warnings = vec![];
-        assert!(config
-            .add_warnings(true, anyhow!("test"), &mut warnings)
-            .is_ok());
-        assert_eq!(4, warnings.len());
-        Ok(())
-    }
+    use anyhow::Result;
 
     #[test]
     #[serial_test::serial]

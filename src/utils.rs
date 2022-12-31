@@ -26,3 +26,33 @@ pub(crate) mod testutils {
         env::remove_var("TARGET");
     }
 }
+
+#[cfg(any(
+    feature = "build",
+    feature = "cargo",
+    all(
+        feature = "git",
+        any(feature = "gitcl", feature = "git2", feature = "gix")
+    ),
+    feature = "rustc",
+    feature = "si",
+))]
+pub(crate) mod fns {
+    use crate::{constants::VERGEN_IDEMPOTENT_DEFAULT, emitter::RustcEnvMap, key::VergenKey};
+
+    pub(crate) fn add_default_map_entry(
+        key: VergenKey,
+        map: &mut RustcEnvMap,
+        warnings: &mut Vec<String>,
+    ) {
+        let _old = map.insert(key, VERGEN_IDEMPOTENT_DEFAULT.to_string());
+        warnings.push(format!("{} set to default", key.name()));
+    }
+
+    pub(crate) fn add_map_entry<T>(key: VergenKey, value: T, map: &mut RustcEnvMap)
+    where
+        T: Into<String>,
+    {
+        let _old = map.insert(key, value.into());
+    }
+}

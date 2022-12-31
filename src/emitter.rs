@@ -41,12 +41,18 @@ pub(crate) struct Emitter {
 impl Emitter {
     #[cfg(feature = "build")]
     fn add_build_entries(&mut self, builder: &EmitBuilder) -> Result<()> {
-        let config = builder.build_config;
-        let skip = builder.skip_if_error;
         let idem = builder.idempotent;
+        let fail_on_error = builder.fail_on_error;
         builder
             .add_build_map_entries(idem, &mut self.cargo_rustc_env_map, &mut self.warnings)
-            .or_else(|e| config.add_warnings(skip, e, &mut self.warnings))
+            .or_else(|e| {
+                builder.add_build_default(
+                    e,
+                    fail_on_error,
+                    &mut self.cargo_rustc_env_map,
+                    &mut self.warnings,
+                )
+            })
     }
 
     #[cfg(not(feature = "build"))]
@@ -59,32 +65,19 @@ impl Emitter {
         Ok(())
     }
 
-    #[cfg(feature = "rustc")]
-    fn add_rustc_entries(&mut self, builder: &EmitBuilder) -> Result<()> {
-        let config = builder.rustc_config;
-        let skip = builder.skip_if_error;
-        builder
-            .add_rustc_map_entries(&mut self.cargo_rustc_env_map)
-            .or_else(|e| config.add_warnings(skip, e, &mut self.warnings))
-    }
-
-    #[cfg(not(feature = "rustc"))]
-    #[allow(
-        clippy::unnecessary_wraps,
-        clippy::trivially_copy_pass_by_ref,
-        clippy::unused_self
-    )]
-    fn add_rustc_entries(&mut self, _builder: &EmitBuilder) -> Result<()> {
-        Ok(())
-    }
-
     #[cfg(feature = "cargo")]
     fn add_cargo_entries(&mut self, builder: &EmitBuilder) -> Result<()> {
-        let config = builder.cargo_config;
-        let skip = builder.skip_if_error;
+        let fail_on_error = builder.fail_on_error;
         builder
             .add_cargo_map_entries(&mut self.cargo_rustc_env_map)
-            .or_else(|e| config.add_warnings(skip, e, &mut self.warnings))
+            .or_else(|e| {
+                builder.add_cargo_default(
+                    e,
+                    fail_on_error,
+                    &mut self.cargo_rustc_env_map,
+                    &mut self.warnings,
+                )
+            })
     }
 
     #[cfg(not(feature = "cargo"))]
@@ -102,16 +95,22 @@ impl Emitter {
         any(feature = "git2", feature = "gitcl", feature = "gix")
     ))]
     fn add_git_entries(&mut self, builder: &EmitBuilder) -> Result<()> {
-        let config = builder.git_config;
         let idem = builder.idempotent;
-        let skip = builder.skip_if_error;
+        let fail_on_error = builder.fail_on_error;
         builder
             .add_git_map_entries(
                 idem,
                 &mut self.cargo_rustc_env_map,
                 &mut self.rerun_if_changed,
             )
-            .or_else(|e| config.add_warnings(skip, e, &mut self.warnings))
+            .or_else(|e| {
+                builder.add_git_default(
+                    e,
+                    fail_on_error,
+                    &mut self.cargo_rustc_env_map,
+                    &mut self.warnings,
+                )
+            })
     }
 
     #[cfg(not(all(
@@ -127,14 +126,45 @@ impl Emitter {
         Ok(())
     }
 
+    #[cfg(feature = "rustc")]
+    fn add_rustc_entries(&mut self, builder: &EmitBuilder) -> Result<()> {
+        let fail_on_error = builder.fail_on_error;
+        builder
+            .add_rustc_map_entries(&mut self.cargo_rustc_env_map, &mut self.warnings)
+            .or_else(|e| {
+                builder.add_rustc_default(
+                    e,
+                    fail_on_error,
+                    &mut self.cargo_rustc_env_map,
+                    &mut self.warnings,
+                )
+            })
+    }
+
+    #[cfg(not(feature = "rustc"))]
+    #[allow(
+        clippy::unnecessary_wraps,
+        clippy::trivially_copy_pass_by_ref,
+        clippy::unused_self
+    )]
+    fn add_rustc_entries(&mut self, _builder: &EmitBuilder) -> Result<()> {
+        Ok(())
+    }
+
     #[cfg(feature = "si")]
     fn add_si_entries(&mut self, builder: &EmitBuilder) -> Result<()> {
-        let config = builder.sysinfo_config;
         let idem = builder.idempotent;
-        let skip = builder.skip_if_error;
+        let fail_on_error = builder.fail_on_error;
         builder
             .add_sysinfo_map_entries(idem, &mut self.cargo_rustc_env_map, &mut self.warnings)
-            .or_else(|e| config.add_warnings(skip, e, &mut self.warnings))
+            .or_else(|e| {
+                builder.add_sysinfo_default(
+                    e,
+                    fail_on_error,
+                    &mut self.cargo_rustc_env_map,
+                    &mut self.warnings,
+                )
+            })
     }
 
     #[cfg(not(feature = "si"))]
@@ -219,7 +249,7 @@ impl Emitter {
 #[derive(Clone, Copy, Debug)]
 pub struct EmitBuilder {
     idempotent: bool,
-    skip_if_error: bool,
+    fail_on_error: bool,
     #[cfg(feature = "build")]
     pub(crate) build_config: BuildConfig,
     #[cfg(feature = "cargo")]
@@ -240,10 +270,9 @@ impl EmitBuilder {
     #[must_use]
     pub fn builder() -> Self {
         let idempotent = matches!(env::var("VERGEN_IDEMPOTENT"), Ok(_val));
-        let skip_if_error = matches!(env::var("VERGEN_SKIP_IF_ERROR"), Ok(_val));
         Self {
             idempotent,
-            skip_if_error,
+            fail_on_error: false,
             #[cfg(feature = "build")]
             build_config: BuildConfig::default(),
             #[cfg(feature = "cargo")]
@@ -334,20 +363,18 @@ EmitBuilder::builder().idempotent().all_build().emit()?;
         self
     }
 
-    /// Enable the `skip_if_error` feature
+    /// Enable the `fail_on_error` feature
     ///
-    /// **NOTE** - This feature can also be enabled via the `VERGEN_SKIP_IF_ERROR`
-    /// environment variable.
+    /// By default `vergen` will emit the instructions you requested.  If for some
+    /// reason those instructions cannot be generated correctly, placeholder values
+    /// will be used instead.   `vergen` will also emit [`cargo:warning`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#cargo-warning)
+    /// instructions notifying you this has happened.
     ///
-    /// **NOTE** - The [`gen`](Self::emit) function can still potentially fail
-    /// with an [`io`](std::io::Error) error writing to stdout, so the library
-    /// still returns a [`Result`](anyhow::Result) that should be handled.
+    /// For example, if you configure `vergen` to emit `VERGEN_GIT_*` instructions and
+    /// you run a build from a source tarball with no `.git` directory, the instructions
+    /// will be populated with placeholder values, rather than information gleaned through git.
     ///
-    /// This feature will cause `vergen` to skip any cargo instructions that would
-    /// normally generate an error.  Instead, a [`cargo:warning`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#cargo-warning) instruction will
-    /// be generated.  If you use this feature, you should use the [`option_env!`](std::option_env!)
-    /// macro rather than the [`env!`](std::env!) macro when reading the variables
-    /// in your code as they may not be set.
+    /// You can turn off this behavior by enabling `fail_on_error`.
     ///
     /// # Example
     ///
@@ -360,23 +387,14 @@ EmitBuilder::builder().idempotent().all_build().emit()?;
     #[cfg_attr(
         feature = "build",
         doc = r##"
-EmitBuilder::builder().skip_if_error().all_build().emit()?;
+EmitBuilder::builder().fail_on_error().all_build().emit()?;
 "##
     )]
-    /// // or
-    /// env::set_var("VERGEN_SKIP_IF_ERROR", "true");
-    #[cfg_attr(
-        feature = "build",
-        doc = r##"
-EmitBuilder::builder().all_build().emit()?;
-"##
-    )]
-    /// # env::remove_var("VERGEN_SKIP_IF_ERROR");
     /// #   Ok(())
     /// # }
     /// ```
-    pub fn skip_if_error(&mut self) -> &mut Self {
-        self.skip_if_error = true;
+    pub fn fail_on_error(&mut self) -> &mut Self {
+        self.fail_on_error = true;
         self
     }
 
@@ -384,7 +402,7 @@ EmitBuilder::builder().all_build().emit()?;
     /// [build script](https://doc.rust-lang.org/cargo/reference/build-scripts.html#outputs-of-the-build-script) outputs.
     ///
     /// **NOTE** - [`cargo:warning`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#cargo-warning) outputs
-    /// may also be emitted if the [`skip_if_error`](Self::skip_if_error) feature is enabled.
+    /// may also be emitted if the [`fail_on_error`](Self::fail_on_error) feature is not enabled.
     ///
     /// # Errors
     /// * The [`writeln!`](std::writeln!) macro can throw a [`std::io::Error`]
@@ -570,7 +588,7 @@ pub(crate) mod test {
         let mut stdout_buf = vec![];
         EmitBuilder::builder()
             .idempotent()
-            .skip_if_error()
+            .fail_on_error()
             .all_build()
             .all_cargo()
             .all_rustc()

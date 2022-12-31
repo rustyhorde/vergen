@@ -9,6 +9,7 @@
 use crate::{
     emitter::{EmitBuilder, RustcEnvMap},
     key::VergenKey,
+    utils::fns::{add_default_map_entry, add_map_entry},
 };
 use anyhow::{anyhow, Error, Result};
 #[cfg(not(target_env = "msvc"))]
@@ -41,22 +42,6 @@ pub(crate) struct Config {
     // git rev-parse HEAD (optionally with --short)
     pub(crate) git_sha: bool,
     git_sha_short: bool,
-}
-
-impl Config {
-    #[cfg(test)]
-    fn enable_all(&mut self) {
-        super::enable_all(self);
-    }
-
-    pub(crate) fn add_warnings(
-        self,
-        skip_if_error: bool,
-        e: Error,
-        warnings: &mut Vec<String>,
-    ) -> Result<()> {
-        super::add_warnings(self, skip_if_error, e, warnings)
-    }
 }
 
 // This funkiness allows the command to be output in the docs
@@ -315,6 +300,47 @@ impl EmitBuilder {
         self
     }
 
+    pub(crate) fn add_git_default(
+        &self,
+        e: Error,
+        fail_on_error: bool,
+        map: &mut RustcEnvMap,
+        warnings: &mut Vec<String>,
+    ) -> Result<()> {
+        if fail_on_error {
+            Err(e)
+        } else {
+            if self.git_config.git_branch {
+                add_default_map_entry(VergenKey::GitBranch, map, warnings);
+            }
+            if self.git_config.git_commit_author_email {
+                add_default_map_entry(VergenKey::GitCommitAuthorEmail, map, warnings);
+            }
+            if self.git_config.git_commit_author_name {
+                add_default_map_entry(VergenKey::GitCommitAuthorName, map, warnings);
+            }
+            if self.git_config.git_commit_count {
+                add_default_map_entry(VergenKey::GitCommitCount, map, warnings);
+            }
+            if self.git_config.git_commit_date {
+                add_default_map_entry(VergenKey::GitCommitDate, map, warnings);
+            }
+            if self.git_config.git_commit_message {
+                add_default_map_entry(VergenKey::GitCommitMessage, map, warnings);
+            }
+            if self.git_config.git_commit_timestamp {
+                add_default_map_entry(VergenKey::GitCommitTimestamp, map, warnings);
+            }
+            if self.git_config.git_describe {
+                add_default_map_entry(VergenKey::GitDescribe, map, warnings);
+            }
+            if self.git_config.git_sha {
+                add_default_map_entry(VergenKey::GitSha, map, warnings);
+            }
+            Ok(())
+        }
+    }
+
     pub(crate) fn add_git_map_entries(
         &self,
         idempotent: bool,
@@ -442,7 +468,7 @@ fn add_git_cmd_entry(cmd: &str, key: VergenKey, map: &mut RustcEnvMap) -> Result
             .trim()
             .trim_matches('\'')
             .to_string();
-        let _old = map.insert(key, stdout);
+        add_map_entry(key, stdout, map);
     } else {
         return Err(anyhow!("Failed to run '{cmd}'!"));
     }
@@ -479,9 +505,9 @@ fn add_rerun_if_changed(rerun_if_changed: &mut Vec<String>) -> Result<()> {
 
 #[cfg(test)]
 mod test {
-    use super::{add_git_cmd_entry, check_git, check_inside_git_worktree, Config};
+    use super::{add_git_cmd_entry, check_git, check_inside_git_worktree};
     use crate::{emitter::test::count_idempotent, key::VergenKey, EmitBuilder};
-    use anyhow::{anyhow, Result};
+    use anyhow::Result;
     use std::{collections::BTreeMap, env};
 
     #[test]
@@ -523,31 +549,6 @@ mod test {
         if let Ok(curr_shell) = curr_shell {
             env::set_var("SHELL", curr_shell);
         }
-        Ok(())
-    }
-
-    #[test]
-    #[serial_test::parallel]
-    fn add_warnings_is_err() -> Result<()> {
-        let config = Config::default();
-        let mut warnings = vec![];
-        assert!(config
-            .add_warnings(false, anyhow!("test"), &mut warnings)
-            .is_err());
-        Ok(())
-    }
-
-    #[test]
-    #[serial_test::parallel]
-    fn add_warnings_adds_warnings() -> Result<()> {
-        let mut config = Config::default();
-        config.enable_all();
-
-        let mut warnings = vec![];
-        assert!(config
-            .add_warnings(true, anyhow!("test"), &mut warnings)
-            .is_ok());
-        assert_eq!(9, warnings.len());
         Ok(())
     }
 

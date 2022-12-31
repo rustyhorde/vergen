@@ -1,7 +1,7 @@
 use crate::{
-    constants::VERGEN_IDEMPOTENT_DEFAULT,
     emitter::{EmitBuilder, RustcEnvMap},
     key::VergenKey,
+    utils::fns::{add_default_map_entry, add_map_entry},
 };
 use anyhow::{Error, Result};
 use std::{env, str::FromStr};
@@ -14,39 +14,6 @@ use time::{
 pub(crate) struct Config {
     pub(crate) build_date: bool,
     pub(crate) build_timestamp: bool,
-}
-
-impl Config {
-    #[cfg(test)]
-    fn enable_all(&mut self) {
-        self.build_date = true;
-        self.build_timestamp = true;
-    }
-
-    pub(crate) fn add_warnings(
-        self,
-        skip_if_error: bool,
-        e: Error,
-        warnings: &mut Vec<String>,
-    ) -> Result<()> {
-        if skip_if_error {
-            if self.build_date {
-                warnings.push(format!(
-                    "Unable to add {} to output",
-                    VergenKey::BuildDate.name()
-                ));
-            }
-            if self.build_timestamp {
-                warnings.push(format!(
-                    "Unable to add {} to output",
-                    VergenKey::BuildTimestamp.name()
-                ));
-            }
-            Ok(())
-        } else {
-            Err(e)
-        }
-    }
 }
 
 /// The `VERGEN_BUILD_*` configuration features
@@ -84,6 +51,26 @@ impl EmitBuilder {
     pub fn build_timestamp(&mut self) -> &mut Self {
         self.build_config.build_timestamp = true;
         self
+    }
+
+    pub(crate) fn add_build_default(
+        &self,
+        e: Error,
+        fail_on_error: bool,
+        map: &mut RustcEnvMap,
+        warnings: &mut Vec<String>,
+    ) -> Result<()> {
+        if fail_on_error {
+            Err(e)
+        } else {
+            if self.build_config.build_date {
+                add_default_map_entry(VergenKey::BuildDate, map, warnings);
+            }
+            if self.build_config.build_timestamp {
+                add_default_map_entry(VergenKey::BuildTimestamp, map, warnings);
+            }
+            Ok(())
+        }
     }
 
     pub(crate) fn add_build_map_entries(
@@ -126,14 +113,10 @@ impl EmitBuilder {
     ) -> Result<()> {
         if self.build_config.build_date {
             if idempotent && !source_date_epoch {
-                warnings.push(format!(
-                    "{} set to idempotent default",
-                    VergenKey::BuildDate.name()
-                ));
-                let _old = map.insert(VergenKey::BuildDate, VERGEN_IDEMPOTENT_DEFAULT.to_string());
+                add_default_map_entry(VergenKey::BuildDate, map, warnings);
             } else {
                 let format = format_description::parse("[year]-[month]-[day]")?;
-                let _old = map.insert(VergenKey::BuildDate, ts.format(&format)?);
+                add_map_entry(VergenKey::BuildDate, ts.format(&format)?, map);
             }
         }
         Ok(())
@@ -149,16 +132,9 @@ impl EmitBuilder {
     ) -> Result<()> {
         if self.build_config.build_timestamp {
             if idempotent && !source_date_epoch {
-                warnings.push(format!(
-                    "{} set to idempotent default",
-                    VergenKey::BuildTimestamp.name()
-                ));
-                let _old = map.insert(
-                    VergenKey::BuildTimestamp,
-                    VERGEN_IDEMPOTENT_DEFAULT.to_string(),
-                );
+                add_default_map_entry(VergenKey::BuildTimestamp, map, warnings);
             } else {
-                let _old = map.insert(VergenKey::BuildTimestamp, ts.format(&Rfc3339)?);
+                add_map_entry(VergenKey::BuildTimestamp, ts.format(&Rfc3339)?, map);
             }
         }
         Ok(())
@@ -167,35 +143,9 @@ impl EmitBuilder {
 
 #[cfg(test)]
 mod test {
-    use super::Config;
     use crate::{emitter::test::count_idempotent, EmitBuilder};
-    use anyhow::{anyhow, Result};
+    use anyhow::Result;
     use std::env;
-
-    #[test]
-    #[serial_test::parallel]
-    fn add_warnings_is_err() -> Result<()> {
-        let config = Config::default();
-        let mut warnings = vec![];
-        assert!(config
-            .add_warnings(false, anyhow!("test"), &mut warnings)
-            .is_err());
-        Ok(())
-    }
-
-    #[test]
-    #[serial_test::parallel]
-    fn add_warnings_adds_warnings() -> Result<()> {
-        let mut config = Config::default();
-        config.enable_all();
-
-        let mut warnings = vec![];
-        assert!(config
-            .add_warnings(true, anyhow!("test"), &mut warnings)
-            .is_ok());
-        assert_eq!(2, warnings.len());
-        Ok(())
-    }
 
     #[test]
     #[serial_test::parallel]
@@ -258,6 +208,7 @@ mod test {
         let mut stdout_buf = vec![];
         assert!(EmitBuilder::builder()
             .idempotent()
+            .fail_on_error()
             .all_build()
             .emit_to(&mut stdout_buf)
             .is_err());
@@ -280,6 +231,7 @@ mod test {
         let mut stdout_buf = vec![];
         assert!(EmitBuilder::builder()
             .idempotent()
+            .fail_on_error()
             .all_build()
             .emit_to(&mut stdout_buf)
             .is_err());

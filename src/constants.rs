@@ -11,15 +11,13 @@
 // Idempotent Constant
 #[cfg(any(
     feature = "build",
-    feature = "si",
-    all(test, any(feature = "cargo", feature = "rustc")),
+    feature = "cargo",
     all(
-        test,
-        all(
-            feature = "git",
-            any(feature = "git2", feature = "gitcl", feature = "gix")
-        )
-    )
+        feature = "git",
+        any(feature = "git2", feature = "gitcl", feature = "gix")
+    ),
+    feature = "rustc",
+    feature = "si",
 ))]
 pub(crate) const VERGEN_IDEMPOTENT_DEFAULT: &str = "VERGEN_IDEMPOTENT_OUTPUT";
 
