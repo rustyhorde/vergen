@@ -6,13 +6,19 @@
 // option. All files in the project carrying such notice may not be copied,
 // modified, or distributed except according to those terms.
 
-use crate::key::VergenKey;
 use anyhow::Result;
 use std::{
-    collections::BTreeMap,
     env,
     io::{self, Write},
 };
+#[cfg(any(
+    feature = "build",
+    feature = "cargo",
+    feature = "git",
+    feature = "rustc",
+    feature = "si"
+))]
+use {crate::key::VergenKey, std::collections::BTreeMap};
 
 #[cfg(feature = "build")]
 use crate::feature::build::Config as BuildConfig;
@@ -28,13 +34,41 @@ use crate::feature::rustc::Config as RustcConfig;
 #[cfg(feature = "si")]
 use crate::feature::si::Config as SysinfoConfig;
 
+#[cfg(any(
+    feature = "build",
+    feature = "cargo",
+    feature = "git",
+    feature = "rustc",
+    feature = "si"
+))]
 pub(crate) type RustcEnvMap = BTreeMap<VergenKey, String>;
 
 // Everything that can be emitted as cargo build instructions
 #[derive(Clone, Debug, Default)]
 pub(crate) struct Emitter {
+    #[cfg(any(
+        feature = "build",
+        feature = "cargo",
+        feature = "git",
+        feature = "rustc",
+        feature = "si"
+    ))]
     pub(crate) cargo_rustc_env_map: RustcEnvMap,
+    #[cfg(any(
+        feature = "build",
+        feature = "cargo",
+        feature = "git",
+        feature = "rustc",
+        feature = "si"
+    ))]
     pub(crate) rerun_if_changed: Vec<String>,
+    #[cfg(any(
+        feature = "build",
+        feature = "cargo",
+        feature = "git",
+        feature = "rustc",
+        feature = "si"
+    ))]
     pub(crate) warnings: Vec<String>,
 }
 
@@ -184,14 +218,6 @@ impl Emitter {
     where
         T: Write,
     {
-        // Emit the 'cargo:rustc-env' instructions
-        for _v in self.cargo_rustc_env_map.values() {}
-
-        // Emit the `cargo:warning` instructions
-        for _warning in &self.warnings {}
-
-        // Emit the 'cargo:rerun-if-changed' instructions for the git paths (if added)
-        for _path in &self.rerun_if_changed {}
         Ok(())
     }
 
