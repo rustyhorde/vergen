@@ -198,4 +198,26 @@ mod test {
         teardown();
         Ok(())
     }
+
+    #[test]
+    #[serial_test::parallel]
+    fn bad_env_fails() {
+        assert!(EmitBuilder::builder()
+            .fail_on_error()
+            .all_cargo()
+            .test_emit()
+            .is_err());
+    }
+
+    #[test]
+    #[serial_test::parallel]
+    fn bad_env_emits_default() -> Result<()> {
+        let emit_res = EmitBuilder::builder().all_cargo().test_emit();
+        assert!(emit_res.is_ok());
+        let emit = emit_res?;
+        assert_eq!(4, emit.cargo_rustc_env_map.len());
+        assert_eq!(4, count_idempotent(emit.cargo_rustc_env_map));
+        assert_eq!(4, emit.warnings.len());
+        Ok(())
+    }
 }
