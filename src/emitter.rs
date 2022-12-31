@@ -152,19 +152,9 @@ impl Emitter {
     }
 
     #[cfg(feature = "si")]
-    fn add_si_entries(&mut self, builder: &EmitBuilder) -> Result<()> {
+    fn add_si_entries(&mut self, builder: &EmitBuilder) {
         let idem = builder.idempotent;
-        let fail_on_error = builder.fail_on_error;
-        builder
-            .add_sysinfo_map_entries(idem, &mut self.cargo_rustc_env_map, &mut self.warnings)
-            .or_else(|e| {
-                builder.add_sysinfo_default(
-                    e,
-                    fail_on_error,
-                    &mut self.cargo_rustc_env_map,
-                    &mut self.warnings,
-                )
-            })
+        builder.add_sysinfo_map_entries(idem, &mut self.cargo_rustc_env_map, &mut self.warnings);
     }
 
     #[cfg(not(feature = "si"))]
@@ -173,9 +163,7 @@ impl Emitter {
         clippy::trivially_copy_pass_by_ref,
         clippy::unused_self
     )]
-    fn add_si_entries(&mut self, _builder: &EmitBuilder) -> Result<()> {
-        Ok(())
-    }
+    fn add_si_entries(&mut self, _builder: &EmitBuilder) {}
 
     fn emit_output<T>(&self, stdout: &mut T) -> Result<()>
     where
@@ -520,7 +508,7 @@ EmitBuilder::builder()
         config.add_cargo_entries(&self)?;
         config.add_git_entries(&self)?;
         config.add_rustc_entries(&self)?;
-        config.add_si_entries(&self)?;
+        config.add_si_entries(&self);
         Ok(config)
     }
 }

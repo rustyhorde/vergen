@@ -11,7 +11,6 @@ use crate::{
     key::VergenKey,
     utils::fns::{add_default_map_entry, add_map_entry},
 };
-use anyhow::{Error, Result};
 use sysinfo::{CpuExt, System, SystemExt};
 #[cfg(not(target_os = "macos"))]
 use sysinfo::{Process, User};
@@ -123,53 +122,12 @@ impl EmitBuilder {
         self
     }
 
-    pub(crate) fn add_sysinfo_default(
-        &self,
-        e: Error,
-        fail_on_error: bool,
-        map: &mut RustcEnvMap,
-        warnings: &mut Vec<String>,
-    ) -> Result<()> {
-        if fail_on_error {
-            Err(e)
-        } else {
-            if self.sysinfo_config.si_cpu_brand {
-                add_default_map_entry(VergenKey::SysinfoCpuBrand, map, warnings);
-            }
-            if self.sysinfo_config.si_cpu_core_count {
-                add_default_map_entry(VergenKey::SysinfoCpuCoreCount, map, warnings);
-            }
-            if self.sysinfo_config.si_cpu_frequency {
-                add_default_map_entry(VergenKey::SysinfoCpuFrequency, map, warnings);
-            }
-            if self.sysinfo_config.si_cpu_name {
-                add_default_map_entry(VergenKey::SysinfoCpuName, map, warnings);
-            }
-            if self.sysinfo_config.si_cpu_vendor {
-                add_default_map_entry(VergenKey::SysinfoCpuVendor, map, warnings);
-            }
-            if self.sysinfo_config.si_memory {
-                add_default_map_entry(VergenKey::SysinfoMemory, map, warnings);
-            }
-            if self.sysinfo_config.si_name {
-                add_default_map_entry(VergenKey::SysinfoName, map, warnings);
-            }
-            if self.sysinfo_config.si_os_version {
-                add_default_map_entry(VergenKey::SysinfoOsVersion, map, warnings);
-            }
-            if self.sysinfo_config.si_user {
-                add_default_map_entry(VergenKey::SysinfoUser, map, warnings);
-            }
-            Ok(())
-        }
-    }
-
     pub(crate) fn add_sysinfo_map_entries(
         &self,
         idempotent: bool,
         map: &mut RustcEnvMap,
         warnings: &mut Vec<String>,
-    ) -> Result<()> {
+    ) {
         let system = setup_system();
 
         if self.sysinfo_config.si_name {
@@ -277,7 +235,6 @@ impl EmitBuilder {
                 warnings,
             );
         }
-        Ok(())
     }
 }
 
