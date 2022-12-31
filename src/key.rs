@@ -19,7 +19,7 @@ mod keys {
     #[cfg(feature = "build")]
     use crate::constants::{BUILD_DATE_NAME, BUILD_TIMESTAMP_NAME};
     #[cfg(feature = "cargo")]
-    use crate::constants::{CARGO_FEATURES, CARGO_PROFILE, CARGO_TARGET_TRIPLE};
+    use crate::constants::{CARGO_DEBUG, CARGO_FEATURES, CARGO_OPT_LEVEL, CARGO_TARGET_TRIPLE};
     #[cfg(all(
         feature = "git",
         any(feature = "gitcl", feature = "git2", feature = "gix")
@@ -49,15 +49,18 @@ mod keys {
         /// The build timestamp. (VERGEN_BUILD_TIMESTAMP)
         #[cfg(feature = "build")]
         BuildTimestamp,
-        /// The cargo target triple (VERGEN_CARGO_TARGET_TRIPLE)
+        /// The cargo debug flag (VERGEN_CARGO_DEBUG)
         #[cfg(feature = "cargo")]
-        CargoTargetTriple,
-        /// The cargo profile (VERGEN_CARGO_PROFILE)
-        #[cfg(feature = "cargo")]
-        CargoProfile,
+        CargoDebug,
         /// The cargo features (VERGEN_CARGO_FEATURES)
         #[cfg(feature = "cargo")]
         CargoFeatures,
+        /// The cargo opt level (VERGEN_CARGO_OPT_LEVEL)
+        #[cfg(feature = "cargo")]
+        CargoOptLevel,
+        /// The cargo target triple (VERGEN_CARGO_TARGET_TRIPLE)
+        #[cfg(feature = "cargo")]
+        CargoTargetTriple,
         /// The current working branch name (VERGEN_GIT_BRANCH)
         #[cfg(all(
             feature = "git",
@@ -168,11 +171,13 @@ mod keys {
                 #[cfg(feature = "build")]
                 VergenKey::BuildTimestamp => BUILD_TIMESTAMP_NAME,
                 #[cfg(feature = "cargo")]
-                VergenKey::CargoTargetTriple => CARGO_TARGET_TRIPLE,
-                #[cfg(feature = "cargo")]
-                VergenKey::CargoProfile => CARGO_PROFILE,
+                VergenKey::CargoDebug => CARGO_DEBUG,
                 #[cfg(feature = "cargo")]
                 VergenKey::CargoFeatures => CARGO_FEATURES,
+                #[cfg(feature = "cargo")]
+                VergenKey::CargoOptLevel => CARGO_OPT_LEVEL,
+                #[cfg(feature = "cargo")]
+                VergenKey::CargoTargetTriple => CARGO_TARGET_TRIPLE,
                 #[cfg(all(
                     feature = "git",
                     any(feature = "gitcl", feature = "git2", feature = "gix")

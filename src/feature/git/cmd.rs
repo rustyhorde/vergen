@@ -93,7 +93,7 @@ const BRANCH_CMD: &str = branch_cmd!();
 /// ```
 #[cfg_attr(docsrs, doc(cfg(feature = "git")))]
 impl EmitBuilder {
-    /// Enable all of the `VERGEN_GIT_*` options
+    /// Emit all of the `VERGEN_GIT_*` instructions
     pub fn all_git(&mut self) -> &mut Self {
         self.git_branch()
             .git_commit_author_email()
@@ -106,9 +106,30 @@ impl EmitBuilder {
             .git_sha(false)
     }
 
-    /// Emit the git branch instruction
+    fn any(&self) -> bool {
+        let cfg = self.git_config;
+
+        cfg.git_branch
+            || cfg.git_commit_author_email
+            || cfg.git_commit_author_name
+            || cfg.git_commit_count
+            || cfg.git_commit_date
+            || cfg.git_commit_message
+            || cfg.git_commit_timestamp
+            || cfg.git_describe
+            || cfg.git_sha
+    }
+
+    /// Emit the current git branch
     ///
-    #[doc = concat!("Runs **'", branch_cmd!(), "'**")]
+    /// ```text
+    /// cargo:rustc-env=VERGEN_GIT_BRANCH=<BRANCH_NAME>
+    /// ```
+    ///
+    /// The following command outputs the current branch
+    /// ```text
+    #[doc = concat!(branch_cmd!())]
+    /// ```
     pub fn git_branch(&mut self) -> &mut Self {
         self.git_config.git_branch = true;
         self
@@ -181,7 +202,7 @@ impl EmitBuilder {
     ) -> Result<()> {
         check_git("git -v").and_then(check_inside_git_worktree)?;
 
-        if !idempotent {
+        if !idempotent && self.any() {
             add_rerun_if_changed(rerun_if_changed)?;
         }
 

@@ -15,16 +15,18 @@ use std::env;
 
 #[derive(Clone, Copy, Debug, Default)]
 pub(crate) struct Config {
+    pub(crate) cargo_debug: bool,
     pub(crate) cargo_features: bool,
-    pub(crate) cargo_profile: bool,
+    pub(crate) cargo_opt_level: bool,
     pub(crate) cargo_target_triple: bool,
 }
 
 impl Config {
     #[cfg(test)]
     fn enable_all(&mut self) {
+        self.cargo_debug = true;
         self.cargo_features = true;
-        self.cargo_profile = true;
+        self.cargo_opt_level = true;
         self.cargo_target_triple = true;
     }
 
@@ -35,16 +37,22 @@ impl Config {
         warnings: &mut Vec<String>,
     ) -> Result<()> {
         if skip_if_error {
+            if self.cargo_debug {
+                warnings.push(format!(
+                    "Unable to add {} to output",
+                    VergenKey::CargoDebug.name()
+                ));
+            }
             if self.cargo_features {
                 warnings.push(format!(
                     "Unable to add {} to output",
                     VergenKey::CargoFeatures.name()
                 ));
             }
-            if self.cargo_profile {
+            if self.cargo_opt_level {
                 warnings.push(format!(
                     "Unable to add {} to output",
-                    VergenKey::CargoProfile.name()
+                    VergenKey::CargoOptLevel.name()
                 ));
             }
             if self.cargo_target_triple {
@@ -60,12 +68,13 @@ impl Config {
     }
 }
 
-/// The `VERGEN_CARGO_*` configuration features
+/// Copnfigure the emission of `VERGEN_CARGO_*` instructions
 ///
 /// | Variable | Sample |
 /// | -------  | ------ |
+/// | `VERGEN_CARGO_DEBUG` | true |
 /// | `VERGEN_CARGO_FEATURES` | git,build |
-/// | `VERGEN_CARGO_PROFILE` | debug |
+/// | `VERGEN_CARGO_OPT_LEVEL` | 1 |
 /// | `VERGEN_CARGO_TARGET_TRIPLE` | x86_64-unknown-linux-gnu |
 ///
 /// # Example
@@ -76,48 +85,75 @@ impl Config {
 /// # use vergen::EmitBuilder;
 /// #
 /// # fn main() -> Result<()> {
-/// # env::set_var("TARGET", "x86_64-unknown-linux-gnu");
-/// # env::set_var("PROFILE", "build,rustc");
 /// # env::set_var("CARGO_FEATURE_BUILD", "");
+/// # env::set_var("DEBUG", "true");
+/// # env::set_var("OPT_LEVEL", "1");
+/// # env::set_var("TARGET", "x86_64-unknown-linux-gnu");
 /// EmitBuilder::builder().all_cargo().emit()?;
-/// # env::remove_var("TARGET");
-/// # env::remove_var("PROFILE");
 /// # env::remove_var("CARGO_FEATURE_BUILD");
+/// # env::remove_var("DEBUG");
+/// # env::remove_var("OPT_LEVEL");
+/// # env::remove_var("TARGET");
 /// #   Ok(())
 /// # }
 /// ```
 #[cfg_attr(docsrs, doc(cfg(feature = "cargo")))]
 impl EmitBuilder {
-    /// Enable all of the `VERGEN_CARGO_*` options
+    /// Emit all of the `VERGEN_CARGO_*` instructions
     pub fn all_cargo(&mut self) -> &mut Self {
-        self.cargo_features().cargo_profile().cargo_target_triple()
+        self.cargo_debug()
+            .cargo_features()
+            .cargo_opt_level()
+            .cargo_target_triple()
     }
 
-    /// Enable the cargo features
+    /// Emit the DEBUG value set by cargo
+    ///
+    /// ```text
+    /// cargo:rustc-env=VERGEN_CARGO_DEBUG=true|false
+    /// ```
+    ///
+    pub fn cargo_debug(&mut self) -> &mut Self {
+        self.cargo_config.cargo_debug = true;
+        self
+    }
+
+    /// Emit the CARGO_FEATURE_* values set by cargo
+    ///
+    /// ```text
+    /// cargo:rustc-env=VERGEN_CARGO_FEATURES=<features>
+    /// ```
+    ///
     pub fn cargo_features(&mut self) -> &mut Self {
         self.cargo_config.cargo_features = true;
         self
     }
 
-    /// Enable the cargo profile
-    pub fn cargo_profile(&mut self) -> &mut Self {
-        self.cargo_config.cargo_profile = true;
+    /// Emit the OPT_LEVEL value set by cargo
+    ///
+    /// ```text
+    /// cargo:rustc-env=VERGEN_CARGO_OPT_LEVEL=<opt_level>
+    /// ```
+    ///
+    pub fn cargo_opt_level(&mut self) -> &mut Self {
+        self.cargo_config.cargo_opt_level = true;
         self
     }
 
-    /// Enable cargo target triple
+    /// Emit the TARGET value set by cargo
+    ///
+    /// ```text
+    /// cargo:rustc-env=VERGEN_CARGO_TARGET_TRIPLE=<target_triple>
+    /// ```
+    ///
     pub fn cargo_target_triple(&mut self) -> &mut Self {
         self.cargo_config.cargo_target_triple = true;
         self
     }
 
     pub(crate) fn add_cargo_map_entries(&self, map: &mut RustcEnvMap) -> Result<()> {
-        if self.cargo_config.cargo_target_triple {
-            let _old = map.insert(VergenKey::CargoTargetTriple, env::var("TARGET")?);
-        }
-
-        if self.cargo_config.cargo_profile {
-            let _old = map.insert(VergenKey::CargoProfile, env::var("PROFILE")?);
+        if self.cargo_config.cargo_debug {
+            let _old = map.insert(VergenKey::CargoDebug, env::var("DEBUG")?);
         }
 
         if self.cargo_config.cargo_features {
@@ -125,6 +161,15 @@ impl EmitBuilder {
             let feature_str = features.as_slice().join(",");
             let _old = map.insert(VergenKey::CargoFeatures, feature_str);
         }
+
+        if self.cargo_config.cargo_opt_level {
+            let _old = map.insert(VergenKey::CargoOptLevel, env::var("OPT_LEVEL")?);
+        }
+
+        if self.cargo_config.cargo_target_triple {
+            let _old = map.insert(VergenKey::CargoTargetTriple, env::var("TARGET")?);
+        }
+
         Ok(())
     }
 }
@@ -169,7 +214,7 @@ mod test {
         assert!(config
             .add_warnings(true, anyhow!("test"), &mut warnings)
             .is_ok());
-        assert_eq!(3, warnings.len());
+        assert_eq!(4, warnings.len());
         Ok(())
     }
 
@@ -181,7 +226,7 @@ mod test {
             .idempotent()
             .all_cargo()
             .test_emit()?;
-        assert_eq!(3, config.cargo_rustc_env_map.len());
+        assert_eq!(4, config.cargo_rustc_env_map.len());
         assert_eq!(0, count_idempotent(config.cargo_rustc_env_map));
         assert_eq!(0, config.warnings.len());
         teardown();
@@ -193,7 +238,7 @@ mod test {
     fn build_all() -> Result<()> {
         setup();
         let config = EmitBuilder::builder().all_cargo().test_emit()?;
-        assert_eq!(3, config.cargo_rustc_env_map.len());
+        assert_eq!(4, config.cargo_rustc_env_map.len());
         assert_eq!(0, count_idempotent(config.cargo_rustc_env_map));
         assert_eq!(0, config.warnings.len());
         teardown();

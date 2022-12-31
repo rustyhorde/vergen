@@ -204,10 +204,12 @@ impl Emitter {
         }
 
         // Emit the 'cargo:rerun-if-changed' instructions
-        writeln!(stdout, "cargo:rerun-if-changed=build.rs")?;
-        writeln!(stdout, "cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT")?;
-        writeln!(stdout, "cargo:rerun-if-env-changed=VERGEN_SKIP_IF_ERROR")?;
-        writeln!(stdout, "cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH")?;
+        if !self.cargo_rustc_env_map.is_empty() || !self.warnings.is_empty() {
+            writeln!(stdout, "cargo:rerun-if-changed=build.rs")?;
+            writeln!(stdout, "cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT")?;
+            writeln!(stdout, "cargo:rerun-if-env-changed=VERGEN_SKIP_IF_ERROR")?;
+            writeln!(stdout, "cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH")?;
+        }
         Ok(())
     }
 }
@@ -275,9 +277,7 @@ impl EmitBuilder {
     /// | Variable | Sample |
     /// | -------  | ------ |
     /// | `VERGEN_BUILD_DATE` | `VERGEN_IDEMPOTENT_OUTPUT` |
-    /// | `VERGEN_BUILD_TIME` | `VERGEN_IDEMPOTENT_OUTPUT` |
     /// | `VERGEN_BUILD_TIMESTAMP` | `VERGEN_IDEMPOTENT_OUTPUT` |
-    /// | `VERGEN_BUILD_SEMVER` | 8.0.0 |
     ///
     /// # Example
     ///
@@ -405,18 +405,22 @@ EmitBuilder::builder().all_build().emit()?;
             feature = "si"
         ),
         doc = r##"
+# env::set_var("CARGO_FEATURE_BUILD", "build");
+# env::set_var("CARGO_FEATURE_GIT", "git");
+# env::set_var("DEBUG", "true");
+# env::set_var("OPT_LEVEL", "1");
 # env::set_var("TARGET", "x86_64-unknown-linux-gnu");
-# env::set_var("PROFILE", "build,rustc");
-# env::set_var("CARGO_FEATURE_BUILD", "");
 EmitBuilder::builder()
   .all_build()
   .all_cargo()
   .all_rustc()
   .all_sysinfo()
   .emit()?;
-# env::remove_var("TARGET");
-# env::remove_var("PROFILE");
 # env::remove_var("CARGO_FEATURE_BUILD");
+# env::remove_var("CARGO_FEATURE_GIT");
+# env::remove_var("DEBUG");
+# env::remove_var("OPT_LEVEL");
+# env::remove_var("TARGET");
 "##
     )]
     /// #   Ok(())
@@ -426,12 +430,9 @@ EmitBuilder::builder()
     /// # Sample Output
     /// ```text
     /// cargo:rustc-env=VERGEN_BUILD_DATE=2022-12-28
-    /// cargo:rustc-env=VERGEN_BUILD_TIME=21:56:23
     /// cargo:rustc-env=VERGEN_BUILD_TIMESTAMP=2022-12-28T21:56:23.764785796Z
-    /// cargo:rustc-env=VERGEN_BUILD_SEMVER=8.0.0
     /// cargo:rustc-env=VERGEN_CARGO_TARGET_TRIPLE=x86_64-unknown-linux-gnu
-    /// cargo:rustc-env=VERGEN_CARGO_PROFILE=debug
-    /// cargo:rustc-env=VERGEN_CARGO_FEATURES=git,build
+    /// cargo:rustc-env=VERGEN_CARGO_FEATURES=build,cargo,git,gitcl,rustc,si
     /// cargo:rustc-env=VERGEN_GIT_BRANCH=feature/version8
     /// cargo:rustc-env=VERGEN_GIT_COMMIT_AUTHOR_EMAIL=your@email.com
     /// cargo:rustc-env=VERGEN_GIT_COMMIT_AUTHOR_NAME=Yoda
@@ -463,7 +464,19 @@ EmitBuilder::builder()
             .and_then(|x| x.emit_output(&mut io::stdout()))
     }
 
-    #[cfg(test)]
+    #[cfg(all(
+        test,
+        any(
+            feature = "build",
+            feature = "cargo",
+            all(
+                feature = "git",
+                any(feature = "gitcl", feature = "git2", feature = "gix")
+            ),
+            feature = "rustc",
+            feature = "si"
+        )
+    ))]
     pub(crate) fn test_emit(self) -> Result<Emitter> {
         self.inner_emit()
     }
@@ -528,10 +541,10 @@ pub(crate) mod test {
 
     #[test]
     #[serial_test::parallel]
-    fn default_is_disabled() -> Result<()> {
-        let config = EmitBuilder::builder().test_emit()?;
-        assert!(config.cargo_rustc_env_map.is_empty());
-        assert!(config.warnings.is_empty());
+    fn default_is_no_emit() -> Result<()> {
+        let mut stdout_buf = vec![];
+        EmitBuilder::builder().emit_to(&mut stdout_buf)?;
+        assert!(stdout_buf.is_empty());
         Ok(())
     }
 

@@ -115,11 +115,13 @@ mod features {
 
     // cargo Constants
     #[cfg(feature = "cargo")]
-    pub(crate) const CARGO_TARGET_TRIPLE: &str = "VERGEN_CARGO_TARGET_TRIPLE";
-    #[cfg(feature = "cargo")]
-    pub(crate) const CARGO_PROFILE: &str = "VERGEN_CARGO_PROFILE";
+    pub(crate) const CARGO_DEBUG: &str = "VERGEN_CARGO_DEBUG";
     #[cfg(feature = "cargo")]
     pub(crate) const CARGO_FEATURES: &str = "VERGEN_CARGO_FEATURES";
+    #[cfg(feature = "cargo")]
+    pub(crate) const CARGO_OPT_LEVEL: &str = "VERGEN_CARGO_OPT_LEVEL";
+    #[cfg(feature = "cargo")]
+    pub(crate) const CARGO_TARGET_TRIPLE: &str = "VERGEN_CARGO_TARGET_TRIPLE";
 
     // sysinfo Constants
     #[cfg(feature = "si")]
@@ -171,7 +173,6 @@ mod test {
     fn cargo_constants_dont_change() {
         // cargo Constants
         assert_eq!(CARGO_TARGET_TRIPLE, "VERGEN_CARGO_TARGET_TRIPLE");
-        assert_eq!(CARGO_PROFILE, "VERGEN_CARGO_PROFILE");
         assert_eq!(CARGO_FEATURES, "VERGEN_CARGO_FEATURES");
     }
 

@@ -11,16 +11,18 @@ pub(crate) mod testutils {
     use std::env;
 
     pub(crate) fn setup() {
-        env::set_var("TARGET", "x86_64-unknown-linux-gnu");
-        env::set_var("PROFILE", "debug");
-        env::set_var("CARGO_FEATURE_GIT", "git");
         env::set_var("CARGO_FEATURE_BUILD", "build");
+        env::set_var("CARGO_FEATURE_GIT", "git");
+        env::set_var("DEBUG", "true");
+        env::set_var("OPT_LEVEL", "1");
+        env::set_var("TARGET", "x86_64-unknown-linux-gnu");
     }
 
     pub(crate) fn teardown() {
-        env::remove_var("TARGET");
-        env::remove_var("PROFILE");
-        env::remove_var("CARGO_FEATURE_GIT");
         env::remove_var("CARGO_FEATURE_BUILD");
+        env::remove_var("CARGO_FEATURE_GIT");
+        env::remove_var("DEBUG");
+        env::remove_var("OPT_LEVEL");
+        env::remove_var("TARGET");
     }
 }
