@@ -42,6 +42,8 @@ pub(crate) struct Config {
     // git rev-parse HEAD (optionally with --short)
     pub(crate) git_sha: bool,
     git_sha_short: bool,
+    #[cfg(test)]
+    git_cmd: Option<&'static str>,
 }
 
 // This funkiness allows the command to be output in the docs
@@ -341,6 +343,7 @@ impl EmitBuilder {
         }
     }
 
+    #[cfg(not(test))]
     pub(crate) fn add_git_map_entries(
         &self,
         idempotent: bool,
@@ -348,7 +351,31 @@ impl EmitBuilder {
         rerun_if_changed: &mut Vec<String>,
     ) -> Result<()> {
         check_git("git -v").and_then(check_inside_git_worktree)?;
+        self.inner_add_git_map_entries(idempotent, map, rerun_if_changed)
+    }
 
+    #[cfg(test)]
+    pub(crate) fn add_git_map_entries(
+        &self,
+        idempotent: bool,
+        map: &mut RustcEnvMap,
+        rerun_if_changed: &mut Vec<String>,
+    ) -> Result<()> {
+        let git_cmd = if let Some(cmd) = self.git_config.git_cmd {
+            cmd
+        } else {
+            "git -v"
+        };
+        check_git(git_cmd).and_then(check_inside_git_worktree)?;
+        self.inner_add_git_map_entries(idempotent, map, rerun_if_changed)
+    }
+
+    fn inner_add_git_map_entries(
+        &self,
+        idempotent: bool,
+        map: &mut RustcEnvMap,
+        rerun_if_changed: &mut Vec<String>,
+    ) -> Result<()> {
         if !idempotent && self.any() {
             add_rerun_if_changed(rerun_if_changed)?;
         }
@@ -490,7 +517,7 @@ fn add_rerun_if_changed(rerun_if_changed: &mut Vec<String>) -> Result<()> {
         }
 
         // Setup the ref path
-        let refp = run_cmd("git symbolic-ref HEAD")?;
+        let refp = setup_ref_path()?;
         if refp.status.success() {
             let ref_path_str = String::from_utf8_lossy(&refp.stdout).trim().to_string();
             let mut ref_path = git_path.clone();
@@ -501,6 +528,21 @@ fn add_rerun_if_changed(rerun_if_changed: &mut Vec<String>) -> Result<()> {
         }
     }
     Ok(())
+}
+
+#[cfg(not(test))]
+fn setup_ref_path() -> Result<Output> {
+    run_cmd("git symbolic-ref HEAD")
+}
+
+#[cfg(all(test, not(target_os = "windows")))]
+fn setup_ref_path() -> Result<Output> {
+    run_cmd("pwd")
+}
+
+#[cfg(all(test, target_os = "windows"))]
+fn setup_ref_path() -> Result<Output> {
+    run_cmd("cd")
 }
 
 #[cfg(test)]
@@ -583,6 +625,30 @@ mod test {
         assert_eq!(9, config.cargo_rustc_env_map.len());
         assert_eq!(0, count_idempotent(config.cargo_rustc_env_map));
         assert_eq!(0, config.warnings.len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::parallel]
+    fn fails_on_bad_git_command() -> Result<()> {
+        let mut config = EmitBuilder::builder();
+        let _ = config.fail_on_error();
+        let _ = config.all_git();
+        config.git_config.git_cmd = Some("this_is_not_a_git_cmd");
+        assert!(config.test_emit().is_err());
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::parallel]
+    fn defaults_on_bad_git_command() -> Result<()> {
+        let mut config = EmitBuilder::builder();
+        let _ = config.all_git();
+        config.git_config.git_cmd = Some("this_is_not_a_git_cmd");
+        let emitter = config.test_emit()?;
+        assert_eq!(9, emitter.cargo_rustc_env_map.len());
+        assert_eq!(9, count_idempotent(emitter.cargo_rustc_env_map));
+        assert_eq!(9, emitter.warnings.len());
         Ok(())
     }
 }
