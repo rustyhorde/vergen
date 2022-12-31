@@ -218,6 +218,27 @@ mod test {
 
     #[test]
     #[serial_test::serial]
+    #[cfg(unix)]
+    fn bad_source_date_epoch_defaults() -> Result<()> {
+        use std::ffi::OsStr;
+        use std::os::unix::prelude::OsStrExt;
+
+        let source = [0x66, 0x6f, 0x80, 0x6f];
+        let os_str = OsStr::from_bytes(&source[..]);
+        env::set_var("SOURCE_DATE_EPOCH", os_str);
+
+        let mut stdout_buf = vec![];
+        assert!(EmitBuilder::builder()
+            .idempotent()
+            .all_build()
+            .emit_to(&mut stdout_buf)
+            .is_ok());
+        env::remove_var("SOURCE_DATE_EPOCH");
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::serial]
     #[cfg(windows)]
     fn bad_source_date_epoch_fails() -> Result<()> {
         use std::ffi::OsString;
@@ -235,6 +256,28 @@ mod test {
             .all_build()
             .emit_to(&mut stdout_buf)
             .is_err());
+        env::remove_var("SOURCE_DATE_EPOCH");
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::serial]
+    #[cfg(windows)]
+    fn bad_source_date_epoch_defaults() -> Result<()> {
+        use std::ffi::OsString;
+        use std::os::windows::prelude::OsStringExt;
+
+        let source = [0x0066, 0x006f, 0xD800, 0x006f];
+        let os_string = OsString::from_wide(&source[..]);
+        let os_str = os_string.as_os_str();
+        env::set_var("SOURCE_DATE_EPOCH", os_str);
+
+        let mut stdout_buf = vec![];
+        assert!(EmitBuilder::builder()
+            .idempotent()
+            .all_build()
+            .emit_to(&mut stdout_buf)
+            .is_ok());
         env::remove_var("SOURCE_DATE_EPOCH");
         Ok(())
     }
