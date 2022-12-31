@@ -5,7 +5,6 @@ mod test_sysinfo {
     use regex::Regex;
     use vergen::EmitBuilder;
 
-    #[cfg(all(not(target_os = "windows"), not(target_os = "macos")))]
     lazy_static! {
         static ref NAME_RE_STR: &'static str = r#"cargo:rustc-env=VERGEN_SYSINFO_NAME=.*"#;
         static ref NAME_IDEM_RE_STR: &'static str =
@@ -49,41 +48,6 @@ mod test_sysinfo {
                 *TOTAL_MEMORY_IDEM_RE_STR,
                 *CPU_VENDOR_IDEM_RE_STR,
                 *CPU_CORE_IDEM_RE_STR,
-            ]
-            .join("\n");
-            Regex::new(&re_str).unwrap()
-        };
-    }
-
-    #[cfg(target_os = "macos")]
-    lazy_static! {
-        static ref NAME_RE_STR: &'static str = r#"cargo:rustc-env=VERGEN_SYSINFO_NAME=.*"#;
-        static ref OS_VERSION_RE_STR: &'static str =
-            r#"cargo:rustc-env=VERGEN_SYSINFO_OS_VERSION=.*"#;
-        static ref TOTAL_MEMORY_RE_STR: &'static str =
-            r#"cargo:rustc-env=VERGEN_SYSINFO_TOTAL_MEMORY=.*"#;
-        static ref CPU_VENDOR_RE_STR: &'static str =
-            r#"cargo:rustc-env=VERGEN_SYSINFO_CPU_VENDOR=.*"#;
-        static ref CPU_CORE_RE_STR: &'static str =
-            r#"cargo:rustc-env=VERGEN_SYSINFO_CPU_CORE_COUNT=.*"#;
-        static ref SYSINFO_REGEX_INST: Regex = {
-            let re_str = vec![
-                *NAME_RE_STR,
-                *OS_VERSION_RE_STR,
-                *TOTAL_MEMORY_RE_STR,
-                *CPU_VENDOR_RE_STR,
-                *CPU_CORE_RE_STR,
-            ]
-            .join("\n");
-            Regex::new(&re_str).unwrap()
-        };
-        static ref SYSINFO_IDEM_REGEX_INST: Regex = {
-            let re_str = vec![
-                *NAME_RE_STR,
-                *OS_VERSION_RE_STR,
-                *TOTAL_MEMORY_RE_STR,
-                *CPU_VENDOR_RE_STR,
-                *CPU_CORE_RE_STR,
             ]
             .join("\n");
             Regex::new(&re_str).unwrap()

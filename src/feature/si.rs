@@ -377,8 +377,9 @@ mod test {
     use anyhow::Result;
 
     #[cfg(any(target_os = "macos", target_os = "windows"))]
-    const SYSINFO_COUNT: usize = 8;
+    const IDEM_COUNT: usize = 1;
     #[cfg(not(any(target_os = "macos", target_os = "windows")))]
+    const IDEM_COUNT: usize = 0;
     const SYSINFO_COUNT: usize = 9;
 
     #[test]
@@ -388,9 +389,9 @@ mod test {
             .idempotent()
             .all_sysinfo()
             .test_emit()?;
-        assert_eq!(9, config.cargo_rustc_env_map.len());
-        assert_eq!(9, count_idempotent(config.cargo_rustc_env_map));
-        assert_eq!(9, config.warnings.len());
+        assert_eq!(SYSINFO_COUNT, config.cargo_rustc_env_map.len());
+        assert_eq!(SYSINFO_COUNT, count_idempotent(config.cargo_rustc_env_map));
+        assert_eq!(SYSINFO_COUNT, config.warnings.len());
         Ok(())
     }
 
@@ -399,8 +400,8 @@ mod test {
     fn sysinfo_all() -> Result<()> {
         let config = EmitBuilder::builder().all_sysinfo().test_emit()?;
         assert_eq!(SYSINFO_COUNT, config.cargo_rustc_env_map.len());
-        assert_eq!(0, count_idempotent(config.cargo_rustc_env_map));
-        assert_eq!(0, config.warnings.len());
+        assert_eq!(IDEM_COUNT, count_idempotent(config.cargo_rustc_env_map));
+        assert_eq!(IDEM_COUNT, config.warnings.len());
         Ok(())
     }
 
