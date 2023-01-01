@@ -243,6 +243,7 @@ impl EmitBuilder {
     }
 
     #[cfg(target_os = "macos")]
+    #[allow(clippy::unused_self)]
     fn get_user(&self, _system: &System) -> Option<String> {
         None
     }
