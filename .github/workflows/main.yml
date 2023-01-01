@@ -43,14 +43,13 @@ jobs:
       - name: 🧰 Toolchain 🧰
         run: |
           rustup toolchain remove ${{ matrix.rust }}
-          rm ~/.cargo/bin/rustfmt
-          rm ~/.cargo/bin/cargo-fmt
-          rm ~/.cargo/bin/cargo-clippy
+          rm -f ~/.cargo/bin/rustfmt
+          rm -f ~/.cargo/bin/cargo-fmt
+          rm -f ~/.cargo/bin/cargo-clippy
           rustup toolchain install ${{ matrix.rust }} --profile default
-      - name: 🧰 Toolchain Override 🧰
-        run: rustup override set ${{ matrix.rust }}
+          rustup default ${{ matrix.rust }}
       - name: ✂ Clippy ✂
-        run: cargo clippy --all -- -D warnings
+        run: cargo clippy --all -- -Dwarnings
   lints-macos:
     name: 🕳️ Lints MacOS 🕳️
     needs: rustfmt
@@ -65,14 +64,12 @@ jobs:
       - name: 🧰 Toolchain 🧰
         run: |
           rustup toolchain remove ${{ matrix.rust }}
-          rm ~/.cargo/bin/rustfmt
-          rm ~/.cargo/bin/cargo-fmt
-          rm ~/.cargo/bin/cargo-clippy
+          rm -f ~/.cargo/bin/rustfmt
+          rm -f ~/.cargo/bin/cargo-fmt
           rustup toolchain install ${{ matrix.rust }} --profile default
-      - name: 🧰 Toolchain Override 🧰
-        run: rustup override set ${{ matrix.rust }}
+          rustup default ${{ matrix.rust }}
       - name: ✂ Clippy ✂
-        run: cargo clippy --all -- -D warnings
+        run: cargo clippy --all -- -Dwarnings
   lints-windows:
     name: 🕳️ Lints Windows 🕳️
     needs: rustfmt
@@ -87,14 +84,12 @@ jobs:
       - name: 🧰 Toolchain 🧰
         run: |
           rustup toolchain remove ${{ matrix.rust }}
-          rm ~/.cargo/bin/rustfmt
-          rm ~/.cargo/bin/cargo-fmt
-          rm ~/.cargo/bin/cargo-clippy
+          rm -f ~/.cargo/bin/rustfmt
+          rm -f ~/.cargo/bin/cargo-fmt
           rustup toolchain install ${{ matrix.rust }} --profile default
-      - name: 🧰 Toolchain Override 🧰
-        run: rustup override set ${{ matrix.rust }}
+          rustup default ${{ matrix.rust }}
       - name: ✂ Clippy ✂
-        run: cargo clippy --all -- -D warnings
+        run: cargo clippy --all -- -Dwarnings
   test-linux:
     name: 🧪 Linux 🧪
     needs: lints-linux
@@ -128,14 +123,16 @@ jobs:
       - name: 🧰 Toolchain 🧰
         run: |
           rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
-          rm ~/.cargo/bin/rustfmt
-          rm ~/.cargo/bin/cargo-fmt
-          rm ~/.cargo/bin/cargo-clippy
+          rm -f ~/.cargo/bin/rustfmt
+          rm -f ~/.cargo/bin/cargo-fmt
+          rm -f ~/.cargo/bin/cargo-clippy
           rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile default
-      - name: 🧰 Toolchain Override 🧰
-        run: rustup override set ${{ matrix.rust }}
+          rustup default ${{ matrix.rust }}
       - name: 💾 Install (cargo-binstall) 💾
-        run: cargo binstall -V || cargo install cargo-binstall
+        run: |
+          rustup override set stable
+          cargo binstall -V || cargo install cargo-binstall
+          rustup override remove
       - name: 💾 Install (tarpaulin, all-features) 💾
         run: cargo binstall --no-confirm --no-symlinks cargo-tarpaulin cargo-all-features
       - name: 🧪 Test 🧪
@@ -183,14 +180,16 @@ jobs:
       - name: 🧰 Toolchain 🧰
         run: |
           rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
-          rm ~/.cargo/bin/rustfmt
-          rm ~/.cargo/bin/cargo-fmt
-          rm ~/.cargo/bin/cargo-clippy
+          rm -f ~/.cargo/bin/rustfmt
+          rm -f ~/.cargo/bin/cargo-fmt
+          rm -f ~/.cargo/bin/cargo-clippy
           rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile default
-      - name: 🧰 Toolchain Override 🧰
-        run: rustup override set ${{ matrix.rust }}
+          rustup default ${{ matrix.rust }}
       - name: 💾 Install (cargo-binstall) 💾
-        run: cargo binstall -V || cargo install cargo-binstall
+        run: |
+          rustup override set stable
+          cargo binstall -V || cargo install cargo-binstall
+          rustup override remove
       - name: 💾 Install (all-features) 💾
         run: cargo binstall --no-confirm --no-symlinks cargo-all-features
       - name: 🧪 Test 🧪
@@ -244,14 +243,16 @@ jobs:
       - name: 🧰 Toolchain 🧰
         run: |
           rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
-          rm ~/.cargo/bin/rustfmt
-          rm ~/.cargo/bin/cargo-fmt
-          rm ~/.cargo/bin/cargo-clippy
+          rm -f ~/.cargo/bin/rustfmt
+          rm -f ~/.cargo/bin/cargo-fmt
+          rm -f ~/.cargo/bin/cargo-clippy
           rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile default
-      - name: 🧰 Toolchain Override 🧰
-        run: rustup override set ${{ matrix.rust }}
+          rustup default ${{ matrix.rust }}
       - name: 💾 Install (cargo-binstall) 💾
-        run: cargo binstall -V || cargo install cargo-binstall
+        run: |
+          rustup override set stable
+          cargo binstall -V || cargo install cargo-binstall
+          rustup override remove
       - name: 💾 Install (all-features) 💾
         run: cargo binstall --no-confirm --no-symlinks cargo-all-features
       - name: 🧪 Test 🧪
