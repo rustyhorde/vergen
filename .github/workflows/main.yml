@@ -46,7 +46,7 @@ jobs:
           rm ~/.cargo/bin/rustfmt
           rm ~/.cargo/bin/cargo-fmt
           rm ~/.cargo/bin/cargo-clippy
-          rustup toolchain add ${{ matrix.rust }}
+          rustup toolchain install ${{ matrix.rust }} --profile default
       - name: 🧰 Toolchain Override 🧰
         run: rustup override set ${{ matrix.rust }}
       - name: ✂ Clippy ✂
@@ -68,7 +68,7 @@ jobs:
           rm ~/.cargo/bin/rustfmt
           rm ~/.cargo/bin/cargo-fmt
           rm ~/.cargo/bin/cargo-clippy
-          rustup toolchain add ${{ matrix.rust }}
+          rustup toolchain install ${{ matrix.rust }} --profile default
       - name: 🧰 Toolchain Override 🧰
         run: rustup override set ${{ matrix.rust }}
       - name: ✂ Clippy ✂
@@ -90,7 +90,7 @@ jobs:
           rm ~/.cargo/bin/rustfmt
           rm ~/.cargo/bin/cargo-fmt
           rm ~/.cargo/bin/cargo-clippy
-          rustup toolchain add ${{ matrix.rust }}
+          rustup toolchain install ${{ matrix.rust }} --profile default
       - name: 🧰 Toolchain Override 🧰
         run: rustup override set ${{ matrix.rust }}
       - name: ✂ Clippy ✂
@@ -131,7 +131,7 @@ jobs:
           rm ~/.cargo/bin/rustfmt
           rm ~/.cargo/bin/cargo-fmt
           rm ~/.cargo/bin/cargo-clippy
-          rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }}
+          rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile default
       - name: 🧰 Toolchain Override 🧰
         run: rustup override set ${{ matrix.rust }}
       - name: 💾 Install (cargo-binstall) 💾
@@ -186,7 +186,7 @@ jobs:
           rm ~/.cargo/bin/rustfmt
           rm ~/.cargo/bin/cargo-fmt
           rm ~/.cargo/bin/cargo-clippy
-          rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }}
+          rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile default
       - name: 🧰 Toolchain Override 🧰
         run: rustup override set ${{ matrix.rust }}
       - name: 💾 Install (cargo-binstall) 💾
@@ -247,7 +247,7 @@ jobs:
           rm ~/.cargo/bin/rustfmt
           rm ~/.cargo/bin/cargo-fmt
           rm ~/.cargo/bin/cargo-clippy
-          rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }}
+          rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile default
       - name: 🧰 Toolchain Override 🧰
         run: rustup override set ${{ matrix.rust }}
       - name: 💾 Install (cargo-binstall) 💾
