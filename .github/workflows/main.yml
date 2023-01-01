@@ -50,9 +50,9 @@ jobs:
           rustup default ${{ matrix.rust }}
       - name: ✂ Clippy ✂
         run: |
-          cargo clippy --all-targets --features build,cargo,git,gitcl,rustc,si
-          cargo clippy --all-targets --features build,cargo,git,git2,rustc,si
-          cargo clippy --all-targets --features build,cargo,git,git2,rustc,si
+          cargo clippy --all-targets --features build,cargo,git,gitcl,rustc,si -- -Dwarnings
+          cargo clippy --all-targets --features build,cargo,git,git2,rustc,si -- -Dwarnings
+          cargo clippy --all-targets --features build,cargo,git,git2,rustc,si -- -Dwarnings
   lints-macos:
     name: 🕳️ Lints MacOS 🕳️
     needs: rustfmt
@@ -76,7 +76,10 @@ jobs:
           rustup toolchain install ${{ matrix.rust }} --profile default
           rustup default ${{ matrix.rust }}
       - name: ✂ Clippy ✂
-        run: cargo clippy --all -- -Dwarnings
+        run: |
+          cargo clippy --all-targets --features build,cargo,git,gitcl,rustc,si -- -Dwarnings
+          cargo clippy --all-targets --features build,cargo,git,git2,rustc,si -- -Dwarnings
+          cargo clippy --all-targets --features build,cargo,git,git2,rustc,si -- -Dwarnings
   lints-windows:
     name: 🕳️ Lints Windows 🕳️
     needs: rustfmt
@@ -100,7 +103,10 @@ jobs:
           rustup toolchain install ${{ matrix.rust }} --profile default
           rustup default ${{ matrix.rust }}
       - name: ✂ Clippy ✂
-        run: cargo clippy --all -- -Dwarnings
+        run: |
+          cargo clippy --all-targets --features build,cargo,git,gitcl,rustc,si -- -Dwarnings
+          cargo clippy --all-targets --features build,cargo,git,git2,rustc,si -- -Dwarnings
+          cargo clippy --all-targets --features build,cargo,git,git2,rustc,si -- -Dwarnings
   test-linux:
     name: 🧪 Linux 🧪
     needs: lints-linux
