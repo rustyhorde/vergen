@@ -1,4 +1,4 @@
-#!/usr/bin/fish
+#!/usr/bin/env fish
 cargo fmt --all -- --check; and \
 cargo clippy --all-targets --features build,cargo,git,gitcl,rustc,si -- -Dwarnings; and \
 cargo clippy --all-targets --features build,cargo,git,git2,rustc,si -- -Dwarnings; and \
