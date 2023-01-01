@@ -21,12 +21,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
-          components: rustfmt
       - run: cargo fmt --all -- --check
   lints-linux:
     name: 🕳️ Lints Linux 🕳️
@@ -45,12 +39,8 @@ jobs:
             rust: nightly
     steps:
       - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: ${{ matrix.rust }}
-          override: true
-          components: clippy
+      - name: 🧰 Toolchain 🧰
+        run: rustup toolchain add ${{ matrix.rust }}
       - run: cargo clippy --all -- -D warnings
   lints-macos:
     name: 🕳️ Lints MacOS 🕳️
@@ -63,12 +53,8 @@ jobs:
             rust: stable
     steps:
       - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: ${{ matrix.rust }}
-          override: true
-          components: clippy
+      - name: 🧰 Toolchain 🧰
+        run: rustup toolchain add ${{ matrix.rust }}
       - run: cargo clippy --all -- -D warnings
   lints-windows:
     name: 🕳️ Lints Windows 🕳️
@@ -81,12 +67,8 @@ jobs:
             rust: stable
     steps:
       - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: ${{ matrix.rust }}
-          override: true
-          components: clippy
+      - name: 🧰 Toolchain 🧰
+        run: rustup toolchain add ${{ matrix.rust }}
       - run: cargo clippy --all -- -D warnings
   test-linux:
     name: 🧪 Linux 🧪
