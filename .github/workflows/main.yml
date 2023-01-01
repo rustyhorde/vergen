@@ -190,6 +190,7 @@ jobs:
         with:
           path: |
             ~/.cargo/bin/cargo-binstall
+            ~/.cargo/bin/cargo-tarpaulin*
             ~/.cargo/bin/cargo-*-all-features*
           key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.toml','**/main.yml') }}
       - name: 🧰 Toolchain 🧰
@@ -202,8 +203,8 @@ jobs:
           rustup override set stable
           cargo binstall -V || cargo install cargo-binstall
           rustup override remove
-      - name: 💾 Install (all-features) 💾
-        run: cargo binstall --no-confirm --no-symlinks cargo-all-features
+      - name: 💾 Install (tarpaulin, all-features) 💾
+        run: cargo binstall --no-confirm --no-symlinks cargo-tarpaulin cargo-all-features
       - name: 🧪 Test 🧪
         run: cargo test-all-features
       - name: 🧪 Test gitcl 🧪
@@ -212,6 +213,12 @@ jobs:
         run: cargo test -F build,cargo,git,git2,rustc,si
       - name: 🧪 Test gix 🧪
         run: cargo test -F build,cargo,git,gix,rustc,si
+      - name: 🙊 Code Coverage 🙊
+        run: cargo tarpaulin --exclude-files src/lib.rs --out Xml
+      - name: 🙊 Upload Code Coverage 🙊
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./cobertura.xml
   test-windows:
     name: 🧪 Windows 🧪
     needs: lints-windows
@@ -251,6 +258,7 @@ jobs:
         with:
           path: |
             ~/.cargo/bin/cargo-binstall
+            ~/.cargo/bin/cargo-tarpaulin*
             ~/.cargo/bin/cargo-*-all-features*
           key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.toml','**/main.yml') }}
       - name: 🧰 Toolchain 🧰
@@ -263,8 +271,8 @@ jobs:
           rustup override set stable
           cargo binstall -V || cargo install cargo-binstall
           rustup override remove
-      - name: 💾 Install (all-features) 💾
-        run: cargo binstall --no-confirm --no-symlinks cargo-all-features
+      - name: 💾 Install (tarpaulin, all-features) 💾
+        run: cargo binstall --no-confirm --no-symlinks cargo-tarpaulin cargo-all-features
       - name: 🧪 Test 🧪
         run: cargo test-all-features
       - name: 🧪 Test gitcl 🧪
@@ -273,3 +281,9 @@ jobs:
         run: cargo test -F build,cargo,git,git2,rustc,si
       - name: 🧪 Test gix 🧪
         run: cargo test -F build,cargo,git,gix,rustc,si
+      - name: 🙊 Code Coverage 🙊
+        run: cargo tarpaulin --exclude-files src/lib.rs --out Xml
+      - name: 🙊 Upload Code Coverage 🙊
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./cobertura.xml
