@@ -19,6 +19,7 @@ use git_repository as _;
 use time as _;
 
 #[derive(Clone, Copy, Debug, Default)]
+#[allow(clippy::struct_excessive_bools)]
 pub(crate) struct Config {
     // git rev-parse --abbrev-ref HEAD
     pub(crate) git_branch: bool,
@@ -199,7 +200,7 @@ impl EmitBuilder {
         fail_on_error: bool,
         map: &mut RustcEnvMap,
         warnings: &mut Vec<String>,
-        _rerun_if_changed: &mut Vec<String>,
+        _rerun_if_changed: &mut [String],
     ) -> Result<()> {
         if fail_on_error {
             Err(e)
@@ -240,8 +241,8 @@ impl EmitBuilder {
         &self,
         idempotent: bool,
         map: &mut RustcEnvMap,
-        warnings: &mut Vec<String>,
-        rerun_if_changed: &mut Vec<String>,
+        warnings: &mut [String],
+        rerun_if_changed: &mut [String],
     ) -> Result<()> {
         self.inner_add_git_map_entries(idempotent, map, warnings, rerun_if_changed)
     }
@@ -251,8 +252,8 @@ impl EmitBuilder {
         &self,
         idempotent: bool,
         map: &mut RustcEnvMap,
-        warnings: &mut Vec<String>,
-        rerun_if_changed: &mut Vec<String>,
+        warnings: &mut [String],
+        rerun_if_changed: &mut [String],
     ) -> Result<()> {
         if self.git_config.fail {
             Err(anyhow!("failed to create entries"))
@@ -261,12 +262,13 @@ impl EmitBuilder {
         }
     }
 
+    #[allow(clippy::unnecessary_wraps)]
     fn inner_add_git_map_entries(
         &self,
         _idempotent: bool,
         map: &mut RustcEnvMap,
-        _warnings: &mut Vec<String>,
-        _rerun_if_changed: &mut Vec<String>,
+        _warnings: &mut [String],
+        _rerun_if_changed: &mut [String],
     ) -> Result<()> {
         if self.git_config.git_branch {
             add_map_entry(VergenKey::GitBranch, "stuff", map);
@@ -285,7 +287,7 @@ mod test {
     fn git_all_idempotent() -> Result<()> {
         let config = EmitBuilder::builder().idempotent().all_git().test_emit()?;
         assert_eq!(1, config.cargo_rustc_env_map.len());
-        assert_eq!(0, count_idempotent(config.cargo_rustc_env_map));
+        assert_eq!(0, count_idempotent(&config.cargo_rustc_env_map));
         assert_eq!(0, config.warnings.len());
         Ok(())
     }
@@ -295,7 +297,7 @@ mod test {
     fn git_all() -> Result<()> {
         let config = EmitBuilder::builder().all_git().test_emit()?;
         assert_eq!(1, config.cargo_rustc_env_map.len());
-        assert_eq!(0, count_idempotent(config.cargo_rustc_env_map));
+        assert_eq!(0, count_idempotent(&config.cargo_rustc_env_map));
         assert_eq!(0, config.warnings.len());
         Ok(())
     }
@@ -319,7 +321,7 @@ mod test {
         config.git_config.fail = true;
         let emitter = config.test_emit()?;
         assert_eq!(9, emitter.cargo_rustc_env_map.len());
-        assert_eq!(9, count_idempotent(emitter.cargo_rustc_env_map));
+        assert_eq!(9, count_idempotent(&emitter.cargo_rustc_env_map));
         assert_eq!(9, emitter.warnings.len());
         Ok(())
     }

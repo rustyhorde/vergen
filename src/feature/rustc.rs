@@ -7,6 +7,7 @@ use anyhow::{Error, Result};
 use rustc_version::{version_meta, Channel, VersionMeta};
 
 #[derive(Clone, Copy, Debug, Default)]
+#[allow(clippy::struct_excessive_bools)]
 pub(crate) struct Config {
     pub(crate) rustc_channel: bool,
     pub(crate) rustc_commit_date: bool,
@@ -212,7 +213,7 @@ mod test {
             .all_rustc()
             .test_emit()?;
         assert_eq!(6, config.cargo_rustc_env_map.len());
-        assert_eq!(0, count_idempotent(config.cargo_rustc_env_map));
+        assert_eq!(0, count_idempotent(&config.cargo_rustc_env_map));
         assert_eq!(0, config.warnings.len());
         Ok(())
     }
@@ -222,7 +223,7 @@ mod test {
     fn rustc_all() -> Result<()> {
         let config = EmitBuilder::builder().all_rustc().test_emit()?;
         assert_eq!(6, config.cargo_rustc_env_map.len());
-        assert_eq!(0, count_idempotent(config.cargo_rustc_env_map));
+        assert_eq!(0, count_idempotent(&config.cargo_rustc_env_map));
         assert_eq!(0, config.warnings.len());
         Ok(())
     }
@@ -244,7 +245,7 @@ release: 1.68.0-nightly
         config.rustc_config.rustc_str_to_test = Some(NO_LLVM);
         let emitter = config.test_emit()?;
         assert_eq!(6, emitter.cargo_rustc_env_map.len());
-        assert_eq!(1, count_idempotent(emitter.cargo_rustc_env_map));
+        assert_eq!(1, count_idempotent(&emitter.cargo_rustc_env_map));
         assert_eq!(1, emitter.warnings.len());
         Ok(())
     }
@@ -267,7 +268,7 @@ LLVM version: 15.0.6
         config.rustc_config.rustc_str_to_test = Some(DEV_BUILD);
         let emitter = config.test_emit()?;
         assert_eq!(6, emitter.cargo_rustc_env_map.len());
-        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map));
+        assert_eq!(0, count_idempotent(&emitter.cargo_rustc_env_map));
         assert_eq!(0, emitter.warnings.len());
         Ok(())
     }
@@ -290,7 +291,7 @@ LLVM version: 15.0.6
         config.rustc_config.rustc_str_to_test = Some(UNKNOWN_BITS);
         let emitter = config.test_emit()?;
         assert_eq!(6, emitter.cargo_rustc_env_map.len());
-        assert_eq!(2, count_idempotent(emitter.cargo_rustc_env_map));
+        assert_eq!(2, count_idempotent(&emitter.cargo_rustc_env_map));
         assert_eq!(2, emitter.warnings.len());
         Ok(())
     }
@@ -314,7 +315,7 @@ LLVM version: 15.0.6
         config.rustc_config.rustc_str_to_test = Some("a_bad_rustcvv_string");
         let emitter = config.test_emit()?;
         assert_eq!(6, emitter.cargo_rustc_env_map.len());
-        assert_eq!(6, count_idempotent(emitter.cargo_rustc_env_map));
+        assert_eq!(6, count_idempotent(&emitter.cargo_rustc_env_map));
         assert_eq!(6, emitter.warnings.len());
         Ok(())
     }

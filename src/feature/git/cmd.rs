@@ -27,6 +27,7 @@ use time::{
 };
 
 #[derive(Clone, Copy, Debug, Default)]
+#[allow(clippy::struct_excessive_bools)]
 pub(crate) struct Config {
     // git rev-parse --abbrev-ref --symbolic-full-name HEAD
     pub(crate) git_branch: bool,
@@ -314,7 +315,7 @@ impl EmitBuilder {
         fail_on_error: bool,
         map: &mut RustcEnvMap,
         warnings: &mut Vec<String>,
-        _rerun_if_changed: &mut Vec<String>,
+        _rerun_if_changed: &mut [String],
     ) -> Result<()> {
         if fail_on_error {
             Err(e)
@@ -584,7 +585,7 @@ fn add_rerun_if_changed(rerun_if_changed: &mut Vec<String>) -> Result<()> {
         let refp = setup_ref_path()?;
         if refp.status.success() {
             let ref_path_str = String::from_utf8_lossy(&refp.stdout).trim().to_string();
-            let mut ref_path = git_path.clone();
+            let mut ref_path = git_path;
             ref_path.push(ref_path_str);
             if ref_path.exists() {
                 rerun_if_changed.push(format!("{}", ref_path.display()));
@@ -663,7 +664,7 @@ mod test {
     fn git_all_idempotent() -> Result<()> {
         let config = EmitBuilder::builder().idempotent().all_git().test_emit()?;
         assert_eq!(9, config.cargo_rustc_env_map.len());
-        assert_eq!(2, count_idempotent(config.cargo_rustc_env_map));
+        assert_eq!(2, count_idempotent(&config.cargo_rustc_env_map));
         assert_eq!(2, config.warnings.len());
         Ok(())
     }
@@ -673,7 +674,7 @@ mod test {
     fn git_all() -> Result<()> {
         let config = EmitBuilder::builder().all_git().test_emit()?;
         assert_eq!(9, config.cargo_rustc_env_map.len());
-        assert_eq!(0, count_idempotent(config.cargo_rustc_env_map));
+        assert_eq!(0, count_idempotent(&config.cargo_rustc_env_map));
         assert_eq!(0, config.warnings.len());
         Ok(())
     }
@@ -687,7 +688,7 @@ mod test {
             .git_sha(true)
             .test_emit()?;
         assert_eq!(9, config.cargo_rustc_env_map.len());
-        assert_eq!(0, count_idempotent(config.cargo_rustc_env_map));
+        assert_eq!(0, count_idempotent(&config.cargo_rustc_env_map));
         assert_eq!(0, config.warnings.len());
         Ok(())
     }
@@ -711,7 +712,7 @@ mod test {
         config.git_config.git_cmd = Some("this_is_not_a_git_cmd");
         let emitter = config.test_emit()?;
         assert_eq!(9, emitter.cargo_rustc_env_map.len());
-        assert_eq!(9, count_idempotent(emitter.cargo_rustc_env_map));
+        assert_eq!(9, count_idempotent(&emitter.cargo_rustc_env_map));
         assert_eq!(9, emitter.warnings.len());
         Ok(())
     }

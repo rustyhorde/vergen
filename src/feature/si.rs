@@ -18,6 +18,7 @@ use sysinfo::{CpuExt, System, SystemExt};
 use sysinfo::{Pid, Process, User};
 
 #[derive(Clone, Copy, Debug, Default)]
+#[allow(clippy::struct_excessive_bools)]
 pub(crate) struct Config {
     pub(crate) si_name: bool,
     pub(crate) si_os_version: bool,
@@ -168,7 +169,7 @@ impl EmitBuilder {
             add_sysinfo_map_entry(
                 VergenKey::SysinfoMemory,
                 idempotent,
-                Some(format!("{}", suffix(system.total_memory()))),
+                Some(suffix(system.total_memory())),
                 map,
                 warnings,
             );
@@ -262,6 +263,7 @@ impl EmitBuilder {
         None
     }
     #[cfg(all(not(test), not(target_os = "macos")))]
+    #[allow(clippy::unused_self)]
     fn get_pid(&self) -> Result<Pid> {
         use sysinfo::get_current_pid;
 
@@ -289,12 +291,10 @@ fn add_sysinfo_map_entry(
 ) {
     if idempotent {
         add_default_map_entry(key, map, warnings);
+    } else if let Some(val) = value {
+        add_map_entry(key, val, map);
     } else {
-        if let Some(val) = value {
-            add_map_entry(key, val, map);
-        } else {
-            add_default_map_entry(key, map, warnings);
-        }
+        add_default_map_entry(key, map, warnings);
     }
 }
 
@@ -369,7 +369,7 @@ mod test {
             .all_sysinfo()
             .test_emit()?;
         assert_eq!(SYSINFO_COUNT, config.cargo_rustc_env_map.len());
-        assert_eq!(SYSINFO_COUNT, count_idempotent(config.cargo_rustc_env_map));
+        assert_eq!(SYSINFO_COUNT, count_idempotent(&config.cargo_rustc_env_map));
         assert_eq!(SYSINFO_COUNT, config.warnings.len());
         Ok(())
     }
@@ -379,7 +379,7 @@ mod test {
     fn sysinfo_all() -> Result<()> {
         let config = EmitBuilder::builder().all_sysinfo().test_emit()?;
         assert_eq!(SYSINFO_COUNT, config.cargo_rustc_env_map.len());
-        assert_eq!(IDEM_COUNT, count_idempotent(config.cargo_rustc_env_map));
+        assert_eq!(IDEM_COUNT, count_idempotent(&config.cargo_rustc_env_map));
         assert_eq!(IDEM_COUNT, config.warnings.len());
         Ok(())
     }
@@ -425,7 +425,7 @@ mod test {
         config.sysinfo_config.fail_pid = true;
         let emitter = config.test_emit()?;
         assert_eq!(SYSINFO_COUNT, emitter.cargo_rustc_env_map.len());
-        assert_eq!(1, count_idempotent(emitter.cargo_rustc_env_map));
+        assert_eq!(1, count_idempotent(&emitter.cargo_rustc_env_map));
         assert_eq!(1, emitter.warnings.len());
         Ok(())
     }

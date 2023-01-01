@@ -570,7 +570,7 @@ pub(crate) mod test {
         feature = "rustc",
         feature = "si",
     ))]
-    pub(crate) fn count_idempotent(map: RustcEnvMap) -> usize {
+    pub(crate) fn count_idempotent(map: &RustcEnvMap) -> usize {
         map.values()
             .filter(|x| *x == VERGEN_IDEMPOTENT_DEFAULT)
             .count()

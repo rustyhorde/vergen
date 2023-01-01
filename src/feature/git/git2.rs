@@ -15,13 +15,14 @@ use crate::{
 use anyhow::anyhow;
 use anyhow::{Error, Result};
 use git2_rs::{BranchType, Commit, DescribeFormatOptions, DescribeOptions, Reference, Repository};
-use std::{env, path::PathBuf, str::FromStr};
+use std::{env, path::Path, str::FromStr};
 use time::{
     format_description::{self, well_known::Iso8601},
     OffsetDateTime,
 };
 
 #[derive(Clone, Copy, Debug, Default)]
+#[allow(clippy::struct_excessive_bools)]
 pub(crate) struct Config {
     // git rev-parse --abbrev-ref HEAD
     pub(crate) git_branch: bool,
@@ -459,14 +460,15 @@ impl EmitBuilder {
         Ok(())
     }
 
+    #[allow(clippy::unused_self)]
     fn add_rerun_if_changed(
         &self,
         ref_head: &Reference<'_>,
-        git_path: &PathBuf,
+        git_path: &Path,
         rerun_if_changed: &mut Vec<String>,
     ) {
         // Setup the head path
-        let mut head_path = git_path.clone();
+        let mut head_path = git_path.to_path_buf();
         head_path.push("HEAD");
 
         // Check whether the path exists in the filesystem before emitting it
@@ -476,7 +478,7 @@ impl EmitBuilder {
 
         if let Ok(resolved) = ref_head.resolve() {
             if let Some(name) = resolved.name() {
-                let ref_path = git_path.clone();
+                let ref_path = git_path.to_path_buf();
                 let path = ref_path.join(name);
                 // Check whether the path exists in the filesystem before emitting it
                 if path.exists() {
@@ -507,10 +509,10 @@ mod test {
         assert_eq!(9, config.cargo_rustc_env_map.len());
 
         if repo_exists().is_ok() && !config.failed {
-            assert_eq!(2, count_idempotent(config.cargo_rustc_env_map));
+            assert_eq!(2, count_idempotent(&config.cargo_rustc_env_map));
             assert_eq!(2, config.warnings.len());
         } else {
-            assert_eq!(9, count_idempotent(config.cargo_rustc_env_map));
+            assert_eq!(9, count_idempotent(&config.cargo_rustc_env_map));
             assert_eq!(9, config.warnings.len());
         }
         Ok(())
@@ -523,10 +525,10 @@ mod test {
         assert_eq!(9, config.cargo_rustc_env_map.len());
 
         if repo_exists().is_ok() && !config.failed {
-            assert_eq!(0, count_idempotent(config.cargo_rustc_env_map));
+            assert_eq!(0, count_idempotent(&config.cargo_rustc_env_map));
             assert_eq!(0, config.warnings.len());
         } else {
-            assert_eq!(9, count_idempotent(config.cargo_rustc_env_map));
+            assert_eq!(9, count_idempotent(&config.cargo_rustc_env_map));
             assert_eq!(9, config.warnings.len());
         }
         Ok(())
@@ -551,7 +553,7 @@ mod test {
         config.git_config.fail = true;
         let emitter = config.test_emit()?;
         assert_eq!(9, emitter.cargo_rustc_env_map.len());
-        assert_eq!(9, count_idempotent(emitter.cargo_rustc_env_map));
+        assert_eq!(9, count_idempotent(&emitter.cargo_rustc_env_map));
         assert_eq!(9, emitter.warnings.len());
         Ok(())
     }

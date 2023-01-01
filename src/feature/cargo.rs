@@ -15,6 +15,7 @@ use anyhow::{Error, Result};
 use std::env;
 
 #[derive(Clone, Copy, Debug, Default)]
+#[allow(clippy::struct_excessive_bools)]
 pub(crate) struct Config {
     pub(crate) cargo_debug: bool,
     pub(crate) cargo_features: bool,
@@ -72,7 +73,7 @@ impl EmitBuilder {
         self
     }
 
-    /// Emit the CARGO_FEATURE_* values set by cargo
+    /// Emit the `CARGO_FEATURE_*` values set by cargo
     ///
     /// ```text
     /// cargo:rustc-env=VERGEN_CARGO_FEATURES=<features>
@@ -83,7 +84,7 @@ impl EmitBuilder {
         self
     }
 
-    /// Emit the OPT_LEVEL value set by cargo
+    /// Emit the `OPT_LEVEL` value set by cargo
     ///
     /// ```text
     /// cargo:rustc-env=VERGEN_CARGO_OPT_LEVEL=<opt_level>
@@ -181,7 +182,7 @@ mod test {
             .all_cargo()
             .test_emit()?;
         assert_eq!(4, config.cargo_rustc_env_map.len());
-        assert_eq!(0, count_idempotent(config.cargo_rustc_env_map));
+        assert_eq!(0, count_idempotent(&config.cargo_rustc_env_map));
         assert_eq!(0, config.warnings.len());
         teardown();
         Ok(())
@@ -193,7 +194,7 @@ mod test {
         setup();
         let config = EmitBuilder::builder().all_cargo().test_emit()?;
         assert_eq!(4, config.cargo_rustc_env_map.len());
-        assert_eq!(0, count_idempotent(config.cargo_rustc_env_map));
+        assert_eq!(0, count_idempotent(&config.cargo_rustc_env_map));
         assert_eq!(0, config.warnings.len());
         teardown();
         Ok(())
@@ -216,7 +217,7 @@ mod test {
         assert!(emit_res.is_ok());
         let emit = emit_res?;
         assert_eq!(4, emit.cargo_rustc_env_map.len());
-        assert_eq!(4, count_idempotent(emit.cargo_rustc_env_map));
+        assert_eq!(4, count_idempotent(&emit.cargo_rustc_env_map));
         assert_eq!(4, emit.warnings.len());
         Ok(())
     }
