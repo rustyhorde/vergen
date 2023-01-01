@@ -152,15 +152,15 @@ jobs:
       - name: 🧪 Test 🧪
         run: cargo test-all-features
       - name: 🧪 Test gitcl 🧪
-        run: cargo test -F git,gitcl
+        run: cargo test -F build,cargo,git,gitcl,rustc,si
       - name: 🧪 Test git2 🧪
-        run: cargo test -F git,git2
+        run: cargo test -F build,cargo,git,git2,rustc,si
       - name: 🧪 Test gix 🧪
-        run: cargo test -F git,gix
+        run: cargo test -F build,cargo,git,gix,rustc,si
       - name: 🙊 Code Coverage 🙊
         run: cargo tarpaulin --exclude-files src/lib.rs --out Xml
       - name: 🙊 Upload Code Coverage 🙊
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v3
         with:
           files: ./cobertura.xml
   test-macos:
@@ -189,6 +189,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: |
+            ~/.cargo/bin/cargo-binstall
             ~/.cargo/bin/cargo-*-all-features*
           key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.toml','**/main.yml') }}
       - name: 🧰 Toolchain 🧰
@@ -206,11 +207,11 @@ jobs:
       - name: 🧪 Test 🧪
         run: cargo test-all-features
       - name: 🧪 Test gitcl 🧪
-        run: cargo test -F git,gitcl
+        run: cargo test -F build,cargo,git,gitcl,rustc,si
       - name: 🧪 Test git2 🧪
-        run: cargo test -F git,git2
+        run: cargo test -F build,cargo,git,git2,rustc,si
       - name: 🧪 Test gix 🧪
-        run: cargo test -F git,gix
+        run: cargo test -F build,cargo,git,gix,rustc,si
   test-windows:
     name: 🧪 Windows 🧪
     needs: lints-windows
@@ -249,6 +250,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: |
+            ~/.cargo/bin/cargo-binstall
             ~/.cargo/bin/cargo-*-all-features*
           key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.toml','**/main.yml') }}
       - name: 🧰 Toolchain 🧰
@@ -266,8 +268,8 @@ jobs:
       - name: 🧪 Test 🧪
         run: cargo test-all-features
       - name: 🧪 Test gitcl 🧪
-        run: cargo test -F git,gitcl
+        run: cargo test -F build,cargo,git,gitcl,rustc,si
       - name: 🧪 Test git2 🧪
-        run: cargo test -F git,git2
+        run: cargo test -F build,cargo,git,git2,rustc,si
       - name: 🧪 Test gix 🧪
-        run: cargo test -F git,gix
+        run: cargo test -F build,cargo,git,gix,rustc,si
