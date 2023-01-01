@@ -486,14 +486,28 @@ impl EmitBuilder {
 mod test {
     use crate::{emitter::test::count_idempotent, EmitBuilder};
     use anyhow::Result;
+    use git2_rs::Repository;
+    use std::env;
+
+    fn repo_exists() -> Result<bool> {
+        let curr_dir = env::current_dir()?;
+        let _repo = Repository::discover(curr_dir)?;
+        Ok(true)
+    }
 
     #[test]
     #[serial_test::parallel]
     fn git_all_idempotent() -> Result<()> {
         let config = EmitBuilder::builder().idempotent().all_git().test_emit()?;
         assert_eq!(9, config.cargo_rustc_env_map.len());
-        assert_eq!(2, count_idempotent(config.cargo_rustc_env_map));
-        assert_eq!(2, config.warnings.len());
+
+        if repo_exists().is_ok() {
+            assert_eq!(2, count_idempotent(config.cargo_rustc_env_map));
+            assert_eq!(2, config.warnings.len());
+        } else {
+            assert_eq!(9, count_idempotent(config.cargo_rustc_env_map));
+            assert_eq!(9, config.warnings.len());
+        }
         Ok(())
     }
 
@@ -502,8 +516,14 @@ mod test {
     fn git_all() -> Result<()> {
         let config = EmitBuilder::builder().all_git().test_emit()?;
         assert_eq!(9, config.cargo_rustc_env_map.len());
-        assert_eq!(0, count_idempotent(config.cargo_rustc_env_map));
-        assert_eq!(0, config.warnings.len());
+
+        if repo_exists().is_ok() {
+            assert_eq!(0, count_idempotent(config.cargo_rustc_env_map));
+            assert_eq!(0, config.warnings.len());
+        } else {
+            assert_eq!(9, count_idempotent(config.cargo_rustc_env_map));
+            assert_eq!(9, config.warnings.len());
+        }
         Ok(())
     }
 
