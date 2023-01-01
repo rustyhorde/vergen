@@ -12,9 +12,8 @@ use crate::{
     utils::fns::{add_default_map_entry, add_map_entry},
 };
 use anyhow::{anyhow, Error, Result};
-#[cfg(not(target_env = "msvc"))]
-use std::env;
 use std::{
+    env,
     path::PathBuf,
     process::{Command, Output, Stdio},
     str::FromStr,
