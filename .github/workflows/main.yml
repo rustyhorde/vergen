@@ -117,24 +117,12 @@ jobs:
             ~/.cargo/bin/cargo-tarpaulin*
             ~/.cargo/bin/cargo-*-all-features*
           key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.toml') }}
-      - uses: actions-rs/toolchain@v1
-        name: 🧰 Toolchain 🧰
-        with:
-          profile: minimal
-          toolchain: ${{ matrix.rust }}
-          target: ${{ matrix.target }}
-          override: true
-      - name: 💾 Install (cargo-tarpaulin) 💾
-        uses: actions-rs/install@v0.1
-        with:
-          crate: cargo-tarpaulin
-          version: latest
-        continue-on-error: true
-      - name: 💾 Install (cargo-all-features) 💾
-        uses: actions-rs/install@v0.1
-        with:
-          crate: cargo-all-features
-          version: latest
+      - name: 🧰 Toolchain 🧰
+        run: rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }}
+      - name: 💾 Install (cargo-binstall) 💾
+        run: cargo install cargo-binstall --force
+      - name: 💾 Install (tarpaulin, all-features) 💾
+        run: cargo binstall --no-confirm --no-symlinks cargo-tarpaulin cargo-all-features
         continue-on-error: true
       - name: 🧪 Test 🧪
         run: cargo test-all-features

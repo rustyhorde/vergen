@@ -169,9 +169,9 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     #[test]
     fn git_all_output() -> Result<()> {
         let mut stdout_buf = vec![];
-        EmitBuilder::builder().all_git().emit_to(&mut stdout_buf)?;
+        let failed = EmitBuilder::builder().all_git().emit_to(&mut stdout_buf)?;
         let output = String::from_utf8_lossy(&stdout_buf);
-        if repo_exists().is_ok() {
+        if repo_exists().is_ok() && !failed {
             assert!(GIT_REGEX_INST.is_match(&output));
         } else {
             assert_eq!(ALL_IDEM_OUTPUT, output);
@@ -182,12 +182,12 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     #[test]
     fn git_all_idempotent_output() -> Result<()> {
         let mut stdout_buf = vec![];
-        EmitBuilder::builder()
+        let failed = EmitBuilder::builder()
             .idempotent()
             .all_git()
             .emit_to(&mut stdout_buf)?;
         let output = String::from_utf8_lossy(&stdout_buf);
-        if repo_exists().is_ok() {
+        if repo_exists().is_ok() && !failed {
             assert!(GIT_REGEX_IDEM_INST.is_match(&output));
         } else {
             assert_eq!(ALL_IDEM_OUTPUT, output);

@@ -501,7 +501,7 @@ mod test {
         let config = EmitBuilder::builder().idempotent().all_git().test_emit()?;
         assert_eq!(9, config.cargo_rustc_env_map.len());
 
-        if repo_exists().is_ok() {
+        if repo_exists().is_ok() && !config.failed {
             assert_eq!(2, count_idempotent(config.cargo_rustc_env_map));
             assert_eq!(2, config.warnings.len());
         } else {
@@ -517,7 +517,7 @@ mod test {
         let config = EmitBuilder::builder().all_git().test_emit()?;
         assert_eq!(9, config.cargo_rustc_env_map.len());
 
-        if repo_exists().is_ok() {
+        if repo_exists().is_ok() && !config.failed {
             assert_eq!(0, count_idempotent(config.cargo_rustc_env_map));
             assert_eq!(0, config.warnings.len());
         } else {

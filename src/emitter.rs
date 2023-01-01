@@ -46,6 +46,7 @@ pub(crate) type RustcEnvMap = BTreeMap<VergenKey, String>;
 // Everything that can be emitted as cargo build instructions
 #[derive(Clone, Debug, Default)]
 pub(crate) struct Emitter {
+    pub(crate) failed: bool,
     #[cfg(any(
         feature = "build",
         feature = "cargo",
@@ -139,7 +140,7 @@ impl Emitter {
                 &mut self.rerun_if_changed,
             )
             .or_else(|e| {
-                eprintln!("Error: {e}");
+                self.failed = true;
                 builder.add_git_default(
                     e,
                     fail_on_error,
@@ -523,11 +524,14 @@ EmitBuilder::builder()
     /// # Errors
     /// * The [`writeln!`](std::writeln!) macro can throw a [`std::io::Error`]
     ///
-    pub fn emit_to<T>(self, stdout: &mut T) -> Result<()>
+    pub fn emit_to<T>(self, stdout: &mut T) -> Result<bool>
     where
         T: Write,
     {
-        self.inner_emit().and_then(|x| x.emit_output(stdout))
+        self.inner_emit().and_then(|x| match x.emit_output(stdout) {
+            Ok(_) => Ok(x.failed),
+            Err(e) => Err(e),
+        })
     }
 
     fn inner_emit(self) -> Result<Emitter> {
@@ -577,7 +581,7 @@ pub(crate) mod test {
     #[serial_test::parallel]
     fn default_is_no_emit() -> Result<()> {
         let mut stdout_buf = vec![];
-        EmitBuilder::builder().emit_to(&mut stdout_buf)?;
+        let _ = EmitBuilder::builder().emit_to(&mut stdout_buf)?;
         assert!(stdout_buf.is_empty());
         Ok(())
     }
@@ -602,7 +606,7 @@ pub(crate) mod test {
 
         setup();
         let mut stdout_buf = vec![];
-        EmitBuilder::builder()
+        let _ = EmitBuilder::builder()
             .idempotent()
             .fail_on_error()
             .all_build()
@@ -628,7 +632,7 @@ pub(crate) mod test {
 
         setup();
         let mut stdout_buf = vec![];
-        EmitBuilder::builder()
+        let _ = EmitBuilder::builder()
             .all_build()
             .all_cargo()
             .all_rustc()
