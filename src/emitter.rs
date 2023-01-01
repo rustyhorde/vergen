@@ -529,10 +529,8 @@ EmitBuilder::builder()
     where
         T: Write,
     {
-        self.inner_emit().and_then(|x| match x.emit_output(stdout) {
-            Ok(_) => Ok(x.failed),
-            Err(e) => Err(e),
-        })
+        self.inner_emit()
+            .and_then(|x| x.emit_output(stdout).map(|_| x.failed))
     }
 
     fn inner_emit(self) -> Result<Emitter> {

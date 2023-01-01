@@ -406,7 +406,7 @@ impl EmitBuilder {
             add_git_cmd_entry(COMMIT_COUNT, VergenKey::GitCommitCount, map)?;
         }
 
-        self.add_git_timestamp_entries(idempotent, map, warnings)?;
+        self.add_git_timestamp_entries(COMMIT_TIMESTAMP, idempotent, map, warnings)?;
 
         if self.git_config.git_commit_message {
             add_git_cmd_entry(COMMIT_MESSAGE, VergenKey::GitCommitMessage, map)?;
@@ -436,11 +436,12 @@ impl EmitBuilder {
 
     fn add_git_timestamp_entries(
         &self,
+        cmd: &str,
         idempotent: bool,
         map: &mut RustcEnvMap,
         warnings: &mut Vec<String>,
     ) -> Result<()> {
-        let output = run_cmd(COMMIT_TIMESTAMP)?;
+        let output = run_cmd(cmd)?;
         if output.status.success() {
             let stdout = String::from_utf8_lossy(&output.stdout)
                 .trim()
@@ -712,6 +713,21 @@ mod test {
         assert_eq!(9, emitter.cargo_rustc_env_map.len());
         assert_eq!(9, count_idempotent(emitter.cargo_rustc_env_map));
         assert_eq!(9, emitter.warnings.len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::parallel]
+    fn bad_timestamp_defaults() -> Result<()> {
+        let mut map = BTreeMap::new();
+        let mut warnings = vec![];
+        let mut config = EmitBuilder::builder();
+        let _ = config.all_git();
+        assert!(config
+            .add_git_timestamp_entries("this_is_not_a_git_cmd", false, &mut map, &mut warnings)
+            .is_ok());
+        assert_eq!(2, map.len());
+        assert_eq!(2, warnings.len());
         Ok(())
     }
 }
