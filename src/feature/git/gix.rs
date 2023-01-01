@@ -199,6 +199,7 @@ impl EmitBuilder {
         fail_on_error: bool,
         map: &mut RustcEnvMap,
         warnings: &mut Vec<String>,
+        _rerun_if_changed: &mut Vec<String>,
     ) -> Result<()> {
         if fail_on_error {
             Err(e)

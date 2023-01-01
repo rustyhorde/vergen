@@ -146,6 +146,7 @@ impl Emitter {
                     fail_on_error,
                     &mut self.cargo_rustc_env_map,
                     &mut self.warnings,
+                    &mut self.rerun_if_changed,
                 )
             })
     }

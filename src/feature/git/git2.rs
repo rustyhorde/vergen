@@ -216,12 +216,14 @@ impl EmitBuilder {
         fail_on_error: bool,
         map: &mut RustcEnvMap,
         warnings: &mut Vec<String>,
+        rerun_if_changed: &mut Vec<String>,
     ) -> Result<()> {
         if fail_on_error {
             Err(e)
         } else {
             // Clear any previous warnings.  This should be it.
             warnings.clear();
+            rerun_if_changed.clear();
 
             if self.git_config.git_branch {
                 add_default_map_entry(VergenKey::GitBranch, map, warnings);
