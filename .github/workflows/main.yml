@@ -21,7 +21,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - run: cargo fmt --all -- --check
+      - name: ☢️ Rustfmt Check ☢️
+        run: cargo fmt --all -- --check
   lints-linux:
     name: 🕳️ Lints Linux 🕳️
     needs: rustfmt
@@ -41,7 +42,10 @@ jobs:
       - uses: actions/checkout@v3
       - name: 🧰 Toolchain 🧰
         run: rustup toolchain add ${{ matrix.rust }}
-      - run: cargo clippy --all -- -D warnings
+      - name: 🧰 Toolchain Override 🧰
+        run: rustup override set ${{ matrix.rust }}
+      - name: ✂ Clippy ✂
+        run: cargo clippy --all -- -D warnings
   lints-macos:
     name: 🕳️ Lints MacOS 🕳️
     needs: rustfmt
@@ -55,7 +59,10 @@ jobs:
       - uses: actions/checkout@v3
       - name: 🧰 Toolchain 🧰
         run: rustup toolchain add ${{ matrix.rust }}
-      - run: cargo clippy --all -- -D warnings
+      - name: 🧰 Toolchain Override 🧰
+        run: rustup override set ${{ matrix.rust }}
+      - name: ✂ Clippy ✂
+        run: cargo clippy --all -- -D warnings
   lints-windows:
     name: 🕳️ Lints Windows 🕳️
     needs: rustfmt
@@ -69,7 +76,10 @@ jobs:
       - uses: actions/checkout@v3
       - name: 🧰 Toolchain 🧰
         run: rustup toolchain add ${{ matrix.rust }}
-      - run: cargo clippy --all -- -D warnings
+      - name: 🧰 Toolchain Override 🧰
+        run: rustup override set ${{ matrix.rust }}
+      - name: ✂ Clippy ✂
+        run: cargo clippy --all -- -D warnings
   test-linux:
     name: 🧪 Linux 🧪
     needs: lints-linux
@@ -102,11 +112,12 @@ jobs:
           key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.toml') }}
       - name: 🧰 Toolchain 🧰
         run: rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }}
+      - name: 🧰 Toolchain Override 🧰
+        run: rustup override set ${{ matrix.rust }}
       - name: 💾 Install (cargo-binstall) 💾
         run: cargo binstall -V || cargo install cargo-binstall
       - name: 💾 Install (tarpaulin, all-features) 💾
         run: cargo binstall --no-confirm --no-symlinks cargo-tarpaulin cargo-all-features
-        continue-on-error: true
       - name: 🧪 Test 🧪
         run: cargo test-all-features
       - name: 🧪 Test gitcl 🧪
@@ -151,11 +162,12 @@ jobs:
           key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.toml') }}
       - name: 🧰 Toolchain 🧰
         run: rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }}
+      - name: 🧰 Toolchain Override 🧰
+        run: rustup override set ${{ matrix.rust }}
       - name: 💾 Install (cargo-binstall) 💾
         run: cargo binstall -V || cargo install cargo-binstall
       - name: 💾 Install (all-features) 💾
         run: cargo binstall --no-confirm --no-symlinks cargo-all-features
-        continue-on-error: true
       - name: 🧪 Test 🧪
         run: cargo test-all-features
       - name: 🧪 Test gitcl 🧪
@@ -206,6 +218,8 @@ jobs:
           key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.toml') }}
       - name: 🧰 Toolchain 🧰
         run: rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }}
+      - name: 🧰 Toolchain Override 🧰
+        run: rustup override set ${{ matrix.rust }}
       - name: 💾 Install (cargo-binstall) 💾
         run: cargo binstall -V || cargo install cargo-binstall
       - name: 💾 Install (all-features) 💾
