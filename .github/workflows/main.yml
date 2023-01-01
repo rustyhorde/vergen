@@ -84,8 +84,8 @@ jobs:
       - name: 🧰 Toolchain 🧰
         run: |
           rustup toolchain remove ${{ matrix.rust }}
-          rm -f ~/.cargo/bin/rustfmt
-          rm -f ~/.cargo/bin/cargo-fmt
+          del /q /f ~/.cargo/bin/rustfmt
+          del /q /f ~/.cargo/bin/cargo-fmt
           rustup toolchain install ${{ matrix.rust }} --profile default
           rustup default ${{ matrix.rust }}
       - name: ✂ Clippy ✂
@@ -243,9 +243,9 @@ jobs:
       - name: 🧰 Toolchain 🧰
         run: |
           rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
-          rm -f ~/.cargo/bin/rustfmt
-          rm -f ~/.cargo/bin/cargo-fmt
-          rm -f ~/.cargo/bin/cargo-clippy
+          del /q /f ~/.cargo/bin/rustfmt
+          del /q /f ~/.cargo/bin/cargo-fmt
+          del /q /f ~/.cargo/bin/cargo-clippy
           rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile default
           rustup default ${{ matrix.rust }}
       - name: 💾 Install (cargo-binstall) 💾
