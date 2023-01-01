@@ -124,7 +124,7 @@ jobs:
           rm -f ~/.cargo/bin/rustfmt
           rm -f ~/.cargo/bin/cargo-fmt
           rm -f ~/.cargo/bin/cargo-clippy
-          rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile default
+          rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile minimal
           rustup default ${{ matrix.rust }}
       - name: 💾 Install (cargo-binstall) 💾
         run: |
@@ -181,7 +181,7 @@ jobs:
           rm -f ~/.cargo/bin/rustfmt
           rm -f ~/.cargo/bin/cargo-fmt
           rm -f ~/.cargo/bin/cargo-clippy
-          rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile default
+          rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile minimal
           rustup default ${{ matrix.rust }}
       - name: 💾 Install (cargo-binstall) 💾
         run: |
@@ -241,7 +241,7 @@ jobs:
       - name: 🧰 Toolchain 🧰
         run: |
           rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
-          rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile default
+          rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile minimal
           rustup default ${{ matrix.rust }}
       - name: 💾 Install (cargo-binstall) 💾
         run: |
