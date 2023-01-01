@@ -4,14 +4,14 @@ on:
   push:
     branches:
       - master
-    tags-ignore: '*'
+    tags-ignore: "*"
   pull_request:
     branches:
-      - '*'
-    tags-ignore: '*'
+      - "*"
+    tags-ignore: "*"
   schedule:
     # * is a special character in YAML so you have to quote this string
-    - cron:  '13 3 * * *'
+    - cron: "13 3 * * *"
 
 name: CI
 
@@ -95,18 +95,18 @@ jobs:
     strategy:
       matrix:
         include:
-        - os: ubuntu-latest
-          rust: "1.62.0"
-          target: x86_64-unknown-linux-gnu
-        - os: ubuntu-latest
-          rust: stable
-          target: x86_64-unknown-linux-gnu
-        - os: ubuntu-latest
-          rust: beta
-          target: x86_64-unknown-linux-gnu
-        - os: ubuntu-latest
-          rust: nightly
-          target: x86_64-unknown-linux-gnu
+          - os: ubuntu-latest
+            rust: "1.62.0"
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-latest
+            rust: stable
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-latest
+            rust: beta
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-latest
+            rust: nightly
+            target: x86_64-unknown-linux-gnu
     steps:
       - name: ✔️ Checkout ✔️
         uses: actions/checkout@v3
@@ -145,18 +145,18 @@ jobs:
     strategy:
       matrix:
         include:
-        - os: macos-latest
-          rust: "1.63.0"
-          target: x86_64-apple-darwin
-        - os: macos-latest
-          rust: stable
-          target: x86_64-apple-darwin
-        - os: macos-latest
-          rust: beta
-          target: x86_64-apple-darwin
-        - os: macos-latest
-          rust: nightly
-          target: x86_64-apple-darwin
+          - os: macos-latest
+            rust: "1.62.0"
+            target: x86_64-apple-darwin
+          - os: macos-latest
+            rust: stable
+            target: x86_64-apple-darwin
+          - os: macos-latest
+            rust: beta
+            target: x86_64-apple-darwin
+          - os: macos-latest
+            rust: nightly
+            target: x86_64-apple-darwin
     steps:
       - name: ✔️ Checkout ✔️
         uses: actions/checkout@v3
@@ -166,19 +166,12 @@ jobs:
           path: |
             ~/.cargo/bin/cargo-*-all-features*
           key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.toml') }}
-      - uses: actions-rs/toolchain@v1
-        name: 🧰 Toolchain 🧰
-        with:
-          profile: minimal
-          toolchain: ${{ matrix.rust }}
-          target: ${{ matrix.target }}
-          override: true
-      - name: 💾 Install (cargo-all-features) 💾
-        uses: actions-rs/install@v0.1
-        with:
-          crate: cargo-all-features
-          version: latest
-          use-tool-cache: true
+      - name: 🧰 Toolchain 🧰
+        run: rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }}
+      - name: 💾 Install (cargo-binstall) 💾
+        run: cargo install cargo-binstall --force
+      - name: 💾 Install (all-features) 💾
+        run: cargo binstall --no-confirm --no-symlinks cargo-all-features
         continue-on-error: true
       - name: 🧪 Test 🧪
         run: cargo test-all-features
@@ -195,30 +188,30 @@ jobs:
     strategy:
       matrix:
         include:
-        - os: windows-latest
-          rust: 1.62.0-msvc
-          target: x86_64-pc-windows-msvc
-        - os: windows-latest
-          rust: stable-msvc
-          target: x86_64-pc-windows-msvc
-        - os: windows-latest
-          rust: beta-msvc
-          target: x86_64-pc-windows-msvc
-        - os: windows-latest
-          rust: nightly-msvc
-          target: x86_64-pc-windows-msvc
-        - os: windows-latest
-          rust: 1.62.0-gnu
-          target: x86_64-pc-windows-gnu
-        - os: windows-latest
-          rust: stable-gnu
-          target: x86_64-pc-windows-gnu
-        - os: windows-latest
-          rust: beta-gnu
-          target: x86_64-pc-windows-gnu
-        - os: windows-latest
-          rust: nightly-gnu
-          target: x86_64-pc-windows-gnu
+          - os: windows-latest
+            rust: 1.62.0-msvc
+            target: x86_64-pc-windows-msvc
+          - os: windows-latest
+            rust: stable-msvc
+            target: x86_64-pc-windows-msvc
+          - os: windows-latest
+            rust: beta-msvc
+            target: x86_64-pc-windows-msvc
+          - os: windows-latest
+            rust: nightly-msvc
+            target: x86_64-pc-windows-msvc
+          - os: windows-latest
+            rust: 1.62.0-gnu
+            target: x86_64-pc-windows-gnu
+          - os: windows-latest
+            rust: stable-gnu
+            target: x86_64-pc-windows-gnu
+          - os: windows-latest
+            rust: beta-gnu
+            target: x86_64-pc-windows-gnu
+          - os: windows-latest
+            rust: nightly-gnu
+            target: x86_64-pc-windows-gnu
     steps:
       - name: ✔️ Checkout ✔️
         uses: actions/checkout@v3
@@ -228,20 +221,12 @@ jobs:
           path: |
             ~/.cargo/bin/cargo-*-all-features*
           key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.toml') }}
-      - uses: actions-rs/toolchain@v1
-        name: 🧰 Toolchain 🧰
-        with:
-          profile: minimal
-          toolchain: ${{ matrix.rust }}
-          target: ${{ matrix.target }}
-          override: true
-      - name: 💾 Install (cargo-all-features) 💾
-        uses: actions-rs/install@v0.1
-        with:
-          crate: cargo-all-features
-          version: latest
-          use-tool-cache: true
-        continue-on-error: true
+      - name: 🧰 Toolchain 🧰
+        run: rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }}
+      - name: 💾 Install (cargo-binstall) 💾
+        run: cargo install cargo-binstall --force
+      - name: 💾 Install (all-features) 💾
+        run: cargo binstall --no-confirm --no-symlinks cargo-all-features
       - name: 🧪 Test 🧪
         run: cargo test-all-features
       - name: 🧪 Test gitcl 🧪
