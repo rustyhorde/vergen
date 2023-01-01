@@ -114,13 +114,14 @@ jobs:
         uses: actions/cache@v3
         with:
           path: |
+            ~/.cargo/bin/cargo-binstall
             ~/.cargo/bin/cargo-tarpaulin*
             ~/.cargo/bin/cargo-*-all-features*
           key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.toml') }}
       - name: 🧰 Toolchain 🧰
         run: rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }}
       - name: 💾 Install (cargo-binstall) 💾
-        run: cargo install cargo-binstall --force
+        run: cargo binstall -V || cargo install cargo-binstall
       - name: 💾 Install (tarpaulin, all-features) 💾
         run: cargo binstall --no-confirm --no-symlinks cargo-tarpaulin cargo-all-features
         continue-on-error: true
@@ -169,7 +170,7 @@ jobs:
       - name: 🧰 Toolchain 🧰
         run: rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }}
       - name: 💾 Install (cargo-binstall) 💾
-        run: cargo install cargo-binstall --force
+        run: cargo binstall -V || cargo install cargo-binstall
       - name: 💾 Install (all-features) 💾
         run: cargo binstall --no-confirm --no-symlinks cargo-all-features
         continue-on-error: true
@@ -189,28 +190,28 @@ jobs:
       matrix:
         include:
           - os: windows-latest
-            rust: 1.62.0-msvc
+            rust: "1.62.0"
             target: x86_64-pc-windows-msvc
           - os: windows-latest
-            rust: stable-msvc
+            rust: stable
             target: x86_64-pc-windows-msvc
           - os: windows-latest
-            rust: beta-msvc
+            rust: beta
             target: x86_64-pc-windows-msvc
           - os: windows-latest
-            rust: nightly-msvc
+            rust: nightly
             target: x86_64-pc-windows-msvc
           - os: windows-latest
-            rust: 1.62.0-gnu
+            rust: "1.62.0"
             target: x86_64-pc-windows-gnu
           - os: windows-latest
-            rust: stable-gnu
+            rust: stable
             target: x86_64-pc-windows-gnu
           - os: windows-latest
-            rust: beta-gnu
+            rust: beta
             target: x86_64-pc-windows-gnu
           - os: windows-latest
-            rust: nightly-gnu
+            rust: nightly
             target: x86_64-pc-windows-gnu
     steps:
       - name: ✔️ Checkout ✔️
@@ -224,7 +225,7 @@ jobs:
       - name: 🧰 Toolchain 🧰
         run: rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }}
       - name: 💾 Install (cargo-binstall) 💾
-        run: cargo install cargo-binstall --force
+        run: cargo binstall -V || cargo install cargo-binstall
       - name: 💾 Install (all-features) 💾
         run: cargo binstall --no-confirm --no-symlinks cargo-all-features
       - name: 🧪 Test 🧪
