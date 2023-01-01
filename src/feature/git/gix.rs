@@ -6,6 +6,8 @@
 // option. All files in the project carrying such notice may not be copied,
 // modified, or distributed except according to those terms.
 
+use std::{env, path::Path};
+
 use crate::{
     emitter::{EmitBuilder, RustcEnvMap},
     key::VergenKey,
@@ -14,9 +16,12 @@ use crate::{
 #[cfg(test)]
 use anyhow::anyhow;
 use anyhow::{Error, Result};
-// remove these when impl complete
-use git_repository as _;
-use time as _;
+use git_repository::{commit, head::Kind, Commit, Head};
+use std::str::FromStr;
+use time::{
+    format_description::{self, well_known::Iso8601},
+    OffsetDateTime,
+};
 
 #[derive(Clone, Copy, Debug, Default)]
 #[allow(clippy::struct_excessive_bools)]
@@ -84,6 +89,20 @@ impl EmitBuilder {
             .git_commit_timestamp()
             .git_describe(false, false)
             .git_sha(false)
+    }
+
+    fn any(&self) -> bool {
+        let cfg = self.git_config;
+
+        cfg.git_branch
+            || cfg.git_commit_author_email
+            || cfg.git_commit_author_name
+            || cfg.git_commit_count
+            || cfg.git_commit_date
+            || cfg.git_commit_message
+            || cfg.git_commit_timestamp
+            || cfg.git_describe
+            || cfg.git_sha
     }
 
     /// Emit the current git branch
@@ -200,11 +219,15 @@ impl EmitBuilder {
         fail_on_error: bool,
         map: &mut RustcEnvMap,
         warnings: &mut Vec<String>,
-        _rerun_if_changed: &mut [String],
+        rerun_if_changed: &mut Vec<String>,
     ) -> Result<()> {
         if fail_on_error {
             Err(e)
         } else {
+            // Clear any previous warnings.  This should be it.
+            warnings.clear();
+            rerun_if_changed.clear();
+
             if self.git_config.git_branch {
                 add_default_map_entry(VergenKey::GitBranch, map, warnings);
             }
@@ -241,8 +264,8 @@ impl EmitBuilder {
         &self,
         idempotent: bool,
         map: &mut RustcEnvMap,
-        warnings: &mut [String],
-        rerun_if_changed: &mut [String],
+        warnings: &mut Vec<String>,
+        rerun_if_changed: &mut Vec<String>,
     ) -> Result<()> {
         self.inner_add_git_map_entries(idempotent, map, warnings, rerun_if_changed)
     }
@@ -252,8 +275,8 @@ impl EmitBuilder {
         &self,
         idempotent: bool,
         map: &mut RustcEnvMap,
-        warnings: &mut [String],
-        rerun_if_changed: &mut [String],
+        warnings: &mut Vec<String>,
+        rerun_if_changed: &mut Vec<String>,
     ) -> Result<()> {
         if self.git_config.fail {
             Err(anyhow!("failed to create entries"))
@@ -265,15 +288,179 @@ impl EmitBuilder {
     #[allow(clippy::unnecessary_wraps)]
     fn inner_add_git_map_entries(
         &self,
-        _idempotent: bool,
+        idempotent: bool,
         map: &mut RustcEnvMap,
-        _warnings: &mut [String],
-        _rerun_if_changed: &mut [String],
+        warnings: &mut Vec<String>,
+        rerun_if_changed: &mut Vec<String>,
     ) -> Result<()> {
+        let curr_dir = env::current_dir()?;
+        let repo = git_repository::discover(curr_dir)?;
+        let mut head = repo.head()?;
+        let git_path = repo.git_dir().to_path_buf();
+        let commit = head.peel_to_commit_in_place()?;
+
+        if !idempotent && self.any() {
+            self.add_rerun_if_changed(&head, &git_path, rerun_if_changed);
+        }
+
         if self.git_config.git_branch {
-            add_map_entry(VergenKey::GitBranch, "stuff", map);
+            let branch_name = head
+                .referent_name()
+                .map_or_else(|| "HEAD".to_string(), |name| format!("{}", name.shorten()));
+            add_map_entry(VergenKey::GitBranch, branch_name, map);
+        }
+
+        if self.git_config.git_commit_author_email {
+            let email = String::from_utf8_lossy(commit.author()?.email);
+            add_map_entry(VergenKey::GitCommitAuthorEmail, email.into_owned(), map);
+        }
+
+        if self.git_config.git_commit_author_name {
+            let name = String::from_utf8_lossy(commit.author()?.name);
+            add_map_entry(VergenKey::GitCommitAuthorName, name.into_owned(), map);
+        }
+
+        if self.git_config.git_commit_count {
+            add_map_entry(
+                VergenKey::GitCommitCount,
+                commit.ancestors().all()?.count().to_string(),
+                map,
+            );
+        }
+
+        self.add_git_timestamp_entries(&commit, idempotent, map, warnings)?;
+
+        if self.git_config.git_commit_message {
+            let message = String::from_utf8_lossy(commit.message_raw()?);
+            add_map_entry(
+                VergenKey::GitCommitMessage,
+                message.into_owned().trim(),
+                map,
+            );
+        }
+
+        if self.git_config.git_describe {
+            let names = if self.git_config.git_describe_tags {
+                commit::describe::SelectRef::AllTags
+            } else {
+                commit::describe::SelectRef::AnnotatedTags
+            };
+            let describe = commit
+                .describe()
+                .names(names)
+                // note: this turns on id_as_fallback
+                .format()
+                .map(|mut fmt| {
+                    if fmt.depth > 0 && self.git_config.git_describe_dirty {
+                        fmt.dirty_suffix = Some("dirty".to_string());
+                    }
+                    fmt.to_string()
+                })?;
+            add_map_entry(VergenKey::GitDescribe, describe, map);
+        }
+
+        if self.git_config.git_sha {
+            let id = if self.git_config.git_sha_short {
+                commit.short_id()?.to_string()
+            } else {
+                commit.id().to_string()
+            };
+            add_map_entry(VergenKey::GitSha, id, map);
         }
         Ok(())
+    }
+
+    fn add_git_timestamp_entries(
+        &self,
+        commit: &Commit<'_>,
+        idempotent: bool,
+        map: &mut RustcEnvMap,
+        warnings: &mut Vec<String>,
+    ) -> Result<()> {
+        let (sde, ts) = match env::var("SOURCE_DATE_EPOCH") {
+            Ok(v) => (
+                true,
+                OffsetDateTime::from_unix_timestamp(i64::from_str(&v)?)?,
+            ),
+            Err(std::env::VarError::NotPresent) => (
+                false,
+                OffsetDateTime::from_unix_timestamp(
+                    commit.time()?.seconds_since_unix_epoch.into(),
+                )?,
+            ),
+            Err(e) => return Err(e.into()),
+        };
+
+        self.add_git_date_entry(idempotent, sde, &ts, map, warnings)?;
+        self.add_git_timestamp_entry(idempotent, sde, &ts, map, warnings)?;
+        Ok(())
+    }
+
+    fn add_git_date_entry(
+        &self,
+        idempotent: bool,
+        source_date_epoch: bool,
+        ts: &OffsetDateTime,
+        map: &mut RustcEnvMap,
+        warnings: &mut Vec<String>,
+    ) -> Result<()> {
+        if self.git_config.git_commit_date {
+            if idempotent && !source_date_epoch {
+                add_default_map_entry(VergenKey::GitCommitDate, map, warnings);
+            } else {
+                let format = format_description::parse("[year]-[month]-[day]")?;
+                add_map_entry(VergenKey::GitCommitDate, ts.format(&format)?, map);
+            }
+        }
+        Ok(())
+    }
+
+    fn add_git_timestamp_entry(
+        &self,
+        idempotent: bool,
+        source_date_epoch: bool,
+        ts: &OffsetDateTime,
+        map: &mut RustcEnvMap,
+        warnings: &mut Vec<String>,
+    ) -> Result<()> {
+        if self.git_config.git_commit_timestamp {
+            if idempotent && !source_date_epoch {
+                add_default_map_entry(VergenKey::GitCommitTimestamp, map, warnings);
+            } else {
+                add_map_entry(
+                    VergenKey::GitCommitTimestamp,
+                    ts.format(&Iso8601::DEFAULT)?,
+                    map,
+                );
+            }
+        }
+        Ok(())
+    }
+
+    #[allow(clippy::unused_self)]
+    fn add_rerun_if_changed(
+        &self,
+        head: &Head<'_>,
+        git_path: &Path,
+        rerun_if_changed: &mut Vec<String>,
+    ) {
+        // Setup the head path
+        let mut head_path = git_path.to_path_buf();
+        head_path.push("HEAD");
+
+        // Check whether the path exists in the filesystem before emitting it
+        if head_path.exists() {
+            rerun_if_changed.push(format!("{}", head_path.display()));
+        }
+
+        if let Kind::Symbolic(reference) = &head.kind {
+            let mut ref_path = git_path.to_path_buf();
+            ref_path.push(reference.name.to_path());
+            // Check whether the path exists in the filesystem before emitting it
+            if ref_path.exists() {
+                rerun_if_changed.push(format!("{}", ref_path.display()));
+            }
+        }
     }
 }
 
@@ -286,9 +473,9 @@ mod test {
     #[serial_test::parallel]
     fn git_all_idempotent() -> Result<()> {
         let config = EmitBuilder::builder().idempotent().all_git().test_emit()?;
-        assert_eq!(1, config.cargo_rustc_env_map.len());
-        assert_eq!(0, count_idempotent(&config.cargo_rustc_env_map));
-        assert_eq!(0, config.warnings.len());
+        assert_eq!(9, config.cargo_rustc_env_map.len());
+        assert_eq!(2, count_idempotent(&config.cargo_rustc_env_map));
+        assert_eq!(2, config.warnings.len());
         Ok(())
     }
 
@@ -296,9 +483,21 @@ mod test {
     #[serial_test::parallel]
     fn git_all() -> Result<()> {
         let config = EmitBuilder::builder().all_git().test_emit()?;
-        assert_eq!(1, config.cargo_rustc_env_map.len());
+        assert_eq!(9, config.cargo_rustc_env_map.len());
         assert_eq!(0, count_idempotent(&config.cargo_rustc_env_map));
         assert_eq!(0, config.warnings.len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::parallel]
+    fn emit_all() -> Result<()> {
+        let mut stdout = vec![];
+        let _failed = EmitBuilder::builder()
+            .all_git()
+            .git_describe(true, true)
+            .emit_to(&mut stdout)?;
+        println!("{}", String::from_utf8_lossy(&stdout));
         Ok(())
     }
 

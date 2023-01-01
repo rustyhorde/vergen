@@ -1,5 +1,5 @@
 {
     "rust-analyzer.cargo.features": [
-        "build","cargo","git","gitcl","rustc","si"
+        "build","cargo","git","gix","rustc","si"
     ]
 }
