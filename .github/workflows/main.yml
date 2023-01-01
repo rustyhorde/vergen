@@ -58,7 +58,13 @@ jobs:
       matrix:
         include:
           - os: macos-latest
+            rust: "1.62.0"
+          - os: macos-latest
             rust: stable
+          - os: macos-latest
+            rust: beta
+          - os: macos-latest
+            rust: nightly
     steps:
       - uses: actions/checkout@v3
       - name: 🧰 Toolchain 🧰
@@ -78,7 +84,13 @@ jobs:
       matrix:
         include:
           - os: windows-latest
+            rust: "1.62.0"
+          - os: windows-latest
             rust: stable
+          - os: windows-latest
+            rust: beta
+          - os: windows-latest
+            rust: nightly
     steps:
       - uses: actions/checkout@v3
       - name: 🧰 Toolchain 🧰
