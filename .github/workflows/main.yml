@@ -41,7 +41,12 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: 🧰 Toolchain 🧰
-        run: rustup toolchain add ${{ matrix.rust }}
+        run: |
+          rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
+          rm ~/.cargo/bin/rustfmt
+          rm ~/.cargo/bin/cargo-fmt
+          rm ~/.cargo/bin/cargo-clippy
+          rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }}
       - name: 🧰 Toolchain Override 🧰
         run: rustup override set ${{ matrix.rust }}
       - name: ✂ Clippy ✂
@@ -58,7 +63,12 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: 🧰 Toolchain 🧰
-        run: rustup toolchain add ${{ matrix.rust }}
+        run: |
+          rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
+          rm ~/.cargo/bin/rustfmt
+          rm ~/.cargo/bin/cargo-fmt
+          rm ~/.cargo/bin/cargo-clippy
+          rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }}
       - name: 🧰 Toolchain Override 🧰
         run: rustup override set ${{ matrix.rust }}
       - name: ✂ Clippy ✂
@@ -75,7 +85,12 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: 🧰 Toolchain 🧰
-        run: rustup toolchain add ${{ matrix.rust }}
+        run: |
+          rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
+          rm ~/.cargo/bin/rustfmt
+          rm ~/.cargo/bin/cargo-fmt
+          rm ~/.cargo/bin/cargo-clippy
+          rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }}
       - name: 🧰 Toolchain Override 🧰
         run: rustup override set ${{ matrix.rust }}
       - name: ✂ Clippy ✂
@@ -111,7 +126,12 @@ jobs:
             ~/.cargo/bin/cargo-*-all-features*
           key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.toml','**/main.yml') }}
       - name: 🧰 Toolchain 🧰
-        run: rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }}
+        run: |
+          rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
+          rm ~/.cargo/bin/rustfmt
+          rm ~/.cargo/bin/cargo-fmt
+          rm ~/.cargo/bin/cargo-clippy
+          rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }}
       - name: 🧰 Toolchain Override 🧰
         run: rustup override set ${{ matrix.rust }}
       - name: 💾 Install (cargo-binstall) 💾
@@ -161,7 +181,12 @@ jobs:
             ~/.cargo/bin/cargo-*-all-features*
           key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.toml','**/main.yml') }}
       - name: 🧰 Toolchain 🧰
-        run: rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }}
+        run: |
+          rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
+          rm ~/.cargo/bin/rustfmt
+          rm ~/.cargo/bin/cargo-fmt
+          rm ~/.cargo/bin/cargo-clippy
+          rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }}
       - name: 🧰 Toolchain Override 🧰
         run: rustup override set ${{ matrix.rust }}
       - name: 💾 Install (cargo-binstall) 💾
@@ -217,7 +242,12 @@ jobs:
             ~/.cargo/bin/cargo-*-all-features*
           key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.toml','**/main.yml') }}
       - name: 🧰 Toolchain 🧰
-        run: rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }}
+        run: |
+          rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
+          rm ~/.cargo/bin/rustfmt
+          rm ~/.cargo/bin/cargo-fmt
+          rm ~/.cargo/bin/cargo-clippy
+          rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }}
       - name: 🧰 Toolchain Override 🧰
         run: rustup override set ${{ matrix.rust }}
       - name: 💾 Install (cargo-binstall) 💾
