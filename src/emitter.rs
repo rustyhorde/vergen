@@ -139,6 +139,7 @@ impl Emitter {
                 &mut self.rerun_if_changed,
             )
             .or_else(|e| {
+                eprintln!("Error: {e}");
                 builder.add_git_default(
                     e,
                     fail_on_error,

@@ -20,7 +20,7 @@ jobs:
     name: ☢️ Formatting ☢️
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
@@ -44,7 +44,7 @@ jobs:
           - os: ubuntu-latest
             rust: nightly
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
@@ -62,7 +62,7 @@ jobs:
           - os: macos-latest
             rust: stable
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
@@ -80,7 +80,7 @@ jobs:
           - os: windows-latest
             rust: stable
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
@@ -109,9 +109,9 @@ jobs:
           target: x86_64-unknown-linux-gnu
     steps:
       - name: ✔️ Checkout ✔️
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: 💵 Cache 💵
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             ~/.cargo/bin/cargo-tarpaulin*
@@ -171,9 +171,9 @@ jobs:
           target: x86_64-apple-darwin
     steps:
       - name: ✔️ Checkout ✔️
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: 💵 Cache 💵
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             ~/.cargo/bin/cargo-*-all-features*
@@ -233,9 +233,9 @@ jobs:
           target: x86_64-pc-windows-gnu
     steps:
       - name: ✔️ Checkout ✔️
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: 💵 Cache 💵
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             ~/.cargo/bin/cargo-*-all-features*

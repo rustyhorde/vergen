@@ -60,7 +60,6 @@ mod test_git_gitcl {
         let mut stdout_buf = vec![];
         EmitBuilder::builder().all_git().emit_to(&mut stdout_buf)?;
         let output = String::from_utf8_lossy(&stdout_buf);
-        println!("{output}");
         assert!(GIT_REGEX_INST.is_match(&output));
         Ok(())
     }
