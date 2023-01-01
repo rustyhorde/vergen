@@ -109,7 +109,7 @@ jobs:
             ~/.cargo/bin/cargo-binstall
             ~/.cargo/bin/cargo-tarpaulin*
             ~/.cargo/bin/cargo-*-all-features*
-          key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.toml') }}
+          key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.toml','**/main.yml') }}
       - name: 🧰 Toolchain 🧰
         run: rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }}
       - name: 🧰 Toolchain Override 🧰
@@ -159,7 +159,7 @@ jobs:
         with:
           path: |
             ~/.cargo/bin/cargo-*-all-features*
-          key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.toml') }}
+          key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.toml','**/main.yml') }}
       - name: 🧰 Toolchain 🧰
         run: rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }}
       - name: 🧰 Toolchain Override 🧰
@@ -215,7 +215,7 @@ jobs:
         with:
           path: |
             ~/.cargo/bin/cargo-*-all-features*
-          key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.toml') }}
+          key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.toml','**/main.yml') }}
       - name: 🧰 Toolchain 🧰
         run: rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }}
       - name: 🧰 Toolchain Override 🧰
