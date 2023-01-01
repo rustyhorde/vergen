@@ -14,9 +14,12 @@ use crate::{
 #[cfg(test)]
 use anyhow::anyhow;
 use anyhow::{Error, Result};
-// remove these when impl complete
-use git2_rs as _;
-use time as _;
+use git2_rs::{BranchType, Commit, DescribeFormatOptions, DescribeOptions, Reference, Repository};
+use std::{env, path::PathBuf, str::FromStr};
+use time::{
+    format_description::{self, well_known::Iso8601},
+    OffsetDateTime,
+};
 
 #[derive(Clone, Copy, Debug, Default)]
 pub(crate) struct Config {
@@ -83,6 +86,20 @@ impl EmitBuilder {
             .git_commit_timestamp()
             .git_describe(false, false)
             .git_sha(false)
+    }
+
+    fn any(&self) -> bool {
+        let cfg = self.git_config;
+
+        cfg.git_branch
+            || cfg.git_commit_author_email
+            || cfg.git_commit_author_name
+            || cfg.git_commit_count
+            || cfg.git_commit_date
+            || cfg.git_commit_message
+            || cfg.git_commit_timestamp
+            || cfg.git_describe
+            || cfg.git_sha
     }
 
     /// Emit the current git branch
@@ -239,9 +256,10 @@ impl EmitBuilder {
         &self,
         idempotent: bool,
         map: &mut RustcEnvMap,
+        warnings: &mut Vec<String>,
         rerun_if_changed: &mut Vec<String>,
     ) -> Result<()> {
-        self.inner_add_git_map_entries(idempotent, map, rerun_if_changed)
+        self.inner_add_git_map_entries(idempotent, map, warnings, rerun_if_changed)
     }
 
     #[cfg(test)]
@@ -249,25 +267,218 @@ impl EmitBuilder {
         &self,
         idempotent: bool,
         map: &mut RustcEnvMap,
+        warnings: &mut Vec<String>,
         rerun_if_changed: &mut Vec<String>,
     ) -> Result<()> {
         if self.git_config.fail {
             Err(anyhow!("failed to create entries"))
         } else {
-            self.inner_add_git_map_entries(idempotent, map, rerun_if_changed)
+            self.inner_add_git_map_entries(idempotent, map, warnings, rerun_if_changed)
         }
     }
 
     fn inner_add_git_map_entries(
         &self,
-        _idempotent: bool,
+        idempotent: bool,
         map: &mut RustcEnvMap,
-        _rerun_if_changed: &mut Vec<String>,
+        warnings: &mut Vec<String>,
+        rerun_if_changed: &mut Vec<String>,
     ) -> Result<()> {
+        let curr_dir = env::current_dir()?;
+        let repo = Repository::discover(curr_dir)?;
+        let ref_head = repo.find_reference("HEAD")?;
+        let git_path = repo.path().to_path_buf();
+        let commit = ref_head.peel_to_commit()?;
+
+        if !idempotent && self.any() {
+            self.add_rerun_if_changed(&ref_head, &git_path, rerun_if_changed);
+        }
+
         if self.git_config.git_branch {
-            add_map_entry(VergenKey::GitBranch, "stuff", map);
+            if repo.head_detached()? {
+                add_map_entry(VergenKey::GitBranch, "HEAD", map);
+            } else {
+                let locals = repo.branches(Some(BranchType::Local))?;
+                let mut found_head = false;
+                for (local, _bt) in locals.filter_map(std::result::Result::ok) {
+                    if local.is_head() {
+                        if let Some(name) = local.name()? {
+                            add_map_entry(VergenKey::GitBranch, name, map);
+                            found_head = true;
+                            break;
+                        }
+                    }
+                }
+                if !found_head {
+                    add_default_map_entry(VergenKey::GitBranch, map, warnings);
+                }
+            }
+        }
+
+        if self.git_config.git_commit_author_email {
+            if let Some(email) = commit.author().email() {
+                add_map_entry(VergenKey::GitCommitAuthorEmail, email, map);
+            } else {
+                add_default_map_entry(VergenKey::GitCommitAuthorEmail, map, warnings);
+            }
+        }
+
+        if self.git_config.git_commit_author_name {
+            if let Some(name) = commit.author().name() {
+                add_map_entry(VergenKey::GitCommitAuthorName, name, map);
+            } else {
+                add_default_map_entry(VergenKey::GitCommitAuthorName, map, warnings);
+            }
+        }
+
+        if self.git_config.git_commit_count {
+            if let Ok(mut revwalk) = repo.revwalk() {
+                if revwalk.push_head().is_ok() {
+                    add_map_entry(VergenKey::GitCommitCount, revwalk.count().to_string(), map);
+                } else {
+                    add_default_map_entry(VergenKey::GitCommitCount, map, warnings);
+                }
+            } else {
+                add_default_map_entry(VergenKey::GitCommitCount, map, warnings);
+            }
+        }
+
+        self.add_git_timestamp_entries(&commit, idempotent, map, warnings)?;
+
+        if self.git_config.git_commit_message {
+            if let Some(message) = commit.message() {
+                add_map_entry(VergenKey::GitCommitMessage, message.trim(), map);
+            } else {
+                add_default_map_entry(VergenKey::GitCommitMessage, map, warnings);
+            }
+        }
+
+        if self.git_config.git_describe {
+            let mut describe_opts = DescribeOptions::new();
+            let mut format_opts = DescribeFormatOptions::new();
+
+            let _ = describe_opts.show_commit_oid_as_fallback(true);
+
+            if self.git_config.git_describe_dirty {
+                let _ = format_opts.dirty_suffix("-dirty");
+            }
+
+            if self.git_config.git_describe_tags {
+                let _ = describe_opts.describe_tags();
+            }
+
+            let describe = repo
+                .describe(&describe_opts)
+                .map(|x| x.format(Some(&format_opts)).map_err(Error::from))??;
+            add_map_entry(VergenKey::GitDescribe, describe, map);
+        }
+
+        if self.git_config.git_sha {
+            if self.git_config.git_sha_short {
+                let obj = repo.revparse_single("HEAD")?;
+                if let Some(short_sha) = obj.short_id()?.as_str() {
+                    add_map_entry(VergenKey::GitSha, short_sha, map);
+                } else {
+                    add_default_map_entry(VergenKey::GitSha, map, warnings);
+                }
+            } else {
+                add_map_entry(VergenKey::GitSha, commit.id().to_string(), map);
+            }
+        }
+
+        Ok(())
+    }
+
+    fn add_git_timestamp_entries(
+        &self,
+        commit: &Commit<'_>,
+        idempotent: bool,
+        map: &mut RustcEnvMap,
+        warnings: &mut Vec<String>,
+    ) -> Result<()> {
+        let (sde, ts) = match env::var("SOURCE_DATE_EPOCH") {
+            Ok(v) => (
+                true,
+                OffsetDateTime::from_unix_timestamp(i64::from_str(&v)?)?,
+            ),
+            Err(std::env::VarError::NotPresent) => (
+                false,
+                OffsetDateTime::from_unix_timestamp(commit.time().seconds())?,
+            ),
+            Err(e) => return Err(e.into()),
+        };
+
+        self.add_git_date_entry(idempotent, sde, &ts, map, warnings)?;
+        self.add_git_timestamp_entry(idempotent, sde, &ts, map, warnings)?;
+        Ok(())
+    }
+
+    fn add_git_date_entry(
+        &self,
+        idempotent: bool,
+        source_date_epoch: bool,
+        ts: &OffsetDateTime,
+        map: &mut RustcEnvMap,
+        warnings: &mut Vec<String>,
+    ) -> Result<()> {
+        if self.git_config.git_commit_date {
+            if idempotent && !source_date_epoch {
+                add_default_map_entry(VergenKey::GitCommitDate, map, warnings);
+            } else {
+                let format = format_description::parse("[year]-[month]-[day]")?;
+                add_map_entry(VergenKey::GitCommitDate, ts.format(&format)?, map);
+            }
         }
         Ok(())
+    }
+
+    fn add_git_timestamp_entry(
+        &self,
+        idempotent: bool,
+        source_date_epoch: bool,
+        ts: &OffsetDateTime,
+        map: &mut RustcEnvMap,
+        warnings: &mut Vec<String>,
+    ) -> Result<()> {
+        if self.git_config.git_commit_timestamp {
+            if idempotent && !source_date_epoch {
+                add_default_map_entry(VergenKey::GitCommitTimestamp, map, warnings);
+            } else {
+                add_map_entry(
+                    VergenKey::GitCommitTimestamp,
+                    ts.format(&Iso8601::DEFAULT)?,
+                    map,
+                );
+            }
+        }
+        Ok(())
+    }
+
+    fn add_rerun_if_changed(
+        &self,
+        ref_head: &Reference<'_>,
+        git_path: &PathBuf,
+        rerun_if_changed: &mut Vec<String>,
+    ) {
+        // Setup the head path
+        let mut head_path = git_path.clone();
+        head_path.push("HEAD");
+
+        // Check whether the path exists in the filesystem before emitting it
+        if head_path.exists() {
+            rerun_if_changed.push(format!("{}", head_path.display()));
+        }
+
+        if let Ok(resolved) = ref_head.resolve() {
+            if let Some(name) = resolved.name() {
+                let ref_path = git_path.clone();
+                let path = ref_path.join(name);
+                // Check whether the path exists in the filesystem before emitting it
+                if path.exists() {
+                    rerun_if_changed.push(format!("{}", ref_path.display()));
+                }
+            }
+        }
     }
 }
 
@@ -280,9 +491,9 @@ mod test {
     #[serial_test::parallel]
     fn git_all_idempotent() -> Result<()> {
         let config = EmitBuilder::builder().idempotent().all_git().test_emit()?;
-        assert_eq!(1, config.cargo_rustc_env_map.len());
-        assert_eq!(0, count_idempotent(config.cargo_rustc_env_map));
-        assert_eq!(0, config.warnings.len());
+        assert_eq!(9, config.cargo_rustc_env_map.len());
+        assert_eq!(2, count_idempotent(config.cargo_rustc_env_map));
+        assert_eq!(2, config.warnings.len());
         Ok(())
     }
 
@@ -290,7 +501,7 @@ mod test {
     #[serial_test::parallel]
     fn git_all() -> Result<()> {
         let config = EmitBuilder::builder().all_git().test_emit()?;
-        assert_eq!(1, config.cargo_rustc_env_map.len());
+        assert_eq!(9, config.cargo_rustc_env_map.len());
         assert_eq!(0, count_idempotent(config.cargo_rustc_env_map));
         assert_eq!(0, config.warnings.len());
         Ok(())

@@ -135,6 +135,7 @@ impl Emitter {
             .add_git_map_entries(
                 idem,
                 &mut self.cargo_rustc_env_map,
+                &mut self.warnings,
                 &mut self.rerun_if_changed,
             )
             .or_else(|e| {

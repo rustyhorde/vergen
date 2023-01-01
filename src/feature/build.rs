@@ -6,7 +6,7 @@ use crate::{
 use anyhow::{Error, Result};
 use std::{env, str::FromStr};
 use time::{
-    format_description::{self, well_known::Rfc3339},
+    format_description::{self, well_known::Iso8601},
     OffsetDateTime,
 };
 
@@ -134,7 +134,11 @@ impl EmitBuilder {
             if idempotent && !source_date_epoch {
                 add_default_map_entry(VergenKey::BuildTimestamp, map, warnings);
             } else {
-                add_map_entry(VergenKey::BuildTimestamp, ts.format(&Rfc3339)?, map);
+                add_map_entry(
+                    VergenKey::BuildTimestamp,
+                    ts.format(&Iso8601::DEFAULT)?,
+                    map,
+                );
             }
         }
         Ok(())
@@ -185,7 +189,7 @@ mod test {
                 assert_eq!("cargo:rustc-env=VERGEN_BUILD_DATE=2022-12-23", line);
             } else if idx == 1 {
                 assert_eq!(
-                    "cargo:rustc-env=VERGEN_BUILD_TIMESTAMP=2022-12-23T15:29:20Z",
+                    "cargo:rustc-env=VERGEN_BUILD_TIMESTAMP=2022-12-23T15:29:20.000000000Z",
                     line
                 );
             }

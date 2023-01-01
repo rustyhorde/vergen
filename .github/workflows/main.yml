@@ -145,7 +145,7 @@ jobs:
       - name: 🧪 Test gix 🧪
         run: cargo test -F git,gix
       - name: 🙊 Code Coverage 🙊
-        run: cargo tarpaulin --exclude-files src/lib.rs --exclude-files legacy/git.rs --out Xml
+        run: cargo tarpaulin --exclude-files src/lib.rs --out Xml
       - name: 🙊 Upload Code Coverage 🙊
         uses: codecov/codecov-action@v1
         with:

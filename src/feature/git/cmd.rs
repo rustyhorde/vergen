@@ -17,6 +17,14 @@ use std::env;
 use std::{
     path::PathBuf,
     process::{Command, Output, Stdio},
+    str::FromStr,
+};
+use time::{
+    format_description::{
+        self,
+        well_known::{Iso8601, Rfc3339},
+    },
+    OffsetDateTime,
 };
 
 #[derive(Clone, Copy, Debug, Default)]
@@ -76,7 +84,6 @@ macro_rules! commit_date {
         "git log -1 --pretty=format:'%cs'"
     };
 }
-const COMMIT_DATE: &str = commit_date!();
 macro_rules! commit_message {
     () => {
         "git log -1 --format=%s"
@@ -348,10 +355,11 @@ impl EmitBuilder {
         &self,
         idempotent: bool,
         map: &mut RustcEnvMap,
+        warnings: &mut Vec<String>,
         rerun_if_changed: &mut Vec<String>,
     ) -> Result<()> {
         check_git("git -v").and_then(check_inside_git_worktree)?;
-        self.inner_add_git_map_entries(idempotent, map, rerun_if_changed)
+        self.inner_add_git_map_entries(idempotent, map, warnings, rerun_if_changed)
     }
 
     #[cfg(test)]
@@ -359,6 +367,7 @@ impl EmitBuilder {
         &self,
         idempotent: bool,
         map: &mut RustcEnvMap,
+        warnings: &mut Vec<String>,
         rerun_if_changed: &mut Vec<String>,
     ) -> Result<()> {
         let git_cmd = if let Some(cmd) = self.git_config.git_cmd {
@@ -367,13 +376,14 @@ impl EmitBuilder {
             "git -v"
         };
         check_git(git_cmd).and_then(check_inside_git_worktree)?;
-        self.inner_add_git_map_entries(idempotent, map, rerun_if_changed)
+        self.inner_add_git_map_entries(idempotent, map, warnings, rerun_if_changed)
     }
 
     fn inner_add_git_map_entries(
         &self,
         idempotent: bool,
         map: &mut RustcEnvMap,
+        warnings: &mut Vec<String>,
         rerun_if_changed: &mut Vec<String>,
     ) -> Result<()> {
         if !idempotent && self.any() {
@@ -396,16 +406,10 @@ impl EmitBuilder {
             add_git_cmd_entry(COMMIT_COUNT, VergenKey::GitCommitCount, map)?;
         }
 
-        if self.git_config.git_commit_date {
-            add_git_cmd_entry(COMMIT_DATE, VergenKey::GitCommitDate, map)?;
-        }
+        self.add_git_timestamp_entries(idempotent, map, warnings)?;
 
         if self.git_config.git_commit_message {
             add_git_cmd_entry(COMMIT_MESSAGE, VergenKey::GitCommitMessage, map)?;
-        }
-
-        if self.git_config.git_commit_timestamp {
-            add_git_cmd_entry(COMMIT_TIMESTAMP, VergenKey::GitCommitTimestamp, map)?;
         }
 
         if self.git_config.git_describe {
@@ -427,6 +431,65 @@ impl EmitBuilder {
             sha_cmd.push_str(" HEAD");
             add_git_cmd_entry(&sha_cmd, VergenKey::GitSha, map)?;
         }
+        Ok(())
+    }
+
+    fn add_git_timestamp_entries(
+        &self,
+        idempotent: bool,
+        map: &mut RustcEnvMap,
+        warnings: &mut Vec<String>,
+    ) -> Result<()> {
+        let output = run_cmd(COMMIT_TIMESTAMP)?;
+        if output.status.success() {
+            let stdout = String::from_utf8_lossy(&output.stdout)
+                .trim()
+                .trim_matches('\'')
+                .to_string();
+
+            let (sde, ts) = match env::var("SOURCE_DATE_EPOCH") {
+                Ok(v) => (
+                    true,
+                    OffsetDateTime::from_unix_timestamp(i64::from_str(&v)?)?,
+                ),
+                Err(std::env::VarError::NotPresent) => {
+                    (false, OffsetDateTime::parse(&stdout, &Rfc3339)?)
+                }
+                Err(e) => return Err(e.into()),
+            };
+
+            if idempotent && !sde {
+                if self.git_config.git_commit_date {
+                    add_default_map_entry(VergenKey::GitCommitDate, map, warnings);
+                }
+
+                if self.git_config.git_commit_timestamp {
+                    add_default_map_entry(VergenKey::GitCommitTimestamp, map, warnings);
+                }
+            } else {
+                if self.git_config.git_commit_date {
+                    let format = format_description::parse("[year]-[month]-[day]")?;
+                    add_map_entry(VergenKey::GitCommitDate, ts.format(&format)?, map);
+                }
+
+                if self.git_config.git_commit_timestamp {
+                    add_map_entry(
+                        VergenKey::GitCommitTimestamp,
+                        ts.format(&Iso8601::DEFAULT)?,
+                        map,
+                    );
+                }
+            }
+        } else {
+            if self.git_config.git_commit_date {
+                add_default_map_entry(VergenKey::GitCommitDate, map, warnings);
+            }
+
+            if self.git_config.git_commit_timestamp {
+                add_default_map_entry(VergenKey::GitCommitTimestamp, map, warnings);
+            }
+        }
+
         Ok(())
     }
 }
@@ -599,8 +662,8 @@ mod test {
     fn git_all_idempotent() -> Result<()> {
         let config = EmitBuilder::builder().idempotent().all_git().test_emit()?;
         assert_eq!(9, config.cargo_rustc_env_map.len());
-        assert_eq!(0, count_idempotent(config.cargo_rustc_env_map));
-        assert_eq!(0, config.warnings.len());
+        assert_eq!(2, count_idempotent(config.cargo_rustc_env_map));
+        assert_eq!(2, config.warnings.len());
         Ok(())
     }
 

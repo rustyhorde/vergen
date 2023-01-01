@@ -239,9 +239,10 @@ impl EmitBuilder {
         &self,
         idempotent: bool,
         map: &mut RustcEnvMap,
+        warnings: &mut Vec<String>,
         rerun_if_changed: &mut Vec<String>,
     ) -> Result<()> {
-        self.inner_add_git_map_entries(idempotent, map, rerun_if_changed)
+        self.inner_add_git_map_entries(idempotent, map, warnings, rerun_if_changed)
     }
 
     #[cfg(test)]
@@ -249,12 +250,13 @@ impl EmitBuilder {
         &self,
         idempotent: bool,
         map: &mut RustcEnvMap,
+        warnings: &mut Vec<String>,
         rerun_if_changed: &mut Vec<String>,
     ) -> Result<()> {
         if self.git_config.fail {
             Err(anyhow!("failed to create entries"))
         } else {
-            self.inner_add_git_map_entries(idempotent, map, rerun_if_changed)
+            self.inner_add_git_map_entries(idempotent, map, warnings, rerun_if_changed)
         }
     }
 
@@ -262,6 +264,7 @@ impl EmitBuilder {
         &self,
         _idempotent: bool,
         map: &mut RustcEnvMap,
+        _warnings: &mut Vec<String>,
         _rerun_if_changed: &mut Vec<String>,
     ) -> Result<()> {
         if self.git_config.git_branch {
