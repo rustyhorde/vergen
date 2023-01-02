@@ -322,19 +322,21 @@ impl EmitBuilder {
         }
 
         if self.git_config.git_commit_author_email {
-            if let Some(email) = commit.author().email() {
-                add_map_entry(VergenKey::GitCommitAuthorEmail, email, map);
-            } else {
-                add_default_map_entry(VergenKey::GitCommitAuthorEmail, map, warnings);
-            }
+            add_opt_value(
+                commit.author().email(),
+                VergenKey::GitCommitAuthorEmail,
+                map,
+                warnings,
+            );
         }
 
         if self.git_config.git_commit_author_name {
-            if let Some(name) = commit.author().name() {
-                add_map_entry(VergenKey::GitCommitAuthorName, name, map);
-            } else {
-                add_default_map_entry(VergenKey::GitCommitAuthorName, map, warnings);
-            }
+            add_opt_value(
+                commit.author().name(),
+                VergenKey::GitCommitAuthorName,
+                map,
+                warnings,
+            );
         }
 
         if self.git_config.git_commit_count {
@@ -352,11 +354,7 @@ impl EmitBuilder {
         self.add_git_timestamp_entries(&commit, idempotent, map, warnings)?;
 
         if self.git_config.git_commit_message {
-            if let Some(message) = commit.message() {
-                add_map_entry(VergenKey::GitCommitMessage, message.trim(), map);
-            } else {
-                add_default_map_entry(VergenKey::GitCommitMessage, map, warnings);
-            }
+            add_opt_value(commit.message(), VergenKey::GitCommitMessage, map, warnings);
         }
 
         if self.git_config.git_describe {
@@ -382,11 +380,7 @@ impl EmitBuilder {
         if self.git_config.git_sha {
             if self.git_config.git_sha_short {
                 let obj = repo.revparse_single("HEAD")?;
-                if let Some(short_sha) = obj.short_id()?.as_str() {
-                    add_map_entry(VergenKey::GitSha, short_sha, map);
-                } else {
-                    add_default_map_entry(VergenKey::GitSha, map, warnings);
-                }
+                add_opt_value(obj.short_id()?.as_str(), VergenKey::GitSha, map, warnings);
             } else {
                 add_map_entry(VergenKey::GitSha, commit.id().to_string(), map);
             }
@@ -489,17 +483,45 @@ impl EmitBuilder {
     }
 }
 
+fn add_opt_value(
+    value: Option<&str>,
+    key: VergenKey,
+    map: &mut RustcEnvMap,
+    warnings: &mut Vec<String>,
+) {
+    value
+        .map(|val| add_map_entry(key, val, map))
+        .unwrap_or_else(|| add_default_map_entry(key, map, warnings));
+}
+
 #[cfg(test)]
 mod test {
-    use crate::{emitter::test::count_idempotent, EmitBuilder};
+    use super::add_opt_value;
+    use crate::{emitter::test::count_idempotent, key::VergenKey, EmitBuilder};
     use anyhow::Result;
     use git2_rs::Repository;
-    use std::env;
+    use std::{collections::BTreeMap, env, vec};
 
     fn repo_exists() -> Result<bool> {
         let curr_dir = env::current_dir()?;
         let _repo = Repository::discover(curr_dir)?;
         Ok(true)
+    }
+
+    #[test]
+    #[serial_test::parallel]
+    fn empty_email_is_default() -> Result<()> {
+        let mut map = BTreeMap::new();
+        let mut warnings = vec![];
+        add_opt_value(
+            None,
+            VergenKey::GitCommitAuthorEmail,
+            &mut map,
+            &mut warnings,
+        );
+        assert_eq!(1, map.len());
+        assert_eq!(1, warnings.len());
+        Ok(())
     }
 
     #[test]
