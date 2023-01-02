@@ -483,6 +483,7 @@ impl EmitBuilder {
     }
 }
 
+#[allow(clippy::map_unwrap_or)]
 fn add_opt_value(
     value: Option<&str>,
     key: VergenKey,
