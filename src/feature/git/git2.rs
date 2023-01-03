@@ -312,24 +312,7 @@ impl EmitBuilder {
         }
 
         if self.git_config.git_branch {
-            if repo.head_detached()? {
-                add_map_entry(VergenKey::GitBranch, "HEAD", map);
-            } else {
-                let locals = repo.branches(Some(BranchType::Local))?;
-                let mut found_head = false;
-                for (local, _bt) in locals.filter_map(std::result::Result::ok) {
-                    if local.is_head() {
-                        if let Some(name) = local.name()? {
-                            add_map_entry(VergenKey::GitBranch, name, map);
-                            found_head = true;
-                            break;
-                        }
-                    }
-                }
-                if !found_head {
-                    add_default_map_entry(VergenKey::GitBranch, map, warnings);
-                }
-            }
+            add_branch_name(false, &repo, map, warnings)?;
         }
 
         if self.git_config.git_commit_author_email {
@@ -516,9 +499,36 @@ fn add_commit_count(
     add_default_map_entry(key, map, warnings);
 }
 
+fn add_branch_name(
+    add_default: bool,
+    repo: &Repository,
+    map: &mut RustcEnvMap,
+    warnings: &mut Vec<String>,
+) -> Result<()> {
+    if repo.head_detached()? {
+        add_map_entry(VergenKey::GitBranch, "HEAD", map);
+    } else {
+        let locals = repo.branches(Some(BranchType::Local))?;
+        let mut found_head = false;
+        for (local, _bt) in locals.filter_map(std::result::Result::ok) {
+            if local.is_head() {
+                if let Some(name) = local.name()? {
+                    add_map_entry(VergenKey::GitBranch, name, map);
+                    found_head = true;
+                    break;
+                }
+            }
+        }
+        if add_default || !found_head {
+            add_default_map_entry(VergenKey::GitBranch, map, warnings);
+        }
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 mod test {
-    use super::{add_commit_count, add_opt_value};
+    use super::{add_branch_name, add_commit_count, add_opt_value};
     use crate::{emitter::test::count_idempotent, key::VergenKey, EmitBuilder};
     use anyhow::Result;
     use git2_rs::Repository;
@@ -553,6 +563,19 @@ mod test {
         let mut warnings = vec![];
         if let Ok(repo) = Repository::discover(env::current_dir()?) {
             add_commit_count(true, &repo, &mut map, &mut warnings);
+            assert_eq!(1, map.len());
+            assert_eq!(1, warnings.len());
+        }
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::parallel]
+    fn head_not_found_is_default() -> Result<()> {
+        let mut map = BTreeMap::new();
+        let mut warnings = vec![];
+        if let Ok(repo) = Repository::discover(env::current_dir()?) {
+            add_branch_name(true, &repo, &mut map, &mut warnings)?;
             assert_eq!(1, map.len());
             assert_eq!(1, warnings.len());
         }
