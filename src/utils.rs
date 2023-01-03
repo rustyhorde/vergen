@@ -207,4 +207,34 @@ pub(crate) mod repo {
         };
         clone_path.join("vergen_tmp")
     }
+
+    #[cfg(test)]
+    mod test {
+        use super::{clone_path, repo_path};
+        use std::env;
+
+        #[test]
+        #[serial_test::serial]
+        fn repo_path_temp_dir_works() {
+            if let Ok(runner_temp) = env::var("RUNNER_TEMP") {
+                env::remove_var("RUNNER_TEMP");
+                assert!(repo_path().ends_with("vergen_tmp.git"));
+                env::set_var("RUNNER_TEMP", runner_temp);
+            } else {
+                assert!(repo_path().ends_with("vergen_tmp.git"));
+            }
+        }
+
+        #[test]
+        #[serial_test::serial]
+        fn clone_path_temp_dir_works() {
+            if let Ok(runner_temp) = env::var("RUNNER_TEMP") {
+                env::remove_var("RUNNER_TEMP");
+                assert!(clone_path().ends_with("vergen_tmp"));
+                env::set_var("RUNNER_TEMP", runner_temp);
+            } else {
+                assert!(clone_path().ends_with("vergen_tmp"));
+            }
+        }
+    }
 }
