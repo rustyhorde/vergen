@@ -536,7 +536,7 @@ mod test {
     use crate::{
         emitter::test::count_idempotent,
         key::VergenKey,
-        utils::repo::{clone_test_repo, create_test_repo, repo_path},
+        utils::repo::{clone_path, clone_test_repo, create_test_repo},
         EmitBuilder,
     };
     use anyhow::Result;
@@ -592,7 +592,7 @@ mod test {
         }
         let mut map = BTreeMap::new();
         let mut warnings = vec![];
-        if let Ok(repo) = Repository::discover(repo_path()) {
+        if let Ok(repo) = Repository::discover(clone_path()) {
             add_branch_name(true, &repo, &mut map, &mut warnings)?;
             println!("{warnings:?}");
             assert_eq!(1, map.len());

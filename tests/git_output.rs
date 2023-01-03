@@ -117,15 +117,8 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     fn create_test_repo() {
         CREATE_TEST_REPO.call_once(|| {
             || -> Result<()> {
-                let mut path = if let Ok(temp_path) = env::var("RUNNER_TEMP") {
-                    PathBuf::from(temp_path)
-                } else {
-                    env::temp_dir()
-                };
-                path.push("vergen_tmp.git");
-
+                let path = repo_path();
                 if !path.exists() {
-                    println!("Creating repo at '{}'", path.display());
                     // Initialize a bare repository
                     let mut repo = git::init_bare(&path)?;
 
@@ -209,30 +202,29 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     fn clone_test_repo() {
         CLONE_TEST_REPO.call_once(|| {
             || -> Result<()> {
-                // Create the repository path to clone from
-                let mut bare_repo_path = if let Ok(temp_path) = env::var("RUNNER_TEMP") {
-                    PathBuf::from(temp_path)
-                } else {
-                    env::temp_dir()
-                };
-                bare_repo_path.push("vergen_tmp.git");
+                // The bare repository path
+                let bare_repo_path = repo_path();
+                // The path we are cloning into
+                let clone_path = clone_path();
 
-                // The repository path
-                let repo_path = repo_path();
+                if !clone_path.exists() {
+                    // Setup the directory
+                    fs::create_dir_all(&clone_path)?;
 
-                if !repo_path.exists() {
-                    fs::create_dir_all(&repo_path)?;
+                    // Clone into the directory
                     let _res = git::interrupt::init_handler(|| {})?;
                     let url =
                         git::url::parse(git::path::os_str_into_bstr(bare_repo_path.as_os_str())?)?;
-                    let mut prepare_clone = git::prepare_clone(url, &repo_path)?;
+                    let mut prepare_clone = git::prepare_clone(url, &clone_path)?;
                     let (mut prepare_checkout, _) = prepare_clone.fetch_then_checkout(
                         git::progress::Discard,
                         &git::interrupt::IS_INTERRUPTED,
                     )?;
                     let (_repo, _) = prepare_checkout
                         .main_worktree(git::progress::Discard, &git::interrupt::IS_INTERRUPTED)?;
-                    let file_path = repo_path.join("foo.txt");
+
+                    // "edit" a file to mark the repository describe as dirty
+                    let file_path = clone_path.join("foo.txt");
                     let foo = OpenOptions::new().append(true).open(file_path)?;
                     let mut writer = BufWriter::new(foo);
                     writeln!(writer, "another test line")?;
@@ -244,6 +236,15 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     }
 
     fn repo_path() -> PathBuf {
+        let clone_path = if let Ok(temp_path) = env::var("RUNNER_TEMP") {
+            PathBuf::from(temp_path)
+        } else {
+            env::temp_dir()
+        };
+        clone_path.join("vergen_tmp.git")
+    }
+
+    fn clone_path() -> PathBuf {
         let clone_path = if let Ok(temp_path) = env::var("RUNNER_TEMP") {
             PathBuf::from(temp_path)
         } else {
@@ -293,7 +294,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
             .all_git()
             .git_describe(true, true)
             .git_sha(true)
-            .emit_to_at(&mut stdout_buf, Some(repo_path()))?;
+            .emit_to_at(&mut stdout_buf, Some(clone_path()))?;
         assert!(!failed);
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(GIT_REGEX_SHORT_INST.is_match(&output));
@@ -308,7 +309,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
         let failed = EmitBuilder::builder()
             .all_git()
             .git_describe(true, false)
-            .emit_to_at(&mut stdout_buf, Some(repo_path()))?;
+            .emit_to_at(&mut stdout_buf, Some(clone_path()))?;
         assert!(!failed);
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(GIT_REGEX_INST.is_match(&output));
@@ -323,7 +324,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
             .all_git()
             .git_describe(true, true)
             .git_sha(true)
-            .emit_at(repo_path())
+            .emit_at(clone_path())
             .is_ok());
         Ok(())
     }
