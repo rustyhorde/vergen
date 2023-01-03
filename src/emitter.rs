@@ -656,7 +656,6 @@ pub(crate) mod test {
             .all_rustc()
             .all_sysinfo()
             .emit_to(&mut stdout_buf)?;
-        println!("{}", String::from_utf8_lossy(&stdout_buf));
         teardown();
         Ok(())
     }

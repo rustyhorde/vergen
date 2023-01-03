@@ -351,15 +351,7 @@ impl EmitBuilder {
         }
 
         if self.git_config.git_commit_count {
-            if let Ok(mut revwalk) = repo.revwalk() {
-                if revwalk.push_head().is_ok() {
-                    add_map_entry(VergenKey::GitCommitCount, revwalk.count().to_string(), map);
-                } else {
-                    add_default_map_entry(VergenKey::GitCommitCount, map, warnings);
-                }
-            } else {
-                add_default_map_entry(VergenKey::GitCommitCount, map, warnings);
-            }
+            add_commit_count(false, &repo, map, warnings);
         }
 
         self.add_git_timestamp_entries(&commit, idempotent, map, warnings)?;
@@ -506,9 +498,27 @@ fn add_opt_value(
         .unwrap_or_else(|| add_default_map_entry(key, map, warnings));
 }
 
+fn add_commit_count(
+    add_default: bool,
+    repo: &Repository,
+    map: &mut RustcEnvMap,
+    warnings: &mut Vec<String>,
+) {
+    let key = VergenKey::GitCommitCount;
+    if !add_default {
+        if let Ok(mut revwalk) = repo.revwalk() {
+            if revwalk.push_head().is_ok() {
+                add_map_entry(key, revwalk.count().to_string(), map);
+                return;
+            }
+        }
+    }
+    add_default_map_entry(key, map, warnings);
+}
+
 #[cfg(test)]
 mod test {
-    use super::add_opt_value;
+    use super::{add_commit_count, add_opt_value};
     use crate::{emitter::test::count_idempotent, key::VergenKey, EmitBuilder};
     use anyhow::Result;
     use git2_rs::Repository;
@@ -533,6 +543,19 @@ mod test {
         );
         assert_eq!(1, map.len());
         assert_eq!(1, warnings.len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::parallel]
+    fn bad_revwalk_is_default() -> Result<()> {
+        let mut map = BTreeMap::new();
+        let mut warnings = vec![];
+        if let Ok(repo) = Repository::discover(env::current_dir()?) {
+            add_commit_count(true, &repo, &mut map, &mut warnings);
+            assert_eq!(1, map.len());
+            assert_eq!(1, warnings.len());
+        }
         Ok(())
     }
 

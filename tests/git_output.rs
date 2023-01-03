@@ -285,7 +285,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     }
 
     #[test]
-    fn git_all_output_test_repo() -> Result<()> {
+    fn git_all_flags_test_repo() -> Result<()> {
         create_test_repo();
         clone_test_repo();
         let mut stdout_buf = vec![];
@@ -297,6 +297,34 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
         assert!(!failed);
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(GIT_REGEX_SHORT_INST.is_match(&output));
+        Ok(())
+    }
+
+    #[test]
+    fn git_all_output_test_repo() -> Result<()> {
+        create_test_repo();
+        clone_test_repo();
+        let mut stdout_buf = vec![];
+        let failed = EmitBuilder::builder()
+            .all_git()
+            .git_describe(true, false)
+            .emit_to_at(&mut stdout_buf, Some(repo_path()))?;
+        assert!(!failed);
+        let output = String::from_utf8_lossy(&stdout_buf);
+        assert!(GIT_REGEX_INST.is_match(&output));
+        Ok(())
+    }
+
+    #[test]
+    fn git_emit_at_test_repo() -> Result<()> {
+        create_test_repo();
+        clone_test_repo();
+        assert!(EmitBuilder::builder()
+            .all_git()
+            .git_describe(true, true)
+            .git_sha(true)
+            .emit_at(repo_path())
+            .is_ok());
         Ok(())
     }
 
