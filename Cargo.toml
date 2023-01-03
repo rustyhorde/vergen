@@ -43,13 +43,18 @@ git2-rs = { version = "0.15.0", package = "git2", optional = true, default-featu
 git-repository = { version = "0.31.0", optional = true, default-features = false }
 rustc_version = { version = "0.4.0", optional = true }
 sysinfo = { version = "0.27.2", optional = true, default-features = false }
-time = { version = "0.3.17", features = ["formatting", "parsing"], optional = true }
+time = { version = "0.3.17", features = [
+    "formatting",
+    "parsing",
+], optional = true }
 
 [build-dependencies]
 rustversion = "1.0.11"
 
 [dev-dependencies]
-git-repository = { version = "0.31.0", default-features = false }
+git-repository = { version = "0.31.0", default-features = false, features = [
+    "blocking-network-client",
+] }
 lazy_static = "1.4.0"
 regex = "1.7.0"
 serial_test = "0.10.0"

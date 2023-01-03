@@ -33,6 +33,7 @@ use crate::feature::git::Config as GitConfig;
 use crate::feature::rustc::Config as RustcConfig;
 #[cfg(feature = "si")]
 use crate::feature::si::Config as SysinfoConfig;
+use std::path::PathBuf;
 
 #[cfg(any(
     feature = "build",
@@ -129,11 +130,12 @@ impl Emitter {
         feature = "git",
         any(feature = "git2", feature = "gitcl", feature = "gix")
     ))]
-    fn add_git_entries(&mut self, builder: &EmitBuilder) -> Result<()> {
+    fn add_git_entries(&mut self, builder: &EmitBuilder, repo_path: Option<PathBuf>) -> Result<()> {
         let idem = builder.idempotent;
         let fail_on_error = builder.fail_on_error;
         builder
             .add_git_map_entries(
+                repo_path,
                 idem,
                 &mut self.cargo_rustc_env_map,
                 &mut self.warnings,
@@ -160,7 +162,7 @@ impl Emitter {
         clippy::trivially_copy_pass_by_ref,
         clippy::unused_self
     )]
-    fn add_git_entries(&mut self, _builder: &EmitBuilder) -> Result<()> {
+    fn add_git_entries(&mut self, _builder: &EmitBuilder, _path: Option<PathBuf>) -> Result<()> {
         Ok(())
     }
 
@@ -496,7 +498,20 @@ EmitBuilder::builder()
     /// ```
     ///
     pub fn emit(self) -> Result<()> {
-        self.inner_emit()
+        self.inner_emit(None)
+            .and_then(|x| x.emit_output(&mut io::stdout()))
+    }
+
+    /// Emit instructions from the given repository path.
+    ///
+    /// # Errors
+    ///
+    #[cfg(all(
+        feature = "git",
+        any(feature = "gitcl", feature = "git2", feature = "gix")
+    ))]
+    pub fn emit_at(self, repo_path: PathBuf) -> Result<()> {
+        self.inner_emit(Some(repo_path))
             .and_then(|x| x.emit_output(&mut io::stdout()))
     }
 
@@ -514,7 +529,18 @@ EmitBuilder::builder()
         )
     ))]
     pub(crate) fn test_emit(self) -> Result<Emitter> {
-        self.inner_emit()
+        self.inner_emit(None)
+    }
+
+    #[cfg(all(
+        test,
+        all(
+            feature = "git",
+            any(feature = "gitcl", feature = "git2", feature = "gix")
+        ),
+    ))]
+    pub(crate) fn test_emit_at(self, repo_path: Option<PathBuf>) -> Result<Emitter> {
+        self.inner_emit(repo_path)
     }
 
     /// Emit the cargo build script instructions to the given [`Write`](std::io::Write).
@@ -529,15 +555,32 @@ EmitBuilder::builder()
     where
         T: Write,
     {
-        self.inner_emit()
+        self.inner_emit(None)
             .and_then(|x| x.emit_output(stdout).map(|_| x.failed))
     }
 
-    fn inner_emit(self) -> Result<Emitter> {
+    /// Emit the cargo build script instructions to the given [`Write`](std::io::Write) at
+    /// the given repository path for git instructions
+    ///
+    /// **NOTE** - This is genarally only used for testing and probably shouldn't be used
+    /// withing a `build.rs` file.
+    ///
+    /// # Errors
+    /// * The [`writeln!`](std::writeln!) macro can throw a [`std::io::Error`]
+    ///
+    pub fn emit_to_at<T>(self, stdout: &mut T, path: Option<PathBuf>) -> Result<bool>
+    where
+        T: Write,
+    {
+        self.inner_emit(path)
+            .and_then(|x| x.emit_output(stdout).map(|_| x.failed))
+    }
+
+    fn inner_emit(self, path: Option<PathBuf>) -> Result<Emitter> {
         let mut config = Emitter::default();
         config.add_build_entries(&self)?;
         config.add_cargo_entries(&self)?;
-        config.add_git_entries(&self)?;
+        config.add_git_entries(&self, path)?;
         config.add_rustc_entries(&self)?;
         config.add_si_entries(&self);
         Ok(config)

@@ -10,7 +10,14 @@ mod test_git_git2 {
     use git_repository as git;
     use lazy_static::lazy_static;
     use regex::Regex;
-    use std::{env, path::PathBuf, sync::Once};
+    use std::{
+        env,
+        fs::{self, OpenOptions},
+        io::BufWriter,
+        io::Write,
+        path::PathBuf,
+        sync::Once,
+    };
     use vergen::EmitBuilder;
 
     lazy_static! {
@@ -31,6 +38,8 @@ mod test_git_git2 {
             r#"cargo:rustc-env=VERGEN_GIT_COMMIT_TIMESTAMP=VERGEN_IDEMPOTENT_OUTPUT"#;
         static ref GIT_DESCRIBE_RE_STR: &'static str = r#"cargo:rustc-env=VERGEN_GIT_DESCRIBE=.*"#;
         static ref GIT_SHA_RE_STR: &'static str = r#"cargo:rustc-env=VERGEN_GIT_SHA=[0-9a-f]{40}"#;
+        static ref GIT_SHORT_SHA_RE_STR: &'static str =
+            r#"cargo:rustc-env=VERGEN_GIT_SHA=[0-9a-f]{7}"#;
         static ref GIT_REGEX_INST: Regex = {
             let re_str = vec![
                 *GIT_BRANCH_RE_STR,
@@ -42,6 +51,21 @@ mod test_git_git2 {
                 *GIT_CT_RE_STR,
                 *GIT_DESCRIBE_RE_STR,
                 *GIT_SHA_RE_STR,
+            ]
+            .join("\n");
+            Regex::new(&re_str).unwrap()
+        };
+        static ref GIT_REGEX_SHORT_INST: Regex = {
+            let re_str = vec![
+                *GIT_BRANCH_RE_STR,
+                *GIT_CAE_RE_STR,
+                *GIT_CAN_RE_STR,
+                *GIT_CC_RE_STR,
+                *GIT_CD_RE_STR,
+                *GIT_CM_RE_STR,
+                *GIT_CT_RE_STR,
+                *GIT_DESCRIBE_RE_STR,
+                *GIT_SHORT_SHA_RE_STR,
             ]
             .join("\n");
             Regex::new(&re_str).unwrap()
@@ -88,6 +112,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
 "#;
 
     static CREATE_TEST_REPO: Once = Once::new();
+    static CLONE_TEST_REPO: Once = Once::new();
 
     fn create_test_repo() {
         CREATE_TEST_REPO.call_once(|| {
@@ -98,17 +123,22 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
                     env::temp_dir()
                 };
                 path.push("vergen_tmp.git");
-                println!("Creating repo at '{}'", path.display());
 
                 if !path.exists() {
+                    println!("Creating repo at '{}'", path.display());
+                    // Initialize a bare repository
                     let mut repo = git::init_bare(&path)?;
+
+                    // Create an empty tree for the initial commit
                     let mut tree = git::objs::Tree::empty();
                     let empty_tree_id = repo.write_object(&tree)?.detach();
 
+                    // Setup the base configuration
                     let mut config = repo.config_snapshot_mut();
                     config.set_raw_value("author", None, "name", "Vergen Test")?;
                     config.set_raw_value("author", None, "email", "vergen@blah.com")?;
                     {
+                        // Create an empty commit with the initial empty tree
                         let committer = config.commit_auto_rollback()?;
                         let initial_commit_id = committer.commit(
                             "HEAD",
@@ -117,48 +147,55 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
                             git::commit::NO_PARENT_IDS,
                         )?;
 
-                        let blob_id = committer.write_blob("hello, world")?.into();
+                        // Create a BLOB to commit, along with the corresponding tree entry
+                        let first_blob_id = committer.write_blob("hello, world")?.into();
                         let entry = git::objs::tree::Entry {
                             mode: git::objs::tree::EntryMode::Blob,
                             filename: "foo.txt".into(),
-                            oid: blob_id,
+                            oid: first_blob_id,
                         };
 
+                        // Add everything to the empty tree
                         tree.entries.push(entry);
-                        let hello_tree_id = committer.write_object(&tree)?;
+                        let first_tree_id = committer.write_object(&tree)?;
 
-                        let blob_commit_id = committer.commit(
+                        // Make the commit
+                        let first_commit_id = committer.commit(
                             "HEAD",
                             "foo commit",
-                            hello_tree_id,
+                            first_tree_id,
                             [initial_commit_id],
                         )?;
 
+                        // Tag the previous commit
                         let _tag_id = committer.tag(
                             "0.1.0",
-                            blob_commit_id,
+                            first_commit_id,
                             git::objs::Kind::Commit,
                             None,
                             "v0.1.0",
                             PreviousValue::MustNotExist,
                         )?;
 
-                        let blob_id = committer.write_blob("Hello, World!")?.into();
+                        // Create a new BLOB to commit
+                        let second_blob_id = committer.write_blob("Hello, World!")?.into();
                         let entry = git::objs::tree::Entry {
                             mode: git::objs::tree::EntryMode::Blob,
-                            oid: blob_id,
+                            oid: second_blob_id,
                             filename: "foo.txt".into(),
                         };
 
-                        let mut tree = git::objs::Tree::empty();
-                        tree.entries.push(entry);
-                        let commit_2 = committer.write_object(&tree)?;
+                        // Setup a new tree for this commit
+                        let mut second_tree = git::objs::Tree::empty();
+                        second_tree.entries.push(entry);
+                        let second_tree_id = committer.write_object(&second_tree)?;
 
-                        let _blob_commit_id = committer.commit(
+                        // Make the commit
+                        let _second_commit_id = committer.commit(
                             "HEAD",
                             "such bad casing",
-                            commit_2,
-                            [blob_commit_id],
+                            second_tree_id,
+                            [first_commit_id],
                         )?;
                     }
                 }
@@ -167,6 +204,52 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
             }()
             .expect("unable to create test repository");
         });
+    }
+
+    fn clone_test_repo() {
+        CLONE_TEST_REPO.call_once(|| {
+            || -> Result<()> {
+                // Create the repository path to clone from
+                let mut bare_repo_path = if let Ok(temp_path) = env::var("RUNNER_TEMP") {
+                    PathBuf::from(temp_path)
+                } else {
+                    env::temp_dir()
+                };
+                bare_repo_path.push("vergen_tmp.git");
+
+                // The repository path
+                let repo_path = repo_path();
+
+                if !repo_path.exists() {
+                    fs::create_dir_all(&repo_path)?;
+                    git::interrupt::init_handler(|| {})?;
+                    let url =
+                        git::url::parse(git::path::os_str_into_bstr(bare_repo_path.as_os_str())?)?;
+                    let mut prepare_clone = git::prepare_clone(url, &repo_path)?;
+                    let (mut prepare_checkout, _) = prepare_clone.fetch_then_checkout(
+                        git::progress::Discard,
+                        &git::interrupt::IS_INTERRUPTED,
+                    )?;
+                    let (_repo, _) = prepare_checkout
+                        .main_worktree(git::progress::Discard, &git::interrupt::IS_INTERRUPTED)?;
+                    let file_path = repo_path.join("foo.txt");
+                    let foo = OpenOptions::new().append(true).open(file_path)?;
+                    let mut writer = BufWriter::new(foo);
+                    writeln!(writer, "another test line")?;
+                }
+                Ok(())
+            }()
+            .expect("unable to clone the test repository")
+        });
+    }
+
+    fn repo_path() -> PathBuf {
+        let clone_path = if let Ok(temp_path) = env::var("RUNNER_TEMP") {
+            PathBuf::from(temp_path)
+        } else {
+            env::temp_dir()
+        };
+        clone_path.join("vergen_tmp")
     }
 
     #[cfg(feature = "git2")]
@@ -189,8 +272,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     }
 
     #[test]
-    fn git_all_output() -> Result<()> {
-        create_test_repo();
+    fn git_all_output_default_dir() -> Result<()> {
         let mut stdout_buf = vec![];
         let failed = EmitBuilder::builder().all_git().emit_to(&mut stdout_buf)?;
         let output = String::from_utf8_lossy(&stdout_buf);
@@ -199,6 +281,22 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
         } else {
             assert_eq!(ALL_IDEM_OUTPUT, output);
         }
+        Ok(())
+    }
+
+    #[test]
+    fn git_all_output_test_repo() -> Result<()> {
+        create_test_repo();
+        clone_test_repo();
+        let mut stdout_buf = vec![];
+        let failed = EmitBuilder::builder()
+            .all_git()
+            .git_describe(true, true)
+            .git_sha(true)
+            .emit_to_at(&mut stdout_buf, Some(repo_path()))?;
+        assert!(!failed);
+        let output = String::from_utf8_lossy(&stdout_buf);
+        assert!(GIT_REGEX_SHORT_INST.is_match(&output));
         Ok(())
     }
 

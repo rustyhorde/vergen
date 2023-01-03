@@ -6,8 +6,6 @@
 // option. All files in the project carrying such notice may not be copied,
 // modified, or distributed except according to those terms.
 
-use std::{env, path::Path};
-
 use crate::{
     emitter::{EmitBuilder, RustcEnvMap},
     key::VergenKey,
@@ -17,7 +15,11 @@ use crate::{
 use anyhow::anyhow;
 use anyhow::{Error, Result};
 use git_repository::{commit, head::Kind, Commit, Head};
-use std::str::FromStr;
+use std::{
+    env,
+    path::{Path, PathBuf},
+    str::FromStr,
+};
 use time::{
     format_description::{self, well_known::Iso8601},
     OffsetDateTime,
@@ -92,7 +94,7 @@ impl EmitBuilder {
     }
 
     fn any(&self) -> bool {
-        let cfg = self.git_config;
+        let cfg = &self.git_config;
 
         cfg.git_branch
             || cfg.git_commit_author_email
@@ -262,17 +264,19 @@ impl EmitBuilder {
     #[cfg(not(test))]
     pub(crate) fn add_git_map_entries(
         &self,
+        path: Option<PathBuf>,
         idempotent: bool,
         map: &mut RustcEnvMap,
         warnings: &mut Vec<String>,
         rerun_if_changed: &mut Vec<String>,
     ) -> Result<()> {
-        self.inner_add_git_map_entries(idempotent, map, warnings, rerun_if_changed)
+        self.inner_add_git_map_entries(path, idempotent, map, warnings, rerun_if_changed)
     }
 
     #[cfg(test)]
     pub(crate) fn add_git_map_entries(
         &self,
+        path: Option<PathBuf>,
         idempotent: bool,
         map: &mut RustcEnvMap,
         warnings: &mut Vec<String>,
@@ -281,19 +285,24 @@ impl EmitBuilder {
         if self.git_config.fail {
             Err(anyhow!("failed to create entries"))
         } else {
-            self.inner_add_git_map_entries(idempotent, map, warnings, rerun_if_changed)
+            self.inner_add_git_map_entries(path, idempotent, map, warnings, rerun_if_changed)
         }
     }
 
     #[allow(clippy::unnecessary_wraps)]
     fn inner_add_git_map_entries(
         &self,
+        path: Option<PathBuf>,
         idempotent: bool,
         map: &mut RustcEnvMap,
         warnings: &mut Vec<String>,
         rerun_if_changed: &mut Vec<String>,
     ) -> Result<()> {
-        let curr_dir = env::current_dir()?;
+        let curr_dir = if let Some(path) = path {
+            path
+        } else {
+            env::current_dir()?
+        };
         let repo = git_repository::discover(curr_dir)?;
         let mut head = repo.head()?;
         let git_path = repo.git_dir().to_path_buf();
@@ -472,32 +481,23 @@ mod test {
     #[test]
     #[serial_test::parallel]
     fn git_all_idempotent() -> Result<()> {
-        let config = EmitBuilder::builder().idempotent().all_git().test_emit()?;
-        assert_eq!(9, config.cargo_rustc_env_map.len());
-        assert_eq!(2, count_idempotent(&config.cargo_rustc_env_map));
-        assert_eq!(2, config.warnings.len());
+        let emitter = EmitBuilder::builder()
+            .idempotent()
+            .all_git()
+            .test_emit_at(None)?;
+        assert_eq!(9, emitter.cargo_rustc_env_map.len());
+        assert_eq!(2, count_idempotent(&emitter.cargo_rustc_env_map));
+        assert_eq!(2, emitter.warnings.len());
         Ok(())
     }
 
     #[test]
     #[serial_test::parallel]
     fn git_all() -> Result<()> {
-        let config = EmitBuilder::builder().all_git().test_emit()?;
-        assert_eq!(9, config.cargo_rustc_env_map.len());
-        assert_eq!(0, count_idempotent(&config.cargo_rustc_env_map));
-        assert_eq!(0, config.warnings.len());
-        Ok(())
-    }
-
-    #[test]
-    #[serial_test::parallel]
-    fn emit_all() -> Result<()> {
-        let mut stdout = vec![];
-        let _failed = EmitBuilder::builder()
-            .all_git()
-            .git_describe(true, true)
-            .emit_to(&mut stdout)?;
-        println!("{}", String::from_utf8_lossy(&stdout));
+        let emitter = EmitBuilder::builder().all_git().test_emit_at(None)?;
+        assert_eq!(9, emitter.cargo_rustc_env_map.len());
+        assert_eq!(0, count_idempotent(&emitter.cargo_rustc_env_map));
+        assert_eq!(0, emitter.warnings.len());
         Ok(())
     }
 

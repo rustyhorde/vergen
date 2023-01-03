@@ -358,18 +358,20 @@ impl EmitBuilder {
     #[cfg(not(test))]
     pub(crate) fn add_git_map_entries(
         &self,
+        path: Option<PathBuf>,
         idempotent: bool,
         map: &mut RustcEnvMap,
         warnings: &mut Vec<String>,
         rerun_if_changed: &mut Vec<String>,
     ) -> Result<()> {
         check_git("git -v").and_then(check_inside_git_worktree)?;
-        self.inner_add_git_map_entries(idempotent, map, warnings, rerun_if_changed)
+        self.inner_add_git_map_entries(path, idempotent, map, warnings, rerun_if_changed)
     }
 
     #[cfg(test)]
     pub(crate) fn add_git_map_entries(
         &self,
+        path: Option<PathBuf>,
         idempotent: bool,
         map: &mut RustcEnvMap,
         warnings: &mut Vec<String>,
@@ -381,16 +383,20 @@ impl EmitBuilder {
             "git -v"
         };
         check_git(git_cmd).and_then(check_inside_git_worktree)?;
-        self.inner_add_git_map_entries(idempotent, map, warnings, rerun_if_changed)
+        self.inner_add_git_map_entries(path, idempotent, map, warnings, rerun_if_changed)
     }
 
+    #[allow(clippy::needless_pass_by_value)]
     fn inner_add_git_map_entries(
         &self,
+        _path: Option<PathBuf>,
         idempotent: bool,
         map: &mut RustcEnvMap,
         warnings: &mut Vec<String>,
         rerun_if_changed: &mut Vec<String>,
     ) -> Result<()> {
+        // TODO: Change path before running this stuff
+
         if !idempotent && self.any() {
             add_rerun_if_changed(rerun_if_changed)?;
         }
@@ -666,7 +672,10 @@ mod test {
     #[test]
     #[serial_test::parallel]
     fn git_all_idempotent() -> Result<()> {
-        let config = EmitBuilder::builder().idempotent().all_git().test_emit()?;
+        let config = EmitBuilder::builder()
+            .idempotent()
+            .all_git()
+            .test_emit_at(None)?;
         assert_eq!(9, config.cargo_rustc_env_map.len());
         assert_eq!(2, count_idempotent(&config.cargo_rustc_env_map));
         assert_eq!(2, config.warnings.len());
@@ -676,7 +685,7 @@ mod test {
     #[test]
     #[serial_test::parallel]
     fn git_all() -> Result<()> {
-        let config = EmitBuilder::builder().all_git().test_emit()?;
+        let config = EmitBuilder::builder().all_git().test_emit_at(None)?;
         assert_eq!(9, config.cargo_rustc_env_map.len());
         assert_eq!(0, count_idempotent(&config.cargo_rustc_env_map));
         assert_eq!(0, config.warnings.len());

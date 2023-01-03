@@ -15,7 +15,11 @@ use crate::{
 use anyhow::anyhow;
 use anyhow::{Error, Result};
 use git2_rs::{BranchType, Commit, DescribeFormatOptions, DescribeOptions, Reference, Repository};
-use std::{env, path::Path, str::FromStr};
+use std::{
+    env,
+    path::{Path, PathBuf},
+    str::FromStr,
+};
 use time::{
     format_description::{self, well_known::Iso8601},
     OffsetDateTime,
@@ -260,17 +264,19 @@ impl EmitBuilder {
     #[cfg(not(test))]
     pub(crate) fn add_git_map_entries(
         &self,
+        path: Option<PathBuf>,
         idempotent: bool,
         map: &mut RustcEnvMap,
         warnings: &mut Vec<String>,
         rerun_if_changed: &mut Vec<String>,
     ) -> Result<()> {
-        self.inner_add_git_map_entries(idempotent, map, warnings, rerun_if_changed)
+        self.inner_add_git_map_entries(path, idempotent, map, warnings, rerun_if_changed)
     }
 
     #[cfg(test)]
     pub(crate) fn add_git_map_entries(
         &self,
+        path: Option<PathBuf>,
         idempotent: bool,
         map: &mut RustcEnvMap,
         warnings: &mut Vec<String>,
@@ -279,18 +285,23 @@ impl EmitBuilder {
         if self.git_config.fail {
             Err(anyhow!("failed to create entries"))
         } else {
-            self.inner_add_git_map_entries(idempotent, map, warnings, rerun_if_changed)
+            self.inner_add_git_map_entries(path, idempotent, map, warnings, rerun_if_changed)
         }
     }
 
     fn inner_add_git_map_entries(
         &self,
+        path: Option<PathBuf>,
         idempotent: bool,
         map: &mut RustcEnvMap,
         warnings: &mut Vec<String>,
         rerun_if_changed: &mut Vec<String>,
     ) -> Result<()> {
-        let curr_dir = env::current_dir()?;
+        let curr_dir = if let Some(path) = path {
+            path
+        } else {
+            env::current_dir()?
+        };
         let repo = Repository::discover(curr_dir)?;
         let ref_head = repo.find_reference("HEAD")?;
         let git_path = repo.path().to_path_buf();
@@ -528,7 +539,10 @@ mod test {
     #[test]
     #[serial_test::parallel]
     fn git_all_idempotent() -> Result<()> {
-        let config = EmitBuilder::builder().idempotent().all_git().test_emit()?;
+        let config = EmitBuilder::builder()
+            .idempotent()
+            .all_git()
+            .test_emit_at(None)?;
         assert_eq!(9, config.cargo_rustc_env_map.len());
 
         if repo_exists().is_ok() && !config.failed {
@@ -544,7 +558,7 @@ mod test {
     #[test]
     #[serial_test::parallel]
     fn git_all() -> Result<()> {
-        let config = EmitBuilder::builder().all_git().test_emit()?;
+        let config = EmitBuilder::builder().all_git().test_emit_at(None)?;
         assert_eq!(9, config.cargo_rustc_env_map.len());
 
         if repo_exists().is_ok() && !config.failed {
