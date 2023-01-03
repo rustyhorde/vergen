@@ -135,8 +135,8 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
 
                     // Setup the base configuration
                     let mut config = repo.config_snapshot_mut();
-                    config.set_raw_value("author", None, "name", "Vergen Test")?;
-                    config.set_raw_value("author", None, "email", "vergen@blah.com")?;
+                    let _old = config.set_raw_value("author", None, "name", "Vergen Test")?;
+                    let _old = config.set_raw_value("author", None, "email", "vergen@blah.com")?;
                     {
                         // Create an empty commit with the initial empty tree
                         let committer = config.commit_auto_rollback()?;
@@ -222,7 +222,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
 
                 if !repo_path.exists() {
                     fs::create_dir_all(&repo_path)?;
-                    git::interrupt::init_handler(|| {})?;
+                    let _res = git::interrupt::init_handler(|| {})?;
                     let url =
                         git::url::parse(git::path::os_str_into_bstr(bare_repo_path.as_os_str())?)?;
                     let mut prepare_clone = git::prepare_clone(url, &repo_path)?;

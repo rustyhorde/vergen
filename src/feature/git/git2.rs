@@ -533,7 +533,12 @@ fn add_branch_name(
 #[cfg(test)]
 mod test {
     use super::{add_branch_name, add_commit_count, add_opt_value};
-    use crate::{emitter::test::count_idempotent, key::VergenKey, EmitBuilder};
+    use crate::{
+        emitter::test::count_idempotent,
+        key::VergenKey,
+        utils::repo::{clone_test_repo, create_test_repo, repo_path},
+        EmitBuilder,
+    };
     use anyhow::Result;
     use git2_rs::Repository;
     use std::{collections::BTreeMap, env, vec};
@@ -576,10 +581,20 @@ mod test {
     #[test]
     #[serial_test::parallel]
     fn head_not_found_is_default() -> Result<()> {
+        create_test_repo();
+        clone_test_repo();
         let mut map = BTreeMap::new();
         let mut warnings = vec![];
         if let Ok(repo) = Repository::discover(env::current_dir()?) {
             add_branch_name(true, &repo, &mut map, &mut warnings)?;
+            assert_eq!(1, map.len());
+            assert_eq!(1, warnings.len());
+        }
+        let mut map = BTreeMap::new();
+        let mut warnings = vec![];
+        if let Ok(repo) = Repository::discover(repo_path()) {
+            add_branch_name(true, &repo, &mut map, &mut warnings)?;
+            println!("{warnings:?}");
             assert_eq!(1, map.len());
             assert_eq!(1, warnings.len());
         }
