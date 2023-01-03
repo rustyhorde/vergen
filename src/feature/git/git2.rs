@@ -518,12 +518,12 @@ fn add_branch_name(
             if local.is_head() {
                 if let Some(name) = local.name()? {
                     add_map_entry(VergenKey::GitBranch, name, map);
-                    found_head = true;
+                    found_head = !add_default;
                     break;
                 }
             }
         }
-        if add_default || !found_head {
+        if !found_head {
             add_default_map_entry(VergenKey::GitBranch, map, warnings);
         }
     }
