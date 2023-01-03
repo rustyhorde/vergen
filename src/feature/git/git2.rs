@@ -506,7 +506,11 @@ fn add_branch_name(
     warnings: &mut Vec<String>,
 ) -> Result<()> {
     if repo.head_detached()? {
-        add_map_entry(VergenKey::GitBranch, "HEAD", map);
+        if add_default {
+            add_default_map_entry(VergenKey::GitBranch, map, warnings);
+        } else {
+            add_map_entry(VergenKey::GitBranch, "HEAD", map);
+        }
     } else {
         let locals = repo.branches(Some(BranchType::Local))?;
         let mut found_head = false;
