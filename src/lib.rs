@@ -112,7 +112,7 @@
 //! | Variable | Functionality |
 //! | -------- | ------------- |
 //! | `VERGEN_IDEMPOTENT` | If this environment variable is set `vergen` will use the idempotent output feature regardless of the configuration set in `build.rs`.  This exists mainly to allow package maintainers to force idempotent output to generate deterministic binary output. |
-//! | `SOURCE_DATE_EPOCH` | If this environment variable is set `vergen` will use the unix timestamp value as the basis for a time based instructions.  This can help emit deterministic output. |
+//! | `SOURCE_DATE_EPOCH` | If this environment variable is set `vergen` will use the value (unix time since epoch) as the basis for a time based instructions.  This can help emit deterministic instructions. |
 //!
 //! ## Goals
 //! I initially wrote `vergen` (**ver**sion **gen**erator, so original) so I could embed a some git information in my
