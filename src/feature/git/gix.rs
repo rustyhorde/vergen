@@ -475,7 +475,11 @@ impl EmitBuilder {
 
 #[cfg(test)]
 mod test {
-    use crate::{emitter::test::count_idempotent, EmitBuilder};
+    use crate::{
+        emitter::test::count_idempotent,
+        utils::repo::{clone_path, clone_test_repo, create_test_repo},
+        EmitBuilder,
+    };
     use anyhow::Result;
 
     #[test]
@@ -495,6 +499,20 @@ mod test {
     #[serial_test::parallel]
     fn git_all() -> Result<()> {
         let emitter = EmitBuilder::builder().all_git().test_emit_at(None)?;
+        assert_eq!(9, emitter.cargo_rustc_env_map.len());
+        assert_eq!(0, count_idempotent(&emitter.cargo_rustc_env_map));
+        assert_eq!(0, emitter.warnings.len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::parallel]
+    fn git_all_at_path() -> Result<()> {
+        create_test_repo();
+        clone_test_repo();
+        let emitter = EmitBuilder::builder()
+            .all_git()
+            .test_emit_at(Some(clone_path()))?;
         assert_eq!(9, emitter.cargo_rustc_env_map.len());
         assert_eq!(0, count_idempotent(&emitter.cargo_rustc_env_map));
         assert_eq!(0, emitter.warnings.len());

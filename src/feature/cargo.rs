@@ -25,6 +25,10 @@ pub(crate) struct Config {
 
 /// Copnfigure the emission of `VERGEN_CARGO_*` instructions
 ///
+/// **NOTE** - All cargo instructions are considered deterministic.  If you change
+/// the version of cargo you are compiling with, these values should change if
+/// being used in the generated binary.
+///
 /// | Variable | Sample |
 /// | -------  | ------ |
 /// | `VERGEN_CARGO_DEBUG` | true |
@@ -33,6 +37,7 @@ pub(crate) struct Config {
 /// | `VERGEN_CARGO_TARGET_TRIPLE` | x86_64-unknown-linux-gnu |
 ///
 /// # Example
+/// Emit all of the cargo instructions
 ///
 /// ```
 /// # use anyhow::Result;
@@ -49,6 +54,22 @@ pub(crate) struct Config {
 /// # env::remove_var("DEBUG");
 /// # env::remove_var("OPT_LEVEL");
 /// # env::remove_var("TARGET");
+/// #   Ok(())
+/// # }
+/// ```
+/// Emit some of the cargo instructions
+///
+/// ```
+/// # use anyhow::Result;
+/// # use std::env;
+/// # use vergen::EmitBuilder;
+/// #
+/// # fn main() -> Result<()> {
+/// # env::set_var("DEBUG", "true");
+/// # env::set_var("OPT_LEVEL", "1");
+/// EmitBuilder::builder().cargo_debug().cargo_opt_level().emit()?;
+/// # env::remove_var("DEBUG");
+/// # env::remove_var("OPT_LEVEL");
 /// #   Ok(())
 /// # }
 /// ```

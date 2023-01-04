@@ -24,6 +24,7 @@ pub(crate) struct Config {
 /// | `VERGEN_BUILD_TIMESTAMP` | 2021-02-25T23:28:39.493201+00:00 |
 ///
 /// # Example
+/// Emit all of the build instructions
 ///
 /// ```
 /// # use anyhow::Result;
@@ -34,6 +35,85 @@ pub(crate) struct Config {
 /// #   Ok(())
 /// # }
 /// ```
+///
+/// Emit some of the build instructions
+///
+/// ```
+/// # use anyhow::Result;
+/// # use vergen::EmitBuilder;
+/// #
+/// # fn main() -> Result<()> {
+/// EmitBuilder::builder().build_timestamp().emit()?;
+/// #   Ok(())
+/// # }
+/// ```
+///
+/// # Example
+/// This feature can also be used in conjuction with the [`SOURCE_DATE_EPOCH`](https://reproducible-builds.org/docs/source-date-epoch/)
+/// environment variable to generate deterministic timestamps based off the
+/// last modification time of the source/package
+///
+/// ```
+/// # use anyhow::Result;
+/// # use std::env;
+/// # use vergen::EmitBuilder;
+/// #
+/// # fn main() -> Result<()> {
+/// env::set_var("SOURCE_DATE_EPOCH", "1671809360");
+#[cfg_attr(
+    feature = "build",
+    doc = r##"
+EmitBuilder::builder().all_build().emit()?;
+"##
+)]
+/// # env::remove_var("SOURCE_DATE_EPOCH");
+/// #   Ok(())
+/// # }
+/// ```
+///
+/// The above will always generate the following output for the timestamp
+/// related instructions
+///
+/// ```text
+/// cargo:rustc-env=VERGEN_BUILD_DATE=2022-12-23
+/// cargo:rustc-env=VERGEN_BUILD_TIMESTAMP=2022-12-23T15:29:20.000000000Z
+/// ```
+///
+/// # Example
+/// This feature also recognizes the idempotent flag.
+///
+/// **NOTE** - `SOURCE_DATE_EPOCH` takes precedence over the idempotent flag. If you
+/// use both, the output will be based off `SOURCE_DATE_EPOCH`.  This would still be
+/// deterministic.
+///
+/// ```
+/// # use anyhow::Result;
+/// # use vergen::EmitBuilder;
+/// #
+/// # fn main() -> Result<()> {
+#[cfg_attr(
+    feature = "build",
+    doc = r##"
+EmitBuilder::builder().idempotent().all_build().emit()?;
+"##
+)]
+/// #   Ok(())
+/// # }
+/// ```
+///
+/// The above will always generate the following output for the timestamp
+/// related instructions
+///
+/// ```text
+/// cargo:rustc-env=VERGEN_BUILD_DATE=VERGEN_IDEMPOTENT_OUTPUT
+/// cargo:rustc-env=VERGEN_BUILD_TIMESTAMP=VERGEN_IDEMPOTENT_OUTPUT
+/// cargo:warning=VERGEN_BUILD_DATE set to default
+/// cargo:warning=VERGEN_BUILD_TIMESTAMP set to default
+/// cargo:rerun-if-changed=build.rs
+/// cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT
+/// cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
+/// ```
+///
 #[cfg_attr(docsrs, doc(cfg(feature = "build")))]
 impl EmitBuilder {
     /// Enable all of the `VERGEN_BUILD_*` options

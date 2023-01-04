@@ -57,7 +57,13 @@ pub(crate) mod fns {
     }
 }
 
-#[cfg(all(test, all(feature = "git", feature = "git2")))]
+#[cfg(all(
+    test,
+    all(
+        feature = "git",
+        any(feature = "gitcl", feature = "git2", feature = "gix")
+    )
+))]
 pub(crate) mod repo {
     use anyhow::Result;
     use git::refs::transaction::PreviousValue;

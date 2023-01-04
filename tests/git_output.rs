@@ -107,7 +107,6 @@ cargo:warning=VERGEN_GIT_DESCRIBE set to default
 cargo:warning=VERGEN_GIT_SHA set to default
 cargo:rerun-if-changed=build.rs
 cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT
-cargo:rerun-if-env-changed=VERGEN_SKIP_IF_ERROR
 cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
 "#;
 

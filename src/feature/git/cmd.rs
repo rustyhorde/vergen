@@ -124,6 +124,7 @@ const SHA: &str = sha!();
 /// | `VERGEN_GIT_SHA` | f49246ce334567bff9f950bfd0f3078184a2738a |
 ///
 /// # Example
+/// Emit all of the git instructions
 ///
 /// ```
 /// # use anyhow::Result;
@@ -134,6 +135,102 @@ const SHA: &str = sha!();
 /// #   Ok(())
 /// # }
 /// ```
+///
+/// Emit some of the git instructions
+///
+/// ```
+/// # use anyhow::Result;
+/// # use vergen::EmitBuilder;
+/// #
+/// # fn main() -> Result<()> {
+/// EmitBuilder::builder().git_describe(true, false).emit()?;
+/// #   Ok(())
+/// # }
+/// ```
+///
+/// # Example
+/// This feature can also be used in conjuction with the [`SOURCE_DATE_EPOCH`](https://reproducible-builds.org/docs/source-date-epoch/)
+/// environment variable to generate deterministic timestamps based off the
+/// last modification time of the source/package
+///
+/// ```
+/// # use anyhow::Result;
+/// # use std::env;
+/// # use vergen::EmitBuilder;
+/// #
+/// # fn main() -> Result<()> {
+/// env::set_var("SOURCE_DATE_EPOCH", "1671809360");
+#[cfg_attr(
+    all(feature = "git", feature = "gitcl"),
+    doc = r##"
+EmitBuilder::builder().all_git().emit()?;
+"##
+)]
+/// # env::remove_var("SOURCE_DATE_EPOCH");
+/// #   Ok(())
+/// # }
+/// ```
+///
+/// The above will always generate the following output for the timestamp
+/// related instructions
+///
+/// ```text
+/// ...
+/// cargo:rustc-env=VERGEN_GIT_COMMIT_DATE=2022-12-23
+/// ...
+/// cargo:rustc-env=VERGEN_GIT_COMMIT_TIMESTAMP=2022-12-23T15:29:20.000000000Z
+/// ...
+/// ```
+///
+/// # Example
+/// This feature also recognizes the idempotent flag.
+///
+/// **NOTE** - `SOURCE_DATE_EPOCH` takes precedence over the idempotent flag. If you
+/// use both, the output will be based off `SOURCE_DATE_EPOCH`.  This would still be
+/// deterministic.
+///
+/// # Example
+/// ```
+/// # use anyhow::Result;
+/// # use vergen::EmitBuilder;
+/// #
+/// # fn main() -> Result<()> {
+#[cfg_attr(
+    all(feature = "git", feature = "gitcl"),
+    doc = r##"
+EmitBuilder::builder().idempotent().all_git().emit()?;
+"##
+)]
+/// #   Ok(())
+/// # }
+/// ```
+///
+/// The above will always generate the following instructions
+///
+/// ```text
+/// cargo:rustc-env=VERGEN_GIT_BRANCH=VERGEN_IDEMPOTENT_OUTPUT
+/// cargo:rustc-env=VERGEN_GIT_COMMIT_AUTHOR_EMAIL=VERGEN_IDEMPOTENT_OUTPUT
+/// cargo:rustc-env=VERGEN_GIT_COMMIT_AUTHOR_NAME=VERGEN_IDEMPOTENT_OUTPUT
+/// cargo:rustc-env=VERGEN_GIT_COMMIT_COUNT=VERGEN_IDEMPOTENT_OUTPUT
+/// cargo:rustc-env=VERGEN_GIT_COMMIT_DATE=VERGEN_IDEMPOTENT_OUTPUT
+/// cargo:rustc-env=VERGEN_GIT_COMMIT_MESSAGE=VERGEN_IDEMPOTENT_OUTPUT
+/// cargo:rustc-env=VERGEN_GIT_COMMIT_TIMESTAMP=VERGEN_IDEMPOTENT_OUTPUT
+/// cargo:rustc-env=VERGEN_GIT_DESCRIBE=VERGEN_IDEMPOTENT_OUTPUT
+/// cargo:rustc-env=VERGEN_GIT_SHA=VERGEN_IDEMPOTENT_OUTPUT
+/// cargo:warning=VERGEN_GIT_BRANCH set to default
+/// cargo:warning=VERGEN_GIT_COMMIT_AUTHOR_EMAIL set to default
+/// cargo:warning=VERGEN_GIT_COMMIT_AUTHOR_NAME set to default
+/// cargo:warning=VERGEN_GIT_COMMIT_COUNT set to default
+/// cargo:warning=VERGEN_GIT_COMMIT_DATE set to default
+/// cargo:warning=VERGEN_GIT_COMMIT_MESSAGE set to default
+/// cargo:warning=VERGEN_GIT_COMMIT_TIMESTAMP set to default
+/// cargo:warning=VERGEN_GIT_DESCRIBE set to default
+/// cargo:warning=VERGEN_GIT_SHA set to default
+/// cargo:rerun-if-changed=build.rs
+/// cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT
+/// cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
+/// ```
+///
 #[cfg_attr(docsrs, doc(cfg(feature = "git")))]
 impl EmitBuilder {
     /// Emit all of the `VERGEN_GIT_*` instructions
@@ -169,7 +266,7 @@ impl EmitBuilder {
     /// cargo:rustc-env=VERGEN_GIT_BRANCH=<BRANCH_NAME>
     /// ```
     ///
-    /// The following command outputs the current branch
+    /// The value is determined with the following command
     /// ```text
     #[doc = concat!(branch_cmd!())]
     /// ```
@@ -184,7 +281,7 @@ impl EmitBuilder {
     /// cargo:rustc-env=VERGEN_GIT_COMMIT_AUTHOR_EMAIL=<AUTHOR_EMAIL>
     /// ```
     ///
-    /// The following command outputs the commit author email
+    /// The value is determined with the following command
     /// ```text
     #[doc = concat!(author_email!())]
     /// ```
@@ -199,7 +296,7 @@ impl EmitBuilder {
     /// cargo:rustc-env=VERGEN_GIT_COMMIT_AUTHOR_NAME=<AUTHOR_NAME>
     /// ```
     ///
-    /// The following command outputs the commit author name
+    /// The value is determined with the following command
     /// ```text
     #[doc = concat!(author_name!())]
     /// ```
@@ -214,7 +311,7 @@ impl EmitBuilder {
     /// cargo:rustc-env=VERGEN_GIT_COMMIT_COUNT=<COUNT>
     /// ```
     ///
-    /// The following command outputs the commit count
+    /// The value is determined with the following command
     /// ```text
     #[doc = concat!(commit_count!())]
     /// ```
@@ -229,7 +326,7 @@ impl EmitBuilder {
     /// cargo:rustc-env=VERGEN_GIT_COMMIT_DATE=<YYYY-MM-DD>
     /// ```
     ///
-    /// The following command outputs the commit date
+    /// The value is determined with the following command
     /// ```text
     #[doc = concat!(commit_date!())]
     /// ```
@@ -244,7 +341,7 @@ impl EmitBuilder {
     /// cargo:rustc-env=VERGEN_GIT_COMMIT_MESSAGE=<MESSAGE>
     /// ```
     ///
-    /// The following command outputs the commit message
+    /// The value is determined with the following command
     /// ```text
     #[doc = concat!(commit_message!())]
     /// ```
@@ -259,7 +356,7 @@ impl EmitBuilder {
     /// cargo:rustc-env=VERGEN_GIT_COMMIT_TIMESTAMP=<YYYY-MM-DDThh:mm:ssZ>
     /// ```
     ///
-    /// The following command outputs the commit timestamp
+    /// The value is determined with the following command
     /// ```text
     #[doc = concat!(commit_message!())]
     /// ```
@@ -274,7 +371,7 @@ impl EmitBuilder {
     /// cargo:rustc-env=VERGEN_GIT_DESCRIBE=<DESCRIBE>
     /// ```
     ///
-    /// The following command outputs describe
+    /// The value is determined with the following command
     /// ```text
     #[doc = concat!(describe!())]
     /// ```
@@ -295,7 +392,7 @@ impl EmitBuilder {
     /// cargo:rustc-env=VERGEN_GIT_SHA=<SHA>
     /// ```
     ///
-    /// The following command outputs the SHA
+    /// The value is determined with the following command
     /// ```text
     #[doc = concat!(sha!(), " HEAD")]
     /// ```
@@ -320,7 +417,8 @@ impl EmitBuilder {
         if fail_on_error {
             Err(e)
         } else {
-            // Clear any previous warnings.  This should be it.
+            // Clear any previous data.  We are re-populating
+            // map isn't cleared because keys will overwrite.
             warnings.clear();
             rerun_if_changed.clear();
 
@@ -389,13 +487,15 @@ impl EmitBuilder {
     #[allow(clippy::needless_pass_by_value)]
     fn inner_add_git_map_entries(
         &self,
-        _path: Option<PathBuf>,
+        path: Option<PathBuf>,
         idempotent: bool,
         map: &mut RustcEnvMap,
         warnings: &mut Vec<String>,
         rerun_if_changed: &mut Vec<String>,
     ) -> Result<()> {
-        // TODO: Change path before running this stuff
+        if let Some(path) = path {
+            env::set_current_dir(path)?;
+        }
 
         if !idempotent && self.any() {
             add_rerun_if_changed(rerun_if_changed)?;
@@ -623,7 +723,12 @@ fn setup_ref_path() -> Result<Output> {
 #[cfg(test)]
 mod test {
     use super::{add_git_cmd_entry, check_git, check_inside_git_worktree};
-    use crate::{emitter::test::count_idempotent, key::VergenKey, EmitBuilder};
+    use crate::{
+        emitter::test::count_idempotent,
+        key::VergenKey,
+        utils::repo::{clone_path, clone_test_repo, create_test_repo},
+        EmitBuilder,
+    };
     use anyhow::Result;
     use std::{collections::BTreeMap, env};
 
@@ -679,6 +784,20 @@ mod test {
         assert_eq!(9, config.cargo_rustc_env_map.len());
         assert_eq!(2, count_idempotent(&config.cargo_rustc_env_map));
         assert_eq!(2, config.warnings.len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::parallel]
+    fn git_all_at_path() -> Result<()> {
+        create_test_repo();
+        clone_test_repo();
+        let config = EmitBuilder::builder()
+            .all_git()
+            .test_emit_at(Some(clone_path()))?;
+        assert_eq!(9, config.cargo_rustc_env_map.len());
+        assert_eq!(0, count_idempotent(&config.cargo_rustc_env_map));
+        assert_eq!(0, config.warnings.len());
         Ok(())
     }
 

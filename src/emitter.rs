@@ -257,7 +257,6 @@ impl Emitter {
         if !self.cargo_rustc_env_map.is_empty() || !self.warnings.is_empty() {
             writeln!(stdout, "cargo:rerun-if-changed=build.rs")?;
             writeln!(stdout, "cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT")?;
-            writeln!(stdout, "cargo:rerun-if-env-changed=VERGEN_SKIP_IF_ERROR")?;
             writeln!(stdout, "cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH")?;
         }
         Ok(())
@@ -286,7 +285,7 @@ pub struct EmitBuilder {
 }
 
 impl EmitBuilder {
-    /// Construct a new [`EmitBuilder`] builder to configure the cargo instruction emits
+    /// Instantiate the builder to configure the cargo instruction emits
     #[must_use]
     pub fn builder() -> Self {
         let idempotent = matches!(env::var("VERGEN_IDEMPOTENT"), Ok(_val));
@@ -316,9 +315,9 @@ impl EmitBuilder {
     ///
     /// When this feature is enabled, certain vergen output (i.e. timestamps, sysinfo)
     /// will be set to an idempotent default.  This will allow systems that
-    /// depend on reproducible builds to override user requested vergen
+    /// depend on deterministics builds to override user requested `vergen`
     /// impurities.  This will mainly allow for package maintainers to build
-    /// packages that depend on vergen in a reproducible manner.
+    /// packages that depend on `vergen` in a deterministic manner.
     ///
     /// See [this issue](https://github.com/rustyhorde/vergen/issues/141) for
     /// more details
@@ -355,29 +354,6 @@ EmitBuilder::builder().all_build().emit()?;
     /// # }
     /// ```
     ///
-    /// This feature can also be used in conjuction with the [`SOURCE_DATE_EPOCH`](https://reproducible-builds.org/docs/source-date-epoch/)
-    /// environment variable to generate reproducible timestamps based off the
-    /// last modification time of the source/package
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use anyhow::Result;
-    /// # use std::env;
-    /// # use vergen::EmitBuilder;
-    /// #
-    /// # fn main() -> Result<()> {
-    /// env::set_var("SOURCE_DATE_EPOCH", "1671809360");
-    #[cfg_attr(
-        feature = "build",
-        doc = r##"
-EmitBuilder::builder().idempotent().all_build().emit()?;
-"##
-    )]
-    /// # env::remove_var("SOURCE_DATE_EPOCH");
-    /// #   Ok(())
-    /// # }
-    /// ```
     pub fn idempotent(&mut self) -> &mut Self {
         self.idempotent = true;
         self
@@ -418,11 +394,18 @@ EmitBuilder::builder().fail_on_error().all_build().emit()?;
         self
     }
 
-    /// Emit the [`cargo:rustc-env=VAR=VALUE`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#cargorustc-envvarvalue)
-    /// [build script](https://doc.rust-lang.org/cargo/reference/build-scripts.html#outputs-of-the-build-script) outputs.
+    /// Emit cargo instructions from your build script
     ///
-    /// **NOTE** - [`cargo:warning`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#cargo-warning) outputs
-    /// may also be emitted if the [`fail_on_error`](Self::fail_on_error) feature is not enabled.
+    /// - Will emit [`cargo:rustc-env=VAR=VALUE`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#cargorustc-envvarvalue) for each feature you have enabled.
+    #[cfg_attr(
+        feature = "git",
+        doc = r##" - Will emit [`cargo:rerun-if-changed=PATH`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed) if the git feature
+is enabled.  This is done to ensure any git variables are regenerated when commits are made.
+"##
+    )]
+    /// - Can emit [`cargo:warning`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#cargo-warning) outputs if the
+    /// [`fail_on_error`](Self::fail_on_error) feature is not enabled and the requested variable is defaulted through error or
+    /// the [`idempotent`](Self::idempotent) flag.
     ///
     /// # Errors
     /// * The [`writeln!`](std::writeln!) macro can throw a [`std::io::Error`]
@@ -439,6 +422,7 @@ EmitBuilder::builder().fail_on_error().all_build().emit()?;
         all(
             feature = "build",
             feature = "cargo",
+            all(feature = "git", feature = "gitcl"),
             feature = "rustc",
             feature = "si"
         ),
@@ -451,6 +435,7 @@ EmitBuilder::builder().fail_on_error().all_build().emit()?;
 EmitBuilder::builder()
   .all_build()
   .all_cargo()
+  .all_git()
   .all_rustc()
   .all_sysinfo()
   .emit()?;
@@ -466,23 +451,29 @@ EmitBuilder::builder()
     /// ```
     ///
     /// # Sample Output
+    ///
+    /// **NOTE** - You won't see this output unless you invoke cargo with the `-vv` flag.
+    /// The instruction output is not displayed by default.
+    ///
     /// ```text
-    /// cargo:rustc-env=VERGEN_BUILD_DATE=2022-12-28
-    /// cargo:rustc-env=VERGEN_BUILD_TIMESTAMP=2022-12-28T21:56:23.764785796Z
+    /// cargo:rustc-env=VERGEN_BUILD_DATE=2023-01-04
+    /// cargo:rustc-env=VERGEN_BUILD_TIMESTAMP=2023-01-04T15:38:11.097507114Z
+    /// cargo:rustc-env=VERGEN_CARGO_DEBUG=true
+    /// cargo:rustc-env=VERGEN_CARGO_FEATURES=build,git
+    /// cargo:rustc-env=VERGEN_CARGO_OPT_LEVEL=1
     /// cargo:rustc-env=VERGEN_CARGO_TARGET_TRIPLE=x86_64-unknown-linux-gnu
-    /// cargo:rustc-env=VERGEN_CARGO_FEATURES=build,cargo,git,gitcl,rustc,si
     /// cargo:rustc-env=VERGEN_GIT_BRANCH=feature/version8
     /// cargo:rustc-env=VERGEN_GIT_COMMIT_AUTHOR_EMAIL=your@email.com
     /// cargo:rustc-env=VERGEN_GIT_COMMIT_AUTHOR_NAME=Yoda
-    /// cargo:rustc-env=VERGEN_GIT_COMMIT_COUNT=389
-    /// cargo:rustc-env=VERGEN_GIT_COMMIT_DATE=2022-12-29
-    /// cargo:rustc-env=VERGEN_GIT_COMMIT_MESSAGE=Fix git framework
-    /// cargo:rustc-env=VERGEN_GIT_COMMIT_TIMESTAMP=2022-12-29T10:48:31-05:00
-    /// cargo:rustc-env=VERGEN_GIT_DESCRIBE=7.4.4-16-g2f35555
-    /// cargo:rustc-env=VERGEN_GIT_SHA=2f35555f4d02dc44a60bf5854d5aad8b36494230
+    /// cargo:rustc-env=VERGEN_GIT_COMMIT_COUNT=476
+    /// cargo:rustc-env=VERGEN_GIT_COMMIT_DATE=2023-01-03
+    /// cargo:rustc-env=VERGEN_GIT_COMMIT_MESSAGE=The best message
+    /// cargo:rustc-env=VERGEN_GIT_COMMIT_TIMESTAMP=2023-01-03T14:08:12.000000000-05:00
+    /// cargo:rustc-env=VERGEN_GIT_DESCRIBE=7.4.4-103-g53ae8a6
+    /// cargo:rustc-env=VERGEN_GIT_SHA=53ae8a69ab7917a2909af40f2e5d015f5b29ae28
     /// cargo:rustc-env=VERGEN_RUSTC_CHANNEL=nightly
-    /// cargo:rustc-env=VERGEN_RUSTC_COMMIT_DATE=2022-12-27
-    /// cargo:rustc-env=VERGEN_RUSTC_COMMIT_HASH=92c1937a90e5b6f20fa6e87016d6869da363972e
+    /// cargo:rustc-env=VERGEN_RUSTC_COMMIT_DATE=2023-01-03
+    /// cargo:rustc-env=VERGEN_RUSTC_COMMIT_HASH=c7572670a1302f5c7e245d069200e22da9df0316
     /// cargo:rustc-env=VERGEN_RUSTC_HOST_TRIPLE=x86_64-unknown-linux-gnu
     /// cargo:rustc-env=VERGEN_RUSTC_LLVM_VERSION=15.0
     /// cargo:rustc-env=VERGEN_RUSTC_SEMVER=1.68.0-nightly
@@ -495,6 +486,11 @@ EmitBuilder::builder()
     /// cargo:rustc-env=VERGEN_SYSINFO_CPU_NAME=cpu0,cpu1,cpu2,cpu3,cpu4,cpu5,cpu6,cpu7
     /// cargo:rustc-env=VERGEN_SYSINFO_CPU_BRAND=AMD Ryzen Threadripper 1900X 8-Core Processor
     /// cargo:rustc-env=VERGEN_SYSINFO_CPU_FREQUENCY=3792
+    /// cargo:rerun-if-changed=.git/HEAD
+    /// cargo:rerun-if-changed=.git/refs/heads/feature/version8
+    /// cargo:rerun-if-changed=build.rs
+    /// cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT
+    /// cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     /// ```
     ///
     pub fn emit(self) -> Result<()> {
@@ -502,6 +498,7 @@ EmitBuilder::builder()
             .and_then(|x| x.emit_output(&mut io::stdout()))
     }
 
+    #[doc(hidden)]
     /// Emit instructions from the given repository path.
     ///
     /// # Errors
@@ -543,6 +540,7 @@ EmitBuilder::builder()
         self.inner_emit(repo_path)
     }
 
+    #[doc(hidden)]
     /// Emit the cargo build script instructions to the given [`Write`](std::io::Write).
     ///
     /// **NOTE** - This is genarally only used for testing and probably shouldn't be used
@@ -559,6 +557,7 @@ EmitBuilder::builder()
             .and_then(|x| x.emit_output(stdout).map(|_| x.failed))
     }
 
+    #[doc(hidden)]
     /// Emit the cargo build script instructions to the given [`Write`](std::io::Write) at
     /// the given repository path for git instructions
     ///
@@ -668,6 +667,34 @@ pub(crate) mod test {
     ))]
     #[test]
     #[serial_test::serial]
+    fn all_output_non_git() -> Result<()> {
+        use crate::utils::testutils::{setup, teardown};
+
+        setup();
+        let mut stdout_buf = vec![];
+        let _ = EmitBuilder::builder()
+            .all_build()
+            .all_cargo()
+            .all_rustc()
+            .all_sysinfo()
+            .emit_to(&mut stdout_buf)?;
+        println!("{}", String::from_utf8_lossy(&stdout_buf));
+        teardown();
+        Ok(())
+    }
+
+    #[cfg(all(
+        feature = "build",
+        feature = "rustc",
+        all(
+            feature = "git",
+            any(feature = "gitcl", feature = "git2", feature = "gix")
+        ),
+        feature = "cargo",
+        feature = "si"
+    ))]
+    #[test]
+    #[serial_test::serial]
     fn all_output() -> Result<()> {
         use crate::utils::testutils::{setup, teardown};
 
@@ -676,6 +703,7 @@ pub(crate) mod test {
         let _ = EmitBuilder::builder()
             .all_build()
             .all_cargo()
+            .all_git()
             .all_rustc()
             .all_sysinfo()
             .emit_to(&mut stdout_buf)?;

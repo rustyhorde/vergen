@@ -48,6 +48,7 @@ pub(crate) struct Config {
 /// | `VERGEN_SYSINFO_CPU_FREQUENCY` | 3792 |
 ///
 /// # Example
+/// Emit all sysinfo instructions
 ///
 /// ```
 /// # use anyhow::Result;
@@ -58,6 +59,66 @@ pub(crate) struct Config {
 /// #   Ok(())
 /// # }
 /// ```
+///
+/// Emit some of the sysinfo instructions
+///
+/// ```
+/// # use anyhow::Result;
+/// # use vergen::EmitBuilder;
+/// #
+/// # fn main() -> Result<()> {
+/// EmitBuilder::builder()
+///     .sysinfo_os_version()
+///     .sysinfo_cpu_core_count()
+///     .emit()?;
+/// #   Ok(())
+/// # }
+/// ```
+///
+/// # Example
+/// This feature also recognizes the idempotent flag.
+///
+/// ```
+/// # use anyhow::Result;
+/// # use vergen::EmitBuilder;
+/// #
+/// # fn main() -> Result<()> {
+#[cfg_attr(
+    feature = "sysinfo",
+    doc = r##"
+EmitBuilder::builder().idempotent().all_sysinfo().emit()?;
+"##
+)]
+/// #   Ok(())
+/// # }
+/// ```
+///
+/// The above will always generate the following output
+///
+/// ```text
+/// cargo:rustc-env=VERGEN_SYSINFO_NAME=VERGEN_IDEMPOTENT_OUTPUT
+/// cargo:rustc-env=VERGEN_SYSINFO_OS_VERSION=VERGEN_IDEMPOTENT_OUTPUT
+/// cargo:rustc-env=VERGEN_SYSINFO_USER=VERGEN_IDEMPOTENT_OUTPUT
+/// cargo:rustc-env=VERGEN_SYSINFO_TOTAL_MEMORY=VERGEN_IDEMPOTENT_OUTPUT
+/// cargo:rustc-env=VERGEN_SYSINFO_CPU_VENDOR=VERGEN_IDEMPOTENT_OUTPUT
+/// cargo:rustc-env=VERGEN_SYSINFO_CPU_CORE_COUNT=VERGEN_IDEMPOTENT_OUTPUT
+/// cargo:rustc-env=VERGEN_SYSINFO_CPU_NAME=VERGEN_IDEMPOTENT_OUTPUT
+/// cargo:rustc-env=VERGEN_SYSINFO_CPU_BRAND=VERGEN_IDEMPOTENT_OUTPUT
+/// cargo:rustc-env=VERGEN_SYSINFO_CPU_FREQUENCY=VERGEN_IDEMPOTENT_OUTPUT
+/// cargo:warning=VERGEN_SYSINFO_NAME set to default
+/// cargo:warning=VERGEN_SYSINFO_OS_VERSION set to default
+/// cargo:warning=VERGEN_SYSINFO_USER set to default
+/// cargo:warning=VERGEN_SYSINFO_TOTAL_MEMORY set to default
+/// cargo:warning=VERGEN_SYSINFO_CPU_VENDOR set to default
+/// cargo:warning=VERGEN_SYSINFO_CPU_CORE_COUNT set to default
+/// cargo:warning=VERGEN_SYSINFO_CPU_NAME set to default
+/// cargo:warning=VERGEN_SYSINFO_CPU_BRAND set to default
+/// cargo:warning=VERGEN_SYSINFO_CPU_FREQUENCY set to default
+/// cargo:rerun-if-changed=build.rs
+/// cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT
+/// cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
+/// ```
+///
 #[cfg_attr(docsrs, doc(cfg(feature = "si")))]
 impl EmitBuilder {
     /// Enable all of the `VERGEN_SYSINFO_*` options

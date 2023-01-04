@@ -21,6 +21,10 @@ pub(crate) struct Config {
 
 /// The `VERGEN_RUSTC_*` configuration features
 ///
+/// **NOTE** - All rustc instructions are considered deterministic.  If you change
+/// the version of rustc you are compiling with, these values should change if
+/// being used in the generated binary.
+///
 /// | Variable | Sample |
 /// | -------  | ------ |
 /// | `VERGEN_RUSTC_CHANNEL` | nightly |
@@ -31,6 +35,7 @@ pub(crate) struct Config {
 /// | `VERGEN_RUSTC_SEMVER` | 1.52.0-nightly |
 ///
 /// # Example
+/// Emit all of the rustc instructions
 ///
 /// ```
 /// # use anyhow::Result;
@@ -38,6 +43,21 @@ pub(crate) struct Config {
 /// #
 /// # fn main() -> Result<()> {
 /// EmitBuilder::builder().all_rustc().emit()?;
+/// #   Ok(())
+/// # }
+/// ```
+///
+/// Emit some of the rustc instructions
+///
+/// ```
+/// # use anyhow::Result;
+/// # use vergen::EmitBuilder;
+/// #
+/// # fn main() -> Result<()> {
+/// EmitBuilder::builder()
+///     .rustc_channel()
+///     .rustc_semver()
+///     .emit()?;
 /// #   Ok(())
 /// # }
 /// ```
