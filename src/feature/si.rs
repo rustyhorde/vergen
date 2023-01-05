@@ -1,4 +1,4 @@
-// Copyright (c) 2016, 2018, 2021 vergen developers
+// Copyright (c) 2022 vergen developers
 //
 // Licensed under the Apache License, Version 2.0
 // <LICENSE-APACHE or https://www.apache.org/licenses/LICENSE-2.0> or the MIT
@@ -6,224 +6,263 @@
 // option. All files in the project carrying such notice may not be copied,
 // modified, or distributed except according to those terms.
 
-//! `vergen` sysinfo feature implementation
-
-use crate::config::{Config, Instructions};
-use anyhow::Result;
-#[cfg(all(feature = "si", not(target_os = "macos")))]
-use {
-    crate::error::Error::Pid,
-    sysinfo::{get_current_pid, Process, User, UserExt},
+use crate::{
+    emitter::{EmitBuilder, RustcEnvMap},
+    key::VergenKey,
+    utils::fns::{add_default_map_entry, add_map_entry},
 };
-#[cfg(feature = "si")]
-use {
-    crate::{config::VergenKey, feature::add_entry},
-    getset::{Getters, MutGetters},
-    sysinfo::{CpuExt, System, SystemExt},
-};
+#[cfg(not(target_os = "macos"))]
+use anyhow::{anyhow, Result};
+use sysinfo::{CpuExt, System, SystemExt};
+#[cfg(not(target_os = "macos"))]
+use sysinfo::{Pid, Process, User};
 
-/// Configuration for the `VERGEN_SYSINFO_*` instructions
+#[derive(Clone, Copy, Debug, Default)]
+#[allow(clippy::struct_excessive_bools)]
+pub(crate) struct Config {
+    pub(crate) si_name: bool,
+    pub(crate) si_os_version: bool,
+    pub(crate) si_user: bool,
+    pub(crate) si_memory: bool,
+    pub(crate) si_cpu_vendor: bool,
+    pub(crate) si_cpu_core_count: bool,
+    pub(crate) si_cpu_name: bool,
+    pub(crate) si_cpu_brand: bool,
+    pub(crate) si_cpu_frequency: bool,
+    #[cfg(test)]
+    fail_pid: bool,
+}
+
+/// The `VERGEN_SYSINFO_*` configuration features
 ///
-/// # Instructions
-/// The following instructions can be generated:
-///
-/// | Instruction | Default |
-/// | ----------- | :-----: |
-/// | `cargo:rustc-env=VERGEN_SYSINFO_NAME=Darwin` | * |
-/// | `cargo:rustc-env=VERGEN_SYSINFO_OS_VERSION=MacOS 10.15.7 Catalina` | * |
-/// | `cargo:rustc-env=VERGEN_SYSINFO_USER=yoda` | * |
-/// | `cargo:rustc-env=VERGEN_SYSINFO_TOTAL_MEMORY=16 GB` | * |
-/// | `cargo:rustc-env=VERGEN_SYSINFO_CPU_VENDOR=Intel(R) Core(TM) i7-7820HQ CPU @ 2.90GHz` | * |
-/// | `cargo:rustc-env=VERGEN_SYSINFO_CPU_CORE_COUNT=4` | * |
-///
-/// * If the `name` field is false, the `VERGEN_SYSINFO_NAME` instruction will not be generated.
-/// * If the `os_version` field is false, the `VERGEN_SYSINFO_OS_VERSION` instruction will not be generated.
-/// * If the `user` field is false, the `VERGEN_SYSINFO_USER` instruction will not be generated.
-/// * If the `memory` field is false, the `VERGEN_SYSINFO_TOTAL_MEMORY` instruction will not be generated.
-/// * If the `cpu_vendor` field is false, the `VERGEN_SYSINFO_CPU_VENDOR` instruction will not be generated.
-/// * If the `cpu_core_count` field is false, the `VERGEN_SYSINFO_CPU_CORE_COUNT` instruction will not be generated.
-/// * **NOTE** - To keep processing other sections if an Error occurs in this one, set
-///     [`Sysinfo::skip_if_error`](Sysinfo::skip_if_error_mut()) to true.
+/// | Variable | Sample |
+/// | -------  | ------ |
+/// | `VERGEN_SYSINFO_NAME` | Manjaro Linux |
+/// | `VERGEN_SYSINFO_OS_VERSION` | Linux  Manjaro Linux |
+/// | `VERGEN_SYSINFO_USER` | Yoda |
+/// | `VERGEN_SYSINFO_TOTAL_MEMORY` | 33 GB |
+/// | `VERGEN_SYSINFO_CPU_VENDOR` | Authentic AMD |
+/// | `VERGEN_SYSINFO_CPU_CORE_COUNT` | 8 |
+/// | `VERGEN_SYSINFO_CPU_NAME` | cpu0,cpu1,cpu2,cpu3,cpu4,cpu5,cpu6,cpu7 |
+/// | `VERGEN_SYSINFO_CPU_BRAND` | AMD Ryzen Threadripper 1900X 8-Core Processor |
+/// | `VERGEN_SYSINFO_CPU_FREQUENCY` | 3792 |
 ///
 /// # Example
+/// Emit all sysinfo instructions
 ///
 /// ```
 /// # use anyhow::Result;
-/// use vergen::{vergen, Config};
+/// # use vergen::EmitBuilder;
+/// #
+/// # fn main() -> Result<()> {
+/// EmitBuilder::builder().all_sysinfo().emit()?;
+/// #   Ok(())
+/// # }
+/// ```
 ///
-/// # pub fn main() -> Result<()> {
-/// let mut config = Config::default();
+/// Emit some of the sysinfo instructions
+///
+/// ```
+/// # use anyhow::Result;
+/// # use vergen::EmitBuilder;
+/// #
+/// # fn main() -> Result<()> {
+/// EmitBuilder::builder()
+///     .sysinfo_os_version()
+///     .sysinfo_cpu_core_count()
+///     .emit()?;
+/// #   Ok(())
+/// # }
+/// ```
+///
+/// # Example
+/// This feature also recognizes the idempotent flag.
+///
+/// ```
+/// # use anyhow::Result;
+/// # use vergen::EmitBuilder;
+/// #
+/// # fn main() -> Result<()> {
 #[cfg_attr(
-    feature = "si",
+    feature = "sysinfo",
     doc = r##"
-// Turn off the name instruction
-*config.sysinfo_mut().name_mut() = false;
-
-// Generate the instructions
-vergen(config)?;
+EmitBuilder::builder().idempotent().all_sysinfo().emit()?;
 "##
 )]
-/// # Ok(())
+/// #   Ok(())
 /// # }
-#[cfg(feature = "si")]
-#[derive(Clone, Copy, Debug, Getters, MutGetters)]
-#[getset(get = "pub(crate)", get_mut = "pub")]
-#[allow(clippy::struct_excessive_bools)]
-pub struct Sysinfo {
-    /// Enable/Disable the sysinfo output
-    enabled: bool,
-    /// Enable/Disable the `VERGEN_SYSINFO_NAME` instruction
-    name: bool,
-    /// Enable/Disable the `VERGEN_SYSINFO_OS_VERSION` instruction
-    os_version: bool,
-    /// Enable/Disable the `VERGEN_SYSINFO_USER` instruction
-    user: bool,
-    /// Enable/Disable the `VERGEN_SYSINFO_TOTAL_MEMORY` instruction
-    memory: bool,
-    /// Enable/Disable the `VERGEN_SYSINFO_CPU_VENDOR` instruction
-    cpu_vendor: bool,
-    /// Enable/Disable the `VERGEN_SYSINFO_CPU_CORE_COUNT` instruction
-    cpu_core_count: bool,
-    /// Enable/Disable the `VERGEN_SYSINFO_CPU_NAME` instruction
-    cpu_name: bool,
-    /// Enable/Disable the `VERGEN_SYSINFO_CPU_BRAND` instruction
-    cpu_brand: bool,
-    /// Enable/Disable the `VERGEN_SYSINFO_CPU_FREQUENCY` instruction
-    cpu_frequency: bool,
-    /// Enable/Disable skipping [`Sysinfo`] if an Error occurs.
-    /// Use [`option_env!`](std::option_env!) to read the generated environment variables.
-    skip_if_error: bool,
-}
-
-#[cfg(feature = "si")]
-impl Default for Sysinfo {
-    fn default() -> Self {
-        Self {
-            enabled: true,
-            name: true,
-            os_version: true,
-            user: true,
-            memory: true,
-            cpu_vendor: true,
-            cpu_core_count: true,
-            cpu_name: true,
-            cpu_brand: true,
-            cpu_frequency: true,
-            skip_if_error: false,
-        }
+/// ```
+///
+/// The above will always generate the following output
+///
+/// ```text
+/// cargo:rustc-env=VERGEN_SYSINFO_NAME=VERGEN_IDEMPOTENT_OUTPUT
+/// cargo:rustc-env=VERGEN_SYSINFO_OS_VERSION=VERGEN_IDEMPOTENT_OUTPUT
+/// cargo:rustc-env=VERGEN_SYSINFO_USER=VERGEN_IDEMPOTENT_OUTPUT
+/// cargo:rustc-env=VERGEN_SYSINFO_TOTAL_MEMORY=VERGEN_IDEMPOTENT_OUTPUT
+/// cargo:rustc-env=VERGEN_SYSINFO_CPU_VENDOR=VERGEN_IDEMPOTENT_OUTPUT
+/// cargo:rustc-env=VERGEN_SYSINFO_CPU_CORE_COUNT=VERGEN_IDEMPOTENT_OUTPUT
+/// cargo:rustc-env=VERGEN_SYSINFO_CPU_NAME=VERGEN_IDEMPOTENT_OUTPUT
+/// cargo:rustc-env=VERGEN_SYSINFO_CPU_BRAND=VERGEN_IDEMPOTENT_OUTPUT
+/// cargo:rustc-env=VERGEN_SYSINFO_CPU_FREQUENCY=VERGEN_IDEMPOTENT_OUTPUT
+/// cargo:warning=VERGEN_SYSINFO_NAME set to default
+/// cargo:warning=VERGEN_SYSINFO_OS_VERSION set to default
+/// cargo:warning=VERGEN_SYSINFO_USER set to default
+/// cargo:warning=VERGEN_SYSINFO_TOTAL_MEMORY set to default
+/// cargo:warning=VERGEN_SYSINFO_CPU_VENDOR set to default
+/// cargo:warning=VERGEN_SYSINFO_CPU_CORE_COUNT set to default
+/// cargo:warning=VERGEN_SYSINFO_CPU_NAME set to default
+/// cargo:warning=VERGEN_SYSINFO_CPU_BRAND set to default
+/// cargo:warning=VERGEN_SYSINFO_CPU_FREQUENCY set to default
+/// cargo:rerun-if-changed=build.rs
+/// cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT
+/// cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
+/// ```
+///
+#[cfg_attr(docsrs, doc(cfg(feature = "si")))]
+impl EmitBuilder {
+    /// Enable all of the `VERGEN_SYSINFO_*` options
+    pub fn all_sysinfo(&mut self) -> &mut Self {
+        self.sysinfo_name()
+            .sysinfo_os_version()
+            .sysinfo_user()
+            .sysinfo_memory()
+            .sysinfo_cpu_vendor()
+            .sysinfo_cpu_core_count()
+            .sysinfo_cpu_name()
+            .sysinfo_cpu_brand()
+            .sysinfo_cpu_frequency()
     }
-}
 
-#[cfg(feature = "si")]
-impl Sysinfo {
-    pub(crate) fn has_enabled(self) -> bool {
-        self.enabled
-            && (self.name
-                || self.os_version
-                || self.user
-                || self.memory
-                || self.cpu_vendor
-                || self.cpu_core_count
-                || self.cpu_name
-                || self.cpu_brand
-                || self.cpu_frequency)
+    /// Enable the sysinfo name
+    pub fn sysinfo_name(&mut self) -> &mut Self {
+        self.sysinfo_config.si_name = true;
+        self
     }
-}
 
-#[cfg(all(feature = "si", not(target_os = "macos")))]
-fn setup_system() -> System {
-    let mut system = System::new_all();
-    system.refresh_all();
-    system
-}
+    /// Enable the sysinfo OS version
+    pub fn sysinfo_os_version(&mut self) -> &mut Self {
+        self.sysinfo_config.si_os_version = true;
+        self
+    }
 
-#[cfg(all(feature = "si", target_os = "macos"))]
-fn setup_system() -> System {
-    let mut system = System::new();
-    system.refresh_memory();
-    system.refresh_cpu();
-    system
-}
+    /// Enable sysinfo user
+    pub fn sysinfo_user(&mut self) -> &mut Self {
+        self.sysinfo_config.si_user = true;
+        self
+    }
 
-#[cfg(feature = "si")]
-#[allow(clippy::unnecessary_wraps, clippy::too_many_lines)]
-pub(crate) fn configure_sysinfo(instructions: &Instructions, config: &mut Config) -> Result<()> {
-    let sysinfo_config = instructions.sysinfo();
+    /// Enable sysinfo memory
+    pub fn sysinfo_memory(&mut self) -> &mut Self {
+        self.sysinfo_config.si_memory = true;
+        self
+    }
 
-    let mut add_entries = || {
+    /// Enable sysinfo cpu vendor
+    pub fn sysinfo_cpu_vendor(&mut self) -> &mut Self {
+        self.sysinfo_config.si_cpu_vendor = true;
+        self
+    }
+
+    /// Enable sysinfo cpu core count
+    pub fn sysinfo_cpu_core_count(&mut self) -> &mut Self {
+        self.sysinfo_config.si_cpu_core_count = true;
+        self
+    }
+
+    /// Enable sysinfo cpu name
+    pub fn sysinfo_cpu_name(&mut self) -> &mut Self {
+        self.sysinfo_config.si_cpu_name = true;
+        self
+    }
+
+    /// Enable sysinfo cpu brand
+    pub fn sysinfo_cpu_brand(&mut self) -> &mut Self {
+        self.sysinfo_config.si_cpu_brand = true;
+        self
+    }
+
+    /// Enable sysinfo cpu frequency
+    pub fn sysinfo_cpu_frequency(&mut self) -> &mut Self {
+        self.sysinfo_config.si_cpu_frequency = true;
+        self
+    }
+
+    pub(crate) fn add_sysinfo_map_entries(
+        &self,
+        idempotent: bool,
+        map: &mut RustcEnvMap,
+        warnings: &mut Vec<String>,
+    ) {
         let system = setup_system();
 
-        if *sysinfo_config.name() {
-            add_entry(config.cfg_map_mut(), VergenKey::SysinfoName, system.name());
+        if self.sysinfo_config.si_name {
+            add_sysinfo_map_entry(
+                VergenKey::SysinfoName,
+                idempotent,
+                system.name(),
+                map,
+                warnings,
+            );
         }
 
-        if *sysinfo_config.os_version() {
-            add_entry(
-                config.cfg_map_mut(),
+        if self.sysinfo_config.si_os_version {
+            add_sysinfo_map_entry(
                 VergenKey::SysinfoOsVersion,
+                idempotent,
                 system.long_os_version(),
+                map,
+                warnings,
             );
         }
 
-        if *sysinfo_config.user() {
-            cfg_if::cfg_if! {
-                if #[cfg(target_os = "macos")] {
-                } else {
-                    let pid = get_current_pid().map_err(|e| Pid { msg: e })?;
-                    if let Some(process) = system.process(pid) {
-                        for user in system.users() {
-                            if check_user(process, user) {
-                                add_entry(
-                                    config.cfg_map_mut(),
-                                    VergenKey::SysinfoUser,
-                                    Some(user.name().to_string()),
-                                );
-                            }
-                        }
-                    }
-                }
-            }
+        if self.sysinfo_config.si_user {
+            add_sysinfo_map_entry(
+                VergenKey::SysinfoUser,
+                idempotent,
+                self.get_user(&system),
+                map,
+                warnings,
+            );
         }
 
-        if *sysinfo_config.memory() {
-            let mut curr_memory = system.total_memory();
-            let mut count = 0;
-
-            while curr_memory > 1000 {
-                curr_memory /= 1000;
-                count += 1;
-            }
-
-            add_entry(
-                config.cfg_map_mut(),
+        if self.sysinfo_config.si_memory {
+            add_sysinfo_map_entry(
                 VergenKey::SysinfoMemory,
-                Some(format!("{curr_memory} {}", suffix(count))),
+                idempotent,
+                Some(suffix(system.total_memory())),
+                map,
+                warnings,
             );
         }
 
-        if *sysinfo_config.cpu_vendor() {
-            add_entry(
-                config.cfg_map_mut(),
+        if self.sysinfo_config.si_cpu_vendor {
+            add_sysinfo_map_entry(
                 VergenKey::SysinfoCpuVendor,
+                idempotent,
                 system
                     .cpus()
                     .get(0)
-                    .map(|processor| processor.vendor_id().to_string()),
+                    .map(|proc| proc.vendor_id().to_string()),
+                map,
+                warnings,
             );
         }
 
-        if *sysinfo_config.cpu_core_count() {
-            add_entry(
-                config.cfg_map_mut(),
+        if self.sysinfo_config.si_cpu_core_count {
+            add_sysinfo_map_entry(
                 VergenKey::SysinfoCpuCoreCount,
-                system.physical_core_count().map(|x| x.to_string()),
+                idempotent,
+                system.physical_core_count().as_ref().map(usize::to_string),
+                map,
+                warnings,
             );
         }
 
-        if *sysinfo_config.cpu_name() {
-            add_entry(
-                config.cfg_map_mut(),
+        if self.sysinfo_config.si_cpu_name {
+            add_sysinfo_map_entry(
                 VergenKey::SysinfoCpuName,
+                idempotent,
                 Some(
                     system
                         .cpus()
@@ -232,243 +271,224 @@ pub(crate) fn configure_sysinfo(instructions: &Instructions, config: &mut Config
                         .collect::<Vec<&str>>()
                         .join(","),
                 ),
+                map,
+                warnings,
             );
         }
 
-        if *sysinfo_config.cpu_brand() {
-            add_entry(
-                config.cfg_map_mut(),
+        if self.sysinfo_config.si_cpu_brand {
+            add_sysinfo_map_entry(
                 VergenKey::SysinfoCpuBrand,
+                idempotent,
                 system
                     .cpus()
                     .get(0)
                     .map(|processor| processor.brand().to_string()),
+                map,
+                warnings,
             );
         }
 
-        if *sysinfo_config.cpu_frequency() {
-            add_entry(
-                config.cfg_map_mut(),
+        if self.sysinfo_config.si_cpu_frequency {
+            add_sysinfo_map_entry(
                 VergenKey::SysinfoCpuFrequency,
+                idempotent,
                 system
                     .cpus()
                     .get(0)
-                    .map(|processor| processor.frequency().to_string()),
+                    .map(|proc| proc.frequency().to_string()),
+                map,
+                warnings,
             );
         }
-        Ok(())
-    };
+    }
 
-    if sysinfo_config.has_enabled() {
-        if sysinfo_config.skip_if_error {
-            // hide errors, but emit a warning
-            let result = add_entries();
-            if result.is_err() {
-                let warning = format!(
-                    "An Error occurred during processing of {}. \
-                    VERGEN_{}_* may be incomplete.",
-                    "Sysinfo", "SYSINFO"
-                );
-                config.warnings_mut().push(warning);
+    #[cfg(target_os = "macos")]
+    #[allow(clippy::unused_self)]
+    fn get_user(&self, _system: &System) -> Option<String> {
+        None
+    }
+
+    #[cfg(not(target_os = "macos"))]
+    fn get_user(&self, system: &System) -> Option<String> {
+        use sysinfo::UserExt;
+
+        if let Ok(pid) = self.get_pid() {
+            if let Some(process) = system.process(pid) {
+                for user in system.users() {
+                    if check_user(process, user) {
+                        return Some(user.name().to_string());
+                    }
+                }
             }
-            Ok(())
-        } else {
-            add_entries()
         }
-    } else {
-        Ok(())
+        None
+    }
+    #[cfg(all(not(test), not(target_os = "macos")))]
+    #[allow(clippy::unused_self)]
+    fn get_pid(&self) -> Result<Pid> {
+        use sysinfo::get_current_pid;
+
+        get_current_pid().map_err(|e| anyhow!(format!("{e}")))
+    }
+
+    #[cfg(all(test, not(target_os = "macos")))]
+    fn get_pid(&self) -> Result<Pid> {
+        use sysinfo::get_current_pid;
+
+        if self.sysinfo_config.fail_pid {
+            Err(anyhow!("unable to determine pid"))
+        } else {
+            get_current_pid().map_err(|e| anyhow!(format!("{e}")))
+        }
     }
 }
 
-#[cfg(not(feature = "si"))]
-#[allow(clippy::unnecessary_wraps)]
-pub(crate) fn configure_sysinfo(_instructions: &Instructions, _config: &mut Config) -> Result<()> {
-    Ok(())
+fn add_sysinfo_map_entry(
+    key: VergenKey,
+    idempotent: bool,
+    value: Option<String>,
+    map: &mut RustcEnvMap,
+    warnings: &mut Vec<String>,
+) {
+    if idempotent {
+        add_default_map_entry(key, map, warnings);
+    } else if let Some(val) = value {
+        add_map_entry(key, val, map);
+    } else {
+        add_default_map_entry(key, map, warnings);
+    }
 }
 
-#[cfg(all(feature = "si", not(target_os = "windows"), not(target_os = "macos")))]
+#[cfg(not(target_os = "macos"))]
+fn setup_system() -> System {
+    let mut system = System::new_all();
+    system.refresh_all();
+    system
+}
+
+#[cfg(target_os = "macos")]
+fn setup_system() -> System {
+    let mut system = System::new();
+    system.refresh_memory();
+    system.refresh_cpu();
+    system
+}
+
+#[cfg(all(not(target_os = "windows"), not(target_os = "macos")))]
 fn check_user(process: &Process, user: &User) -> bool {
-    use sysinfo::ProcessExt;
+    use sysinfo::{ProcessExt, UserExt};
 
     Some(user.id()) == process.user_id()
 }
 
-#[cfg(all(feature = "si", target_os = "windows"))]
+#[cfg(target_os = "windows")]
 fn check_user(_process: &Process, _user: &User) -> bool {
     false
 }
 
-#[cfg(feature = "si")]
-fn suffix(val: usize) -> &'static str {
-    match val {
-        0 => "B",
-        1 => "KB",
-        2 => "MB",
-        3 => "GB",
-        4 => "TB",
-        _ => "xB",
+fn suffix(mut curr_memory: u64) -> String {
+    let mut count = 0;
+
+    while curr_memory >= 1024 {
+        curr_memory /= 1024;
+        count += 1;
     }
+    format!(
+        "{curr_memory} {}",
+        match count {
+            0 => "B",
+            1 => "KiB",
+            2 => "MiB",
+            3 => "GiB",
+            4 => "TiB",
+            5 => "PiB",
+            // This is the highest we can reach
+            // at u64::MAX
+            _ => "EiB",
+        }
+    )
 }
 
-#[cfg(all(test, feature = "si"))]
+#[cfg(test)]
 mod test {
-    use super::{suffix, Sysinfo};
-    use crate::config::Instructions;
+    use super::{add_sysinfo_map_entry, suffix};
+    use crate::{emitter::test::count_idempotent, key::VergenKey, EmitBuilder};
+    use anyhow::Result;
+    use std::collections::BTreeMap;
+
+    #[cfg(any(target_os = "macos", target_os = "windows"))]
+    const IDEM_COUNT: usize = 1;
+    #[cfg(not(any(target_os = "macos", target_os = "windows")))]
+    const IDEM_COUNT: usize = 0;
+    const SYSINFO_COUNT: usize = 9;
 
     #[test]
-    fn rustc_config() {
-        let mut config = Instructions::default();
-        assert!(config.sysinfo().name);
-        assert!(config.sysinfo().os_version);
-        assert!(config.sysinfo().user);
-        assert!(config.sysinfo().cpu_vendor);
-        assert!(config.sysinfo().cpu_core_count);
-        assert!(config.sysinfo().cpu_name);
-        assert!(config.sysinfo().cpu_brand);
-        assert!(config.sysinfo().cpu_frequency);
-        config.sysinfo_mut().os_version = false;
-        assert!(!config.sysinfo().os_version);
+    #[serial_test::parallel]
+    fn sysinfo_all_idempotent() -> Result<()> {
+        let config = EmitBuilder::builder()
+            .idempotent()
+            .all_sysinfo()
+            .test_emit()?;
+        assert_eq!(SYSINFO_COUNT, config.cargo_rustc_env_map.len());
+        assert_eq!(SYSINFO_COUNT, count_idempotent(&config.cargo_rustc_env_map));
+        assert_eq!(SYSINFO_COUNT, config.warnings.len());
+        Ok(())
     }
 
     #[test]
-    fn has_enabled_works() {
-        let mut sysinfo = Sysinfo::default();
-        assert!(sysinfo.has_enabled());
-        *sysinfo.name_mut() = false;
-        assert!(sysinfo.has_enabled());
-        *sysinfo.os_version_mut() = false;
-        assert!(sysinfo.has_enabled());
-        *sysinfo.user_mut() = false;
-        assert!(sysinfo.has_enabled());
-        *sysinfo.memory_mut() = false;
-        assert!(sysinfo.has_enabled());
-        *sysinfo.cpu_vendor_mut() = false;
-        assert!(sysinfo.has_enabled());
-        *sysinfo.cpu_core_count_mut() = false;
-        assert!(sysinfo.has_enabled());
-        *sysinfo.cpu_name_mut() = false;
-        assert!(sysinfo.has_enabled());
-        *sysinfo.cpu_brand_mut() = false;
-        assert!(sysinfo.has_enabled());
-        *sysinfo.cpu_frequency_mut() = false;
-        assert!(!sysinfo.has_enabled());
+    #[serial_test::parallel]
+    fn sysinfo_all() -> Result<()> {
+        let config = EmitBuilder::builder().all_sysinfo().test_emit()?;
+        assert_eq!(SYSINFO_COUNT, config.cargo_rustc_env_map.len());
+        assert_eq!(IDEM_COUNT, count_idempotent(&config.cargo_rustc_env_map));
+        assert_eq!(IDEM_COUNT, config.warnings.len());
+        Ok(())
     }
 
     #[test]
+    #[serial_test::parallel]
+    fn adding_none_defaults() -> Result<()> {
+        let mut map = BTreeMap::new();
+        let mut warnings = vec![];
+        add_sysinfo_map_entry(
+            VergenKey::SysinfoCpuBrand,
+            false,
+            None,
+            &mut map,
+            &mut warnings,
+        );
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::parallel]
     fn suffix_works() {
-        assert_eq!("B", suffix(0));
-        assert_eq!("KB", suffix(1));
-        assert_eq!("MB", suffix(2));
-        assert_eq!("GB", suffix(3));
-        assert_eq!("TB", suffix(4));
-        assert_eq!("xB", suffix(5));
+        assert_eq!(suffix(1023), "1023 B");
+        assert_eq!(suffix(1024), "1 KiB");
+        assert_eq!(suffix(1_048_575), "1023 KiB");
+        assert_eq!(suffix(1_048_576), "1 MiB");
+        assert_eq!(suffix(1_073_741_823), "1023 MiB");
+        assert_eq!(suffix(1_073_741_824), "1 GiB");
+        assert_eq!(suffix(1_099_511_627_775), "1023 GiB");
+        assert_eq!(suffix(1_099_511_627_776), "1 TiB");
+        assert_eq!(suffix(1_125_899_906_842_623), "1023 TiB");
+        assert_eq!(suffix(1_125_899_906_842_624), "1 PiB");
+        assert_eq!(suffix((1_125_899_906_842_624 * 1024) - 1), "1023 PiB");
+        assert_eq!(suffix(1_125_899_906_842_624 * 1024), "1 EiB");
+        assert_eq!(suffix(u64::MAX), "15 EiB");
     }
 
     #[test]
-    fn not_enabled() {
-        let mut config = Instructions::default();
-        *config.sysinfo_mut().enabled_mut() = false;
-        assert!(!config.sysinfo().has_enabled());
-    }
-
-    #[test]
-    fn no_name() {
-        let mut config = Instructions::default();
-        *config.sysinfo_mut().name_mut() = false;
-        assert!(config.sysinfo().has_enabled());
-    }
-
-    #[test]
-    fn no_os_version() {
-        let mut config = Instructions::default();
-        *config.sysinfo_mut().name_mut() = false;
-        *config.sysinfo_mut().os_version_mut() = false;
-        assert!(config.sysinfo().has_enabled());
-    }
-
-    #[test]
-    fn no_user() {
-        let mut config = Instructions::default();
-        *config.sysinfo_mut().name_mut() = false;
-        *config.sysinfo_mut().os_version_mut() = false;
-        *config.sysinfo_mut().user_mut() = false;
-        assert!(config.sysinfo().has_enabled());
-    }
-
-    #[test]
-    fn no_memory() {
-        let mut config = Instructions::default();
-        *config.sysinfo_mut().name_mut() = false;
-        *config.sysinfo_mut().os_version_mut() = false;
-        *config.sysinfo_mut().user_mut() = false;
-        *config.sysinfo_mut().memory_mut() = false;
-        assert!(config.sysinfo().has_enabled());
-    }
-    #[test]
-    fn no_cpu_vendor() {
-        let mut config = Instructions::default();
-        *config.sysinfo_mut().name_mut() = false;
-        *config.sysinfo_mut().os_version_mut() = false;
-        *config.sysinfo_mut().user_mut() = false;
-        *config.sysinfo_mut().memory_mut() = false;
-        *config.sysinfo_mut().cpu_vendor_mut() = false;
-        assert!(config.sysinfo().has_enabled());
-    }
-
-    #[test]
-    fn no_cpu_core_count() {
-        let mut config = Instructions::default();
-        *config.sysinfo_mut().name_mut() = false;
-        *config.sysinfo_mut().os_version_mut() = false;
-        *config.sysinfo_mut().user_mut() = false;
-        *config.sysinfo_mut().memory_mut() = false;
-        *config.sysinfo_mut().cpu_vendor_mut() = false;
-        *config.sysinfo_mut().cpu_core_count_mut() = false;
-        assert!(config.sysinfo().has_enabled());
-    }
-
-    #[test]
-    fn no_cpu_name() {
-        let mut config = Instructions::default();
-        *config.sysinfo_mut().name_mut() = false;
-        *config.sysinfo_mut().os_version_mut() = false;
-        *config.sysinfo_mut().user_mut() = false;
-        *config.sysinfo_mut().memory_mut() = false;
-        *config.sysinfo_mut().cpu_vendor_mut() = false;
-        *config.sysinfo_mut().cpu_core_count_mut() = false;
-        *config.sysinfo_mut().cpu_name_mut() = false;
-        assert!(config.sysinfo().has_enabled());
-    }
-
-    #[test]
-    fn no_cpu_brand() {
-        let mut config = Instructions::default();
-        *config.sysinfo_mut().name_mut() = false;
-        *config.sysinfo_mut().os_version_mut() = false;
-        *config.sysinfo_mut().user_mut() = false;
-        *config.sysinfo_mut().memory_mut() = false;
-        *config.sysinfo_mut().cpu_vendor_mut() = false;
-        *config.sysinfo_mut().cpu_core_count_mut() = false;
-        *config.sysinfo_mut().cpu_name_mut() = false;
-        *config.sysinfo_mut().cpu_brand_mut() = false;
-        assert!(config.sysinfo().has_enabled());
-    }
-
-    #[test]
-    fn nothing() {
-        let mut config = Instructions::default();
-        *config.sysinfo_mut().name_mut() = false;
-        *config.sysinfo_mut().os_version_mut() = false;
-        *config.sysinfo_mut().user_mut() = false;
-        *config.sysinfo_mut().memory_mut() = false;
-        *config.sysinfo_mut().cpu_vendor_mut() = false;
-        *config.sysinfo_mut().cpu_core_count_mut() = false;
-        *config.sysinfo_mut().cpu_name_mut() = false;
-        *config.sysinfo_mut().cpu_brand_mut() = false;
-        *config.sysinfo_mut().cpu_frequency_mut() = false;
-        assert!(!config.sysinfo().has_enabled());
+    #[serial_test::parallel]
+    fn pid_lookup_fails() -> Result<()> {
+        let mut config = EmitBuilder::builder();
+        let _ = config.all_sysinfo();
+        config.sysinfo_config.fail_pid = true;
+        let emitter = config.test_emit()?;
+        assert_eq!(SYSINFO_COUNT, emitter.cargo_rustc_env_map.len());
+        assert_eq!(1, count_idempotent(&emitter.cargo_rustc_env_map));
+        assert_eq!(1, emitter.warnings.len());
+        Ok(())
     }
 }
-
-#[cfg(all(test, not(feature = "si")))]
-mod test {}

@@ -1,0 +1,11 @@
+[gitcl]
+features = "build cargo git gitcl rustc si"
+
+[git2]
+features = "build cargo git git2 rustc si"
+
+[gix]
+features = "build cargo git gix rustc si"
+
+[default]
+features = ""

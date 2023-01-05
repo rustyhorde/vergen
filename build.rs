@@ -1,50 +1,42 @@
-use anyhow::Result;
-use time::{format_description::well_known::Rfc3339, OffsetDateTime};
-
-pub fn main() -> Result<()> {
+pub fn main() {
     println!("cargo:rerun-if-changed=build.rs");
-    // These are here so some doc tests work
-    let now = OffsetDateTime::now_utc();
-    println!(
-        "cargo:rustc-env=VERGEN_BUILD_TIMESTAMP={}",
-        now.format(&Rfc3339)?
-    );
-    println!("cargo:rustc-env=VERGEN_GIT_SEMVER=v3.2.0-86-g95fc0f5");
-    nightly_lints();
-    beta_lints();
-    stable_lints();
-    msrv_lints();
-    Ok(())
+    // These are set for some documentation tests
+    println!("cargo:rustc-env=VERGEN_BUILD_TIMESTAMP=2022-12-28T21:56:23.764785796Z");
+    println!("cargo:rustc-env=VERGEN_GIT_DESCRIBE=7.4.4-16-g2f35555");
+    nightly();
+    beta();
+    stable();
+    msrv();
 }
 
 #[rustversion::nightly]
-fn nightly_lints() {
-    println!("cargo:rustc-cfg=nightly_lints");
+fn nightly() {
+    println!("cargo:rustc-cfg=nightly");
 }
 
 #[rustversion::not(nightly)]
-fn nightly_lints() {}
+fn nightly() {}
 
 #[rustversion::beta]
-fn beta_lints() {
-    println!("cargo:rustc-cfg=beta_lints");
+fn beta() {
+    println!("cargo:rustc-cfg=beta");
 }
 
 #[rustversion::not(beta)]
-fn beta_lints() {}
+fn beta() {}
 
 #[rustversion::stable]
-fn stable_lints() {
-    println!("cargo:rustc-cfg=stable_lints");
+fn stable() {
+    println!("cargo:rustc-cfg=stable");
 }
 
 #[rustversion::not(stable)]
-fn stable_lints() {}
+fn stable() {}
 
-#[rustversion::before(1.63)]
-fn msrv_lints() {}
+#[rustversion::before(1.66)]
+fn msrv() {}
 
-#[rustversion::since(1.63)]
-fn msrv_lints() {
+#[rustversion::since(1.66)]
+fn msrv() {
     println!("cargo:rustc-cfg=msrv");
 }

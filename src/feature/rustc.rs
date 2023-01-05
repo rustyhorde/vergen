@@ -1,280 +1,342 @@
-// Copyright (c) 2016, 2018, 2021 vergen developers
-//
-// Licensed under the Apache License, Version 2.0
-// <LICENSE-APACHE or https://www.apache.org/licenses/LICENSE-2.0> or the MIT
-// license <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
-// option. All files in the project carrying such notice may not be copied,
-// modified, or distributed except according to those terms.
-
-//! `vergen` rustc feature implementation
-
-use crate::config::{Config, Instructions};
-use anyhow::Result;
-#[cfg(feature = "rustc")]
-use {
-    crate::{config::VergenKey, feature::add_entry},
-    getset::{Getters, MutGetters},
-    rustc_version::{version_meta, Channel},
+use crate::{
+    emitter::{EmitBuilder, RustcEnvMap},
+    key::VergenKey,
+    utils::fns::{add_default_map_entry, add_map_entry},
 };
+use anyhow::{Error, Result};
+use rustc_version::{version_meta, Channel, VersionMeta};
 
-/// Configuration for the `VERGEN_RUSTC_*` instructions
+#[derive(Clone, Copy, Debug, Default)]
+#[allow(clippy::struct_excessive_bools)]
+pub(crate) struct Config {
+    pub(crate) rustc_channel: bool,
+    pub(crate) rustc_commit_date: bool,
+    pub(crate) rustc_commit_hash: bool,
+    pub(crate) rustc_host_triple: bool,
+    pub(crate) rustc_llvm_version: bool,
+    pub(crate) rustc_semver: bool,
+    #[cfg(test)]
+    rustc_str_to_test: Option<&'static str>,
+}
+
+/// The `VERGEN_RUSTC_*` configuration features
 ///
-/// # Instructions
-/// The following instructions can be generated:
+/// **NOTE** - All rustc instructions are considered deterministic.  If you change
+/// the version of rustc you are compiling with, these values should change if
+/// being used in the generated binary.
 ///
-/// | Instruction | Default |
-/// | ----------- | :-----: |
-/// | `cargo:rustc-env=VERGEN_RUSTC_CHANNEL=nightly` | * |
-/// | `cargo:rustc-env=VERGEN_RUSTC_COMMIT_DATE=2021-02-10` | * |
-/// | `cargo:rustc-env=VERGEN_RUSTC_COMMIT_HASH=07194ffcd25b0871ce560b9f702e52db27ac9f77` | * |
-/// | `cargo:rustc-env=VERGEN_RUSTC_HOST_TRIPLE=x86_64-apple-darwin` | * |
-/// | `cargo:rustc-env=VERGEN_RUSTC_LLVM_VERSION=11.0` | * |
-/// | `cargo:rustc-env=VERGEN_RUSTC_SEMVER=1.52.0-nightly` | * |
-///
-/// * If the `channel` field is false, the `VERGEN_RUSTC_CHANNEL` instruction will not be generated.
-/// * If the `commit_date` field is false, the `VERGEN_RUSTC_COMMIT_DATE` instruction will not be generated.
-/// * If the `host_triple` field is false, the `VERGEN_RUSTC_HOST_TRIPLE` instruction will not be generated.
-/// * If the `llvm_version` field is false, the `VERGEN_RUSTC_LLVM_VERSION` instruction will not be generated.
-/// * If the `semver` field is false, the `VERGEN_RUSTC_SEMVER` instruction will not be generated.
-/// * If the `sha` field is false, the `VERGEN_RUSTC_COMMIT_HASH` instruction will not be generated.
-/// * **NOTE** - The `commit_date` filed is only a date, as we are restricted to the output from `rustc_version`
-/// * **NOTE** - The `VERGEN_RUSTC_LLVM_VERSION` instruction will only be generated on the `nightly` channel, regardless of the `llvm_version` field.
-/// * **NOTE** - To keep processing other sections if an Error occurs in this one, set
-///     [`Rustc::skip_if_error`](Rustc::skip_if_error_mut()) to true.
+/// | Variable | Sample |
+/// | -------  | ------ |
+/// | `VERGEN_RUSTC_CHANNEL` | nightly |
+/// | `VERGEN_RUSTC_COMMIT_DATE` | 2021-02-24 |
+/// | `VERGEN_RUSTC_COMMIT_HASH` | a8486b64b0c87dabd045453b6c81500015d122d6 |
+/// | `VERGEN_RUSTC_HOST_TRIPLE` | x86_64-apple-darwin |
+/// | `VERGEN_RUSTC_LLVM_VERSION` | 11.0 |
+/// | `VERGEN_RUSTC_SEMVER` | 1.52.0-nightly |
 ///
 /// # Example
+/// Emit all of the rustc instructions
 ///
 /// ```
 /// # use anyhow::Result;
-/// use vergen::{vergen, Config};
-///
-/// # pub fn main() -> Result<()> {
-/// let mut config = Config::default();
-#[cfg_attr(
-    feature = "rustc",
-    doc = r##"
-// Turn off the LLVM instruction
-*config.rustc_mut().llvm_version_mut() = false;
-
-// Generate the instructions
-vergen(config)?;
-"##
-)]
-/// # Ok(())
+/// # use vergen::EmitBuilder;
+/// #
+/// # fn main() -> Result<()> {
+/// EmitBuilder::builder().all_rustc().emit()?;
+/// #   Ok(())
 /// # }
-#[cfg(feature = "rustc")]
-#[derive(Clone, Copy, Debug, Getters, MutGetters)]
-#[getset(get = "pub(crate)", get_mut = "pub")]
-#[allow(clippy::struct_excessive_bools)]
-pub struct Rustc {
-    /// Enable/Disable the rustc output
-    enabled: bool,
-    /// Enable/Disable the `VERGEN_RUSTC_CHANNEL` instruction
-    channel: bool,
-    /// Enable/Disable the `VERGEN_RUSTC_COMMIT_DATE` instruction
-    commit_date: bool,
-    /// Enable/Disable the `VERGEN_RUSTC_HOST_TRIPLE` instruction
-    host_triple: bool,
-    /// Enable/Disable the `VERGEN_RUSTC_LLVM_VERSION` instruction
-    llvm_version: bool,
-    /// Enable/Disable the `VERGEN_RUSTC_SEMVER` instruction
-    semver: bool,
-    /// Enable/Disable the `VERGEN_RUSTC_COMMIT_HASH` instruction
-    sha: bool,
-    /// Enable/Disable skipping [`Rustc`] if an Error occurs.
-    /// Use [`option_env!`](std::option_env!) to read the generated environment variables.
-    skip_if_error: bool,
-}
-
-#[cfg(feature = "rustc")]
-impl Default for Rustc {
-    fn default() -> Self {
-        Self {
-            enabled: true,
-            channel: true,
-            commit_date: true,
-            host_triple: true,
-            llvm_version: true,
-            semver: true,
-            sha: true,
-            skip_if_error: false,
-        }
+/// ```
+///
+/// Emit some of the rustc instructions
+///
+/// ```
+/// # use anyhow::Result;
+/// # use vergen::EmitBuilder;
+/// #
+/// # fn main() -> Result<()> {
+/// EmitBuilder::builder()
+///     .rustc_channel()
+///     .rustc_semver()
+///     .emit()?;
+/// #   Ok(())
+/// # }
+/// ```
+#[cfg_attr(docsrs, doc(cfg(feature = "rustc")))]
+impl EmitBuilder {
+    /// Enable all of the `VERGEN_RUSTC_*` options
+    pub fn all_rustc(&mut self) -> &mut Self {
+        self.rustc_channel()
+            .rustc_commit_date()
+            .rustc_commit_hash()
+            .rustc_host_triple()
+            .rustc_llvm_version()
+            .rustc_semver()
     }
-}
 
-#[cfg(feature = "rustc")]
-impl Rustc {
-    pub(crate) fn has_enabled(self) -> bool {
-        self.enabled
-            && (self.channel
-                || self.commit_date
-                || self.host_triple
-                || self.llvm_version
-                || self.sha)
+    /// Enable the rustc channel
+    pub fn rustc_channel(&mut self) -> &mut Self {
+        self.rustc_config.rustc_channel = true;
+        self
     }
-}
 
-#[cfg(feature = "rustc")]
-pub(crate) fn configure_rustc(instructions: &Instructions, config: &mut Config) -> Result<()> {
-    let rustc_config = instructions.rustc();
+    /// Enable the rustc commit date
+    pub fn rustc_commit_date(&mut self) -> &mut Self {
+        self.rustc_config.rustc_commit_date = true;
+        self
+    }
 
-    let mut add_entries = || {
-        let rustc = version_meta()?;
+    /// Enable the rustc SHA
+    pub fn rustc_commit_hash(&mut self) -> &mut Self {
+        self.rustc_config.rustc_commit_hash = true;
+        self
+    }
 
-        if *rustc_config.channel() {
-            add_entry(
-                config.cfg_map_mut(),
-                VergenKey::RustcChannel,
-                Some(
-                    match rustc.channel {
-                        Channel::Dev => "dev",
-                        Channel::Nightly => "nightly",
-                        Channel::Beta => "beta",
-                        Channel::Stable => "stable",
-                    }
-                    .to_string(),
-                ),
-            );
-        }
+    /// Enable rustc host triple
+    pub fn rustc_host_triple(&mut self) -> &mut Self {
+        self.rustc_config.rustc_host_triple = true;
+        self
+    }
 
-        if *rustc_config.host_triple() {
-            add_entry(
-                config.cfg_map_mut(),
-                VergenKey::RustcHostTriple,
-                Some(rustc.host),
-            );
-        }
+    /// Enable rustc LLVM version
+    pub fn rustc_llvm_version(&mut self) -> &mut Self {
+        self.rustc_config.rustc_llvm_version = true;
+        self
+    }
 
-        if *rustc_config.semver() {
-            add_entry(
-                config.cfg_map_mut(),
-                VergenKey::RustcSemver,
-                Some(format!("{}", rustc.semver)),
-            );
-        }
+    /// Enable the rustc semver
+    pub fn rustc_semver(&mut self) -> &mut Self {
+        self.rustc_config.rustc_semver = true;
+        self
+    }
 
-        if *rustc_config.sha() {
-            add_entry(
-                config.cfg_map_mut(),
-                VergenKey::RustcCommitHash,
-                Some(rustc.commit_hash.unwrap_or_else(|| "unknown".to_string())),
-            );
-        }
-
-        if *rustc_config.commit_date() {
-            add_entry(
-                config.cfg_map_mut(),
-                VergenKey::RustcCommitDate,
-                Some(rustc.commit_date.unwrap_or_else(|| "unknown".to_string())),
-            );
-        }
-
-        if *rustc_config.llvm_version() {
-            if let Some(llvmver) = rustc.llvm_version {
-                add_entry(
-                    config.cfg_map_mut(),
-                    VergenKey::RustcLlvmVersion,
-                    Some(format!("{llvmver}")),
-                );
-            }
-        }
-        Ok(())
-    };
-
-    if rustc_config.has_enabled() {
-        if rustc_config.skip_if_error {
-            // hide errors, but emit a warning
-            let result = add_entries();
-            if result.is_err() {
-                let warning = format!(
-                    "An Error occurred during processing of {}. \
-                    VERGEN_{}_* may be incomplete.",
-                    "Rustc", "RUSTC"
-                );
-                config.warnings_mut().push(warning);
-            }
-            Ok(())
+    pub(crate) fn add_rustc_default(
+        &self,
+        e: Error,
+        fail_on_error: bool,
+        map: &mut RustcEnvMap,
+        warnings: &mut Vec<String>,
+    ) -> Result<()> {
+        if fail_on_error {
+            Err(e)
         } else {
-            add_entries()
+            if self.rustc_config.rustc_channel {
+                add_default_map_entry(VergenKey::RustcChannel, map, warnings);
+            }
+            if self.rustc_config.rustc_commit_date {
+                add_default_map_entry(VergenKey::RustcCommitDate, map, warnings);
+            }
+            if self.rustc_config.rustc_commit_hash {
+                add_default_map_entry(VergenKey::RustcCommitHash, map, warnings);
+            }
+            if self.rustc_config.rustc_host_triple {
+                add_default_map_entry(VergenKey::RustcHostTriple, map, warnings);
+            }
+            if self.rustc_config.rustc_llvm_version {
+                add_default_map_entry(VergenKey::RustcLlvmVersion, map, warnings);
+            }
+            if self.rustc_config.rustc_semver {
+                add_default_map_entry(VergenKey::RustcSemver, map, warnings);
+            }
+
+            Ok(())
         }
-    } else {
+    }
+
+    #[cfg(not(test))]
+    pub(crate) fn add_rustc_map_entries(
+        &self,
+        map: &mut RustcEnvMap,
+        warnings: &mut Vec<String>,
+    ) -> Result<()> {
+        self.add_rustc_to_map(version_meta(), map, warnings)
+    }
+
+    #[cfg(test)]
+    pub(crate) fn add_rustc_map_entries(
+        &self,
+        map: &mut RustcEnvMap,
+        warnings: &mut Vec<String>,
+    ) -> Result<()> {
+        use rustc_version::version_meta_for;
+
+        let vm = if let Some(rustc_str) = self.rustc_config.rustc_str_to_test {
+            version_meta_for(rustc_str)
+        } else {
+            version_meta()
+        };
+        self.add_rustc_to_map(vm, map, warnings)
+    }
+
+    fn add_rustc_to_map(
+        &self,
+        rustc_res: std::result::Result<VersionMeta, rustc_version::Error>,
+        map: &mut RustcEnvMap,
+        warnings: &mut Vec<String>,
+    ) -> Result<()> {
+        let rustc = rustc_res?;
+        if self.rustc_config.rustc_channel {
+            let channel = match rustc.channel {
+                Channel::Dev => "dev",
+                Channel::Nightly => "nightly",
+                Channel::Beta => "beta",
+                Channel::Stable => "stable",
+            };
+            add_map_entry(VergenKey::RustcChannel, channel, map);
+        }
+
+        if self.rustc_config.rustc_commit_date {
+            if let Some(commit_date) = rustc.commit_date {
+                add_map_entry(VergenKey::RustcCommitDate, commit_date, map);
+            } else {
+                add_default_map_entry(VergenKey::RustcCommitDate, map, warnings);
+            }
+        }
+
+        if self.rustc_config.rustc_commit_hash {
+            if let Some(commit_hash) = rustc.commit_hash {
+                add_map_entry(VergenKey::RustcCommitHash, commit_hash, map);
+            } else {
+                add_default_map_entry(VergenKey::RustcCommitHash, map, warnings);
+            }
+        }
+
+        if self.rustc_config.rustc_host_triple {
+            add_map_entry(VergenKey::RustcHostTriple, rustc.host, map);
+        }
+
+        if self.rustc_config.rustc_llvm_version {
+            if let Some(llvm_version) = rustc.llvm_version {
+                add_map_entry(VergenKey::RustcLlvmVersion, format!("{llvm_version}"), map);
+            } else {
+                add_default_map_entry(VergenKey::RustcLlvmVersion, map, warnings);
+            }
+        }
+
+        if self.rustc_config.rustc_semver {
+            add_map_entry(VergenKey::RustcSemver, format!("{}", rustc.semver), map);
+        }
+
         Ok(())
     }
 }
 
-#[cfg(not(feature = "rustc"))]
-pub(crate) fn configure_rustc(_instructions: &Instructions, _config: &mut Config) -> Result<()> {
-    Ok(())
-}
-
-#[cfg(all(test, feature = "rustc"))]
+#[cfg(test)]
 mod test {
-    use crate::config::Instructions;
+    use crate::{emitter::test::count_idempotent, EmitBuilder};
+    use anyhow::Result;
 
     #[test]
-    fn rustc_config() {
-        let mut config = Instructions::default();
-        assert!(config.rustc().channel);
-        assert!(config.rustc().commit_date);
-        assert!(config.rustc().host_triple);
-        assert!(config.rustc().llvm_version);
-        assert!(config.rustc().sha);
-        config.rustc_mut().host_triple = false;
-        assert!(!config.rustc().host_triple);
+    #[serial_test::parallel]
+    fn rustc_all_idempotent() -> Result<()> {
+        let config = EmitBuilder::builder()
+            .idempotent()
+            .all_rustc()
+            .test_emit()?;
+        assert_eq!(6, config.cargo_rustc_env_map.len());
+        assert_eq!(0, count_idempotent(&config.cargo_rustc_env_map));
+        assert_eq!(0, config.warnings.len());
+        Ok(())
     }
 
     #[test]
-    fn not_enabled() {
-        let mut config = Instructions::default();
-        *config.rustc_mut().enabled_mut() = false;
-        assert!(!config.rustc().has_enabled());
+    #[serial_test::parallel]
+    fn rustc_all() -> Result<()> {
+        let config = EmitBuilder::builder().all_rustc().test_emit()?;
+        assert_eq!(6, config.cargo_rustc_env_map.len());
+        assert_eq!(0, count_idempotent(&config.cargo_rustc_env_map));
+        assert_eq!(0, config.warnings.len());
+        Ok(())
+    }
+
+    const NO_LLVM: &str = r#"rustc 1.68.0-nightly (270c94e48 2022-12-28)
+binary: rustc
+commit-hash: 270c94e484e19764a2832ef918c95224eb3f17c7
+commit-date: 2022-12-28
+host: x86_64-unknown-linux-gnu
+release: 1.68.0-nightly
+"#;
+
+    #[test]
+    #[serial_test::parallel]
+    fn no_llvm_in_rustc() -> Result<()> {
+        let mut config = EmitBuilder::builder();
+        let _ = config.fail_on_error();
+        let _ = config.all_rustc();
+        config.rustc_config.rustc_str_to_test = Some(NO_LLVM);
+        let emitter = config.test_emit()?;
+        assert_eq!(6, emitter.cargo_rustc_env_map.len());
+        assert_eq!(1, count_idempotent(&emitter.cargo_rustc_env_map));
+        assert_eq!(1, emitter.warnings.len());
+        Ok(())
+    }
+
+    const DEV_BUILD: &str = r#"rustc 1.68.0-nightly (270c94e48 2022-12-28)
+binary: rustc
+commit-hash: 270c94e484e19764a2832ef918c95224eb3f17c7
+commit-date: 2022-12-28
+host: x86_64-unknown-linux-gnu
+release: 1.68.0-dev
+LLVM version: 15.0.6
+"#;
+
+    #[test]
+    #[serial_test::parallel]
+    fn rustc_dev_build() -> Result<()> {
+        let mut config = EmitBuilder::builder();
+        let _ = config.fail_on_error();
+        let _ = config.all_rustc();
+        config.rustc_config.rustc_str_to_test = Some(DEV_BUILD);
+        let emitter = config.test_emit()?;
+        assert_eq!(6, emitter.cargo_rustc_env_map.len());
+        assert_eq!(0, count_idempotent(&emitter.cargo_rustc_env_map));
+        assert_eq!(0, emitter.warnings.len());
+        Ok(())
+    }
+
+    const UNKNOWN_BITS: &str = r#"rustc 1.68.0-nightly (270c94e48 2022-12-28)
+binary: rustc
+commit-hash: unknown
+commit-date: unknown
+host: x86_64-unknown-linux-gnu
+release: 1.68.0-dev
+LLVM version: 15.0.6
+"#;
+
+    #[test]
+    #[serial_test::parallel]
+    fn rustc_unknown_bits() -> Result<()> {
+        let mut config = EmitBuilder::builder();
+        let _ = config.fail_on_error();
+        let _ = config.all_rustc();
+        config.rustc_config.rustc_str_to_test = Some(UNKNOWN_BITS);
+        let emitter = config.test_emit()?;
+        assert_eq!(6, emitter.cargo_rustc_env_map.len());
+        assert_eq!(2, count_idempotent(&emitter.cargo_rustc_env_map));
+        assert_eq!(2, emitter.warnings.len());
+        Ok(())
     }
 
     #[test]
-    fn no_channel() {
-        let mut config = Instructions::default();
-        *config.rustc_mut().channel_mut() = false;
-        assert!(config.rustc().has_enabled());
+    #[serial_test::parallel]
+    fn rustc_fails_on_bad_input() -> Result<()> {
+        let mut config = EmitBuilder::builder();
+        let _ = config.fail_on_error();
+        let _ = config.all_rustc();
+        config.rustc_config.rustc_str_to_test = Some("a_bad_rustcvv_string");
+        assert!(config.test_emit().is_err());
+        Ok(())
     }
 
     #[test]
-    fn no_commit_date() {
-        let mut config = Instructions::default();
-        *config.rustc_mut().channel_mut() = false;
-        *config.rustc_mut().commit_date_mut() = false;
-        assert!(config.rustc().has_enabled());
-    }
-
-    #[test]
-    fn no_host_triple() {
-        let mut config = Instructions::default();
-        *config.rustc_mut().channel_mut() = false;
-        *config.rustc_mut().commit_date_mut() = false;
-        *config.rustc_mut().host_triple_mut() = false;
-        assert!(config.rustc().has_enabled());
-    }
-
-    #[test]
-    fn no_llvm_version() {
-        let mut config = Instructions::default();
-        *config.rustc_mut().channel_mut() = false;
-        *config.rustc_mut().commit_date_mut() = false;
-        *config.rustc_mut().host_triple_mut() = false;
-        *config.rustc_mut().llvm_version_mut() = false;
-        assert!(config.rustc().has_enabled());
-    }
-
-    #[test]
-    fn nothing() {
-        let mut config = Instructions::default();
-        *config.rustc_mut().channel_mut() = false;
-        *config.rustc_mut().commit_date_mut() = false;
-        *config.rustc_mut().host_triple_mut() = false;
-        *config.rustc_mut().llvm_version_mut() = false;
-        *config.rustc_mut().sha_mut() = false;
-        assert!(!config.rustc().has_enabled());
+    #[serial_test::parallel]
+    fn rustc_defaults_on_bad_input() -> Result<()> {
+        let mut config = EmitBuilder::builder();
+        let _ = config.all_rustc();
+        config.rustc_config.rustc_str_to_test = Some("a_bad_rustcvv_string");
+        let emitter = config.test_emit()?;
+        assert_eq!(6, emitter.cargo_rustc_env_map.len());
+        assert_eq!(6, count_idempotent(&emitter.cargo_rustc_env_map));
+        assert_eq!(6, emitter.warnings.len());
+        Ok(())
     }
 }
-
-#[cfg(all(test, not(feature = "rustc")))]
-mod test {}

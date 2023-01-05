@@ -6,13 +6,16 @@
 // option. All files in the project carrying such notice may not be copied,
 // modified, or distributed except according to those terms.
 
-#[cfg(feature = "build")]
-pub(crate) mod build;
-#[cfg(feature = "cargo")]
-pub(crate) mod cargo;
-#[cfg(feature = "git")]
-pub(crate) mod git;
-#[cfg(feature = "rustc")]
-pub(crate) mod rustc;
-#[cfg(feature = "si")]
-pub(crate) mod si;
+#[cfg(feature = "gitcl")]
+pub(crate) mod cmd;
+#[cfg(feature = "git2")]
+pub(crate) mod git2;
+#[cfg(feature = "gix")]
+pub(crate) mod gix;
+
+#[cfg(all(feature = "git", feature = "gitcl"))]
+pub(crate) use self::cmd::Config;
+#[cfg(all(feature = "git", feature = "git2"))]
+pub(crate) use self::git2::Config;
+#[cfg(all(feature = "git", feature = "gix"))]
+pub(crate) use self::gix::Config;

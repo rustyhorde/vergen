@@ -1,7 +1,7 @@
 [package]
 authors = ["Jason Ozias <jason.g.ozias@gmail.com>"]
 categories = ["development-tools", "development-tools::build-utils"]
-description = "Generate 'cargo:rustc-env' instructions via 'build.rs' for use in your code via the env! macro"
+description = "Generate 'cargo:rustc-env' instructions via 'build.rs' for use in your code via the 'env!' macro"
 documentation = "https://docs.rs/vergen"
 edition = "2021"
 homepage = "https://github.com/rustyhorde/vergen"
@@ -10,40 +10,55 @@ license = "MIT OR Apache-2.0"
 name = "vergen"
 readme = "README.md"
 repository = "https://github.com/rustyhorde/vergen"
-resolver = "2"
-version = "7.5.0"
+version = "8.0.0-beta.1"
 
 [package.metadata.cargo-all-features]
-denylist = ["local_offset","time","git2","rustc_version","sysinfo"]
+denylist = [
+    "git2",
+    "git2-rs",
+    "gitcl",
+    "git-repository",
+    "gix",
+    "rustc_version",
+    "sysinfo",
+    "time",
+    "unstable",
+]
 
 [features]
-default = ["build", "cargo", "git", "rustc", "si"]
+default = []
 build = ["time"]
 cargo = []
-git = ["time", "git2"]
+git = []
+gitcl = ["time"]
+git2 = ["time", "git2-rs"]
+gix = ["time", "git-repository"]
 rustc = ["rustc_version"]
+unstable = []
 si = ["sysinfo"]
-local_offset = ["time/local-offset"]
 
 [dependencies]
-anyhow = "1.0.60"
-cfg-if = "1.0.0"
-enum-iterator = "1.2.0"
-getset = "0.1.2"
-git2 = { version = "0.15.0", optional = true, default-features = false }
+anyhow = "1.0.68"
+git2-rs = { version = "0.15.0", package = "git2", optional = true, default-features = false }
+git-repository = { version = "0.31.0", optional = true, default-features = false }
 rustc_version = { version = "0.4.0", optional = true }
-sysinfo = { version = "0.27.0", optional = true, default-features = false }
-thiserror = "1.0.32"
-time = { version = "0.3.12", features = ["formatting"], optional = true }
+sysinfo = { version = "0.27.2", optional = true, default-features = false }
+time = { version = "0.3.17", features = [
+    "formatting",
+    "parsing",
+], optional = true }
 
 [build-dependencies]
-anyhow = "1.0.60"
-time = { version = "0.3.12", features = ["formatting"] }
-rustversion = "1.0.9"
+rustversion = "1.0.11"
 
 [dev-dependencies]
+git-repository = { version = "0.31.0", default-features = false, features = [
+    "blocking-network-client",
+] }
 lazy_static = "1.4.0"
-regex = "1.6.0"
+regex = "1.7.0"
 serial_test = "0.10.0"
-tempfile = "3.3.0"
 
+[package.metadata.docs.rs]
+features = ["build", "cargo", "git", "gitcl", "rustc", "si"]
+rustdoc-args = ["--cfg", "docsrs"]

@@ -43,9 +43,7 @@ A full list of environment variables that can be generated are listed in the fol
 | Variable | Sample |
 | -------  | ------ |
 | `VERGEN_BUILD_DATE` | 2021-02-25 |
-| `VERGEN_BUILD_TIME` | 23:28:39.493201 |
 | `VERGEN_BUILD_TIMESTAMP` | 2021-02-25T23:28:39.493201+00:00 |
-| `VERGEN_BUILD_SEMVER` | 5.0.0 |
 | `VERGEN_GIT_BRANCH` | feature/fun |
 | `VERGEN_GIT_COMMIT_AUTHOR_EMAIL` | janedoe@email.com |
 | `VERGEN_GIT_COMMIT_AUTHOR_NAME` | Jane Doe |
@@ -63,7 +61,6 @@ A full list of environment variables that can be generated are listed in the fol
 | `VERGEN_RUSTC_LLVM_VERSION` | 11.0 |
 | `VERGEN_RUSTC_SEMVER` | 1.52.0-nightly |
 | `VERGEN_CARGO_FEATURES` | git,build |
-| `VERGEN_CARGO_PROFILE` | debug |
 | `VERGEN_CARGO_TARGET_TRIPLE` | x86_64-unknown-linux-gnu |
 | `VERGEN_SYSINFO_NAME` | Manjaro Linux |
 | `VERGEN_SYSINFO_OS_VERSION` | Linux  Manjaro Linux |
