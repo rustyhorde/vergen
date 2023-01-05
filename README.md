@@ -1,29 +1,21 @@
-# vergen
-Generate `build`, `git`, `rustc`, `cargo`, and `sysinfo` related [`cargo:rustc-env`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rustc-env) instructions via [`build.rs`](https://doc.rust-lang.org/cargo/reference/build-scripts.html) for use in your code via the [`env!`](https://doc.rust-lang.org/std/macro.env.html) macro or [`option_env!`](https://doc.rust-lang.org/std/macro.option_env.html) macro.
+# vergen - Emit cargo instructions from a build script
+`vergen`, when used in conjunction with cargo [build scripts](https://doc.rust-lang.org/cargo/reference/build-scripts.html#outputs-of-the-build-script) can emit the following:
 
-## Sponsors
-Special thanks to the sponsors of this project
-* [tryretool](https://github.com/tryretool)
-
-## Release 7.0 Breaking Changes
-* `chrono` has been replaced with `time`. The `time` crate is better maintained.
-* The local timezone support in the `build` and `git` features has been moved behind a `local_offset` feature flag.  This is
-due to a [potential segfault](https://github.com/rustsec/advisory-db/blob/main/crates/time/RUSTSEC-2020-0071.md) when using `localtime_r` as the `time` crate does.
-* To build with the `local_offset` feature, you must also explicitly delare that you are acknowledging the potential unsoundness by
-setting `RUSTFLAGS="--cfg unsound_local_offset"`.  Per the `time` docs this isn't tested, so use with extreme caution.
-
-## Notes about `git 0.15`
-This update to git picked up some [security related features](https://github.blog/2022-04-12-git-security-vulnerability-announced/).  In docker environments especially, this requires a `safe.directory` configuration.   There are a couple methods for achieving this.
-1.  If you control the build, you can add `git config --global --add safe.directory /workspace` to the build file.
-2.  If you do not control the docker build, you can add `git config --global --add safe.directory /workspace &&` before the actual command you are running when using docker run.
-3.  If you do not control the docker build, you can mount a `.gitconfig` file at `/root` that includes the `safe.directory` configuration.  I use this method myself when building static binaries with clux/muslrust.
-
-````docker run -v cargo-cache:/root/.cargo/registry -v (pwd):/volume -v ~/.gitconfig:/root/.gitconfig:ro --rm -t clux/muslrust:stable cargo build --release````
-
-See https://github.com/rustyhorde/vergen/pull/126 for more discussion on the topic.   If the solutions above do not work for your usecase, you can pin your `vergen` version to 7.4.3.   Feel free to open issues about this.   If it comes up enough, I could support a version of `vergen` with the older `git2` dependency.
-
-## MSRV
-The current minimum supported rust version is 1.63.0
+- Will emit [`cargo:rustc-env=VAR=VALUE`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#cargorustc-envvarvalue)
+for each feature you have enabled.  These can be referenced with the [`env!`](https://doc.rust-lang.org/std/macro.env.html) macro in your code.
+- Will emit [`cargo:rerun-if-changed=.git/HEAD`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed)
+if the git feature is enabled.  This is done to ensure any git instructions are regenerated when commits are made.
+- Will emit [`cargo:rerun-if-changed=.git/<path_to_ref>`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed)
+if the git feature is enabled.  This is done to ensure any git instructions are regenerated when commits are made.
+- Can emit [`cargo:warning`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#cargo-warning) outputs if the
+[`fail_on_error`](EmitBuilder::fail_on_error) feature is not enabled and the requested variable is defaulted through error or
+the [`idempotent`](EmitBuilder::idempotent) flag.
+- Will emit [`cargo:rerun-if-changed=build.rs`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed)
+to rerun instruction emission if the `build.rs` file changed.
+- Will emit [`cargo:rurun-if-env-changed=VERGEN_IDEMPOTENT`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed)
+to rerun instruction emission if the `VERGEN_IDEMPOTENT` environment variable has changed.
+- Will emit [`cargo:rurun-if-env-changed=SOURCE_DATE_EPOCH`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed)
+to rerun instruction emission if the `SOURCE_DATE_EPOCH` environment variable has changed.
 
 ## Current Release
 [![docs.rs](https://docs.rs/vergen/badge.svg)](https://docs.rs/vergen)
@@ -34,43 +26,28 @@ The current minimum supported rust version is 1.63.0
 [![CI](https://github.com/rustyhorde/vergen/actions/workflows/main.yml/badge.svg)](https://github.com/rustyhorde/vergen/actions)
 [![sponsor](https://img.shields.io/github/sponsors/crazysacx?logo=github-sponsors)](https://github.com/sponsors/CraZySacX)
 
+## Sponsors
+Special thanks to the sponsors of this project
+* [tryretool](https://github.com/tryretool)
+
+# ⚠️ This documention is for the version 8 beta ⚠️
+If you wish to refer to version 7 you can find that branch [`here`](https://github.com/rustyhorde/vergen/tree/legacy/v7)
+
+## MSRV
+The current minimum supported rust version is 1.62.0
+
 ## Example Usage
-See the documentation at [docs.rs](https://docs.rs/vergen) for example usage
+See the documentation at [docs.rs](https://docs.rs/vergen](https://docs.rs/vergen/8.0.0-beta.0/vergen/index.html#usage) for example usage
 
-## Environment Variables
-A full list of environment variables that can be generated are listed in the following table.
+## Notes about the optional `git2 0.15` dependency
+This update to git2 picked up some [security related features](https://github.blog/2022-04-12-git-security-vulnerability-announced/).  In docker environments especially, this requires a `safe.directory` configuration.   There are a couple methods for achieving this.
+1.  If you control the build, you can add `git config --global --add safe.directory /workspace` to the build file.
+2.  If you do not control the docker build, you can add `git config --global --add safe.directory /workspace &&` before the actual command you are running when using docker run.
+3.  If you do not control the docker build, you can mount a `.gitconfig` file at `/root` that includes the `safe.directory` configuration.  I use this method myself when building static binaries with clux/muslrust.
 
-| Variable | Sample |
-| -------  | ------ |
-| `VERGEN_BUILD_DATE` | 2021-02-25 |
-| `VERGEN_BUILD_TIMESTAMP` | 2021-02-25T23:28:39.493201+00:00 |
-| `VERGEN_GIT_BRANCH` | feature/fun |
-| `VERGEN_GIT_COMMIT_AUTHOR_EMAIL` | janedoe@email.com |
-| `VERGEN_GIT_COMMIT_AUTHOR_NAME` | Jane Doe |
-| `VERGEN_GIT_COMMIT_COUNT` | 330 |
-| `VERGEN_GIT_COMMIT_DATE` | 2021-02-24 |
-| `VERGEN_GIT_COMMIT_MESSAGE` | feat: add commit messages |
-| `VERGEN_GIT_COMMIT_TIME` | 20:55:21 |
-| `VERGEN_GIT_COMMIT_TIMESTAMP` | 2021-02-24T20:55:21+00:00 |
-| `VERGEN_GIT_SEMVER` | 5.0.0-2-gf49246c |
-| `VERGEN_GIT_SHA` | f49246ce334567bff9f950bfd0f3078184a2738a |
-| `VERGEN_RUSTC_CHANNEL` | nightly |
-| `VERGEN_RUSTC_COMMIT_DATE` | 2021-02-24 |
-| `VERGEN_RUSTC_COMMIT_HASH` | a8486b64b0c87dabd045453b6c81500015d122d6 |
-| `VERGEN_RUSTC_HOST_TRIPLE` | x86_64-apple-darwin |
-| `VERGEN_RUSTC_LLVM_VERSION` | 11.0 |
-| `VERGEN_RUSTC_SEMVER` | 1.52.0-nightly |
-| `VERGEN_CARGO_FEATURES` | git,build |
-| `VERGEN_CARGO_TARGET_TRIPLE` | x86_64-unknown-linux-gnu |
-| `VERGEN_SYSINFO_NAME` | Manjaro Linux |
-| `VERGEN_SYSINFO_OS_VERSION` | Linux  Manjaro Linux |
-| `VERGEN_SYSINFO_USER` | Yoda |
-| `VERGEN_SYSINFO_TOTAL_MEMORY` | 33 GB |
-| `VERGEN_SYSINFO_CPU_VENDOR` | Authentic AMD |
-| `VERGEN_SYSINFO_CPU_CORE_COUNT` | 8 |
-| `VERGEN_SYSINFO_CPU_NAME` | cpu0,cpu1,cpu2,cpu3,cpu4,cpu5,cpu6,cpu7 |
-| `VERGEN_SYSINFO_CPU_BRAND` | AMD Ryzen Threadripper 1900X 8-Core Processor |
-| `VERGEN_SYSINFO_CPU_FREQUENCY` | 3792 |
+````docker run -v cargo-cache:/root/.cargo/registry -v (pwd):/volume -v ~/.gitconfig:/root/.gitconfig:ro --rm -t clux/muslrust:stable cargo build --release````
+
+See https://github.com/rustyhorde/vergen/pull/126 for more discussion on the topic.   If the solutions above do not work for your usecase, you can pin your `vergen` version to 7.4.3.   Feel free to open issues about this.   If it comes up enough, I could support a version of `vergen` with the older `git2` dependency.
 
 ## Contributing
 See the documentation at [CONTRIBUTING.md](CONTRIBUTING.md)
