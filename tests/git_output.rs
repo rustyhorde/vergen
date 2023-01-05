@@ -133,7 +133,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
                 let path = repo_path();
                 // Always make sure to re-create repo in CI
                 if let Ok(_ci) = env::var("CI") {
-                    let _ = fs::remove_dir_all(&path);
+                    let _res = fs::remove_dir_all(&path);
                 }
                 if !path.exists() {
                     // Initialize a bare repository
@@ -225,7 +225,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
                 let clone_path = clone_path();
                 // Always make sure to clone a fresh directory in CI
                 if let Ok(_ci) = env::var("CI") {
-                    let _ = fs::remove_dir_all(&clone_path);
+                    let _res = fs::remove_dir_all(&clone_path);
                 }
 
                 if !clone_path.exists() {

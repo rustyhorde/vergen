@@ -84,6 +84,10 @@ pub(crate) mod repo {
         CREATE_TEST_REPO.call_once(|| {
             || -> Result<()> {
                 let path = repo_path();
+                // Always make sure to re-create repo in CI
+                if let Ok(_ci) = env::var("CI") {
+                    let _res = fs::remove_dir_all(&path);
+                }
                 if !path.exists() {
                     // Initialize a bare repository
                     let mut repo = git::init_bare(&path)?;
@@ -172,6 +176,10 @@ pub(crate) mod repo {
                 let bare_repo_path = repo_path();
                 // The path we are cloning into
                 let clone_path = clone_path();
+                // Always make sure to clone a fresh directory in CI
+                if let Ok(_ci) = env::var("CI") {
+                    let _res = fs::remove_dir_all(&clone_path);
+                }
 
                 if !clone_path.exists() {
                     fs::create_dir_all(&clone_path)?;
