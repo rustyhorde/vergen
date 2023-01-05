@@ -77,6 +77,20 @@ cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT
 cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
 "#;
 
+    const IDEM_QUITE_OUTPUT: &str = r#"cargo:rustc-env=VERGEN_SYSINFO_NAME=VERGEN_IDEMPOTENT_OUTPUT
+cargo:rustc-env=VERGEN_SYSINFO_OS_VERSION=VERGEN_IDEMPOTENT_OUTPUT
+cargo:rustc-env=VERGEN_SYSINFO_USER=VERGEN_IDEMPOTENT_OUTPUT
+cargo:rustc-env=VERGEN_SYSINFO_TOTAL_MEMORY=VERGEN_IDEMPOTENT_OUTPUT
+cargo:rustc-env=VERGEN_SYSINFO_CPU_VENDOR=VERGEN_IDEMPOTENT_OUTPUT
+cargo:rustc-env=VERGEN_SYSINFO_CPU_CORE_COUNT=VERGEN_IDEMPOTENT_OUTPUT
+cargo:rustc-env=VERGEN_SYSINFO_CPU_NAME=VERGEN_IDEMPOTENT_OUTPUT
+cargo:rustc-env=VERGEN_SYSINFO_CPU_BRAND=VERGEN_IDEMPOTENT_OUTPUT
+cargo:rustc-env=VERGEN_SYSINFO_CPU_FREQUENCY=VERGEN_IDEMPOTENT_OUTPUT
+cargo:rerun-if-changed=build.rs
+cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT
+cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
+"#;
+
     #[test]
     fn sysinfo_all_output() -> Result<()> {
         let mut stdout_buf = vec![];
@@ -97,6 +111,19 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
             .emit_to(&mut stdout_buf)?;
         let output = String::from_utf8_lossy(&stdout_buf);
         assert_eq!(IDEM_OUTPUT, output);
+        Ok(())
+    }
+
+    #[test]
+    fn sysinfo_all_idempotent_quiet_output() -> Result<()> {
+        let mut stdout_buf = vec![];
+        EmitBuilder::builder()
+            .idempotent()
+            .quiet()
+            .all_sysinfo()
+            .emit_to(&mut stdout_buf)?;
+        let output = String::from_utf8_lossy(&stdout_buf);
+        assert_eq!(IDEM_QUITE_OUTPUT, output);
         Ok(())
     }
 }

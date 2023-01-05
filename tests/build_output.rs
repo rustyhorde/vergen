@@ -20,17 +20,23 @@ mod test_build {
             let re_str = vec![*DATE_RE_STR, *TIMESTAMP_RE_STR].join("\n");
             Regex::new(&re_str).unwrap()
         };
-        static ref BUILD_IDEM_REGEX_INST: Regex = {
-            let re_str = vec![
-                *DATE_IDEM_RE_STR,
-                *TIMESTAMP_IDEM_RE_STR,
-                *DATE_WARNING,
-                *TIMESTAMP_WARNING,
-            ]
-            .join("\n");
-            Regex::new(&re_str).unwrap()
-        };
     }
+
+    const IDEM_OUTPUT: &str = r#"cargo:rustc-env=VERGEN_BUILD_DATE=VERGEN_IDEMPOTENT_OUTPUT
+cargo:rustc-env=VERGEN_BUILD_TIMESTAMP=VERGEN_IDEMPOTENT_OUTPUT
+cargo:warning=VERGEN_BUILD_DATE set to default
+cargo:warning=VERGEN_BUILD_TIMESTAMP set to default
+cargo:rerun-if-changed=build.rs
+cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT
+cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
+"#;
+
+    const QUIET_IDEM_OUTPUT: &str = r#"cargo:rustc-env=VERGEN_BUILD_DATE=VERGEN_IDEMPOTENT_OUTPUT
+cargo:rustc-env=VERGEN_BUILD_TIMESTAMP=VERGEN_IDEMPOTENT_OUTPUT
+cargo:rerun-if-changed=build.rs
+cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT
+cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
+"#;
 
     #[test]
     fn build_all_output() -> Result<()> {
@@ -51,7 +57,20 @@ mod test_build {
             .all_build()
             .emit_to(&mut stdout_buf)?;
         let output = String::from_utf8_lossy(&stdout_buf);
-        assert!(BUILD_IDEM_REGEX_INST.is_match(&output));
+        assert_eq!(IDEM_OUTPUT, output);
+        Ok(())
+    }
+
+    #[test]
+    fn build_all_idempotent_output_quiet() -> Result<()> {
+        let mut stdout_buf = vec![];
+        EmitBuilder::builder()
+            .idempotent()
+            .quiet()
+            .all_build()
+            .emit_to(&mut stdout_buf)?;
+        let output = String::from_utf8_lossy(&stdout_buf);
+        assert_eq!(QUIET_IDEM_OUTPUT, output);
         Ok(())
     }
 }

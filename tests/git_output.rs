@@ -110,6 +110,20 @@ cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT
 cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
 "#;
 
+    const IDEM_QUIET_OUTPUT: &str = r#"cargo:rustc-env=VERGEN_GIT_BRANCH=VERGEN_IDEMPOTENT_OUTPUT
+cargo:rustc-env=VERGEN_GIT_COMMIT_AUTHOR_EMAIL=VERGEN_IDEMPOTENT_OUTPUT
+cargo:rustc-env=VERGEN_GIT_COMMIT_AUTHOR_NAME=VERGEN_IDEMPOTENT_OUTPUT
+cargo:rustc-env=VERGEN_GIT_COMMIT_COUNT=VERGEN_IDEMPOTENT_OUTPUT
+cargo:rustc-env=VERGEN_GIT_COMMIT_DATE=VERGEN_IDEMPOTENT_OUTPUT
+cargo:rustc-env=VERGEN_GIT_COMMIT_MESSAGE=VERGEN_IDEMPOTENT_OUTPUT
+cargo:rustc-env=VERGEN_GIT_COMMIT_TIMESTAMP=VERGEN_IDEMPOTENT_OUTPUT
+cargo:rustc-env=VERGEN_GIT_DESCRIBE=VERGEN_IDEMPOTENT_OUTPUT
+cargo:rustc-env=VERGEN_GIT_SHA=VERGEN_IDEMPOTENT_OUTPUT
+cargo:rerun-if-changed=build.rs
+cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT
+cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
+"#;
+
     static CREATE_TEST_REPO: Once = Once::new();
     static CLONE_TEST_REPO: Once = Once::new();
 
@@ -340,6 +354,23 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
             assert!(GIT_REGEX_IDEM_INST.is_match(&output));
         } else {
             assert_eq!(ALL_IDEM_OUTPUT, output);
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn git_all_idempotent_output_quiet() -> Result<()> {
+        let mut stdout_buf = vec![];
+        let failed = EmitBuilder::builder()
+            .idempotent()
+            .quiet()
+            .all_git()
+            .emit_to(&mut stdout_buf)?;
+        let output = String::from_utf8_lossy(&stdout_buf);
+        if repo_exists().is_ok() && !failed {
+            assert!(GIT_REGEX_IDEM_INST.is_match(&output));
+        } else {
+            assert_eq!(IDEM_QUIET_OUTPUT, output);
         }
         Ok(())
     }

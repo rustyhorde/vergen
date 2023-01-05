@@ -594,7 +594,6 @@ mod test {
         let mut warnings = vec![];
         if let Ok(repo) = Repository::discover(clone_path()) {
             add_branch_name(true, &repo, &mut map, &mut warnings)?;
-            println!("{warnings:?}");
             assert_eq!(1, map.len());
             assert_eq!(1, warnings.len());
         }
@@ -606,6 +605,26 @@ mod test {
     fn git_all_idempotent() -> Result<()> {
         let config = EmitBuilder::builder()
             .idempotent()
+            .all_git()
+            .test_emit_at(None)?;
+        assert_eq!(9, config.cargo_rustc_env_map.len());
+
+        if repo_exists().is_ok() && !config.failed {
+            assert_eq!(2, count_idempotent(&config.cargo_rustc_env_map));
+            assert_eq!(2, config.warnings.len());
+        } else {
+            assert_eq!(9, count_idempotent(&config.cargo_rustc_env_map));
+            assert_eq!(9, config.warnings.len());
+        }
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::parallel]
+    fn git_all_idempotent_no_warn() -> Result<()> {
+        let config = EmitBuilder::builder()
+            .idempotent()
+            .quiet()
             .all_git()
             .test_emit_at(None)?;
         assert_eq!(9, config.cargo_rustc_env_map.len());

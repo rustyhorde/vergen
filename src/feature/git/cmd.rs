@@ -789,6 +789,20 @@ mod test {
 
     #[test]
     #[serial_test::parallel]
+    fn git_all_idempotent_no_warn() -> Result<()> {
+        let config = EmitBuilder::builder()
+            .idempotent()
+            .quiet()
+            .all_git()
+            .test_emit_at(None)?;
+        assert_eq!(9, config.cargo_rustc_env_map.len());
+        assert_eq!(2, count_idempotent(&config.cargo_rustc_env_map));
+        assert_eq!(2, config.warnings.len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::parallel]
     fn git_all_at_path() -> Result<()> {
         create_test_repo();
         clone_test_repo();

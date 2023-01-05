@@ -497,6 +497,20 @@ mod test {
 
     #[test]
     #[serial_test::parallel]
+    fn git_all_idempotent_no_warn() -> Result<()> {
+        let emitter = EmitBuilder::builder()
+            .idempotent()
+            .quiet()
+            .all_git()
+            .test_emit_at(None)?;
+        assert_eq!(9, emitter.cargo_rustc_env_map.len());
+        assert_eq!(2, count_idempotent(&emitter.cargo_rustc_env_map));
+        assert_eq!(2, emitter.warnings.len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::parallel]
     fn git_all() -> Result<()> {
         let emitter = EmitBuilder::builder().all_git().test_emit_at(None)?;
         assert_eq!(9, emitter.cargo_rustc_env_map.len());

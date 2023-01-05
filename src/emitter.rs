@@ -205,11 +205,11 @@ impl Emitter {
     )]
     fn add_si_entries(&mut self, _builder: &EmitBuilder) {}
 
-    fn emit_output<T>(&self, stdout: &mut T) -> Result<()>
+    fn emit_output<T>(&self, quiet: bool, stdout: &mut T) -> Result<()>
     where
         T: Write,
     {
-        self.emit_instructions(stdout)
+        self.emit_instructions(quiet, stdout)
     }
 
     #[cfg(not(any(
@@ -220,7 +220,7 @@ impl Emitter {
         feature = "si"
     )))]
     #[allow(clippy::unused_self, clippy::unnecessary_wraps)]
-    fn emit_instructions<T>(&self, _stdout: &mut T) -> Result<()>
+    fn emit_instructions<T>(&self, _quiet: bool, _stdout: &mut T) -> Result<()>
     where
         T: Write,
     {
@@ -234,7 +234,7 @@ impl Emitter {
         feature = "rustc",
         feature = "si"
     ))]
-    fn emit_instructions<T>(&self, stdout: &mut T) -> Result<()>
+    fn emit_instructions<T>(&self, quiet: bool, stdout: &mut T) -> Result<()>
     where
         T: Write,
     {
@@ -244,8 +244,10 @@ impl Emitter {
         }
 
         // Emit the `cargo:warning` instructions
-        for warning in &self.warnings {
-            writeln!(stdout, "cargo:warning={warning}")?;
+        if !quiet {
+            for warning in &self.warnings {
+                writeln!(stdout, "cargo:warning={warning}")?;
+            }
         }
 
         // Emit the 'cargo:rerun-if-changed' instructions for the git paths (if added)
@@ -269,6 +271,7 @@ impl Emitter {
 pub struct EmitBuilder {
     idempotent: bool,
     fail_on_error: bool,
+    quiet: bool,
     #[cfg(feature = "build")]
     pub(crate) build_config: BuildConfig,
     #[cfg(feature = "cargo")]
@@ -292,6 +295,7 @@ impl EmitBuilder {
         Self {
             idempotent,
             fail_on_error: false,
+            quiet: false,
             #[cfg(feature = "build")]
             build_config: BuildConfig::default(),
             #[cfg(feature = "cargo")]
@@ -376,7 +380,6 @@ EmitBuilder::builder().all_build().emit()?;
     ///
     /// ```
     /// # use anyhow::Result;
-    /// # use std::env;
     /// # use vergen::EmitBuilder;
     /// #
     /// # fn main() -> Result<()> {
@@ -391,6 +394,31 @@ EmitBuilder::builder().fail_on_error().all_build().emit()?;
     /// ```
     pub fn fail_on_error(&mut self) -> &mut Self {
         self.fail_on_error = true;
+        self
+    }
+
+    /// Enable the quiet feature
+    ///
+    /// Suppress the emission of the `cargo:waring` instructions.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use anyhow::Result;
+    /// # use vergen::EmitBuilder;
+    /// #
+    /// # fn main() -> Result<()> {
+    #[cfg_attr(
+        feature = "build",
+        doc = r##"
+EmitBuilder::builder().quiet().all_build().emit()?;
+"##
+    )]
+    /// #   Ok(())
+    /// # }
+    /// ```
+    pub fn quiet(&mut self) -> &mut Self {
+        self.quiet = true;
         self
     }
 
@@ -495,7 +523,7 @@ EmitBuilder::builder()
     ///
     pub fn emit(self) -> Result<()> {
         self.inner_emit(None)
-            .and_then(|x| x.emit_output(&mut io::stdout()))
+            .and_then(|x| x.emit_output(self.quiet, &mut io::stdout()))
     }
 
     #[doc(hidden)]
@@ -509,7 +537,7 @@ EmitBuilder::builder()
     ))]
     pub fn emit_at(self, repo_path: PathBuf) -> Result<()> {
         self.inner_emit(Some(repo_path))
-            .and_then(|x| x.emit_output(&mut io::stdout()))
+            .and_then(|x| x.emit_output(self.quiet, &mut io::stdout()))
     }
 
     #[cfg(all(
@@ -554,7 +582,7 @@ EmitBuilder::builder()
         T: Write,
     {
         self.inner_emit(None)
-            .and_then(|x| x.emit_output(stdout).map(|_| x.failed))
+            .and_then(|x| x.emit_output(self.quiet, stdout).map(|_| x.failed))
     }
 
     #[doc(hidden)]
@@ -572,7 +600,7 @@ EmitBuilder::builder()
         T: Write,
     {
         self.inner_emit(path)
-            .and_then(|x| x.emit_output(stdout).map(|_| x.failed))
+            .and_then(|x| x.emit_output(self.quiet, stdout).map(|_| x.failed))
     }
 
     fn inner_emit(self, path: Option<PathBuf>) -> Result<Emitter> {
@@ -678,7 +706,7 @@ pub(crate) mod test {
             .all_rustc()
             .all_sysinfo()
             .emit_to(&mut stdout_buf)?;
-        println!("{}", String::from_utf8_lossy(&stdout_buf));
+        assert!(!stdout_buf.is_empty());
         teardown();
         Ok(())
     }
@@ -707,7 +735,7 @@ pub(crate) mod test {
             .all_rustc()
             .all_sysinfo()
             .emit_to(&mut stdout_buf)?;
-        println!("{}", String::from_utf8_lossy(&stdout_buf));
+        assert!(!stdout_buf.is_empty());
         teardown();
         Ok(())
     }
