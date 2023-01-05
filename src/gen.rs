@@ -377,7 +377,7 @@ mod test {
     }
 
     #[test]
-    fn describe_falls_back() -> Result<()> {
+    fn describe_falls_back() {
         let no_tags_path = PathBuf::from("testdata").join("notagsrepo");
         assert!(config_from_instructions(
             Instructions::default(),
@@ -385,11 +385,10 @@ mod test {
             &mut io::sink(),
         )
         .is_ok());
-        Ok(())
     }
 
     #[test]
-    fn describe() -> Result<()> {
+    fn describe() {
         let no_tags_path = PathBuf::from("testdata").join("tagsrepo");
         assert!(config_from_instructions(
             Instructions::default(),
@@ -397,23 +396,21 @@ mod test {
             &mut io::sink(),
         )
         .is_ok());
-        Ok(())
     }
 
     #[test]
-    fn detached_head() -> Result<()> {
+    fn detached_head() {
         let dh_path = PathBuf::from("testdata").join("detachedhead");
         assert!(
             config_from_instructions(Instructions::default(), Some(dh_path), &mut io::sink(),)
                 .is_ok()
         );
-        Ok(())
     }
 
     // TODO: Make this a macro to check all toggles
     #[test]
     #[cfg(feature = "build")]
-    fn toggle_works() -> Result<()> {
+    fn toggle_works() {
         use crate::TimestampKind;
         let repo_path = PathBuf::from(".");
         let mut config = Instructions::default();
@@ -423,7 +420,6 @@ mod test {
         assert!(config_from_instructions(config, Some(repo_path), &mut stdout_buf).is_ok());
         let stdout = String::from_utf8_lossy(&stdout_buf);
         assert!(!VBD_REGEX.is_match(&stdout));
-        Ok(())
     }
 
     #[cfg(all(
@@ -581,12 +577,12 @@ mod test {
 
     #[cfg(feature = "rustc")]
     fn check_rustc_output(stdout: &[u8]) {
-        assert!(RUSTC_REGEX.is_match(&String::from_utf8_lossy(&stdout)));
+        assert!(RUSTC_REGEX.is_match(&String::from_utf8_lossy(stdout)));
     }
 
     #[cfg(feature = "rustc")]
     fn check_no_rustc_output(stdout: &[u8]) {
-        assert!(!RUSTC_REGEX.is_match(&String::from_utf8_lossy(&stdout)));
+        assert!(!RUSTC_REGEX.is_match(&String::from_utf8_lossy(stdout)));
     }
 
     #[cfg(all(feature = "build", feature = "local_offset"))]

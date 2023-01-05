@@ -71,32 +71,32 @@ mod test {
         let err: Error = io::Error::new(ErrorKind::Other, "testing").into();
         assert_eq!(
             "protocol: There was an error writing the cargo instructions to stdout: testing",
-            format!("{}", err)
+            format!("{err}")
         );
     }
 
     #[cfg(feature = "rustc")]
     #[test]
     fn rustc_version_error() {
-        let res = version_meta_for("yoda").map_err(|e| Error::from(e));
+        let res = version_meta_for("yoda").map_err(Error::from);
         assert!(res.is_err());
         let err = res.err().unwrap();
         assert_eq!(
             "protocol: An error occurred in the \'rustc_version\' library: unexpected `rustc -vV` format",
-            format!("{}", err)
+            format!("{err}")
         );
     }
 
     #[cfg(feature = "git")]
     #[test]
     fn git2_error() {
-        let res = Repository::open("blah").map_err(|e| Error::from(e));
+        let res = Repository::open("blah").map_err(Error::from);
         assert!(res.is_err());
         let err = res.err().unwrap();
         #[cfg(target_family = "unix")]
-        assert_eq!("protocol: An error occurred in the \'git2\' library: failed to resolve path \'blah\': No such file or directory; class=Os (2); code=NotFound (-3)", format!("{}", err));
+        assert_eq!("protocol: An error occurred in the \'git2\' library: failed to resolve path \'blah\': No such file or directory; class=Os (2); code=NotFound (-3)", format!("{err}"));
         #[cfg(target_family = "windows")]
-        assert_eq!("protocol: An error occurred in the \'git2\' library: failed to resolve path \'blah\': The system cannot find the file specified.\r\n; class=Os (2); code=NotFound (-3)", format!("{}", err));
+        assert_eq!("protocol: An error occurred in the \'git2\' library: failed to resolve path \'blah\': The system cannot find the file specified.\r\n; class=Os (2); code=NotFound (-3)", format!("{err}"));
     }
 
     #[cfg(all(feature = "si", not(target_os = "macos")))]
@@ -105,18 +105,18 @@ mod test {
         let err: Error = Error::Pid { msg: "test" };
         assert_eq!(
             "protocol: Unable to determine the current process pid: test",
-            format!("{}", err)
+            format!("{err}")
         );
     }
 
     #[test]
     fn var_error() {
-        let res = env::var("yoda").map_err(|e| Error::from(e));
+        let res = env::var("yoda").map_err(Error::from);
         assert!(res.is_err());
         let err = res.err().unwrap();
         assert_eq!(
             "env: The \'CARGO_PKG_VERSION\' environment variable may not be set: environment variable not found",
-            format!("{}", err)
+            format!("{err}")
         );
     }
 }

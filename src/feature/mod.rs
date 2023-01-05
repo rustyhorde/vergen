@@ -99,7 +99,7 @@ mod test {
     #[test]
     fn check_add_entry() {
         let mut hm = BTreeMap::new();
-        add_entry(&mut hm, VergenKey::BuildTimestamp, Some("".to_string()));
+        add_entry(&mut hm, VergenKey::BuildTimestamp, Some(String::new()));
         assert!(hm.get(&VergenKey::BuildTimestamp).is_some());
     }
 }
