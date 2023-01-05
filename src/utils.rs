@@ -210,7 +210,7 @@ pub(crate) mod repo {
         } else {
             env::temp_dir()
         };
-        clone_path.join("vergen_tmp.git")
+        clone_path.join("vergen_tmp1.git")
     }
 
     pub(crate) fn clone_path() -> PathBuf {
@@ -219,7 +219,7 @@ pub(crate) mod repo {
         } else {
             env::temp_dir()
         };
-        clone_path.join("vergen_tmp")
+        clone_path.join("vergen_tmp1")
     }
 
     #[cfg(test)]
