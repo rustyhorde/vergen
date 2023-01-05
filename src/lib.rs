@@ -234,6 +234,7 @@
         explicit_outlives_requirements,
         exported_private_dependencies,
         forbidden_lint_groups,
+        for_loops_over_fallibles,
         function_item_references,
         illegal_floating_point_literal_pattern,
         improper_ctypes,
@@ -263,9 +264,10 @@
         non_fmt_panics,
         non_shorthand_field_patterns,
         non_snake_case,
-        non_upper_case_globals,
         nontrivial_structural_match,
+        non_upper_case_globals,
         noop_method_call,
+        opaque_hidden_inferred_bound,
         overlapping_range_endpoints,
         path_statements,
         pointer_structural_match,
@@ -351,7 +353,7 @@
 // nightly or beta only lints
 #![cfg_attr(
     all(msrv, any(beta, nightly)),
-    deny(for_loops_over_fallibles, opaque_hidden_inferred_bound)
+    deny(implied_bounds_entailment, ungated_async_fn_track_caller,)
 )]
 // beta only lints
 // #![cfg_attr( all(msrv, beta), deny())]
