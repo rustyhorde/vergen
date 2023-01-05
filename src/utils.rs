@@ -77,6 +77,9 @@ pub(crate) mod repo {
         sync::Once,
     };
 
+    const BARE_REPO_NAME: &str = "vergen_tmp1.git";
+    const CLONE_NAME: &str = "vergen_tmp1";
+
     static CREATE_TEST_REPO: Once = Once::new();
     static CLONE_TEST_REPO: Once = Once::new();
 
@@ -210,7 +213,7 @@ pub(crate) mod repo {
         } else {
             env::temp_dir()
         };
-        clone_path.join("vergen_tmp1.git")
+        clone_path.join(BARE_REPO_NAME)
     }
 
     pub(crate) fn clone_path() -> PathBuf {
@@ -219,12 +222,12 @@ pub(crate) mod repo {
         } else {
             env::temp_dir()
         };
-        clone_path.join("vergen_tmp1")
+        clone_path.join(CLONE_NAME)
     }
 
     #[cfg(test)]
     mod test {
-        use super::{clone_path, repo_path};
+        use super::{clone_path, repo_path, BARE_REPO_NAME, CLONE_NAME};
         use std::env;
 
         #[test]
@@ -232,10 +235,10 @@ pub(crate) mod repo {
         fn repo_path_temp_dir_works() {
             if let Ok(runner_temp) = env::var("RUNNER_TEMP") {
                 env::remove_var("RUNNER_TEMP");
-                assert!(repo_path().ends_with("vergen_tmp.git"));
+                assert!(repo_path().ends_with(BARE_REPO_NAME));
                 env::set_var("RUNNER_TEMP", runner_temp);
             } else {
-                assert!(repo_path().ends_with("vergen_tmp.git"));
+                assert!(repo_path().ends_with(BARE_REPO_NAME));
             }
         }
 
@@ -244,10 +247,10 @@ pub(crate) mod repo {
         fn clone_path_temp_dir_works() {
             if let Ok(runner_temp) = env::var("RUNNER_TEMP") {
                 env::remove_var("RUNNER_TEMP");
-                assert!(clone_path().ends_with("vergen_tmp"));
+                assert!(clone_path().ends_with(CLONE_NAME));
                 env::set_var("RUNNER_TEMP", runner_temp);
             } else {
-                assert!(clone_path().ends_with("vergen_tmp"));
+                assert!(clone_path().ends_with(CLONE_NAME));
             }
         }
     }
