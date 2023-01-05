@@ -23,7 +23,7 @@ This update to git picked up some [security related features](https://github.blo
 See https://github.com/rustyhorde/vergen/pull/126 for more discussion on the topic.   If the solutions above do not work for your usecase, you can pin your `vergen` version to 7.4.3.   Feel free to open issues about this.   If it comes up enough, I could support a version of `vergen` with the older `git2` dependency.
 
 ## MSRV
-The current minimum supported rust version is 1.62.0
+The current minimum supported rust version is 1.63.0
 
 ## Current Release
 [![docs.rs](https://docs.rs/vergen/badge.svg)](https://docs.rs/vergen)
