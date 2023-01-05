@@ -31,7 +31,7 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            rust: "1.63.0"
+            rust: "1.62.0"
           - os: ubuntu-latest
             rust: stable
           - os: ubuntu-latest
