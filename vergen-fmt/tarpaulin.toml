@@ -1,5 +1,5 @@
 [default]
 features = "__vergen_test"
 
-[color]
-features = "__vergen_test color"
+[all]
+features = "__vergen_test color trace"

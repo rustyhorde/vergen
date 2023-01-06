@@ -203,4 +203,6 @@
 
 mod fmt;
 
-pub use fmt::as_table;
+pub use fmt::display::display;
+#[cfg(feature = "trace")]
+pub use fmt::trace::trace;

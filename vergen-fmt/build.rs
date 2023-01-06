@@ -1,6 +1,6 @@
 use anyhow::Result;
 use std::env;
-#[cfg(feature = "vergen_test")]
+#[cfg(feature = "__vergen_test")]
 use vergen::EmitBuilder;
 
 fn main() -> Result<()> {
@@ -12,18 +12,18 @@ fn main() -> Result<()> {
 }
 
 fn setup_env() -> Result<()> {
-    if env::var("CARGO_FEATURE_VERGEN_TEST").is_ok() {
+    if env::var("CARGO_FEATURE___VERGEN_TEST").is_ok() {
         emit()?;
     }
     Ok(())
 }
 
-#[cfg(not(feature = "vergen_test"))]
+#[cfg(not(feature = "__vergen_test"))]
 fn emit() -> Result<()> {
     Ok(())
 }
 
-#[cfg(feature = "vergen_test")]
+#[cfg(feature = "__vergen_test")]
 fn emit() -> Result<()> {
     println!("cargo:warning=VERGEN TEST ENABLED!");
     EmitBuilder::builder()

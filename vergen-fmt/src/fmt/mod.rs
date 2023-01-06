@@ -6,15 +6,17 @@
 // option. All files in the project carrying such notice may not be copied,
 // modified, or distributed except according to those terms.
 
-use anyhow::Result;
 #[cfg(feature = "color")]
 use console::Style;
 use indexmap::IndexSet;
 use lazy_static::lazy_static;
-use std::io::Write;
+
+pub(crate) mod display;
+#[cfg(feature = "trace")]
+pub(crate) mod trace;
 
 lazy_static! {
-    static ref VERGEN_MAP: IndexSet<(&'static str, &'static str, Option<&'static str>)> = {
+    pub(crate) static ref VERGEN_MAP: IndexSet<(&'static str, &'static str, Option<&'static str>)> = {
         let mut vergen_set = IndexSet::new();
         let _ = vergen_set.insert(("Version", "build", option_env!("CARGO_PKG_VERSION")));
         // build output
@@ -114,52 +116,8 @@ lazy_static! {
 
 #[cfg(feature = "color")]
 lazy_static! {
-    static ref BOLD_BLUE: Style = Style::new().bold().blue();
-    static ref BOLD_GREEN: Style = Style::new().bold().green();
-}
-
-/// Output the `vergen` environment variables that are set in table format
-///
-/// # Errors
-///
-pub fn as_table<T>(writer: &mut T) -> Result<()>
-where
-    T: Write,
-{
-    let vm_iter = (*VERGEN_MAP).iter().filter_map(has_value);
-    let max_prefix = vm_iter
-        .clone()
-        .map(|(prefix, _, _)| prefix.len())
-        .max()
-        .map_or_else(|| 16, |x| x);
-    let max_kind = vm_iter
-        .clone()
-        .map(|(_, kind, _)| kind.len())
-        .max()
-        .map_or_else(|| 7, |x| x);
-    for (prefix, kind, value) in vm_iter {
-        let key = format!("{prefix:>max_prefix$} ({kind:>max_kind$})");
-        inner_write(writer, key, value)?;
-    }
-    Ok(())
-}
-
-#[cfg(feature = "color")]
-fn inner_write<T>(writer: &mut T, key: String, value: &str) -> Result<()>
-where
-    T: Write,
-{
-    let blue_key = (*BOLD_BLUE).apply_to(key);
-    let green_val = (*BOLD_GREEN).apply_to(value);
-    Ok(writeln!(writer, "{blue_key}: {green_val}")?)
-}
-
-#[cfg(not(feature = "color"))]
-fn inner_write<T>(writer: &mut T, key: String, value: &str) -> Result<()>
-where
-    T: Write,
-{
-    Ok(writeln!(writer, "{key}: {value}")?)
+    pub(crate) static ref BOLD_BLUE: Style = Style::new().bold().blue();
+    pub(crate) static ref BOLD_GREEN: Style = Style::new().bold().green();
 }
 
 fn has_value(
@@ -173,17 +131,21 @@ fn has_value(
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::as_table;
-    use anyhow::Result;
-
-    #[test]
-    fn write_works() -> Result<()> {
-        let mut stdout = vec![];
-        as_table(&mut stdout)?;
-        assert!(!stdout.is_empty());
-        println!("{}", String::from_utf8_lossy(&stdout));
-        Ok(())
-    }
+fn determine_maxes() -> (
+    impl Iterator<Item = (&'static str, &'static str, &'static str)>,
+    usize,
+    usize,
+) {
+    let vm_iter = (*VERGEN_MAP).iter().filter_map(has_value);
+    let max_prefix = vm_iter
+        .clone()
+        .map(|(prefix, _, _)| prefix.len())
+        .max()
+        .map_or_else(|| 16, |x| x);
+    let max_kind = vm_iter
+        .clone()
+        .map(|(_, kind, _)| kind.len())
+        .max()
+        .map_or_else(|| 7, |x| x);
+    (vm_iter, max_prefix, max_kind)
 }
