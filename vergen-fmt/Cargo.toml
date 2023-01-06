@@ -43,3 +43,7 @@ vergen = { path = "../vergen", features = [
     "rustc",
     "si",
 ], optional = true }
+
+[package.metadata.docs.rs]
+features = ["color", "trace"]
+rustdoc-args = ["--cfg", "docsrs"]
