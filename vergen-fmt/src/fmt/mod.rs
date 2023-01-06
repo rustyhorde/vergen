@@ -149,3 +149,18 @@ fn determine_maxes() -> (
         .map_or_else(|| 7, |x| x);
     (vm_iter, max_prefix, max_kind)
 }
+
+#[cfg(test)]
+mod test {
+    use super::has_value;
+
+    #[test]
+    fn none_env_is_none() {
+        assert!(has_value(&("test", "test", None)).is_none());
+    }
+
+    #[test]
+    fn some_env_is_some() {
+        assert!(has_value(&("test", "test", Some("test"))).is_some());
+    }
+}
