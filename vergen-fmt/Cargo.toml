@@ -1,0 +1,42 @@
+[package]
+authors = ["Jason Ozias <jason.g.ozias@gmail.com>"]
+categories = ["development-tools", "development-tools::build-utils"]
+description = "Output vergen information in a formatted manner"
+documentation = "https://docs.rs/vergen-fmt"
+edition = "2021"
+homepage = "https://github.com/rustyhorde/vergen"
+keywords = ["cargo", "instructions", "build", "tool"]
+license = "MIT OR Apache-2.0"
+name = "vergen-fmt"
+readme = "README.md"
+repository = "https://github.com/rustyhorde/vergen"
+version = "0.1.0"
+
+[package.metadata.cargo-all-features]
+denylist = [
+    "console",
+    "vergen",
+]
+
+[features]
+default = []
+color = ["console"]
+__vergen_test = ["vergen"]
+
+[dependencies]
+anyhow = "1.0.68"
+console = { version = "0.15.4", optional = true }
+indexmap = "1.9.2"
+lazy_static = "1.4.0"
+
+[build-dependencies]
+anyhow = "1.0.68"
+rustversion = "1.0.11"
+vergen = { path = "../vergen", features = [
+    "build",
+    "cargo",
+    "git",
+    "gix",
+    "rustc",
+    "si",
+], optional = true }
