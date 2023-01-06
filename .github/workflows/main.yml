@@ -164,16 +164,12 @@ jobs:
         run: cargo test -p vergen-fmt -F __vergen_test
       - name: 🙊 Code Coverage (vergen) 🙊
         run: cargo tarpaulin --config vergen/tarpaulin.toml --exclude-files vergen/src/lib.rs --exclude-files vergen-fmt/* --out Xml --output-dir vergen
-      - name: 🙊 Upload Code Coverage (vergen) 🙊
-        uses: codecov/codecov-action@v3
-        with:
-          files: ./vergen/cobertura.xml
       - name: 🙊 Code Coverage (vergen-fmt) 🙊
         run: cargo tarpaulin --config vergen-fmt/tarpaulin.toml --exclude-files vergen-fmt/src/lib.rs --exclude-files vergen/* --out Xml --output-dir vergen-fmt
-      - name: 🙊 Upload Code Coverage (vergen-fmt) 🙊
+      - name: 🙊 Upload Code Coverage 🙊
         uses: codecov/codecov-action@v3
         with:
-          files: ./vergen-fmt/cobertura.xml
+          files: ./vergen/cobertura.xml,./vergen-fmt/cobertura.xml
   test-macos:
     name: 🧪 MacOS 🧪
     needs: lints-macos
