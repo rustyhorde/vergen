@@ -124,6 +124,9 @@ cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT
 cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
 "#;
 
+    const BARE_REPO_NAME: &str = "vergen_tmp.git";
+    const CLONE_NAME: &str = "vergen_tmp";
+
     static CREATE_TEST_REPO: Once = Once::new();
     static CLONE_TEST_REPO: Once = Once::new();
 
@@ -262,7 +265,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
         } else {
             env::temp_dir()
         };
-        clone_path.join("vergen_tmp.git")
+        clone_path.join(BARE_REPO_NAME)
     }
 
     fn clone_path() -> PathBuf {
@@ -271,7 +274,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
         } else {
             env::temp_dir()
         };
-        clone_path.join("vergen_tmp")
+        clone_path.join(CLONE_NAME)
     }
 
     #[cfg(feature = "git2")]
@@ -294,6 +297,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     }
 
     #[test]
+    #[serial_test::parallel]
     fn git_all_output_default_dir() -> Result<()> {
         let mut stdout_buf = vec![];
         let failed = EmitBuilder::builder().all_git().emit_to(&mut stdout_buf)?;
@@ -307,6 +311,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     }
 
     #[test]
+    #[serial_test::parallel]
     fn git_all_flags_test_repo() -> Result<()> {
         create_test_repo();
         clone_test_repo();
@@ -323,6 +328,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     }
 
     #[test]
+    #[serial_test::parallel]
     fn git_all_output_test_repo() -> Result<()> {
         create_test_repo();
         clone_test_repo();
@@ -338,6 +344,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     }
 
     #[test]
+    #[serial_test::parallel]
     fn git_emit_at_test_repo() -> Result<()> {
         create_test_repo();
         clone_test_repo();
@@ -351,6 +358,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     }
 
     #[test]
+    #[serial_test::parallel]
     fn git_all_idempotent_output() -> Result<()> {
         let mut stdout_buf = vec![];
         let failed = EmitBuilder::builder()
@@ -367,6 +375,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     }
 
     #[test]
+    #[serial_test::parallel]
     fn git_all_idempotent_output_quiet() -> Result<()> {
         let mut stdout_buf = vec![];
         let failed = EmitBuilder::builder()
@@ -381,5 +390,29 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
             assert_eq!(IDEM_QUIET_OUTPUT, output);
         }
         Ok(())
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn repo_path_temp_dir_works() {
+        if let Ok(runner_temp) = env::var("RUNNER_TEMP") {
+            env::remove_var("RUNNER_TEMP");
+            assert!(repo_path().ends_with(BARE_REPO_NAME));
+            env::set_var("RUNNER_TEMP", runner_temp);
+        } else {
+            assert!(repo_path().ends_with(BARE_REPO_NAME));
+        }
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn clone_path_temp_dir_works() {
+        if let Ok(runner_temp) = env::var("RUNNER_TEMP") {
+            env::remove_var("RUNNER_TEMP");
+            assert!(clone_path().ends_with(CLONE_NAME));
+            env::set_var("RUNNER_TEMP", runner_temp);
+        } else {
+            assert!(clone_path().ends_with(CLONE_NAME));
+        }
     }
 }

@@ -1,2 +1,5 @@
 [default]
 features = "__vergen_test"
+
+[color]
+features = "__vergen_test color"
