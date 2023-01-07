@@ -8,6 +8,42 @@
 
 //! `vergen-fmt` - A pretty printer for vergen environment variables
 //!
+//! Because `cargo` doesn't pass compile time environment variables to dependencies,
+//! the [`vergen_fmt_env`] macro embeds a map of all the possible `vergen` environment variables with
+//! [`option_env!`](std::option_env!).  Values not set in by your `build.rs` are skipped
+//! when pretty-printing the output.
+//!
+//! # Example
+//! ```
+//! # use anyhow::Result;
+//! # use std::{collections::BTreeMap, io::Write};
+//! # use vergen_fmt::{vergen_fmt_env, Fmt};
+//! # fn has_value(
+//! #     tuple: (&&'static str, &Option<&'static str>),
+//! # ) -> Option<(&'static str, &'static str)> {
+//! #     let (key, value) = tuple;
+//! #     if value.is_some() {
+//! #         Some((*key, value.unwrap_or_default()))
+//! #     } else {
+//! #         None
+//! #     }
+//! # }
+//! # fn is_empty(map: &BTreeMap<&'static str, Option<&'static str>>) -> bool {
+//! #     map.iter().filter_map(has_value).count() == 0
+//! # }
+//! # fn main() -> Result<()> {
+//! let mut stdout = vec![];
+//! # let map = vergen_fmt_env!();
+//! # let empty = is_empty(&map);
+//! Fmt::builder().env(vergen_fmt_env!()).build().display(&mut stdout)?;
+//! # if empty {
+//! #    assert!(stdout.is_empty());
+//! # } else {
+//! assert!(!stdout.is_empty());
+//! # }
+//! #     Ok(())
+//! # }
+//! ```
 
 #![cfg_attr(docsrs, feature(doc_cfg))]
 // rustc lints
@@ -214,7 +250,23 @@ pub use tracing::Level;
 #[cfg(all(test, not(feature = "trace")))]
 use tracing_subscriber as _;
 
-/// Generate a map of `VERGEN_*` to [`option_env!`](std::option_env!)(`VERGEN_*`) values for use with [`Fmt`](self::Fmt)
+/// Used to initialize `env` in [`Fmt`](self::Fmt)
+///
+/// Because `cargo` doesn't pass compile time environment variables to dependencies,
+/// this macro embeds a map of all the possible `vergen` environment variables with
+/// [`option_env!`](std::option_env!).  Non-set values are skipped when pretty-printing the output.
+///
+/// # Example
+/// ```
+/// # use anyhow::Result;
+/// # use std::{collections::BTreeMap, io::Write};
+/// # use vergen_fmt::{vergen_fmt_env, Fmt};
+/// #
+/// # fn main() -> Result<()> {
+/// let mut stdout = vec![];
+/// Fmt::builder().env(vergen_fmt_env!()).build().display(&mut stdout)?;
+/// #     Ok(())
+/// # }
 #[macro_export]
 macro_rules! vergen_fmt_env {
     () => {{

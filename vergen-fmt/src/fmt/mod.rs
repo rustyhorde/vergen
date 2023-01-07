@@ -57,10 +57,9 @@ impl Fmt {
         }
 
         for (category, label, value) in &self.vars {
-            let key = format!(
-                "{label:>0$} ({category:>1$})",
-                self.max_label, self.max_category
-            );
+            let max_label = self.max_label;
+            let max_category = self.max_category;
+            let key = format!("{label:>max_label$} ({category:>max_category$})");
             self.inner_display(writer, &key, value)?;
         }
 
@@ -99,18 +98,18 @@ impl Fmt {
     where
         T: Write + ?Sized,
     {
-        let key = if let Some(style) = &self.key_style {
+        let key_so = if let Some(style) = &self.key_style {
             style
         } else {
             &*BOLD_BLUE
-        }
-        .apply_to(key);
-        let value = if let Some(style) = &self.value_style {
+        };
+        let value_so = if let Some(style) = &self.value_style {
             style
         } else {
             &*BOLD_GREEN
-        }
-        .apply_to(value);
+        };
+        let key = key_so.apply_to(key);
+        let value = value_so.apply_to(value);
         Ok(writeln!(writer, "{key}: {value}")?)
     }
 
@@ -491,8 +490,95 @@ mod tests {
     fn default_trace_works() {
         initialize_tracing();
         let map = vergen_fmt_env!();
-        let fmt = Fmt::builder().env(map).build();
-        fmt.trace();
+        Fmt::builder().env(map).build().trace();
+    }
+
+    #[cfg(feature = "trace")]
+    #[test]
+    fn trace_debug_works() {
+        initialize_tracing();
+        let level = Level::DEBUG;
+        let prefix = Prefix::builder()
+            .lines(TEST_PREFIX_SUFFIX.lines().map(str::to_string).collect())
+            .level(level)
+            .build();
+        let suffix = Suffix::builder()
+            .lines(TEST_PREFIX_SUFFIX.lines().map(str::to_string).collect())
+            .level(level)
+            .build();
+        Fmt::builder()
+            .env(vergen_fmt_env!())
+            .level(level)
+            .prefix(prefix)
+            .suffix(suffix)
+            .build()
+            .trace();
+    }
+
+    #[cfg(feature = "trace")]
+    #[test]
+    fn default_trace_trace_works() {
+        initialize_tracing();
+        let level = Level::TRACE;
+        let prefix = Prefix::builder()
+            .lines(TEST_PREFIX_SUFFIX.lines().map(str::to_string).collect())
+            .level(level)
+            .build();
+        let suffix = Suffix::builder()
+            .lines(TEST_PREFIX_SUFFIX.lines().map(str::to_string).collect())
+            .level(level)
+            .build();
+        Fmt::builder()
+            .env(vergen_fmt_env!())
+            .level(level)
+            .prefix(prefix)
+            .suffix(suffix)
+            .build()
+            .trace();
+    }
+
+    #[cfg(feature = "trace")]
+    #[test]
+    fn default_trace_error_works() {
+        initialize_tracing();
+        let level = Level::ERROR;
+        let prefix = Prefix::builder()
+            .lines(TEST_PREFIX_SUFFIX.lines().map(str::to_string).collect())
+            .level(level)
+            .build();
+        let suffix = Suffix::builder()
+            .lines(TEST_PREFIX_SUFFIX.lines().map(str::to_string).collect())
+            .level(level)
+            .build();
+        Fmt::builder()
+            .env(vergen_fmt_env!())
+            .level(level)
+            .prefix(prefix)
+            .suffix(suffix)
+            .build()
+            .trace();
+    }
+
+    #[cfg(feature = "trace")]
+    #[test]
+    fn default_trace_warn_works() {
+        initialize_tracing();
+        let level = Level::WARN;
+        let prefix = Prefix::builder()
+            .lines(TEST_PREFIX_SUFFIX.lines().map(str::to_string).collect())
+            .level(level)
+            .build();
+        let suffix = Suffix::builder()
+            .lines(TEST_PREFIX_SUFFIX.lines().map(str::to_string).collect())
+            .level(level)
+            .build();
+        Fmt::builder()
+            .env(vergen_fmt_env!())
+            .level(level)
+            .prefix(prefix)
+            .suffix(suffix)
+            .build()
+            .trace();
     }
 
     #[test]
