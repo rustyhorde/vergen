@@ -47,6 +47,7 @@ vergen = { path = "../vergen", features = [
 ], optional = true }
 
 [dev-dependencies]
+tracing-subscriber = { version = "0.3.16", features = ["fmt"] }
 typed-builder = "0.11.0"
 
 [package.metadata.docs.rs]

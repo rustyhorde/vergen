@@ -211,6 +211,9 @@ pub use fmt::Suffix;
 #[cfg(feature = "trace")]
 pub use tracing::Level;
 
+#[cfg(all(test, not(feature = "trace")))]
+use tracing_subscriber as _;
+
 /// Generate a map of `VERGEN_*` to [`option_env!`](std::option_env!)(`VERGEN_*`) values for use with [`Fmt`](self::Fmt)
 #[macro_export]
 macro_rules! vergen_fmt_env {

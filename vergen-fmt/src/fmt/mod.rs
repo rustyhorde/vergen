@@ -125,7 +125,7 @@ impl Fmt {
     /// Output the `vergen` environment variables that are set in table format to a tracing subscriber
     ///
     #[cfg(feature = "trace")]
-    pub fn trace(&mut self) {
+    pub fn trace(mut self) {
         self.populate_fmt();
 
         if let Some(prefix) = &self.prefix {
@@ -411,13 +411,20 @@ fn not_vergen(part: &str) -> Option<String> {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::BTreeMap;
-
-    use super::has_value;
+    use super::{has_value, split_key, split_kv};
     use crate::{vergen_fmt_env, Fmt, Prefix, Suffix};
     use anyhow::Result;
     #[cfg(feature = "color")]
     use console::Style;
+    use std::collections::BTreeMap;
+    #[cfg(feature = "trace")]
+    use {
+        std::sync::Once,
+        tracing::{metadata::LevelFilter, Level},
+        tracing_subscriber::{
+            fmt, prelude::__tracing_subscriber_SubscriberExt, registry, util::SubscriberInitExt,
+        },
+    };
 
     const TEST_PREFIX_SUFFIX: &str = r#"██████╗ ██╗   ██╗██████╗ ██╗    ██╗
 ██╔══██╗██║   ██║██╔══██╗██║    ██║
@@ -429,12 +436,43 @@ mod tests {
 4a61736f6e204f7a696173
 "#;
 
+    #[cfg(feature = "trace")]
+    static INIT_TRACING: Once = Once::new();
+
     fn is_empty(map: &BTreeMap<&'static str, Option<&'static str>>) -> bool {
         map.iter().filter_map(has_value).count() == 0
     }
 
+    #[cfg(feature = "trace")]
+    fn initialize_tracing() {
+        INIT_TRACING.call_once(|| {
+            let format = fmt::layer().compact().with_level(true).with_ansi(true);
+            let filter_layer = LevelFilter::from(Level::INFO);
+            registry()
+                .with(format)
+                .with(filter_layer)
+                .try_init()
+                .expect("unable to initialize tracing");
+        });
+    }
+
     #[test]
-    fn default_works() -> Result<()> {
+    fn has_value_none_is_none() {
+        assert!(has_value((&"test", &None)).is_none());
+    }
+
+    #[test]
+    fn split_key_no_vergen_is_none() {
+        assert!(split_key(("test", "test")).is_none());
+    }
+
+    #[test]
+    fn split_kv_too_short_is_none() {
+        assert!(split_kv((vec!["test".to_string()], "test".to_string())).is_none());
+    }
+
+    #[test]
+    fn default_display_works() -> Result<()> {
         let mut stdout = vec![];
         let map = vergen_fmt_env!();
         let empty = is_empty(&map);
@@ -448,9 +486,18 @@ mod tests {
         Ok(())
     }
 
+    #[cfg(feature = "trace")]
+    #[test]
+    fn default_trace_works() {
+        initialize_tracing();
+        let map = vergen_fmt_env!();
+        let fmt = Fmt::builder().env(map).build();
+        fmt.trace();
+    }
+
     #[test]
     #[cfg(feature = "color")]
-    fn key_style_works() -> Result<()> {
+    fn display_key_style_works() -> Result<()> {
         let mut stdout = vec![];
         let red_bold = Style::new().bold().red();
         let map = vergen_fmt_env!();
@@ -466,8 +513,17 @@ mod tests {
     }
 
     #[test]
+    #[cfg(all(feature = "color", feature = "trace"))]
+    fn trace_key_style_works() {
+        let red_bold = Style::new().bold().red();
+        let map = vergen_fmt_env!();
+        let fmt = Fmt::builder().env(map).key_style(red_bold).build();
+        fmt.trace();
+    }
+
+    #[test]
     #[cfg(feature = "color")]
-    fn value_style_works() -> Result<()> {
+    fn display_value_style_works() -> Result<()> {
         let mut stdout = vec![];
         let map = vergen_fmt_env!();
         let empty = is_empty(&map);
@@ -483,7 +539,16 @@ mod tests {
     }
 
     #[test]
-    fn prefix_works() -> Result<()> {
+    #[cfg(all(feature = "color", feature = "trace"))]
+    fn trace_value_style_works() {
+        let red_bold = Style::new().bold().red();
+        let map = vergen_fmt_env!();
+        let fmt = Fmt::builder().env(map).value_style(red_bold).build();
+        fmt.trace();
+    }
+
+    #[test]
+    fn display_prefix_works() -> Result<()> {
         let mut stdout = vec![];
         let map = vergen_fmt_env!();
         let prefix = Prefix::builder()
@@ -495,8 +560,48 @@ mod tests {
         Ok(())
     }
 
+    #[cfg(feature = "trace")]
     #[test]
-    fn suffix_works() -> Result<()> {
+    fn trace_prefix_works() {
+        let map = vergen_fmt_env!();
+        let prefix = Prefix::builder()
+            .lines(TEST_PREFIX_SUFFIX.lines().map(str::to_string).collect())
+            .build();
+        let fmt = Fmt::builder().env(map).prefix(prefix).build();
+        fmt.trace();
+    }
+
+    #[cfg(feature = "color")]
+    #[test]
+    fn display_prefix_with_style_works() -> Result<()> {
+        let mut stdout = vec![];
+        let map = vergen_fmt_env!();
+        let red_bold = Style::new().bold().red();
+        let prefix = Prefix::builder()
+            .lines(TEST_PREFIX_SUFFIX.lines().map(str::to_string).collect())
+            .style(red_bold)
+            .build();
+        let fmt = Fmt::builder().env(map).prefix(prefix).build();
+        fmt.display(&mut stdout)?;
+        assert!(!stdout.is_empty());
+        Ok(())
+    }
+
+    #[cfg(all(feature = "color", feature = "trace"))]
+    #[test]
+    fn trace_prefix_with_style_works() {
+        let map = vergen_fmt_env!();
+        let red_bold = Style::new().bold().red();
+        let prefix = Prefix::builder()
+            .lines(TEST_PREFIX_SUFFIX.lines().map(str::to_string).collect())
+            .style(red_bold)
+            .build();
+        let fmt = Fmt::builder().env(map).prefix(prefix).build();
+        fmt.trace();
+    }
+
+    #[test]
+    fn display_suffix_works() -> Result<()> {
         let mut stdout = vec![];
         let map = vergen_fmt_env!();
         let suffix = Suffix::builder()
@@ -506,5 +611,45 @@ mod tests {
         fmt.display(&mut stdout)?;
         assert!(!stdout.is_empty());
         Ok(())
+    }
+
+    #[cfg(feature = "trace")]
+    #[test]
+    fn trace_suffix_works() {
+        let map = vergen_fmt_env!();
+        let suffix = Suffix::builder()
+            .lines(TEST_PREFIX_SUFFIX.lines().map(str::to_string).collect())
+            .build();
+        let fmt = Fmt::builder().env(map).suffix(suffix).build();
+        fmt.trace();
+    }
+
+    #[cfg(feature = "color")]
+    #[test]
+    fn display_suffix_with_style_works() -> Result<()> {
+        let mut stdout = vec![];
+        let map = vergen_fmt_env!();
+        let red_bold = Style::new().bold().red();
+        let suffix = Suffix::builder()
+            .lines(TEST_PREFIX_SUFFIX.lines().map(str::to_string).collect())
+            .style(red_bold)
+            .build();
+        let fmt = Fmt::builder().env(map).suffix(suffix).build();
+        fmt.display(&mut stdout)?;
+        assert!(!stdout.is_empty());
+        Ok(())
+    }
+
+    #[cfg(all(feature = "color", feature = "trace"))]
+    #[test]
+    fn trace_suffix_with_style_works() {
+        let map = vergen_fmt_env!();
+        let red_bold = Style::new().bold().red();
+        let suffix = Suffix::builder()
+            .lines(TEST_PREFIX_SUFFIX.lines().map(str::to_string).collect())
+            .style(red_bold)
+            .build();
+        let fmt = Fmt::builder().env(map).suffix(suffix).build();
+        fmt.trace();
     }
 }
