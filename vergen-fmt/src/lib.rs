@@ -203,6 +203,113 @@
 
 mod fmt;
 
-pub use fmt::display::display;
+#[cfg(feature = "color")]
+pub use console::Style;
+pub use fmt::Fmt;
+pub use fmt::Prefix;
+pub use fmt::Suffix;
 #[cfg(feature = "trace")]
-pub use fmt::trace::trace;
+pub use tracing::Level;
+
+/// Generate a map of `VERGEN_*` to [`option_env!`](std::option_env!)(`VERGEN_*`) values for use with [`Fmt`](self::Fmt)
+#[macro_export]
+macro_rules! vergen_fmt_env {
+    () => {{
+        use std::collections::BTreeMap;
+        let mut map = BTreeMap::new();
+        let _old = map.insert("VERGEN_BUILD_DATE", option_env!("VERGEN_BUILD_DATE"));
+        let _old = map.insert(
+            "VERGEN_BUILD_TIMESTAMP",
+            option_env!("VERGEN_BUILD_TIMESTAMP"),
+        );
+        let _old = map.insert("VERGEN_CARGO_DEBUG", option_env!("VERGEN_CARGO_DEBUG"));
+        let _old = map.insert(
+            "VERGEN_CARGO_FEATURES",
+            option_env!("VERGEN_CARGO_FEATURES"),
+        );
+        let _old = map.insert(
+            "VERGEN_CARGO_OPT_LEVEL",
+            option_env!("VERGEN_CARGO_OPT_LEVEL"),
+        );
+        let _old = map.insert(
+            "VERGEN_CARGO_TARGET_TRIPLE",
+            option_env!("VERGEN_CARGO_TARGET_TRIPLE"),
+        );
+        let _old = map.insert("VERGEN_GIT_BRANCH", option_env!("VERGEN_GIT_BRANCH"));
+        let _old = map.insert(
+            "VERGEN_GIT_COMMIT_AUTHOR_EMAIL",
+            option_env!("VERGEN_GIT_COMMIT_AUTHOR_EMAIL"),
+        );
+        let _old = map.insert(
+            "VERGEN_GIT_COMMIT_AUTHOR_NAME",
+            option_env!("VERGEN_GIT_COMMIT_AUTHOR_NAME"),
+        );
+        let _old = map.insert(
+            "VERGEN_GIT_COMMIT_COUNT",
+            option_env!("VERGEN_GIT_COMMIT_COUNT"),
+        );
+        let _old = map.insert(
+            "VERGEN_GIT_COMMIT_DATE",
+            option_env!("VERGEN_GIT_COMMIT_DATE"),
+        );
+        let _old = map.insert(
+            "VERGEN_GIT_COMMIT_MESSAGE",
+            option_env!("VERGEN_GIT_COMMIT_MESSAGE"),
+        );
+        let _old = map.insert(
+            "VERGEN_GIT_COMMIT_TIMESTAMP",
+            option_env!("VERGEN_GIT_COMMIT_TIMESTAMP"),
+        );
+        let _old = map.insert("VERGEN_GIT_DESCRIBE", option_env!("VERGEN_GIT_DESCRIBE"));
+        let _old = map.insert("VERGEN_GIT_SHA", option_env!("VERGEN_GIT_SHA"));
+        let _old = map.insert("VERGEN_RUSTC_CHANNEL", option_env!("VERGEN_RUSTC_CHANNEL"));
+        let _old = map.insert(
+            "VERGEN_RUSTC_COMMIT_DATE",
+            option_env!("VERGEN_RUSTC_COMMIT_DATE"),
+        );
+        let _old = map.insert(
+            "VERGEN_RUSTC_COMMIT_HASH",
+            option_env!("VERGEN_RUSTC_COMMIT_HASH"),
+        );
+        let _old = map.insert(
+            "VERGEN_RUSTC_HOST_TRIPLE",
+            option_env!("VERGEN_RUSTC_HOST_TRIPLE"),
+        );
+        let _old = map.insert(
+            "VERGEN_RUSTC_LLVM_VERSION",
+            option_env!("VERGEN_RUSTC_LLVM_VERSION"),
+        );
+        let _old = map.insert("VERGEN_RUSTC_SEMVER", option_env!("VERGEN_RUSTC_SEMVER"));
+        let _old = map.insert("VERGEN_SYSINFO_NAME", option_env!("VERGEN_SYSINFO_NAME"));
+        let _old = map.insert(
+            "VERGEN_SYSINFO_OS_VERSION",
+            option_env!("VERGEN_SYSINFO_OS_VERSION"),
+        );
+        let _old = map.insert("VERGEN_SYSINFO_USER", option_env!("VERGEN_SYSINFO_USER"));
+        let _old = map.insert(
+            "VERGEN_SYSINFO_TOTAL_MEMORY",
+            option_env!("VERGEN_SYSINFO_TOTAL_MEMORY"),
+        );
+        let _old = map.insert(
+            "VERGEN_SYSINFO_CPU_VENDOR",
+            option_env!("VERGEN_SYSINFO_CPU_VENDOR"),
+        );
+        let _old = map.insert(
+            "VERGEN_SYSINFO_CPU_CORE_COUNT",
+            option_env!("VERGEN_SYSINFO_CPU_CORE_COUNT"),
+        );
+        let _old = map.insert(
+            "VERGEN_SYSINFO_CPU_NAME",
+            option_env!("VERGEN_SYSINFO_CPU_NAME"),
+        );
+        let _old = map.insert(
+            "VERGEN_SYSINFO_CPU_BRAND",
+            option_env!("VERGEN_SYSINFO_CPU_BRAND"),
+        );
+        let _old = map.insert(
+            "VERGEN_SYSINFO_CPU_FREQUENCY",
+            option_env!("VERGEN_SYSINFO_CPU_FREQUENCY"),
+        );
+        map
+    }};
+}

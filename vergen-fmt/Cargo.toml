@@ -15,22 +15,26 @@ version = "0.1.0"
 [package.metadata.cargo-all-features]
 denylist = [
     "console",
+    "lazy_static",
+    "serde",
     "tracing",
     "vergen",
 ]
 
 [features]
 default = []
-color = ["console"]
+color = ["console", "lazy_static"]
 trace = ["tracing"]
 __vergen_test = ["vergen"]
 
 [dependencies]
 anyhow = "1.0.68"
 console = { version = "0.15.4", optional = true }
-indexmap = "1.9.2"
-lazy_static = "1.4.0"
+convert_case = "0.6.0"
+lazy_static = { version = "1.4.0", optional = true }
+serde = { version = "1.0.152", features = ["derive"], optional = true }
 tracing = { version = "0.1.37", features = ["max_level_trace", "release_max_level_trace"], optional = true }
+typed-builder = "0.11.0"
 
 [build-dependencies]
 anyhow = "1.0.68"
@@ -43,6 +47,9 @@ vergen = { path = "../vergen", features = [
     "rustc",
     "si",
 ], optional = true }
+
+[dev-dependencies]
+typed-builder = "0.11.0"
 
 [package.metadata.docs.rs]
 features = ["color", "trace"]
