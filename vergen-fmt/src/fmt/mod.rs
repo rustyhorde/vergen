@@ -8,8 +8,6 @@
 
 use anyhow::Result;
 use convert_case::{Case, Casing};
-#[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
 use std::{collections::BTreeMap, io::Write};
 #[cfg(feature = "trace")]
 use tracing::{event, Level};
@@ -19,7 +17,6 @@ use {crate::Style, lazy_static::lazy_static};
 
 /// The `vergen-fmt` configuration
 #[derive(Clone, Debug, TypedBuilder)]
-#[cfg_attr(feature = "serde", Derive(Deserialize, Serialize))]
 pub struct Fmt {
     #[builder(setter(strip_option), default)]
     prefix: Option<Prefix>,
@@ -185,7 +182,6 @@ impl Fmt {
 
 /// The prefix configuration
 #[derive(Clone, Debug, TypedBuilder)]
-#[cfg_attr(feature = "serde", Derive(Deserialize, Serialize))]
 pub struct Prefix {
     lines: Vec<String>,
     #[cfg(feature = "color")]
@@ -278,7 +274,6 @@ impl Prefix {
 
 /// The suffix configuration
 #[derive(Clone, Debug, TypedBuilder)]
-#[cfg_attr(feature = "serde", Derive(Deserialize, Serialize))]
 pub struct Suffix {
     lines: Vec<String>,
     #[cfg(feature = "color")]
