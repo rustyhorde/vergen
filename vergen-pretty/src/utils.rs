@@ -35,7 +35,10 @@ pub(crate) fn split_kv(tuple: (Vec<String>, String)) -> Option<(String, String, 
     let (mut kv, v) = tuple;
     if kv.len() >= 2 {
         let category = kv.remove(0);
-        let label = kv.join(" ").to_case(Case::Title);
+        let label = kv
+            .into_iter()
+            .map(caps_proper)
+            .fold(String::new(), |a, b| a + " " + &b);
         Some((category, label, v))
     } else {
         None
@@ -47,6 +50,15 @@ pub(crate) fn not_vergen(part: &str) -> Option<String> {
         None
     } else {
         Some(part.to_string())
+    }
+}
+
+#[allow(clippy::needless_pass_by_value)]
+fn caps_proper(val: String) -> String {
+    if val == "cpu" || val == "os" || val == "llvm" || val == "sha" {
+        val.to_ascii_uppercase()
+    } else {
+        val.to_case(Case::Title)
     }
 }
 
