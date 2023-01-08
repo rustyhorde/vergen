@@ -50,9 +50,10 @@ jobs:
           rustup default ${{ matrix.rust }}
       - name: ✂ Clippy ✂
         run: |
-          cargo clippy --all-targets --features build,cargo,git,gitcl,rustc,si -- -Dwarnings
-          cargo clippy --all-targets --features build,cargo,git,git2,rustc,si -- -Dwarnings
-          cargo clippy --all-targets --features build,cargo,git,git2,rustc,si -- -Dwarnings
+          cargo clippy -p vergen --all-targets --features build,cargo,git,gitcl,rustc,si -- -Dwarnings
+          cargo clippy -p vergen --all-targets --features build,cargo,git,git2,rustc,si -- -Dwarnings
+          cargo clippy -p vergen --all-targets --features build,cargo,git,gix,rustc,si -- -Dwarnings
+          cargo clippy -p vergen-pretty --all-targets --all-features -- -Dwarnings
   lints-macos:
     name: 🕳️ Lints MacOS 🕳️
     needs: rustfmt
@@ -77,9 +78,10 @@ jobs:
           rustup default ${{ matrix.rust }}
       - name: ✂ Clippy ✂
         run: |
-          cargo clippy --all-targets --features build,cargo,git,gitcl,rustc,si -- -Dwarnings
-          cargo clippy --all-targets --features build,cargo,git,git2,rustc,si -- -Dwarnings
-          cargo clippy --all-targets --features build,cargo,git,git2,rustc,si -- -Dwarnings
+          cargo clippy -p vergen --all-targets --features build,cargo,git,gitcl,rustc,si -- -Dwarnings
+          cargo clippy -p vergen --all-targets --features build,cargo,git,git2,rustc,si -- -Dwarnings
+          cargo clippy -p vergen --all-targets --features build,cargo,git,gix,rustc,si -- -Dwarnings
+          cargo clippy -p vergen-pretty --all-targets --all-features -- -Dwarnings
   lints-windows:
     name: 🕳️ Lints Windows 🕳️
     needs: rustfmt
@@ -104,9 +106,10 @@ jobs:
           rustup default ${{ matrix.rust }}
       - name: ✂ Clippy ✂
         run: |
-          cargo clippy --all-targets --features build,cargo,git,gitcl,rustc,si -- -Dwarnings
-          cargo clippy --all-targets --features build,cargo,git,git2,rustc,si -- -Dwarnings
-          cargo clippy --all-targets --features build,cargo,git,git2,rustc,si -- -Dwarnings
+          cargo clippy -p vergen --all-targets --features build,cargo,git,gitcl,rustc,si -- -Dwarnings
+          cargo clippy -p vergen --all-targets --features build,cargo,git,git2,rustc,si -- -Dwarnings
+          cargo clippy -p vergen --all-targets --features build,cargo,git,gix,rustc,si -- -Dwarnings
+          cargo clippy -p vergen-pretty --all-targets --all-features -- -Dwarnings
   test-linux:
     name: 🧪 Linux 🧪
     needs: lints-linux
@@ -148,21 +151,25 @@ jobs:
           cargo binstall -V || cargo install cargo-binstall
           rustup override remove
       - name: 💾 Install (tarpaulin, all-features) 💾
-        run: cargo binstall --no-confirm --no-symlinks cargo-tarpaulin cargo-all-features
+        run: cargo binstall --no-confirm --no-symlinks --force cargo-tarpaulin cargo-all-features
       - name: 🧪 Test 🧪
-        run: cargo test-all-features
-      - name: 🧪 Test gitcl 🧪
-        run: cargo test -F build,cargo,git,gitcl,rustc,si
-      - name: 🧪 Test git2 🧪
-        run: cargo test -F build,cargo,git,git2,rustc,si
-      - name: 🧪 Test gix 🧪
-        run: cargo test -F build,cargo,git,gix,rustc,si
-      - name: 🙊 Code Coverage 🙊
-        run: cargo tarpaulin --exclude-files src/lib.rs --out Xml
+        run: |
+          cargo test-all-features
+          cargo test -p vergen -F build,cargo,git,gitcl,rustc,si
+          cargo test -p vergen -F build,cargo,git,git2,rustc,si
+          cargo test -p vergen -F build,cargo,git,gix,rustc,si
+          cargo test -p vergen-pretty -F __vergen_test
+          cargo test -p vergen-pretty -F __vergen_test,color
+          cargo test -p vergen-pretty -F __vergen_test,trace
+          cargo test -p vergen-pretty -F __vergen_test,color,trace
+      - name: 🙊 Code Coverage (vergen) 🙊
+        run: cargo tarpaulin --config vergen/tarpaulin.toml --exclude-files vergen/src/lib.rs --exclude-files vergen-pretty/* --out Xml --output-dir vergen
+      - name: 🙊 Code Coverage (vergen-pretty) 🙊
+        run: cargo tarpaulin --config vergen-pretty/tarpaulin.toml --exclude-files vergen-pretty/src/lib.rs --exclude-files vergen/* --out Xml --output-dir vergen-pretty
       - name: 🙊 Upload Code Coverage 🙊
         uses: codecov/codecov-action@v3
         with:
-          files: ./cobertura.xml
+          files: ./vergen/cobertura.xml,./vergen-pretty/cobertura.xml
   test-macos:
     name: 🧪 MacOS 🧪
     needs: lints-macos
@@ -202,16 +209,18 @@ jobs:
           rustup override set stable
           cargo binstall -V || cargo install cargo-binstall
           rustup override remove
-      - name: 💾 Install (tarpaulin, all-features) 💾
-        run: cargo binstall --no-confirm --no-symlinks cargo-all-features
+      - name: 💾 Install (all-features) 💾
+        run: cargo binstall --no-confirm --no-symlinks --force cargo-all-features
       - name: 🧪 Test 🧪
-        run: cargo test-all-features
-      - name: 🧪 Test gitcl 🧪
-        run: cargo test -F build,cargo,git,gitcl,rustc,si
-      - name: 🧪 Test git2 🧪
-        run: cargo test -F build,cargo,git,git2,rustc,si
-      - name: 🧪 Test gix 🧪
-        run: cargo test -F build,cargo,git,gix,rustc,si
+        run: |
+          cargo test-all-features
+          cargo test -p vergen -F build,cargo,git,gitcl,rustc,si
+          cargo test -p vergen -F build,cargo,git,git2,rustc,si
+          cargo test -p vergen -F build,cargo,git,gix,rustc,si
+          cargo test -p vergen-pretty -F __vergen_test
+          cargo test -p vergen-pretty -F __vergen_test,color
+          cargo test -p vergen-pretty -F __vergen_test,trace
+          cargo test -p vergen-pretty -F __vergen_test,color,trace
   test-windows:
     name: 🧪 Windows 🧪
     needs: lints-windows
@@ -264,12 +273,14 @@ jobs:
           cargo binstall -V || cargo install cargo-binstall
           rustup override remove
       - name: 💾 Install (all-features) 💾
-        run: cargo binstall --no-confirm --no-symlinks cargo-all-features
+        run: cargo binstall --no-confirm --no-symlinks --force cargo-all-features
       - name: 🧪 Test 🧪
-        run: cargo test-all-features
-      - name: 🧪 Test gitcl 🧪
-        run: cargo test -F build,cargo,git,gitcl,rustc,si
-      - name: 🧪 Test git2 🧪
-        run: cargo test -F build,cargo,git,git2,rustc,si
-      - name: 🧪 Test gix 🧪
-        run: cargo test -F build,cargo,git,gix,rustc,si
+        run: |
+          cargo test-all-features
+          cargo test -p vergen -F build,cargo,git,gitcl,rustc,si
+          cargo test -p vergen -F build,cargo,git,git2,rustc,si
+          cargo test -p vergen -F build,cargo,git,gix,rustc,si
+          cargo test -p vergen-pretty -F __vergen_test
+          cargo test -p vergen-pretty -F __vergen_test,color
+          cargo test -p vergen-pretty -F __vergen_test,trace
+          cargo test -p vergen-pretty -F __vergen_test,color,trace

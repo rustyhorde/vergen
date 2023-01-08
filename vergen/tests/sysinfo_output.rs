@@ -40,18 +40,6 @@ mod test_sysinfo {
             .join("\n");
             Regex::new(&re_str).unwrap()
         };
-        static ref SYSINFO_IDEM_REGEX_INST: Regex = {
-            let re_str = vec![
-                *NAME_IDEM_RE_STR,
-                *OS_VERSION_IDEM_RE_STR,
-                *USER_IDEM_RE_STR,
-                *TOTAL_MEMORY_IDEM_RE_STR,
-                *CPU_VENDOR_IDEM_RE_STR,
-                *CPU_CORE_IDEM_RE_STR,
-            ]
-            .join("\n");
-            Regex::new(&re_str).unwrap()
-        };
     }
 
     const IDEM_OUTPUT: &str = r#"cargo:rustc-env=VERGEN_SYSINFO_NAME=VERGEN_IDEMPOTENT_OUTPUT
