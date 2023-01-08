@@ -6,10 +6,10 @@
 // option. All files in the project carrying such notice may not be copied,
 // modified, or distributed except according to those terms.
 
-//! `vergen-fmt` - A pretty printer for vergen environment variables
+//! `vergen-pretty` - A pretty printer for vergen environment variables
 //!
 //! Because `cargo` doesn't pass compile time environment variables to dependencies,
-//! the [`vergen_fmt_env`] macro embeds a map of all the possible `vergen` environment variables with
+//! the [`vergen_pretty_env`] macro embeds a map of all the possible `vergen` environment variables with
 //! [`option_env!`](std::option_env!).  Values not set in by your `build.rs` are skipped
 //! when pretty-printing the output.
 //!
@@ -17,7 +17,7 @@
 //! ```
 //! # use anyhow::Result;
 //! # use std::{collections::BTreeMap, io::Write};
-//! # use vergen_fmt::{vergen_fmt_env, Fmt};
+//! # use vergen_pretty::{vergen_pretty_env, Pretty};
 //! # fn has_value(
 //! #     tuple: (&&'static str, &Option<&'static str>),
 //! # ) -> Option<(&'static str, &'static str)> {
@@ -33,9 +33,9 @@
 //! # }
 //! # fn main() -> Result<()> {
 //! let mut stdout = vec![];
-//! # let map = vergen_fmt_env!();
+//! # let map = vergen_pretty_env!();
 //! # let empty = is_empty(&map);
-//! Fmt::builder().env(vergen_fmt_env!()).build().display(&mut stdout)?;
+//! Pretty::builder().env(vergen_pretty_env!()).build().display(&mut stdout)?;
 //! # if empty {
 //! #    assert!(stdout.is_empty());
 //! # } else {
@@ -237,20 +237,21 @@
     deny(rustdoc::missing_doc_code_examples)
 )]
 
-mod fmt;
+mod pretty;
+mod utils;
 
 #[cfg(feature = "color")]
 pub use console::Style;
-pub use fmt::Fmt;
-pub use fmt::Prefix;
-pub use fmt::Suffix;
+pub use pretty::prefix::Prefix;
+pub use pretty::suffix::Suffix;
+pub use pretty::Pretty;
 #[cfg(feature = "trace")]
 pub use tracing::Level;
 
 #[cfg(all(test, not(feature = "trace")))]
 use tracing_subscriber as _;
 
-/// Used to initialize `env` in [`Fmt`](self::Fmt)
+/// Used to initialize `env` in [`Pretty`](self::Pretty)
 ///
 /// Because `cargo` doesn't pass compile time environment variables to dependencies,
 /// this macro embeds a map of all the possible `vergen` environment variables with
@@ -260,15 +261,15 @@ use tracing_subscriber as _;
 /// ```
 /// # use anyhow::Result;
 /// # use std::{collections::BTreeMap, io::Write};
-/// # use vergen_fmt::{vergen_fmt_env, Fmt};
+/// # use vergen_pretty::{vergen_pretty_env, Pretty};
 /// #
 /// # fn main() -> Result<()> {
 /// let mut stdout = vec![];
-/// Fmt::builder().env(vergen_fmt_env!()).build().display(&mut stdout)?;
+/// Pretty::builder().env(vergen_pretty_env!()).build().display(&mut stdout)?;
 /// #     Ok(())
 /// # }
 #[macro_export]
-macro_rules! vergen_fmt_env {
+macro_rules! vergen_pretty_env {
     () => {{
         use std::collections::BTreeMap;
         let mut map = BTreeMap::new();

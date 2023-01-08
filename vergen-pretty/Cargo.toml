@@ -2,23 +2,18 @@
 authors = ["Jason Ozias <jason.g.ozias@gmail.com>"]
 categories = ["development-tools", "development-tools::build-utils"]
 description = "Output vergen information in a formatted manner"
-documentation = "https://docs.rs/vergen-fmt"
+documentation = "https://docs.rs/vergen-pretty"
 edition = "2021"
 homepage = "https://github.com/rustyhorde/vergen"
 keywords = ["cargo", "instructions", "build", "tool"]
 license = "MIT OR Apache-2.0"
-name = "vergen-fmt"
+name = "vergen-pretty"
 readme = "README.md"
 repository = "https://github.com/rustyhorde/vergen"
 version = "0.1.0"
 
 [package.metadata.cargo-all-features]
-denylist = [
-    "console",
-    "lazy_static",
-    "tracing",
-    "vergen",
-]
+denylist = ["console", "lazy_static", "tracing", "vergen"]
 
 [features]
 default = []
@@ -31,7 +26,10 @@ anyhow = "1.0.68"
 console = { version = "0.15.4", optional = true }
 convert_case = "0.6.0"
 lazy_static = { version = "1.4.0", optional = true }
-tracing = { version = "0.1.37", features = ["max_level_trace", "release_max_level_trace"], optional = true }
+tracing = { version = "0.1.37", features = [
+    "max_level_trace",
+    "release_max_level_trace",
+], optional = true }
 typed-builder = "0.11.0"
 
 [build-dependencies]

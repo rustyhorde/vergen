@@ -3,5 +3,5 @@ resolver = "2"
 
 members = [
   "vergen",
-  "vergen-fmt",
+  "vergen-pretty",
 ]
