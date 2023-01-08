@@ -11,26 +11,128 @@ use crate::utils::{has_value, split_key, split_kv};
 use anyhow::Result;
 #[cfg(feature = "color")]
 use console::Style;
+use derive_builder::Builder;
 use std::{collections::BTreeMap, io::Write};
 #[cfg(feature = "trace")]
 use tracing::Level;
-use typed_builder::TypedBuilder;
 
 pub(crate) mod feature;
 pub(crate) mod prefix;
 pub(crate) mod suffix;
 
-/// Configure `vergen` environment variable pretty printing
-#[derive(Clone, Debug, TypedBuilder)]
+/// Configuration for `vergen` environment variable pretty printing
+///
+/// Build this with [`PrettyBuilder`]
+///
+/// # Display
+/// ```
+/// # use anyhow::Result;
+/// # use vergen_pretty::{vergen_pretty_env, PrettyBuilder};
+/// #
+/// # pub fn main() -> Result<()> {
+/// let mut stdout = vec![];
+/// PrettyBuilder::default()
+///     .env(vergen_pretty_env!())
+///     .build()?
+///     .display(&mut stdout)?;
+/// #     Ok(())
+/// # }
+/// ```
+///
+#[cfg_attr(
+    feature = "trace",
+    doc = r##"
+# Trace
+
+Generate [`tracing`] output
+
+```
+# use anyhow::Result;
+# use vergen_pretty::{vergen_pretty_env, PrettyBuilder};
+# 
+# pub fn main() -> Result<()> {
+PrettyBuilder::default()
+    .env(vergen_pretty_env!())
+    .build()?
+    .trace();
+#     Ok(())
+# }
+```
+"##
+)]
+///
+/// # Output a prefix/suffix
+///
+/// [`Prefix`] and [`Suffix`] also have configurable styles if you enable
+/// the `color` feature
+///
+/// ```
+/// # use anyhow::Result;
+/// # use vergen_pretty::{vergen_pretty_env, PrettyBuilder, PrefixBuilder, SuffixBuilder};
+/// #
+/// const TEST_PREFIX: &str = r#"A wonderful introduction
+/// "#;
+/// const TEST_SUFFIX: &str = r#"An outro"#;
+///
+/// # pub fn main() -> Result<()> {
+/// let mut stdout = vec![];
+/// let prefix = PrefixBuilder::default()
+///     .lines(TEST_PREFIX.lines().map(str::to_string).collect())
+///     .build()?;
+/// let suffix = SuffixBuilder::default()
+///     .lines(TEST_SUFFIX.lines().map(str::to_string).collect())
+///     .build()?;
+/// PrettyBuilder::default()
+///     .env(vergen_pretty_env!())
+///     .prefix(prefix)
+///     .suffix(suffix)
+///     .build()?
+///     .display(&mut stdout)?;
+/// #     Ok(())
+/// # }
+/// ```
+///
+#[cfg_attr(
+    feature = "color",
+    doc = r##"
+# Customize Colorized Output
+
+Uses [`Style`](console::Style) to colorize output
+
+```
+# use anyhow::Result;
+# use vergen_pretty::{vergen_pretty_env, PrettyBuilder, Style};
+# 
+# pub fn main() -> Result<()> {
+let mut stdout = vec![];
+let red_bold = Style::new().bold().red();
+let yellow_bold = Style::new().bold().yellow();
+PrettyBuilder::default()
+    .env(vergen_pretty_env!())
+    .key_style(red_bold)
+    .value_style(yellow_bold)
+    .build()?
+    .display(&mut stdout)?;
+#     Ok(())
+# }
+```
+"##
+)]
+///
+#[derive(Clone, Builder, Debug)]
 pub struct Pretty {
+    /// Set the optional [`Prefix`] configuration
     #[builder(setter(strip_option), default)]
     prefix: Option<Prefix>,
+    /// The `vergen` env variables.  Should be set with [`vergen_pretty_env!`](crate::vergen_pretty_env) macro.
     env: BTreeMap<&'static str, Option<&'static str>>,
     #[builder(setter(skip), default)]
     vars: Vec<(String, String, String)>,
+    /// The [`Style`] to apply to the keys in the output
     #[cfg(feature = "color")]
     #[builder(setter(strip_option), default)]
     key_style: Option<Style>,
+    /// The [`Style`] to apply to the values in the output
     #[cfg(feature = "color")]
     #[builder(setter(strip_option), default)]
     value_style: Option<Style>,
@@ -38,15 +140,18 @@ pub struct Pretty {
     max_label: usize,
     #[builder(setter(skip), default)]
     max_category: usize,
+    /// Set the optional [`Suffix`] configuration
     #[builder(setter(strip_option), default)]
     suffix: Option<Suffix>,
+    /// Set the tracing [`Level`]
     #[cfg(feature = "trace")]
-    #[builder(default = Level::INFO)]
+    #[builder(default = "Level::INFO")]
     level: Level,
 }
 
 impl Pretty {
-    /// Output the `vergen` environment variables that are set in table format
+    /// Write the `vergen` environment variables that are set in table format to
+    /// the given [`writer`](std::io::Write)
     ///
     /// # Errors
     /// * The [`writeln!`](std::writeln!) macro can throw a [`std::io::Error`]
@@ -109,7 +214,8 @@ impl Pretty {
 
 #[cfg(test)]
 mod tests {
-    use crate::{utils::test_utils::is_empty, vergen_pretty_env, Pretty};
+    use super::PrettyBuilder;
+    use crate::{utils::test_utils::is_empty, vergen_pretty_env};
     use anyhow::Result;
 
     #[test]
@@ -117,7 +223,7 @@ mod tests {
         let mut stdout = vec![];
         let map = vergen_pretty_env!();
         let empty = is_empty(&map);
-        let fmt = Pretty::builder().env(map).build();
+        let fmt = PrettyBuilder::default().env(map).build()?;
         fmt.display(&mut stdout)?;
         if empty {
             assert!(stdout.is_empty());

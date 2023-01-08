@@ -17,7 +17,7 @@
 //! ```
 //! # use anyhow::Result;
 //! # use std::{collections::BTreeMap, io::Write};
-//! # use vergen_pretty::{vergen_pretty_env, Pretty};
+//! # use vergen_pretty::{vergen_pretty_env, PrettyBuilder};
 //! # fn has_value(
 //! #     tuple: (&&'static str, &Option<&'static str>),
 //! # ) -> Option<(&'static str, &'static str)> {
@@ -35,7 +35,10 @@
 //! let mut stdout = vec![];
 //! # let map = vergen_pretty_env!();
 //! # let empty = is_empty(&map);
-//! Pretty::builder().env(vergen_pretty_env!()).build().display(&mut stdout)?;
+//! PrettyBuilder::default()
+//!     .env(vergen_pretty_env!())
+//!     .build()?
+//!     .display(&mut stdout)?;
 //! # if empty {
 //! #    assert!(stdout.is_empty());
 //! # } else {
@@ -44,6 +47,18 @@
 //! #     Ok(())
 //! # }
 //! ```
+//!
+//! See the [`Pretty`](crate::Pretty) documentation for more examples
+//!
+//! ## Features
+//! `vergen-pretty` has two feature toggles allowing you to customize your output. No features are enabled by default.  
+//! You **must** specifically enable the features you wish to use.
+//!
+//! | Feature | Enables |
+//! | ------- | ------- |
+//! |  color  | Colorize output, allow configuration of coloring via [`console`] |
+//! |  trace  | Enable support for [`tracing`](https://docs.rs/tracing/latest/tracing/) output |
+//!
 
 #![cfg_attr(docsrs, feature(doc_cfg))]
 // rustc lints
@@ -243,15 +258,18 @@ mod utils;
 #[cfg(feature = "color")]
 pub use console::Style;
 pub use pretty::prefix::Prefix;
+pub use pretty::prefix::PrefixBuilder;
 pub use pretty::suffix::Suffix;
+pub use pretty::suffix::SuffixBuilder;
 pub use pretty::Pretty;
+pub use pretty::PrettyBuilder;
 #[cfg(feature = "trace")]
 pub use tracing::Level;
 
 #[cfg(all(test, not(feature = "trace")))]
 use tracing_subscriber as _;
 
-/// Used to initialize `env` in [`Pretty`](self::Pretty)
+/// Used to initialize `env` in [`PrettyBuilder`](self::PrettyBuilder)
 ///
 /// Because `cargo` doesn't pass compile time environment variables to dependencies,
 /// this macro embeds a map of all the possible `vergen` environment variables with
@@ -261,11 +279,14 @@ use tracing_subscriber as _;
 /// ```
 /// # use anyhow::Result;
 /// # use std::{collections::BTreeMap, io::Write};
-/// # use vergen_pretty::{vergen_pretty_env, Pretty};
+/// # use vergen_pretty::{vergen_pretty_env, PrettyBuilder};
 /// #
 /// # fn main() -> Result<()> {
 /// let mut stdout = vec![];
-/// Pretty::builder().env(vergen_pretty_env!()).build().display(&mut stdout)?;
+/// PrettyBuilder::default()
+///     .env(vergen_pretty_env!())
+///     .build()?
+///     .display(&mut stdout)?;
 /// #     Ok(())
 /// # }
 #[macro_export]

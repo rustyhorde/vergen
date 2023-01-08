@@ -8,7 +8,7 @@
 
 #[cfg(feature = "color")]
 use super::color::{BOLD_BLUE, BOLD_GREEN};
-use crate::{Prefix, Pretty, Suffix};
+use crate::{pretty::Pretty, Prefix, Suffix};
 use tracing::{event, Level};
 
 impl Pretty {
@@ -150,7 +150,11 @@ impl Suffix {
 
 #[cfg(test)]
 mod test {
-    use crate::{utils::test_utils::TEST_PREFIX_SUFFIX, vergen_pretty_env, Prefix, Pretty, Suffix};
+    use crate::{
+        utils::test_utils::TEST_PREFIX_SUFFIX, vergen_pretty_env, PrefixBuilder, PrettyBuilder,
+        SuffixBuilder,
+    };
+    use anyhow::Result;
     #[cfg(feature = "color")]
     use console::Style;
     use std::sync::Once;
@@ -174,157 +178,186 @@ mod test {
     }
 
     #[test]
-    fn default_trace_works() {
+    fn default_trace_works() -> Result<()> {
         initialize_tracing();
         let map = vergen_pretty_env!();
-        Pretty::builder().env(map).build().trace();
+        PrettyBuilder::default().env(map).build()?.trace();
+        Ok(())
     }
 
     #[test]
-    fn trace_debug_works() {
+    fn trace_debug_works() -> Result<()> {
         initialize_tracing();
         let level = Level::DEBUG;
-        let prefix = Prefix::builder()
+        let prefix = PrefixBuilder::default()
             .lines(TEST_PREFIX_SUFFIX.lines().map(str::to_string).collect())
             .level(level)
-            .build();
-        let suffix = Suffix::builder()
+            .build()?;
+        let suffix = SuffixBuilder::default()
             .lines(TEST_PREFIX_SUFFIX.lines().map(str::to_string).collect())
             .level(level)
-            .build();
-        Pretty::builder()
+            .build()?;
+        PrettyBuilder::default()
             .env(vergen_pretty_env!())
             .level(level)
             .prefix(prefix)
             .suffix(suffix)
-            .build()
+            .build()?
             .trace();
+        Ok(())
     }
 
     #[test]
-    fn default_trace_trace_works() {
+    fn default_trace_trace_works() -> Result<()> {
         initialize_tracing();
         let level = Level::TRACE;
-        let prefix = Prefix::builder()
+        let prefix = PrefixBuilder::default()
             .lines(TEST_PREFIX_SUFFIX.lines().map(str::to_string).collect())
             .level(level)
-            .build();
-        let suffix = Suffix::builder()
+            .build()?;
+        let suffix = SuffixBuilder::default()
             .lines(TEST_PREFIX_SUFFIX.lines().map(str::to_string).collect())
             .level(level)
-            .build();
-        Pretty::builder()
+            .build()?;
+        PrettyBuilder::default()
             .env(vergen_pretty_env!())
             .level(level)
             .prefix(prefix)
             .suffix(suffix)
-            .build()
+            .build()?
             .trace();
+        Ok(())
     }
 
     #[test]
-    fn default_trace_error_works() {
+    fn default_trace_error_works() -> Result<()> {
         initialize_tracing();
         let level = Level::ERROR;
-        let prefix = Prefix::builder()
+        let prefix = PrefixBuilder::default()
             .lines(TEST_PREFIX_SUFFIX.lines().map(str::to_string).collect())
             .level(level)
-            .build();
-        let suffix = Suffix::builder()
+            .build()?;
+        let suffix = SuffixBuilder::default()
             .lines(TEST_PREFIX_SUFFIX.lines().map(str::to_string).collect())
             .level(level)
-            .build();
-        Pretty::builder()
+            .build()?;
+        PrettyBuilder::default()
             .env(vergen_pretty_env!())
             .level(level)
             .prefix(prefix)
             .suffix(suffix)
-            .build()
+            .build()?
             .trace();
+        Ok(())
     }
 
     #[test]
-    fn default_trace_warn_works() {
+    fn default_trace_warn_works() -> Result<()> {
         initialize_tracing();
         let level = Level::WARN;
-        let prefix = Prefix::builder()
+        let prefix = PrefixBuilder::default()
             .lines(TEST_PREFIX_SUFFIX.lines().map(str::to_string).collect())
             .level(level)
-            .build();
-        let suffix = Suffix::builder()
+            .build()?;
+        let suffix = SuffixBuilder::default()
             .lines(TEST_PREFIX_SUFFIX.lines().map(str::to_string).collect())
             .level(level)
-            .build();
-        Pretty::builder()
+            .build()?;
+        PrettyBuilder::default()
             .env(vergen_pretty_env!())
             .level(level)
             .prefix(prefix)
             .suffix(suffix)
-            .build()
+            .build()?
             .trace();
+        Ok(())
     }
 
     #[test]
     #[cfg(feature = "color")]
-    fn trace_key_style_works() {
+    fn trace_key_style_works() -> Result<()> {
         let red_bold = Style::new().bold().red();
         let map = vergen_pretty_env!();
-        let fmt = Pretty::builder().env(map).key_style(red_bold).build();
-        fmt.trace();
+        PrettyBuilder::default()
+            .env(map)
+            .key_style(red_bold)
+            .build()?
+            .trace();
+        Ok(())
     }
 
     #[test]
     #[cfg(feature = "color")]
-    fn trace_value_style_works() {
+    fn trace_value_style_works() -> Result<()> {
         let red_bold = Style::new().bold().red();
         let map = vergen_pretty_env!();
-        let fmt = Pretty::builder().env(map).value_style(red_bold).build();
-        fmt.trace();
+        PrettyBuilder::default()
+            .env(map)
+            .value_style(red_bold)
+            .build()?
+            .trace();
+        Ok(())
     }
 
     #[test]
-    fn trace_prefix_works() {
+    fn trace_prefix_works() -> Result<()> {
         let map = vergen_pretty_env!();
-        let prefix = Prefix::builder()
+        let prefix = PrefixBuilder::default()
             .lines(TEST_PREFIX_SUFFIX.lines().map(str::to_string).collect())
-            .build();
-        let fmt = Pretty::builder().env(map).prefix(prefix).build();
-        fmt.trace();
+            .build()?;
+        PrettyBuilder::default()
+            .env(map)
+            .prefix(prefix)
+            .build()?
+            .trace();
+        Ok(())
     }
 
     #[cfg(feature = "color")]
     #[test]
-    fn trace_prefix_with_style_works() {
+    fn trace_prefix_with_style_works() -> Result<()> {
         let map = vergen_pretty_env!();
         let red_bold = Style::new().bold().red();
-        let prefix = Prefix::builder()
-            .lines(TEST_PREFIX_SUFFIX.lines().map(str::to_string).collect())
-            .style(red_bold)
-            .build();
-        let fmt = Pretty::builder().env(map).prefix(prefix).build();
-        fmt.trace();
-    }
-
-    #[test]
-    fn trace_suffix_works() {
-        let map = vergen_pretty_env!();
-        let suffix = Suffix::builder()
-            .lines(TEST_PREFIX_SUFFIX.lines().map(str::to_string).collect())
-            .build();
-        let fmt = Pretty::builder().env(map).suffix(suffix).build();
-        fmt.trace();
-    }
-
-    #[cfg(feature = "color")]
-    #[test]
-    fn trace_suffix_with_style_works() {
-        let map = vergen_pretty_env!();
-        let red_bold = Style::new().bold().red();
-        let suffix = Suffix::builder()
+        let prefix = PrefixBuilder::default()
             .lines(TEST_PREFIX_SUFFIX.lines().map(str::to_string).collect())
             .style(red_bold)
-            .build();
-        let fmt = Pretty::builder().env(map).suffix(suffix).build();
-        fmt.trace();
+            .build()?;
+        PrettyBuilder::default()
+            .env(map)
+            .prefix(prefix)
+            .build()?
+            .trace();
+        Ok(())
+    }
+
+    #[test]
+    fn trace_suffix_works() -> Result<()> {
+        let map = vergen_pretty_env!();
+        let suffix = SuffixBuilder::default()
+            .lines(TEST_PREFIX_SUFFIX.lines().map(str::to_string).collect())
+            .build()?;
+        PrettyBuilder::default()
+            .env(map)
+            .suffix(suffix)
+            .build()?
+            .trace();
+        Ok(())
+    }
+
+    #[cfg(feature = "color")]
+    #[test]
+    fn trace_suffix_with_style_works() -> Result<()> {
+        let map = vergen_pretty_env!();
+        let red_bold = Style::new().bold().red();
+        let suffix = SuffixBuilder::default()
+            .lines(TEST_PREFIX_SUFFIX.lines().map(str::to_string).collect())
+            .style(red_bold)
+            .build()?;
+        PrettyBuilder::default()
+            .env(map)
+            .suffix(suffix)
+            .build()?
+            .trace();
+        Ok(())
     }
 }
