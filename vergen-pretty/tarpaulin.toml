@@ -1,0 +1,5 @@
+[default]
+features = "__vergen_test"
+
+[all]
+features = "__vergen_test color trace"

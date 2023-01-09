@@ -1,9 +1,0 @@
-[submodule "testdata/notagsrepo"]
-	path = testdata/notagsrepo
-	url = https://github.com/rustyhorde/notagsrepo.git
-[submodule "testdata/tagsrepo"]
-	path = testdata/tagsrepo
-	url = https://github.com/rustyhorde/tagsrepo.git
-[submodule "testdata/detachedhead"]
-	path = testdata/detachedhead
-	url = https://github.com/rustyhorde/detachedhead.git
