@@ -266,6 +266,8 @@ pub use pretty::PrettyBuilder;
 #[cfg(feature = "trace")]
 pub use tracing::Level;
 
+#[cfg(all(test, not(feature = "serde")))]
+use serde_json as _;
 #[cfg(all(test, not(feature = "trace")))]
 use tracing_subscriber as _;
 

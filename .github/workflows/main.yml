@@ -161,7 +161,11 @@ jobs:
           cargo test -p vergen-pretty -F __vergen_test
           cargo test -p vergen-pretty -F __vergen_test,color
           cargo test -p vergen-pretty -F __vergen_test,trace
+          cargo test -p vergen-pretty -F __vergen_test,serde
+          cargo test -p vergen-pretty -F __vergen_test,color,serde
           cargo test -p vergen-pretty -F __vergen_test,color,trace
+          cargo test -p vergen-pretty -F __vergen_test,trace,serde
+          cargo test -p vergen-pretty -F __vergen_test,color,serde,trace
       - name: 🙊 Code Coverage (vergen) 🙊
         run: cargo tarpaulin --config vergen/tarpaulin.toml --exclude-files vergen/src/lib.rs --exclude-files vergen-pretty/* --out Xml --output-dir vergen
       - name: 🙊 Code Coverage (vergen-pretty) 🙊
@@ -220,7 +224,11 @@ jobs:
           cargo test -p vergen-pretty -F __vergen_test
           cargo test -p vergen-pretty -F __vergen_test,color
           cargo test -p vergen-pretty -F __vergen_test,trace
+          cargo test -p vergen-pretty -F __vergen_test,serde
+          cargo test -p vergen-pretty -F __vergen_test,color,serde
           cargo test -p vergen-pretty -F __vergen_test,color,trace
+          cargo test -p vergen-pretty -F __vergen_test,trace,serde
+          cargo test -p vergen-pretty -F __vergen_test,color,serde,trace
   test-windows:
     name: 🧪 Windows 🧪
     needs: lints-windows
@@ -283,4 +291,8 @@ jobs:
           cargo test -p vergen-pretty -F __vergen_test
           cargo test -p vergen-pretty -F __vergen_test,color
           cargo test -p vergen-pretty -F __vergen_test,trace
+          cargo test -p vergen-pretty -F __vergen_test,serde
+          cargo test -p vergen-pretty -F __vergen_test,color,serde
           cargo test -p vergen-pretty -F __vergen_test,color,trace
+          cargo test -p vergen-pretty -F __vergen_test,trace,serde
+          cargo test -p vergen-pretty -F __vergen_test,color,serde,trace
