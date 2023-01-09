@@ -129,6 +129,9 @@ pub struct Pretty {
     /// A set of `vergen` env variable names that should be filtered regardless if they are set or not.
     #[builder(setter(strip_option), default)]
     filter: Option<Vec<&'static str>>,
+    /// Include category output.  Default: true
+    #[builder(default = "true")]
+    category: bool,
     #[builder(setter(skip), default)]
     vars: Vec<(String, String, String)>,
     /// The [`Style`] to apply to the keys in the output
@@ -172,7 +175,11 @@ impl Pretty {
         for (category, label, value) in &self.vars {
             let max_label = self.max_label;
             let max_category = self.max_category;
-            let key = format!("{label:>max_label$} ({category:>max_category$})");
+            let key = if self.category {
+                format!("{label:>max_label$} ({category:>max_category$})")
+            } else {
+                format!("{label:>max_label$}")
+            };
             self.inner_display(writer, &key, value)?;
         }
 
@@ -236,6 +243,21 @@ mod tests {
         let map = vergen_pretty_env!();
         let empty = is_empty(&map);
         let fmt = PrettyBuilder::default().env(map).build()?;
+        fmt.display(&mut stdout)?;
+        if empty {
+            assert!(stdout.is_empty());
+        } else {
+            assert!(!stdout.is_empty());
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn no_category_works() -> Result<()> {
+        let mut stdout = vec![];
+        let map = vergen_pretty_env!();
+        let empty = is_empty(&map);
+        let fmt = PrettyBuilder::default().env(map).category(false).build()?;
         fmt.display(&mut stdout)?;
         if empty {
             assert!(stdout.is_empty());
