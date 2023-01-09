@@ -21,6 +21,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-${{ hashFiles('**/Cargo.lock','**/main.yml') }}
       - name: ☢️ Rustfmt Check ☢️
         run: cargo fmt --all -- --check
   lints-linux:
@@ -40,6 +49,17 @@ jobs:
             rust: nightly
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock','**/main.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ hashFiles('**/Cargo.lock','**/main.yml') }}
       - name: 🧰 Toolchain 🧰
         run: |
           rustup toolchain remove ${{ matrix.rust }}
@@ -71,6 +91,17 @@ jobs:
             rust: nightly
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock','**/main.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ hashFiles('**/Cargo.lock','**/main.yml') }}
       - name: 🧰 Toolchain 🧰
         run: |
           rustup toolchain remove ${{ matrix.rust }}
@@ -99,6 +130,17 @@ jobs:
             rust: nightly
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock','**/main.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ hashFiles('**/Cargo.lock','**/main.yml') }}
       - name: 🧰 Toolchain 🧰
         run: |
           rustup toolchain remove ${{ matrix.rust }}
@@ -136,10 +178,15 @@ jobs:
         uses: actions/cache@v3
         with:
           path: |
-            ~/.cargo/bin/cargo-binstall
-            ~/.cargo/bin/cargo-tarpaulin*
-            ~/.cargo/bin/cargo-*-all-features*
-          key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.toml','**/main.yml') }}
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock','**/main.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock','**/main.yml') }}
+            ${{ runner.os }}-${{ hashFiles('**/Cargo.lock','**/main.yml') }}
       - name: 🧰 Toolchain 🧰
         run: |
           rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
@@ -200,9 +247,15 @@ jobs:
         uses: actions/cache@v3
         with:
           path: |
-            ~/.cargo/bin/cargo-binstall
-            ~/.cargo/bin/cargo-*-all-features*
-          key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.toml','**/main.yml') }}
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock','**/main.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock','**/main.yml') }}
+            ${{ runner.os }}-${{ hashFiles('**/Cargo.lock','**/main.yml') }}
       - name: 🧰 Toolchain 🧰
         run: |
           rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
@@ -267,9 +320,15 @@ jobs:
         uses: actions/cache@v3
         with:
           path: |
-            ~/.cargo/bin/cargo-binstall
-            ~/.cargo/bin/cargo-*-all-features*
-          key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.toml','**/main.yml') }}
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock','**/main.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock','**/main.yml') }}
+            ${{ runner.os }}-${{ hashFiles('**/Cargo.lock','**/main.yml') }}
       - name: 🧰 Toolchain 🧰
         run: |
           rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
