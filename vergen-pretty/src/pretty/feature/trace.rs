@@ -180,8 +180,10 @@ mod test {
     #[test]
     fn default_trace_works() -> Result<()> {
         initialize_tracing();
-        let map = vergen_pretty_env!();
-        PrettyBuilder::default().env(map).build()?.trace();
+        PrettyBuilder::default()
+            .env(vergen_pretty_env!())
+            .build()?
+            .trace();
         Ok(())
     }
 
@@ -276,10 +278,10 @@ mod test {
     #[test]
     #[cfg(feature = "color")]
     fn trace_key_style_works() -> Result<()> {
+        initialize_tracing();
         let red_bold = Style::new().bold().red();
-        let map = vergen_pretty_env!();
         PrettyBuilder::default()
-            .env(map)
+            .env(vergen_pretty_env!())
             .key_style(red_bold)
             .build()?
             .trace();
@@ -289,10 +291,10 @@ mod test {
     #[test]
     #[cfg(feature = "color")]
     fn trace_value_style_works() -> Result<()> {
+        initialize_tracing();
         let red_bold = Style::new().bold().red();
-        let map = vergen_pretty_env!();
         PrettyBuilder::default()
-            .env(map)
+            .env(vergen_pretty_env!())
             .value_style(red_bold)
             .build()?
             .trace();
@@ -301,12 +303,12 @@ mod test {
 
     #[test]
     fn trace_prefix_works() -> Result<()> {
-        let map = vergen_pretty_env!();
+        initialize_tracing();
         let prefix = PrefixBuilder::default()
             .lines(TEST_PREFIX_SUFFIX.lines().map(str::to_string).collect())
             .build()?;
         PrettyBuilder::default()
-            .env(map)
+            .env(vergen_pretty_env!())
             .prefix(prefix)
             .build()?
             .trace();
@@ -316,14 +318,14 @@ mod test {
     #[cfg(feature = "color")]
     #[test]
     fn trace_prefix_with_style_works() -> Result<()> {
-        let map = vergen_pretty_env!();
+        initialize_tracing();
         let red_bold = Style::new().bold().red();
         let prefix = PrefixBuilder::default()
             .lines(TEST_PREFIX_SUFFIX.lines().map(str::to_string).collect())
             .style(red_bold)
             .build()?;
         PrettyBuilder::default()
-            .env(map)
+            .env(vergen_pretty_env!())
             .prefix(prefix)
             .build()?
             .trace();
@@ -332,12 +334,12 @@ mod test {
 
     #[test]
     fn trace_suffix_works() -> Result<()> {
-        let map = vergen_pretty_env!();
+        initialize_tracing();
         let suffix = SuffixBuilder::default()
             .lines(TEST_PREFIX_SUFFIX.lines().map(str::to_string).collect())
             .build()?;
         PrettyBuilder::default()
-            .env(map)
+            .env(vergen_pretty_env!())
             .suffix(suffix)
             .build()?
             .trace();
@@ -347,15 +349,26 @@ mod test {
     #[cfg(feature = "color")]
     #[test]
     fn trace_suffix_with_style_works() -> Result<()> {
-        let map = vergen_pretty_env!();
+        initialize_tracing();
         let red_bold = Style::new().bold().red();
         let suffix = SuffixBuilder::default()
             .lines(TEST_PREFIX_SUFFIX.lines().map(str::to_string).collect())
             .style(red_bold)
             .build()?;
         PrettyBuilder::default()
-            .env(map)
+            .env(vergen_pretty_env!())
             .suffix(suffix)
+            .build()?
+            .trace();
+        Ok(())
+    }
+
+    #[test]
+    fn trace_with_filter_works() -> Result<()> {
+        initialize_tracing();
+        PrettyBuilder::default()
+            .env(vergen_pretty_env!())
+            .filter(vec!["VERGEN_GIT_BRANCH", "VERGEN_SYSINFO_USER"])
             .build()?
             .trace();
         Ok(())

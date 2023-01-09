@@ -126,6 +126,9 @@ pub struct Pretty {
     prefix: Option<Prefix>,
     /// The `vergen` env variables.  Should be set with [`vergen_pretty_env!`](crate::vergen_pretty_env) macro.
     env: BTreeMap<&'static str, Option<&'static str>>,
+    /// A set of `vergen` env variable names that should be filtered regardless if they are set or not.
+    #[builder(setter(strip_option), default)]
+    filter: Option<Vec<&'static str>>,
     #[builder(setter(skip), default)]
     vars: Vec<(String, String, String)>,
     /// The [`Style`] to apply to the keys in the output
@@ -181,10 +184,19 @@ impl Pretty {
     }
 
     fn populate_fmt(&mut self) {
+        let filter_fn = |tuple: &(&'static str, &'static str)| -> bool {
+            let (key, _) = tuple;
+            if let Some(filter) = &self.filter {
+                !filter.contains(key)
+            } else {
+                true
+            }
+        };
         let vm_iter: Vec<(String, String, String)> = self
             .env
             .iter()
             .filter_map(has_value)
+            .filter(filter_fn)
             .filter_map(split_key)
             .filter_map(split_kv)
             .collect();
