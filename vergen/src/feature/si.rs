@@ -11,11 +11,10 @@ use crate::{
     key::VergenKey,
     utils::fns::{add_default_map_entry, add_map_entry},
 };
-#[cfg(not(target_os = "macos"))]
 use anyhow::{anyhow, Result};
-use sysinfo::{get_current_pid, CpuExt, ProcessExt, System, SystemExt, UserExt};
-#[cfg(not(target_os = "macos"))]
-use sysinfo::{Pid, Process, User};
+use sysinfo::{
+    get_current_pid, CpuExt, Pid, Process, ProcessExt, System, SystemExt, User, UserExt,
+};
 
 #[derive(Clone, Copy, Debug, Default)]
 #[allow(clippy::struct_excessive_bools)]
