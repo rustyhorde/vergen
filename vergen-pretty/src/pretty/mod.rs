@@ -153,6 +153,10 @@ pub struct Pretty {
     #[cfg(feature = "trace")]
     #[builder(default = "Level::INFO")]
     level: Level,
+    /// Flatten the serde output if no prefix/suffix are defined. Default: false
+    #[cfg(feature = "serde")]
+    #[builder(default = "false")]
+    flatten: bool,
 }
 
 impl Pretty {

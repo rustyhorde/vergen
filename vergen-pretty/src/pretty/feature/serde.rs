@@ -32,15 +32,19 @@ impl Serialize for Pretty {
             field_count += 1;
         }
 
-        let mut state = serializer.serialize_struct("Pretty", field_count)?;
-        if let Some(prefix) = pretty_c.prefix {
-            state.serialize_field("prefix", &prefix)?;
+        if field_count == 1 && self.flatten {
+            serializer.serialize_newtype_struct("VarsTuple", &VarsTuple(pretty_c.vars))
+        } else {
+            let mut state = serializer.serialize_struct("Pretty", field_count)?;
+            if let Some(prefix) = pretty_c.prefix {
+                state.serialize_field("prefix", &prefix)?;
+            }
+            state.serialize_field("vars", &VarsTuple(pretty_c.vars))?;
+            if let Some(suffix) = pretty_c.suffix {
+                state.serialize_field("suffix", &suffix)?;
+            }
+            state.end()
         }
-        state.serialize_field("vars", &VarsTuple(pretty_c.vars))?;
-        if let Some(suffix) = pretty_c.suffix {
-            state.serialize_field("suffix", &suffix)?;
-        }
-        state.end()
     }
 }
 
