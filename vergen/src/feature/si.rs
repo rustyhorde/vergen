@@ -11,11 +11,10 @@ use crate::{
     key::VergenKey,
     utils::fns::{add_default_map_entry, add_map_entry},
 };
-#[cfg(not(target_os = "macos"))]
 use anyhow::{anyhow, Result};
-use sysinfo::{CpuExt, System, SystemExt};
-#[cfg(not(target_os = "macos"))]
-use sysinfo::{Pid, Process, User};
+use sysinfo::{
+    get_current_pid, CpuExt, Pid, Process, ProcessExt, System, SystemExt, User, UserExt,
+};
 
 #[derive(Clone, Copy, Debug, Default)]
 #[allow(clippy::struct_excessive_bools)]
@@ -303,16 +302,7 @@ impl EmitBuilder {
         }
     }
 
-    #[cfg(target_os = "macos")]
-    #[allow(clippy::unused_self)]
-    fn get_user(&self, _system: &System) -> Option<String> {
-        None
-    }
-
-    #[cfg(not(target_os = "macos"))]
     fn get_user(&self, system: &System) -> Option<String> {
-        use sysinfo::UserExt;
-
         if let Ok(pid) = self.get_pid() {
             if let Some(process) = system.process(pid) {
                 for user in system.users() {
@@ -324,18 +314,15 @@ impl EmitBuilder {
         }
         None
     }
-    #[cfg(all(not(test), not(target_os = "macos")))]
+
+    #[cfg(not(test))]
     #[allow(clippy::unused_self)]
     fn get_pid(&self) -> Result<Pid> {
-        use sysinfo::get_current_pid;
-
         get_current_pid().map_err(|e| anyhow!(format!("{e}")))
     }
 
-    #[cfg(all(test, not(target_os = "macos")))]
+    #[cfg(test)]
     fn get_pid(&self) -> Result<Pid> {
-        use sysinfo::get_current_pid;
-
         if self.sysinfo_config.fail_pid {
             Err(anyhow!("unable to determine pid"))
         } else {
@@ -360,31 +347,23 @@ fn add_sysinfo_map_entry(
     }
 }
 
-#[cfg(not(target_os = "macos"))]
 fn setup_system() -> System {
     let mut system = System::new_all();
     system.refresh_all();
+    system.refresh_users_list();
     system
 }
 
-#[cfg(target_os = "macos")]
-fn setup_system() -> System {
-    let mut system = System::new();
-    system.refresh_memory();
-    system.refresh_cpu();
-    system
-}
+// #[cfg(target_os = "macos")]
+// fn setup_system() -> System {
+//     let mut system = System::new();
+//     system.refresh_memory();
+//     system.refresh_cpu();
+//     system
+// }
 
-#[cfg(all(not(target_os = "windows"), not(target_os = "macos")))]
 fn check_user(process: &Process, user: &User) -> bool {
-    use sysinfo::{ProcessExt, UserExt};
-
     Some(user.id()) == process.user_id()
-}
-
-#[cfg(target_os = "windows")]
-fn check_user(_process: &Process, _user: &User) -> bool {
-    false
 }
 
 fn suffix(mut curr_memory: u64) -> String {
@@ -417,9 +396,6 @@ mod test {
     use anyhow::Result;
     use std::collections::BTreeMap;
 
-    #[cfg(any(target_os = "macos", target_os = "windows"))]
-    const IDEM_COUNT: usize = 1;
-    #[cfg(not(any(target_os = "macos", target_os = "windows")))]
     const IDEM_COUNT: usize = 0;
     const SYSINFO_COUNT: usize = 9;
 
