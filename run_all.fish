@@ -12,6 +12,10 @@ cargo test -p vergen -F build,cargo,git,gix,rustc,si; and \
 cargo test -p vergen-pretty -F __vergen_test; and \
 cargo test -p vergen-pretty -F __vergen_test,color; and \
 cargo test -p vergen-pretty -F __vergen_test,trace; and \
+cargo test -p vergen-pretty -F __vergen_test,serde; and \
+cargo test -p vergen-pretty -F __vergen_test,color,serde; and \
 cargo test -p vergen-pretty -F __vergen_test,color,trace; and \
+cargo test -p vergen-pretty -F __vergen_test,serde,trace; and \
+cargo test -p vergen-pretty -F __vergen_test,color,serde,trace; and \
 cargo doc -p vergen -F build,cargo,git,gitcl,rustc,si; and \
 cargo doc -p vergen-pretty -F color,trace

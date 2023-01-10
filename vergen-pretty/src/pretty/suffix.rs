@@ -10,22 +10,27 @@ use anyhow::Result;
 #[cfg(feature = "color")]
 use console::Style;
 use derive_builder::Builder;
+#[cfg(feature = "serde")]
+use serde::Serialize;
 use std::io::Write;
 #[cfg(feature = "trace")]
 use tracing::Level;
 
 /// Configure suffix output for [`PrettyBuilder`](crate::PrettyBuilder)
 #[derive(Builder, Clone, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize))]
 pub struct Suffix {
     /// The suffix lines to output
     pub(crate) lines: Vec<String>,
     /// The [`Style`] to apply to the output lines
     #[cfg(feature = "color")]
     #[builder(setter(strip_option), default)]
+    #[cfg_attr(feature = "serde", serde(skip))]
     pub(crate) style: Option<Style>,
     /// The tracing [`Level`] to output the prefix at
     #[cfg(feature = "trace")]
     #[builder(default = "Level::INFO")]
+    #[cfg_attr(feature = "serde", serde(skip))]
     pub(crate) level: Level,
 }
 

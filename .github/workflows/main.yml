@@ -21,6 +21,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
       - name: ☢️ Rustfmt Check ☢️
         run: cargo fmt --all -- --check
   lints-linux:
@@ -40,6 +49,17 @@ jobs:
             rust: nightly
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
       - name: 🧰 Toolchain 🧰
         run: |
           rustup toolchain remove ${{ matrix.rust }}
@@ -71,6 +91,16 @@ jobs:
             rust: nightly
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+          key: ${{ runner.os }}-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
       - name: 🧰 Toolchain 🧰
         run: |
           rustup toolchain remove ${{ matrix.rust }}
@@ -90,7 +120,7 @@ jobs:
       matrix:
         include:
           - os: windows-latest
-            rust: "1.62.0"
+            rust: "1.64.0"
           - os: windows-latest
             rust: stable
           - os: windows-latest
@@ -99,6 +129,16 @@ jobs:
             rust: nightly
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+          key: ${{ runner.os }}-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
       - name: 🧰 Toolchain 🧰
         run: |
           rustup toolchain remove ${{ matrix.rust }}
@@ -136,10 +176,15 @@ jobs:
         uses: actions/cache@v3
         with:
           path: |
-            ~/.cargo/bin/cargo-binstall
-            ~/.cargo/bin/cargo-tarpaulin*
-            ~/.cargo/bin/cargo-*-all-features*
-          key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.toml','**/main.yml') }}
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
+            ${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
       - name: 🧰 Toolchain 🧰
         run: |
           rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
@@ -161,11 +206,15 @@ jobs:
           cargo test -p vergen-pretty -F __vergen_test
           cargo test -p vergen-pretty -F __vergen_test,color
           cargo test -p vergen-pretty -F __vergen_test,trace
+          cargo test -p vergen-pretty -F __vergen_test,serde
+          cargo test -p vergen-pretty -F __vergen_test,color,serde
           cargo test -p vergen-pretty -F __vergen_test,color,trace
+          cargo test -p vergen-pretty -F __vergen_test,trace,serde
+          cargo test -p vergen-pretty -F __vergen_test,color,serde,trace
       - name: 🙊 Code Coverage (vergen) 🙊
-        run: cargo tarpaulin --config vergen/tarpaulin.toml --exclude-files vergen/src/lib.rs --exclude-files vergen-pretty/* --out Xml --output-dir vergen
+        run: cargo tarpaulin --config vergen/tarpaulin.toml --exclude-files vergen/src/lib.rs --exclude-files vergen-pretty/* --out Xml --output-dir vergen --skip-clean --target-dir target/coverage
       - name: 🙊 Code Coverage (vergen-pretty) 🙊
-        run: cargo tarpaulin --config vergen-pretty/tarpaulin.toml --exclude-files vergen-pretty/src/lib.rs --exclude-files vergen/* --out Xml --output-dir vergen-pretty
+        run: cargo tarpaulin --config vergen-pretty/tarpaulin.toml --exclude-files vergen-pretty/src/lib.rs --exclude-files vergen/* --out Xml --output-dir vergen-pretty --skip-clean --target-dir target/coverage
       - name: 🙊 Upload Code Coverage 🙊
         uses: codecov/codecov-action@v3
         with:
@@ -196,9 +245,14 @@ jobs:
         uses: actions/cache@v3
         with:
           path: |
-            ~/.cargo/bin/cargo-binstall
-            ~/.cargo/bin/cargo-*-all-features*
-          key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.toml','**/main.yml') }}
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+          key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
+            ${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
       - name: 🧰 Toolchain 🧰
         run: |
           rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
@@ -220,7 +274,11 @@ jobs:
           cargo test -p vergen-pretty -F __vergen_test
           cargo test -p vergen-pretty -F __vergen_test,color
           cargo test -p vergen-pretty -F __vergen_test,trace
+          cargo test -p vergen-pretty -F __vergen_test,serde
+          cargo test -p vergen-pretty -F __vergen_test,color,serde
           cargo test -p vergen-pretty -F __vergen_test,color,trace
+          cargo test -p vergen-pretty -F __vergen_test,trace,serde
+          cargo test -p vergen-pretty -F __vergen_test,color,serde,trace
   test-windows:
     name: 🧪 Windows 🧪
     needs: lints-windows
@@ -229,7 +287,7 @@ jobs:
       matrix:
         include:
           - os: windows-latest
-            rust: "1.62.0"
+            rust: "1.64.0"
             target: x86_64-pc-windows-msvc
           - os: windows-latest
             rust: stable
@@ -241,7 +299,7 @@ jobs:
             rust: nightly
             target: x86_64-pc-windows-msvc
           - os: windows-latest
-            rust: "1.62.0"
+            rust: "1.64.0"
             target: x86_64-pc-windows-gnu
           - os: windows-latest
             rust: stable
@@ -259,9 +317,14 @@ jobs:
         uses: actions/cache@v3
         with:
           path: |
-            ~/.cargo/bin/cargo-binstall
-            ~/.cargo/bin/cargo-*-all-features*
-          key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.toml','**/main.yml') }}
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+          key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
+            ${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
       - name: 🧰 Toolchain 🧰
         run: |
           rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
@@ -283,4 +346,8 @@ jobs:
           cargo test -p vergen-pretty -F __vergen_test
           cargo test -p vergen-pretty -F __vergen_test,color
           cargo test -p vergen-pretty -F __vergen_test,trace
+          cargo test -p vergen-pretty -F __vergen_test,serde
+          cargo test -p vergen-pretty -F __vergen_test,color,serde
           cargo test -p vergen-pretty -F __vergen_test,color,trace
+          cargo test -p vergen-pretty -F __vergen_test,trace,serde
+          cargo test -p vergen-pretty -F __vergen_test,color,serde,trace

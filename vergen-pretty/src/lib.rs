@@ -263,9 +263,12 @@ pub use pretty::suffix::Suffix;
 pub use pretty::suffix::SuffixBuilder;
 pub use pretty::Pretty;
 pub use pretty::PrettyBuilder;
+pub use pretty::PrettyBuilderError;
 #[cfg(feature = "trace")]
 pub use tracing::Level;
 
+#[cfg(all(test, not(feature = "serde")))]
+use serde_json as _;
 #[cfg(all(test, not(feature = "trace")))]
 use tracing_subscriber as _;
 

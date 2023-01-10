@@ -10,13 +10,14 @@ license = "MIT OR Apache-2.0"
 name = "vergen-pretty"
 readme = "README.md"
 repository = "https://github.com/rustyhorde/vergen"
-version = "0.1.0"
+version = "0.1.1"
 
 [package.metadata.cargo-all-features]
-denylist = ["console", "lazy_static", "tracing", "vergen"]
+denylist = ["console", "lazy_static", "serde", "tracing", "unstable", "vergen"]
 
 [features]
 default = []
+unstable = []
 color = ["console", "lazy_static"]
 trace = ["tracing"]
 __vergen_test = ["vergen"]
@@ -27,6 +28,7 @@ console = { version = "0.15.4", optional = true }
 convert_case = "0.6.0"
 derive_builder = "0.12.0"
 lazy_static = { version = "1.4.0", optional = true }
+serde = { version = "1.0.152", features = ["derive"], optional = true }
 tracing = { version = "0.1.37", features = [
     "max_level_trace",
     "release_max_level_trace",
@@ -45,8 +47,9 @@ vergen = { version = "8.0.0-beta.0", path = "../vergen", features = [
 ], optional = true }
 
 [dev-dependencies]
+serde_json = "1.0.91"
 tracing-subscriber = { version = "0.3.16", features = ["fmt"] }
 
 [package.metadata.docs.rs]
-features = ["color", "trace"]
+features = ["color", "serde", "trace"]
 rustdoc-args = ["--cfg", "docsrs"]

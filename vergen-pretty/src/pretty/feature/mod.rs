@@ -8,5 +8,7 @@
 
 #[cfg(feature = "color")]
 pub(crate) mod color;
+#[cfg(feature = "serde")]
+pub(crate) mod serde;
 #[cfg(feature = "trace")]
 pub(crate) mod trace;

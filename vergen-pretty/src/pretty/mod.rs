@@ -126,6 +126,12 @@ pub struct Pretty {
     prefix: Option<Prefix>,
     /// The `vergen` env variables.  Should be set with [`vergen_pretty_env!`](crate::vergen_pretty_env) macro.
     env: BTreeMap<&'static str, Option<&'static str>>,
+    /// A set of `vergen` env variable names that should be filtered regardless if they are set or not.
+    #[builder(setter(strip_option), default)]
+    filter: Option<Vec<&'static str>>,
+    /// Include category output.  Default: true
+    #[builder(default = "true")]
+    category: bool,
     #[builder(setter(skip), default)]
     vars: Vec<(String, String, String)>,
     /// The [`Style`] to apply to the keys in the output
@@ -147,6 +153,10 @@ pub struct Pretty {
     #[cfg(feature = "trace")]
     #[builder(default = "Level::INFO")]
     level: Level,
+    /// Flatten the serde output if no prefix/suffix are defined. Default: false
+    #[cfg(feature = "serde")]
+    #[builder(default = "false")]
+    flatten: bool,
 }
 
 impl Pretty {
@@ -169,7 +179,11 @@ impl Pretty {
         for (category, label, value) in &self.vars {
             let max_label = self.max_label;
             let max_category = self.max_category;
-            let key = format!("{label:>max_label$} ({category:>max_category$})");
+            let key = if self.category {
+                format!("{label:>max_label$} ({category:>max_category$})")
+            } else {
+                format!("{label:>max_label$}")
+            };
             self.inner_display(writer, &key, value)?;
         }
 
@@ -181,10 +195,19 @@ impl Pretty {
     }
 
     fn populate_fmt(&mut self) {
+        let filter_fn = |tuple: &(&'static str, &'static str)| -> bool {
+            let (key, _) = tuple;
+            if let Some(filter) = &self.filter {
+                !filter.contains(key)
+            } else {
+                true
+            }
+        };
         let vm_iter: Vec<(String, String, String)> = self
             .env
             .iter()
             .filter_map(has_value)
+            .filter(filter_fn)
             .filter_map(split_key)
             .filter_map(split_kv)
             .collect();
@@ -224,6 +247,21 @@ mod tests {
         let map = vergen_pretty_env!();
         let empty = is_empty(&map);
         let fmt = PrettyBuilder::default().env(map).build()?;
+        fmt.display(&mut stdout)?;
+        if empty {
+            assert!(stdout.is_empty());
+        } else {
+            assert!(!stdout.is_empty());
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn no_category_works() -> Result<()> {
+        let mut stdout = vec![];
+        let map = vergen_pretty_env!();
+        let empty = is_empty(&map);
+        let fmt = PrettyBuilder::default().env(map).category(false).build()?;
         fmt.display(&mut stdout)?;
         if empty {
             assert!(stdout.is_empty());
