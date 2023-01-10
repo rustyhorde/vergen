@@ -51,5 +51,5 @@ serde_json = "1.0.91"
 tracing-subscriber = { version = "0.3.16", features = ["fmt"] }
 
 [package.metadata.docs.rs]
-features = ["color", "trace"]
+features = ["color", "serde", "trace"]
 rustdoc-args = ["--cfg", "docsrs"]
