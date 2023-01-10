@@ -111,4 +111,17 @@ mod test {
         assert!(val.contains(SUFFIX));
         Ok(())
     }
+
+    #[test]
+    fn pretty_with_flatten_serialize_works() -> Result<()> {
+        let pretty = PrettyBuilder::default()
+            .env(vergen_pretty_env!())
+            .flatten(true)
+            .build()?;
+        let val = serde_json::to_string(&pretty)?;
+        assert!(!val.contains(VARS));
+        assert!(!val.contains(PREFIX));
+        assert!(!val.contains(SUFFIX));
+        Ok(())
+    }
 }
