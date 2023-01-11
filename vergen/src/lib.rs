@@ -66,7 +66,7 @@
 //!
 //! 1. Use the [`env!`](std::env!) macro in your code to read the environment variables.
 //!
-//! ```
+//! ```compile_fail
 //! println!("Build Timestamp: {}", env!("VERGEN_BUILD_TIMESTAMP"));
 //! println!("git describe: {}", env!("VERGEN_GIT_DESCRIBE"));
 //! ```

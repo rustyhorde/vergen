@@ -1,8 +1,5 @@
 pub fn main() {
     println!("cargo:rerun-if-changed=build.rs");
-    // These are set for some documentation tests
-    println!("cargo:rustc-env=VERGEN_BUILD_TIMESTAMP=2022-12-28T21:56:23.764785796Z");
-    println!("cargo:rustc-env=VERGEN_GIT_DESCRIBE=7.4.4-16-g2f35555");
     nightly();
     beta();
     stable();
