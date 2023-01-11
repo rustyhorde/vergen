@@ -1,7 +1,8 @@
 use crate::{
+    constants::{BUILD_DATE_NAME, BUILD_TIMESTAMP_NAME},
     emitter::{EmitBuilder, RustcEnvMap},
     key::VergenKey,
-    utils::fns::{add_default_map_entry, add_map_entry}, constants::{BUILD_TIMESTAMP_NAME, BUILD_DATE_NAME},
+    utils::fns::{add_default_map_entry, add_map_entry},
 };
 use anyhow::{Error, Result};
 use std::{env, str::FromStr};
