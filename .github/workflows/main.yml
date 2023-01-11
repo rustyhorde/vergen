@@ -19,7 +19,7 @@ name: CI
 
 jobs:
   rustfmt:
-    name: ☢️ Formatting ☢️
+    name: 📌 Formatting 📌
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -32,7 +32,7 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: ${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
-      - name: ☢️ Rustfmt Check ☢️
+      - name: ⭕ Rustfmt Check ⭕
         run: cargo fmt --all -- --check
   lints-linux:
     name: 🕳️ Lints Linux 🕳️
@@ -50,8 +50,10 @@ jobs:
           - os: ubuntu-latest
             rust: nightly
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/cache@v3
+      - name: ✅ Checkout ✅
+        uses: actions/checkout@v3
+      - name: 💵 Cache 💵
+        uses: actions/cache@v3
         with:
           path: |
             ~/.cargo/bin/
@@ -70,7 +72,7 @@ jobs:
           rm -f ~/.cargo/bin/cargo-clippy
           rustup toolchain install ${{ matrix.rust }} --profile default
           rustup default ${{ matrix.rust }}
-      - name: ✂ Clippy ✂
+      - name: 📎 Clippy 📎
         run: |
           cargo clippy -p vergen --all-targets --features build,cargo,git,gitcl,rustc,si -- -Dwarnings
           cargo clippy -p vergen --all-targets --features build,cargo,git,git2,rustc,si -- -Dwarnings
@@ -92,8 +94,10 @@ jobs:
           - os: macos-latest
             rust: nightly
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/cache@v3
+      - name: ✅ Checkout ✅
+        uses: actions/checkout@v3
+      - name: 💵 Cache 💵
+        uses: actions/cache@v3
         with:
           path: |
             ~/.cargo/bin/
@@ -108,7 +112,7 @@ jobs:
           rustup toolchain remove ${{ matrix.rust }}
           rustup toolchain install ${{ matrix.rust }} --profile default
           rustup default ${{ matrix.rust }}
-      - name: ✂ Clippy ✂
+      - name: 📎 Clippy 📎
         run: |
           cargo clippy -p vergen --all-targets --features build,cargo,git,gitcl,rustc,si -- -Dwarnings
           cargo clippy -p vergen --all-targets --features build,cargo,git,git2,rustc,si -- -Dwarnings
@@ -130,8 +134,10 @@ jobs:
           - os: windows-latest
             rust: nightly
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/cache@v3
+      - name: ✅ Checkout ✅
+        uses: actions/checkout@v3
+      - name: 💵 Cache 💵
+        uses: actions/cache@v3
         with:
           path: |
             ~/.cargo/bin/
@@ -146,7 +152,7 @@ jobs:
           rustup toolchain remove ${{ matrix.rust }}
           rustup toolchain install ${{ matrix.rust }} --profile default
           rustup default ${{ matrix.rust }}
-      - name: ✂ Clippy ✂
+      - name: 📎 Clippy 📎
         run: |
           cargo clippy -p vergen --all-targets --features build,cargo,git,gitcl,rustc,si -- -Dwarnings
           cargo clippy -p vergen --all-targets --features build,cargo,git,git2,rustc,si -- -Dwarnings
@@ -172,7 +178,7 @@ jobs:
             rust: nightly
             target: x86_64-unknown-linux-gnu
     steps:
-      - name: ✔️ Checkout ✔️
+      - name: ✅ Checkout ✅
         uses: actions/checkout@v3
       - name: 💵 Cache 💵
         uses: actions/cache@v3
@@ -198,7 +204,7 @@ jobs:
           cargo binstall -V || cargo install cargo-binstall
           rustup override remove
       - name: 💾 Install (tarpaulin, all-features) 💾
-        run: cargo binstall --no-confirm --no-symlinks --force cargo-tarpaulin cargo-all-features
+        run: cargo binstall --no-confirm --no-symlinks cargo-tarpaulin cargo-all-features
       - name: 🧪 Test 🧪
         run: |
           cargo test-all-features
@@ -241,7 +247,7 @@ jobs:
             rust: nightly
             target: x86_64-apple-darwin
     steps:
-      - name: ✔️ Checkout ✔️
+      - name: ✅ Checkout ✅
         uses: actions/checkout@v3
       - name: 💵 Cache 💵
         uses: actions/cache@v3
@@ -266,7 +272,7 @@ jobs:
           cargo binstall -V || cargo install cargo-binstall
           rustup override remove
       - name: 💾 Install (all-features) 💾
-        run: cargo binstall --no-confirm --no-symlinks --force cargo-all-features
+        run: cargo binstall --no-confirm --no-symlinks cargo-all-features
       - name: 🧪 Test 🧪
         run: |
           cargo test-all-features
@@ -313,7 +319,7 @@ jobs:
             rust: nightly
             target: x86_64-pc-windows-gnu
     steps:
-      - name: ✔️ Checkout ✔️
+      - name: ✅ Checkout ✅
         uses: actions/checkout@v3
       - name: 💵 Cache 💵
         uses: actions/cache@v3
@@ -338,7 +344,7 @@ jobs:
           cargo binstall -V || cargo install cargo-binstall
           rustup override remove
       - name: 💾 Install (all-features) 💾
-        run: cargo binstall --no-confirm --no-symlinks --force cargo-all-features
+        run: cargo binstall --no-confirm --no-symlinks cargo-all-features
       - name: 🧪 Test 🧪
         run: |
           cargo test-all-features
