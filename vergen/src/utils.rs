@@ -66,7 +66,7 @@ pub(crate) mod fns {
 ))]
 pub(crate) mod repo {
     use anyhow::Result;
-    use git::{open, refs::transaction::PreviousValue};
+    use git::{create::Options, open, refs::transaction::PreviousValue};
     use git_repository as git;
     use std::{
         env,
@@ -195,7 +195,7 @@ pub(crate) mod repo {
                         url,
                         &clone_path,
                         git::create::Kind::WithWorktree,
-                        Default::default(),
+                        Options::default(),
                         opts,
                     )?;
                     let (mut prepare_checkout, _) = prep.fetch_then_checkout(
