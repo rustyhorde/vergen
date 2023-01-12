@@ -101,8 +101,8 @@ pub(crate) mod repo {
 
                     // Setup the base configuration
                     let mut config = repo.config_snapshot_mut();
-                    let _old = config.set_raw_value("author", None, "name", "Vergen Test")?;
-                    let _old = config.set_raw_value("author", None, "email", "vergen@blah.com")?;
+                    let _old = config.set_raw_value("user", None, "name", "Vergen Test")?;
+                    let _old = config.set_raw_value("user", None, "email", "vergen@blah.com")?;
                     {
                         // Create an empty commit with the initial empty tree
                         let committer = config.commit_auto_rollback()?;
