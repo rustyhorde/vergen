@@ -1,4 +1,3 @@
-name: "Audit Dependencies"
 on:
   push:
     paths:
@@ -15,10 +14,13 @@ on:
   # Run manually
   workflow_dispatch:
 
+name: 💣 Audit 💣
+
 permissions: read-all
 
 jobs:
   audit:
+    name: 💣 Audit 💣
     runs-on: ubuntu-latest
     permissions:
       issues: write

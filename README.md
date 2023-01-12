@@ -34,7 +34,7 @@ Special thanks to the sponsors of this project
 If you wish to refer to version 7 you can find that branch [`here`](https://github.com/rustyhorde/vergen/tree/legacy/v7)
 
 ## MSRV
-The current minimum supported rust version is 1.62.0 for non-Windows platforms
+The current minimum supported rust version is 1.64.0 for non-Windows platforms
 The current minimum supported rust version is 1.64.0 for Windows platforms
 
 ## Example Usage
