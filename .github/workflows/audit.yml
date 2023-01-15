@@ -1,0 +1,33 @@
+on:
+  # Trigger the workflow on push to master or any pull request
+  # Ignore all tags
+  push:
+    branches:
+      - master
+    tags-ignore: 
+      - "*"
+  pull_request:
+    branches:
+      - "*"
+    tags-ignore: 
+      - "*"
+  schedule:
+    # * is a special character in YAML so you have to quote this string
+    - cron: "23 3 * * *"
+
+name: 💣 Audit 💣
+
+jobs:
+  audit-check:
+    runs-on: ubuntu-latest
+    name: 💣 Audit 💣
+    steps:
+      - name: ✅ Checkout ✅
+        uses: actions/checkout@v3
+      - name: 💣 Audit 💣
+        id: audit
+        uses: rustyhorde/audit-check@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          deny: 'warnings'
+          create_issue: 'true'
