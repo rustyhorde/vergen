@@ -40,7 +40,7 @@ The current minimum supported rust version is 1.64.0 for Windows platforms
 ## Example Usage
 See the documentation at [docs.rs](https://docs.rs/vergen/8.0.0-beta.0/vergen/index.html#usage) for example usage
 
-## Notes about the optional `git2 0.15` dependency
+## Notes about the optional `git2` dependency
 This update to git2 picked up some [security related features](https://github.blog/2022-04-12-git-security-vulnerability-announced/).  In docker environments especially, this requires a `safe.directory` configuration.   There are a couple methods for achieving this.
 1.  If you control the build, you can add `git config --global --add safe.directory /workspace` to the build file.
 2.  If you do not control the docker build, you can add `git config --global --add safe.directory /workspace &&` before the actual command you are running when using docker run.
