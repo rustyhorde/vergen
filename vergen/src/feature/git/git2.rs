@@ -7,6 +7,11 @@
 // modified, or distributed except according to those terms.
 
 use crate::{
+    constants::{
+        GIT_BRANCH_NAME, GIT_COMMIT_AUTHOR_EMAIL, GIT_COMMIT_AUTHOR_NAME, GIT_COMMIT_COUNT,
+        GIT_COMMIT_DATE_NAME, GIT_COMMIT_MESSAGE, GIT_COMMIT_TIMESTAMP_NAME, GIT_DESCRIBE_NAME,
+        GIT_SHA_NAME,
+    },
     emitter::{EmitBuilder, RustcEnvMap},
     key::VergenKey,
     utils::fns::{add_default_map_entry, add_map_entry},
@@ -78,6 +83,22 @@ pub(crate) struct Config {
 /// #   Ok(())
 /// # }
 /// ```
+///
+/// Override output with your own value
+///
+/// ```
+/// # use anyhow::Result;
+/// # use std::env;
+/// # use vergen::EmitBuilder;
+/// #
+/// # fn main() -> Result<()> {
+/// env::set_var("VERGEN_GIT_BRANCH", "this is the branch I want output");
+/// EmitBuilder::builder().all_git().emit()?;
+/// # env::remove_var("VERGEN_GIT_BRANCH");
+/// #   Ok(())
+/// # }
+/// ```
+///
 #[cfg_attr(docsrs, doc(cfg(feature = "git")))]
 impl EmitBuilder {
     /// Emit all of the `VERGEN_GIT_*` instructions
@@ -312,63 +333,89 @@ impl EmitBuilder {
         }
 
         if self.git_config.git_branch {
-            add_branch_name(false, &repo, map, warnings)?;
+            if let Ok(value) = env::var(GIT_BRANCH_NAME) {
+                add_map_entry(VergenKey::GitBranch, value, map);
+            } else {
+                add_branch_name(false, &repo, map, warnings)?;
+            }
         }
 
         if self.git_config.git_commit_author_email {
-            add_opt_value(
-                commit.author().email(),
-                VergenKey::GitCommitAuthorEmail,
-                map,
-                warnings,
-            );
+            if let Ok(value) = env::var(GIT_COMMIT_AUTHOR_EMAIL) {
+                add_map_entry(VergenKey::GitCommitAuthorEmail, value, map);
+            } else {
+                add_opt_value(
+                    commit.author().email(),
+                    VergenKey::GitCommitAuthorEmail,
+                    map,
+                    warnings,
+                );
+            }
         }
 
         if self.git_config.git_commit_author_name {
-            add_opt_value(
-                commit.author().name(),
-                VergenKey::GitCommitAuthorName,
-                map,
-                warnings,
-            );
+            if let Ok(value) = env::var(GIT_COMMIT_AUTHOR_NAME) {
+                add_map_entry(VergenKey::GitCommitAuthorName, value, map);
+            } else {
+                add_opt_value(
+                    commit.author().name(),
+                    VergenKey::GitCommitAuthorName,
+                    map,
+                    warnings,
+                );
+            }
         }
 
         if self.git_config.git_commit_count {
-            add_commit_count(false, &repo, map, warnings);
+            if let Ok(value) = env::var(GIT_COMMIT_COUNT) {
+                add_map_entry(VergenKey::GitCommitCount, value, map);
+            } else {
+                add_commit_count(false, &repo, map, warnings);
+            }
         }
 
         self.add_git_timestamp_entries(&commit, idempotent, map, warnings)?;
 
         if self.git_config.git_commit_message {
-            add_opt_value(commit.message(), VergenKey::GitCommitMessage, map, warnings);
-        }
-
-        if self.git_config.git_describe {
-            let mut describe_opts = DescribeOptions::new();
-            let mut format_opts = DescribeFormatOptions::new();
-
-            let _ = describe_opts.show_commit_oid_as_fallback(true);
-
-            if self.git_config.git_describe_dirty {
-                let _ = format_opts.dirty_suffix("-dirty");
+            if let Ok(value) = env::var(GIT_COMMIT_MESSAGE) {
+                add_map_entry(VergenKey::GitCommitMessage, value, map);
+            } else {
+                add_opt_value(commit.message(), VergenKey::GitCommitMessage, map, warnings);
             }
-
-            if self.git_config.git_describe_tags {
-                let _ = describe_opts.describe_tags();
-            }
-
-            let describe = repo
-                .describe(&describe_opts)
-                .map(|x| x.format(Some(&format_opts)).map_err(Error::from))??;
-            add_map_entry(VergenKey::GitDescribe, describe, map);
         }
 
         if self.git_config.git_sha {
-            if self.git_config.git_sha_short {
+            if let Ok(value) = env::var(GIT_SHA_NAME) {
+                add_map_entry(VergenKey::GitSha, value, map);
+            } else if self.git_config.git_sha_short {
                 let obj = repo.revparse_single("HEAD")?;
                 add_opt_value(obj.short_id()?.as_str(), VergenKey::GitSha, map, warnings);
             } else {
                 add_map_entry(VergenKey::GitSha, commit.id().to_string(), map);
+            }
+        }
+
+        if self.git_config.git_describe {
+            if let Ok(value) = env::var(GIT_DESCRIBE_NAME) {
+                add_map_entry(VergenKey::GitDescribe, value, map);
+            } else {
+                let mut describe_opts = DescribeOptions::new();
+                let mut format_opts = DescribeFormatOptions::new();
+
+                let _ = describe_opts.show_commit_oid_as_fallback(true);
+
+                if self.git_config.git_describe_dirty {
+                    let _ = format_opts.dirty_suffix("-dirty");
+                }
+
+                if self.git_config.git_describe_tags {
+                    let _ = describe_opts.describe_tags();
+                }
+
+                let describe = repo
+                    .describe(&describe_opts)
+                    .map(|x| x.format(Some(&format_opts)).map_err(Error::from))??;
+                add_map_entry(VergenKey::GitDescribe, describe, map);
             }
         }
 
@@ -394,8 +441,16 @@ impl EmitBuilder {
             Err(e) => return Err(e.into()),
         };
 
-        self.add_git_date_entry(idempotent, sde, &ts, map, warnings)?;
-        self.add_git_timestamp_entry(idempotent, sde, &ts, map, warnings)?;
+        if let Ok(value) = env::var(GIT_COMMIT_DATE_NAME) {
+            add_map_entry(VergenKey::GitCommitDate, value, map);
+        } else {
+            self.add_git_date_entry(idempotent, sde, &ts, map, warnings)?;
+        }
+        if let Ok(value) = env::var(GIT_COMMIT_TIMESTAMP_NAME) {
+            add_map_entry(VergenKey::GitCommitTimestamp, value, map);
+        } else {
+            self.add_git_timestamp_entry(idempotent, sde, &ts, map, warnings)?;
+        }
         Ok(())
     }
 
@@ -550,7 +605,7 @@ mod test {
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn empty_email_is_default() -> Result<()> {
         let mut map = BTreeMap::new();
         let mut warnings = vec![];
@@ -566,7 +621,7 @@ mod test {
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn bad_revwalk_is_default() -> Result<()> {
         let mut map = BTreeMap::new();
         let mut warnings = vec![];
@@ -579,7 +634,7 @@ mod test {
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn head_not_found_is_default() -> Result<()> {
         create_test_repo();
         clone_test_repo();
@@ -601,7 +656,7 @@ mod test {
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn git_all_idempotent() -> Result<()> {
         let config = EmitBuilder::builder()
             .idempotent()
@@ -620,7 +675,7 @@ mod test {
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn git_all_idempotent_no_warn() -> Result<()> {
         let config = EmitBuilder::builder()
             .idempotent()
@@ -640,7 +695,7 @@ mod test {
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn git_all() -> Result<()> {
         let config = EmitBuilder::builder().all_git().test_emit_at(None)?;
         assert_eq!(9, config.cargo_rustc_env_map.len());
@@ -656,7 +711,7 @@ mod test {
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn git_error_fails() -> Result<()> {
         let mut config = EmitBuilder::builder();
         let _ = config.fail_on_error();
@@ -667,7 +722,7 @@ mod test {
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn git_error_defaults() -> Result<()> {
         let mut config = EmitBuilder::builder();
         let _ = config.all_git();

@@ -66,7 +66,7 @@ pub(crate) mod fns {
 ))]
 pub(crate) mod repo {
     use anyhow::Result;
-    use git::refs::transaction::PreviousValue;
+    use git::{create::Options, open, refs::transaction::PreviousValue};
     use git_repository as git;
     use std::{
         env,
@@ -101,8 +101,8 @@ pub(crate) mod repo {
 
                     // Setup the base configuration
                     let mut config = repo.config_snapshot_mut();
-                    let _old = config.set_raw_value("author", None, "name", "Vergen Test")?;
-                    let _old = config.set_raw_value("author", None, "email", "vergen@blah.com")?;
+                    let _old = config.set_raw_value("user", None, "name", "Vergen Test")?;
+                    let _old = config.set_raw_value("user", None, "email", "vergen@blah.com")?;
                     {
                         // Create an empty commit with the initial empty tree
                         let committer = config.commit_auto_rollback()?;
@@ -189,8 +189,16 @@ pub(crate) mod repo {
                     let _res = git::interrupt::init_handler(|| {})?;
                     let url =
                         git::url::parse(git::path::os_str_into_bstr(bare_repo_path.as_os_str())?)?;
-                    let mut prepare_clone = git::prepare_clone(url, &clone_path)?;
-                    let (mut prepare_checkout, _) = prepare_clone.fetch_then_checkout(
+                    let opts = open::Options::isolated()
+                        .config_overrides(["user.name=Vergen Test", "user.email=vergen@blah.com"]);
+                    let mut prep = git::clone::PrepareFetch::new(
+                        url,
+                        &clone_path,
+                        git::create::Kind::WithWorktree,
+                        Options::default(),
+                        opts,
+                    )?;
+                    let (mut prepare_checkout, _) = prep.fetch_then_checkout(
                         git::progress::Discard,
                         &git::interrupt::IS_INTERRUPTED,
                     )?;

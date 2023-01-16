@@ -7,6 +7,11 @@
 // modified, or distributed except according to those terms.
 
 use crate::{
+    constants::{
+        GIT_BRANCH_NAME, GIT_COMMIT_AUTHOR_EMAIL, GIT_COMMIT_AUTHOR_NAME, GIT_COMMIT_COUNT,
+        GIT_COMMIT_DATE_NAME, GIT_COMMIT_MESSAGE, GIT_COMMIT_TIMESTAMP_NAME, GIT_DESCRIBE_NAME,
+        GIT_SHA_NAME,
+    },
     emitter::{EmitBuilder, RustcEnvMap},
     key::VergenKey,
     utils::fns::{add_default_map_entry, add_map_entry},
@@ -144,6 +149,21 @@ const SHA: &str = sha!();
 /// #
 /// # fn main() -> Result<()> {
 /// EmitBuilder::builder().git_describe(true, false).emit()?;
+/// #   Ok(())
+/// # }
+/// ```
+///
+/// Override output with your own value
+///
+/// ```
+/// # use anyhow::Result;
+/// # use std::env;
+/// # use vergen::EmitBuilder;
+/// #
+/// # fn main() -> Result<()> {
+/// env::set_var("VERGEN_GIT_BRANCH", "this is the branch I want output");
+/// EmitBuilder::builder().all_git().emit()?;
+/// # env::remove_var("VERGEN_GIT_BRANCH");
 /// #   Ok(())
 /// # }
 /// ```
@@ -502,45 +522,73 @@ impl EmitBuilder {
         }
 
         if self.git_config.git_branch {
-            add_git_cmd_entry(BRANCH_CMD, VergenKey::GitBranch, map)?;
+            if let Ok(value) = env::var(GIT_BRANCH_NAME) {
+                add_map_entry(VergenKey::GitBranch, value, map);
+            } else {
+                add_git_cmd_entry(BRANCH_CMD, VergenKey::GitBranch, map)?;
+            }
         }
 
         if self.git_config.git_commit_author_email {
-            add_git_cmd_entry(COMMIT_AUTHOR_EMAIL, VergenKey::GitCommitAuthorEmail, map)?;
+            if let Ok(value) = env::var(GIT_COMMIT_AUTHOR_EMAIL) {
+                add_map_entry(VergenKey::GitCommitAuthorEmail, value, map);
+            } else {
+                add_git_cmd_entry(COMMIT_AUTHOR_EMAIL, VergenKey::GitCommitAuthorEmail, map)?;
+            }
         }
 
         if self.git_config.git_commit_author_name {
-            add_git_cmd_entry(COMMIT_AUTHOR_NAME, VergenKey::GitCommitAuthorName, map)?;
+            if let Ok(value) = env::var(GIT_COMMIT_AUTHOR_NAME) {
+                add_map_entry(VergenKey::GitCommitAuthorName, value, map);
+            } else {
+                add_git_cmd_entry(COMMIT_AUTHOR_NAME, VergenKey::GitCommitAuthorName, map)?;
+            }
         }
 
         if self.git_config.git_commit_count {
-            add_git_cmd_entry(COMMIT_COUNT, VergenKey::GitCommitCount, map)?;
+            if let Ok(value) = env::var(GIT_COMMIT_COUNT) {
+                add_map_entry(VergenKey::GitCommitCount, value, map);
+            } else {
+                add_git_cmd_entry(COMMIT_COUNT, VergenKey::GitCommitCount, map)?;
+            }
         }
 
         self.add_git_timestamp_entries(COMMIT_TIMESTAMP, idempotent, map, warnings)?;
 
         if self.git_config.git_commit_message {
-            add_git_cmd_entry(COMMIT_MESSAGE, VergenKey::GitCommitMessage, map)?;
+            if let Ok(value) = env::var(GIT_COMMIT_MESSAGE) {
+                add_map_entry(VergenKey::GitCommitMessage, value, map);
+            } else {
+                add_git_cmd_entry(COMMIT_MESSAGE, VergenKey::GitCommitMessage, map)?;
+            }
         }
 
         if self.git_config.git_describe {
-            let mut describe_cmd = String::from(DESCRIBE);
-            if self.git_config.git_describe_dirty {
-                describe_cmd.push_str(" --dirty");
+            if let Ok(value) = env::var(GIT_DESCRIBE_NAME) {
+                add_map_entry(VergenKey::GitDescribe, value, map);
+            } else {
+                let mut describe_cmd = String::from(DESCRIBE);
+                if self.git_config.git_describe_dirty {
+                    describe_cmd.push_str(" --dirty");
+                }
+                if self.git_config.git_describe_tags {
+                    describe_cmd.push_str(" --tags");
+                }
+                add_git_cmd_entry(&describe_cmd, VergenKey::GitDescribe, map)?;
             }
-            if self.git_config.git_describe_tags {
-                describe_cmd.push_str(" --tags");
-            }
-            add_git_cmd_entry(&describe_cmd, VergenKey::GitDescribe, map)?;
         }
 
         if self.git_config.git_sha {
-            let mut sha_cmd = String::from(SHA);
-            if self.git_config.git_sha_short {
-                sha_cmd.push_str(" --short");
+            if let Ok(value) = env::var(GIT_SHA_NAME) {
+                add_map_entry(VergenKey::GitSha, value, map);
+            } else {
+                let mut sha_cmd = String::from(SHA);
+                if self.git_config.git_sha_short {
+                    sha_cmd.push_str(" --short");
+                }
+                sha_cmd.push_str(" HEAD");
+                add_git_cmd_entry(&sha_cmd, VergenKey::GitSha, map)?;
             }
-            sha_cmd.push_str(" HEAD");
-            add_git_cmd_entry(&sha_cmd, VergenKey::GitSha, map)?;
         }
         Ok(())
     }
@@ -552,6 +600,18 @@ impl EmitBuilder {
         map: &mut RustcEnvMap,
         warnings: &mut Vec<String>,
     ) -> Result<()> {
+        let mut date_override = false;
+        if let Ok(value) = env::var(GIT_COMMIT_DATE_NAME) {
+            add_map_entry(VergenKey::GitCommitDate, value, map);
+            date_override = true;
+        }
+
+        let mut timestamp_override = false;
+        if let Ok(value) = env::var(GIT_COMMIT_TIMESTAMP_NAME) {
+            add_map_entry(VergenKey::GitCommitTimestamp, value, map);
+            timestamp_override = true;
+        }
+
         let output = run_cmd(cmd)?;
         if output.status.success() {
             let stdout = String::from_utf8_lossy(&output.stdout)
@@ -571,20 +631,20 @@ impl EmitBuilder {
             };
 
             if idempotent && !sde {
-                if self.git_config.git_commit_date {
+                if self.git_config.git_commit_date && !date_override {
                     add_default_map_entry(VergenKey::GitCommitDate, map, warnings);
                 }
 
-                if self.git_config.git_commit_timestamp {
+                if self.git_config.git_commit_timestamp && !timestamp_override {
                     add_default_map_entry(VergenKey::GitCommitTimestamp, map, warnings);
                 }
             } else {
-                if self.git_config.git_commit_date {
+                if self.git_config.git_commit_date && !date_override {
                     let format = format_description::parse("[year]-[month]-[day]")?;
                     add_map_entry(VergenKey::GitCommitDate, ts.format(&format)?, map);
                 }
 
-                if self.git_config.git_commit_timestamp {
+                if self.git_config.git_commit_timestamp && !timestamp_override {
                     add_map_entry(
                         VergenKey::GitCommitTimestamp,
                         ts.format(&Iso8601::DEFAULT)?,
@@ -593,11 +653,11 @@ impl EmitBuilder {
                 }
             }
         } else {
-            if self.git_config.git_commit_date {
+            if self.git_config.git_commit_date && !date_override {
                 add_default_map_entry(VergenKey::GitCommitDate, map, warnings);
             }
 
-            if self.git_config.git_commit_timestamp {
+            if self.git_config.git_commit_timestamp && !timestamp_override {
                 add_default_map_entry(VergenKey::GitCommitTimestamp, map, warnings);
             }
         }
@@ -733,7 +793,7 @@ mod test {
     use std::{collections::BTreeMap, env};
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn bad_command_is_error() -> Result<()> {
         let mut map = BTreeMap::new();
         assert!(
@@ -754,7 +814,7 @@ mod test {
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn invalid_git_is_error() -> Result<()> {
         assert!(check_git("such_a_terrible_cmd -v").is_err());
         Ok(())
@@ -775,7 +835,7 @@ mod test {
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn git_all_idempotent() -> Result<()> {
         let config = EmitBuilder::builder()
             .idempotent()
@@ -788,7 +848,7 @@ mod test {
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn git_all_idempotent_no_warn() -> Result<()> {
         let config = EmitBuilder::builder()
             .idempotent()
@@ -802,7 +862,7 @@ mod test {
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn git_all_at_path() -> Result<()> {
         create_test_repo();
         clone_test_repo();
@@ -816,7 +876,7 @@ mod test {
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn git_all() -> Result<()> {
         let config = EmitBuilder::builder().all_git().test_emit_at(None)?;
         assert_eq!(9, config.cargo_rustc_env_map.len());
@@ -826,7 +886,7 @@ mod test {
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn git_all_dirty_tags_short() -> Result<()> {
         let config = EmitBuilder::builder()
             .all_git()
@@ -840,7 +900,7 @@ mod test {
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn fails_on_bad_git_command() -> Result<()> {
         let mut config = EmitBuilder::builder();
         let _ = config.fail_on_error();
@@ -851,7 +911,7 @@ mod test {
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn defaults_on_bad_git_command() -> Result<()> {
         let mut config = EmitBuilder::builder();
         let _ = config.all_git();
@@ -864,7 +924,7 @@ mod test {
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn bad_timestamp_defaults() -> Result<()> {
         let mut map = BTreeMap::new();
         let mut warnings = vec![];

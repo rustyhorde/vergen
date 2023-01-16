@@ -647,7 +647,7 @@ pub(crate) mod test {
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn default_is_no_emit() -> Result<()> {
         let mut stdout_buf = vec![];
         let _ = EmitBuilder::builder().emit_to(&mut stdout_buf)?;
@@ -656,7 +656,7 @@ pub(crate) mod test {
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn gen_is_ok() -> Result<()> {
         assert!(EmitBuilder::builder().emit().is_ok());
         Ok(())

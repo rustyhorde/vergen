@@ -1,4 +1,5 @@
 use crate::{
+    constants::{BUILD_DATE_NAME, BUILD_TIMESTAMP_NAME},
     emitter::{EmitBuilder, RustcEnvMap},
     key::VergenKey,
     utils::fns::{add_default_map_entry, add_map_entry},
@@ -44,6 +45,21 @@ pub(crate) struct Config {
 /// #
 /// # fn main() -> Result<()> {
 /// EmitBuilder::builder().build_timestamp().emit()?;
+/// #   Ok(())
+/// # }
+/// ```
+///
+/// Override output with your own value
+///
+/// ```
+/// # use anyhow::Result;
+/// # use std::env;
+/// # use vergen::EmitBuilder;
+/// #
+/// # fn main() -> Result<()> {
+/// env::set_var("VERGEN_BUILD_DATE", "this is the date I want output");
+/// EmitBuilder::builder().build_date().emit()?;
+/// # env::remove_var("VERGEN_BUILD_DATE");
 /// #   Ok(())
 /// # }
 /// ```
@@ -192,7 +208,9 @@ impl EmitBuilder {
         warnings: &mut Vec<String>,
     ) -> Result<()> {
         if self.build_config.build_date {
-            if idempotent && !source_date_epoch {
+            if let Ok(value) = env::var(BUILD_DATE_NAME) {
+                add_map_entry(VergenKey::BuildDate, value, map);
+            } else if idempotent && !source_date_epoch {
                 add_default_map_entry(VergenKey::BuildDate, map, warnings);
             } else {
                 let format = format_description::parse("[year]-[month]-[day]")?;
@@ -211,7 +229,9 @@ impl EmitBuilder {
         warnings: &mut Vec<String>,
     ) -> Result<()> {
         if self.build_config.build_timestamp {
-            if idempotent && !source_date_epoch {
+            if let Ok(value) = env::var(BUILD_TIMESTAMP_NAME) {
+                add_map_entry(VergenKey::BuildTimestamp, value, map);
+            } else if idempotent && !source_date_epoch {
                 add_default_map_entry(VergenKey::BuildTimestamp, map, warnings);
             } else {
                 add_map_entry(
@@ -232,12 +252,13 @@ mod test {
     use std::env;
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn build_all_idempotent() -> Result<()> {
         let config = EmitBuilder::builder()
             .idempotent()
             .all_build()
             .test_emit()?;
+        println!("{:?}", config.cargo_rustc_env_map);
         assert_eq!(2, config.cargo_rustc_env_map.len());
         assert_eq!(2, count_idempotent(&config.cargo_rustc_env_map));
         assert_eq!(2, config.warnings.len());
@@ -245,7 +266,7 @@ mod test {
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn build_all() -> Result<()> {
         let config = EmitBuilder::builder().all_build().test_emit()?;
         assert_eq!(2, config.cargo_rustc_env_map.len());
@@ -363,6 +384,36 @@ mod test {
             .emit_to(&mut stdout_buf)
             .is_ok());
         env::remove_var("SOURCE_DATE_EPOCH");
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn build_date_override_works() -> Result<()> {
+        env::set_var("VERGEN_BUILD_DATE", "this is a bad date");
+        let mut stdout_buf = vec![];
+        assert!(EmitBuilder::builder()
+            .all_build()
+            .emit_to(&mut stdout_buf)
+            .is_ok());
+        let output = String::from_utf8_lossy(&stdout_buf);
+        assert!(output.contains("cargo:rustc-env=VERGEN_BUILD_DATE=this is a bad date"));
+        env::remove_var("VERGEN_BUILD_DATE");
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn build_timestamp_override_works() -> Result<()> {
+        env::set_var("VERGEN_BUILD_TIMESTAMP", "this is a bad timestamp");
+        let mut stdout_buf = vec![];
+        assert!(EmitBuilder::builder()
+            .all_build()
+            .emit_to(&mut stdout_buf)
+            .is_ok());
+        let output = String::from_utf8_lossy(&stdout_buf);
+        assert!(output.contains("cargo:rustc-env=VERGEN_BUILD_TIMESTAMP=this is a bad timestamp"));
+        env::remove_var("VERGEN_BUILD_TIMESTAMP");
         Ok(())
     }
 }

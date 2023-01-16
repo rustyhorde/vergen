@@ -4,7 +4,7 @@
 ))]
 mod test_git_git2 {
     use anyhow::Result;
-    use git::refs::transaction::PreviousValue;
+    use git::{create::Options, open, refs::transaction::PreviousValue};
     #[cfg(feature = "git2")]
     use git2_rs::Repository;
     use git_repository as git;
@@ -148,8 +148,8 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
 
                     // Setup the base configuration
                     let mut config = repo.config_snapshot_mut();
-                    let _old = config.set_raw_value("author", None, "name", "Vergen Test")?;
-                    let _old = config.set_raw_value("author", None, "email", "vergen@blah.com")?;
+                    let _old = config.set_raw_value("user", None, "name", "Vergen Test")?;
+                    let _old = config.set_raw_value("user", None, "email", "vergen@blah.com")?;
                     {
                         // Create an empty commit with the initial empty tree
                         let committer = config.commit_auto_rollback()?;
@@ -239,8 +239,16 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
                     let _res = git::interrupt::init_handler(|| {})?;
                     let url =
                         git::url::parse(git::path::os_str_into_bstr(bare_repo_path.as_os_str())?)?;
-                    let mut prepare_clone = git::prepare_clone(url, &clone_path)?;
-                    let (mut prepare_checkout, _) = prepare_clone.fetch_then_checkout(
+                    let opts = open::Options::isolated()
+                        .config_overrides(["user.name=Vergen Test", "user.email=vergen@blah.com"]);
+                    let mut prep = git::clone::PrepareFetch::new(
+                        url,
+                        &clone_path,
+                        git::create::Kind::WithWorktree,
+                        Options::default(),
+                        opts,
+                    )?;
+                    let (mut prepare_checkout, _) = prep.fetch_then_checkout(
                         git::progress::Discard,
                         &git::interrupt::IS_INTERRUPTED,
                     )?;
@@ -297,7 +305,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn git_all_output_default_dir() -> Result<()> {
         let mut stdout_buf = vec![];
         let failed = EmitBuilder::builder().all_git().emit_to(&mut stdout_buf)?;
@@ -311,7 +319,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn git_all_flags_test_repo() -> Result<()> {
         create_test_repo();
         clone_test_repo();
@@ -328,7 +336,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn git_all_output_test_repo() -> Result<()> {
         create_test_repo();
         clone_test_repo();
@@ -344,7 +352,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn git_emit_at_test_repo() -> Result<()> {
         create_test_repo();
         clone_test_repo();
@@ -358,7 +366,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn git_all_idempotent_output() -> Result<()> {
         let mut stdout_buf = vec![];
         let failed = EmitBuilder::builder()
@@ -375,7 +383,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn git_all_idempotent_output_quiet() -> Result<()> {
         let mut stdout_buf = vec![];
         let failed = EmitBuilder::builder()
@@ -414,5 +422,154 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
         } else {
             assert!(clone_path().ends_with(CLONE_NAME));
         }
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn git_branch_override_works() -> Result<()> {
+        env::set_var("VERGEN_GIT_BRANCH", "this is a bad date");
+        let mut stdout_buf = vec![];
+        let failed = EmitBuilder::builder().all_git().emit_to(&mut stdout_buf)?;
+        let output = String::from_utf8_lossy(&stdout_buf);
+        if repo_exists().is_ok() && !failed {
+            assert!(output.contains("cargo:rustc-env=VERGEN_GIT_BRANCH=this is a bad date"));
+        } else {
+            assert_eq!(ALL_IDEM_OUTPUT, output);
+        }
+        env::remove_var("VERGEN_GIT_BRANCH");
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn git_commit_author_email_override_works() -> Result<()> {
+        env::set_var("VERGEN_GIT_COMMIT_AUTHOR_EMAIL", "this is a bad date");
+        let mut stdout_buf = vec![];
+        let failed = EmitBuilder::builder().all_git().emit_to(&mut stdout_buf)?;
+        let output = String::from_utf8_lossy(&stdout_buf);
+        if repo_exists().is_ok() && !failed {
+            assert!(output
+                .contains("cargo:rustc-env=VERGEN_GIT_COMMIT_AUTHOR_EMAIL=this is a bad date"));
+        } else {
+            assert_eq!(ALL_IDEM_OUTPUT, output);
+        }
+        env::remove_var("VERGEN_GIT_COMMIT_AUTHOR_EMAIL");
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn git_commit_author_name_override_works() -> Result<()> {
+        env::set_var("VERGEN_GIT_COMMIT_AUTHOR_NAME", "this is a bad date");
+        let mut stdout_buf = vec![];
+        let failed = EmitBuilder::builder().all_git().emit_to(&mut stdout_buf)?;
+        let output = String::from_utf8_lossy(&stdout_buf);
+        if repo_exists().is_ok() && !failed {
+            assert!(
+                output.contains("cargo:rustc-env=VERGEN_GIT_COMMIT_AUTHOR_NAME=this is a bad date")
+            );
+        } else {
+            assert_eq!(ALL_IDEM_OUTPUT, output);
+        }
+        env::remove_var("VERGEN_GIT_COMMIT_AUTHOR_NAME");
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn git_commit_count_override_works() -> Result<()> {
+        env::set_var("VERGEN_GIT_COMMIT_COUNT", "this is a bad date");
+        let mut stdout_buf = vec![];
+        let failed = EmitBuilder::builder().all_git().emit_to(&mut stdout_buf)?;
+        let output = String::from_utf8_lossy(&stdout_buf);
+        if repo_exists().is_ok() && !failed {
+            assert!(output.contains("cargo:rustc-env=VERGEN_GIT_COMMIT_COUNT=this is a bad date"));
+        } else {
+            assert_eq!(ALL_IDEM_OUTPUT, output);
+        }
+        env::remove_var("VERGEN_GIT_COMMIT_COUNT");
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn git_commit_date_override_works() -> Result<()> {
+        env::set_var("VERGEN_GIT_COMMIT_DATE", "this is a bad date");
+        let mut stdout_buf = vec![];
+        let failed = EmitBuilder::builder().all_git().emit_to(&mut stdout_buf)?;
+        let output = String::from_utf8_lossy(&stdout_buf);
+        if repo_exists().is_ok() && !failed {
+            assert!(output.contains("cargo:rustc-env=VERGEN_GIT_COMMIT_DATE=this is a bad date"));
+        } else {
+            assert_eq!(ALL_IDEM_OUTPUT, output);
+        }
+        env::remove_var("VERGEN_GIT_COMMIT_DATE");
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn git_commit_message_override_works() -> Result<()> {
+        env::set_var("VERGEN_GIT_COMMIT_MESSAGE", "this is a bad date");
+        let mut stdout_buf = vec![];
+        let failed = EmitBuilder::builder().all_git().emit_to(&mut stdout_buf)?;
+        let output = String::from_utf8_lossy(&stdout_buf);
+        if repo_exists().is_ok() && !failed {
+            assert!(output.contains("cargo:rustc-env=VERGEN_GIT_COMMIT_MESSAGE=this is a bad date"));
+        } else {
+            assert_eq!(ALL_IDEM_OUTPUT, output);
+        }
+        env::remove_var("VERGEN_GIT_COMMIT_MESSAGE");
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn git_commit_timestamp_override_works() -> Result<()> {
+        env::set_var("VERGEN_GIT_COMMIT_TIMESTAMP", "this is a bad date");
+        let mut stdout_buf = vec![];
+        let failed = EmitBuilder::builder().all_git().emit_to(&mut stdout_buf)?;
+        let output = String::from_utf8_lossy(&stdout_buf);
+        if repo_exists().is_ok() && !failed {
+            assert!(
+                output.contains("cargo:rustc-env=VERGEN_GIT_COMMIT_TIMESTAMP=this is a bad date")
+            );
+        } else {
+            assert_eq!(ALL_IDEM_OUTPUT, output);
+        }
+        env::remove_var("VERGEN_GIT_COMMIT_TIMESTAMP");
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn git_describe_override_works() -> Result<()> {
+        env::set_var("VERGEN_GIT_DESCRIBE", "this is a bad date");
+        let mut stdout_buf = vec![];
+        let failed = EmitBuilder::builder().all_git().emit_to(&mut stdout_buf)?;
+        let output = String::from_utf8_lossy(&stdout_buf);
+        if repo_exists().is_ok() && !failed {
+            assert!(output.contains("cargo:rustc-env=VERGEN_GIT_DESCRIBE=this is a bad date"));
+        } else {
+            assert_eq!(ALL_IDEM_OUTPUT, output);
+        }
+        env::remove_var("VERGEN_GIT_DESCRIBE");
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn git_sha_override_works() -> Result<()> {
+        env::set_var("VERGEN_GIT_SHA", "this is a bad date");
+        let mut stdout_buf = vec![];
+        let failed = EmitBuilder::builder().all_git().emit_to(&mut stdout_buf)?;
+        let output = String::from_utf8_lossy(&stdout_buf);
+        if repo_exists().is_ok() && !failed {
+            assert!(output.contains("cargo:rustc-env=VERGEN_GIT_SHA=this is a bad date"));
+        } else {
+            assert_eq!(ALL_IDEM_OUTPUT, output);
+        }
+        env::remove_var("VERGEN_GIT_SHA");
+        Ok(())
     }
 }

@@ -7,6 +7,7 @@
 // modified, or distributed except according to those terms.
 
 use crate::{
+    constants::{CARGO_DEBUG, CARGO_FEATURES, CARGO_OPT_LEVEL, CARGO_TARGET_TRIPLE},
     emitter::{EmitBuilder, RustcEnvMap},
     key::VergenKey,
     utils::fns::{add_default_map_entry, add_map_entry},
@@ -73,6 +74,26 @@ pub(crate) struct Config {
 /// #   Ok(())
 /// # }
 /// ```
+///
+/// Override output with your own value
+///
+/// ```
+/// # use anyhow::Result;
+/// # use std::env;
+/// # use vergen::EmitBuilder;
+/// #
+/// # fn main() -> Result<()> {
+/// # env::set_var("DEBUG", "true");
+/// # env::set_var("OPT_LEVEL", "1");
+/// env::set_var("VERGEN_CARGO_DEBUG", "this is the debug I want output");
+/// EmitBuilder::builder().all_cargo().emit()?;
+/// # env::remove_var("VERGEN_BUILD_DATE");
+/// # env::remove_var("DEBUG");
+/// # env::remove_var("OPT_LEVEL");
+/// #   Ok(())
+/// # }
+/// ```
+///
 #[cfg_attr(docsrs, doc(cfg(feature = "cargo")))]
 impl EmitBuilder {
     /// Emit all of the `VERGEN_CARGO_*` instructions
@@ -134,6 +155,7 @@ impl EmitBuilder {
         map: &mut RustcEnvMap,
         warnings: &mut Vec<String>,
     ) -> Result<()> {
+        println!("{e:?}");
         if fail_on_error {
             Err(e)
         } else {
@@ -155,21 +177,37 @@ impl EmitBuilder {
 
     pub(crate) fn add_cargo_map_entries(&self, map: &mut RustcEnvMap) -> Result<()> {
         if self.cargo_config.cargo_debug {
-            add_map_entry(VergenKey::CargoDebug, env::var("DEBUG")?, map);
+            if let Ok(value) = env::var(CARGO_DEBUG) {
+                add_map_entry(VergenKey::CargoDebug, value, map);
+            } else {
+                add_map_entry(VergenKey::CargoDebug, env::var("DEBUG")?, map);
+            }
         }
 
         if self.cargo_config.cargo_features {
-            let features: Vec<String> = env::vars().filter_map(is_cargo_feature).collect();
-            let feature_str = features.as_slice().join(",");
-            add_map_entry(VergenKey::CargoFeatures, feature_str, map);
+            if let Ok(value) = env::var(CARGO_FEATURES) {
+                add_map_entry(VergenKey::CargoFeatures, value, map);
+            } else {
+                let features: Vec<String> = env::vars().filter_map(is_cargo_feature).collect();
+                let feature_str = features.as_slice().join(",");
+                add_map_entry(VergenKey::CargoFeatures, feature_str, map);
+            }
         }
 
         if self.cargo_config.cargo_opt_level {
-            add_map_entry(VergenKey::CargoOptLevel, env::var("OPT_LEVEL")?, map);
+            if let Ok(value) = env::var(CARGO_OPT_LEVEL) {
+                add_map_entry(VergenKey::CargoOptLevel, value, map);
+            } else {
+                add_map_entry(VergenKey::CargoOptLevel, env::var("OPT_LEVEL")?, map);
+            }
         }
 
         if self.cargo_config.cargo_target_triple {
-            add_map_entry(VergenKey::CargoTargetTriple, env::var("TARGET")?, map);
+            if let Ok(value) = env::var(CARGO_TARGET_TRIPLE) {
+                add_map_entry(VergenKey::CargoTargetTriple, value, map);
+            } else {
+                add_map_entry(VergenKey::CargoTargetTriple, env::var("TARGET")?, map);
+            }
         }
 
         Ok(())
@@ -193,6 +231,7 @@ mod test {
         EmitBuilder,
     };
     use anyhow::Result;
+    use std::env;
 
     #[test]
     #[serial_test::serial]
@@ -222,7 +261,7 @@ mod test {
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn bad_env_fails() {
         assert!(EmitBuilder::builder()
             .fail_on_error()
@@ -232,7 +271,7 @@ mod test {
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn bad_env_emits_default() -> Result<()> {
         let emit_res = EmitBuilder::builder().all_cargo().test_emit();
         assert!(emit_res.is_ok());
@@ -240,6 +279,75 @@ mod test {
         assert_eq!(4, emit.cargo_rustc_env_map.len());
         assert_eq!(4, count_idempotent(&emit.cargo_rustc_env_map));
         assert_eq!(4, emit.warnings.len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn cargo_debug_override_works() -> Result<()> {
+        setup();
+        env::set_var("VERGEN_CARGO_DEBUG", "this is a bad date");
+        let mut stdout_buf = vec![];
+        assert!(EmitBuilder::builder()
+            .all_cargo()
+            .emit_to(&mut stdout_buf)
+            .is_ok());
+        let output = String::from_utf8_lossy(&stdout_buf);
+        assert!(output.contains("cargo:rustc-env=VERGEN_CARGO_DEBUG=this is a bad date"));
+        env::remove_var("VERGEN_CARGO_DEBUG");
+        teardown();
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn cargo_features_override_works() -> Result<()> {
+        setup();
+        env::set_var("VERGEN_CARGO_FEATURES", "this is a bad date");
+        let mut stdout_buf = vec![];
+        assert!(EmitBuilder::builder()
+            .all_cargo()
+            .emit_to(&mut stdout_buf)
+            .is_ok());
+        let output = String::from_utf8_lossy(&stdout_buf);
+        println!("{output}");
+        assert!(output.contains("cargo:rustc-env=VERGEN_CARGO_FEATURES=this is a bad date"));
+        env::remove_var("VERGEN_CARGO_FEATURES");
+        teardown();
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn cargo_opt_level_override_works() -> Result<()> {
+        setup();
+        env::set_var("VERGEN_CARGO_OPT_LEVEL", "this is a bad date");
+        let mut stdout_buf = vec![];
+        assert!(EmitBuilder::builder()
+            .all_cargo()
+            .emit_to(&mut stdout_buf)
+            .is_ok());
+        let output = String::from_utf8_lossy(&stdout_buf);
+        assert!(output.contains("cargo:rustc-env=VERGEN_CARGO_OPT_LEVEL=this is a bad date"));
+        env::remove_var("VERGEN_CARGO_OPT_LEVEL");
+        teardown();
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn cargo_target_triple_override_works() -> Result<()> {
+        setup();
+        env::set_var("VERGEN_CARGO_TARGET_TRIPLE", "this is a bad date");
+        let mut stdout_buf = vec![];
+        assert!(EmitBuilder::builder()
+            .all_cargo()
+            .emit_to(&mut stdout_buf)
+            .is_ok());
+        let output = String::from_utf8_lossy(&stdout_buf);
+        assert!(output.contains("cargo:rustc-env=VERGEN_CARGO_TARGET_TRIPLE=this is a bad date"));
+        env::remove_var("VERGEN_CARGO_TARGET_TRIPLE");
+        teardown();
         Ok(())
     }
 }
