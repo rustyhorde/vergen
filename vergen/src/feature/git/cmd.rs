@@ -7,6 +7,11 @@
 // modified, or distributed except according to those terms.
 
 use crate::{
+    constants::{
+        GIT_BRANCH_NAME, GIT_COMMIT_AUTHOR_EMAIL, GIT_COMMIT_AUTHOR_NAME, GIT_COMMIT_COUNT,
+        GIT_COMMIT_DATE_NAME, GIT_COMMIT_MESSAGE, GIT_COMMIT_TIMESTAMP_NAME, GIT_DESCRIBE_NAME,
+        GIT_SHA_NAME,
+    },
     emitter::{EmitBuilder, RustcEnvMap},
     key::VergenKey,
     utils::fns::{add_default_map_entry, add_map_entry},
@@ -502,45 +507,73 @@ impl EmitBuilder {
         }
 
         if self.git_config.git_branch {
-            add_git_cmd_entry(BRANCH_CMD, VergenKey::GitBranch, map)?;
+            if let Ok(value) = env::var(GIT_BRANCH_NAME) {
+                add_map_entry(VergenKey::GitBranch, value, map);
+            } else {
+                add_git_cmd_entry(BRANCH_CMD, VergenKey::GitBranch, map)?;
+            }
         }
 
         if self.git_config.git_commit_author_email {
-            add_git_cmd_entry(COMMIT_AUTHOR_EMAIL, VergenKey::GitCommitAuthorEmail, map)?;
+            if let Ok(value) = env::var(GIT_COMMIT_AUTHOR_EMAIL) {
+                add_map_entry(VergenKey::GitCommitAuthorEmail, value, map);
+            } else {
+                add_git_cmd_entry(COMMIT_AUTHOR_EMAIL, VergenKey::GitCommitAuthorEmail, map)?;
+            }
         }
 
         if self.git_config.git_commit_author_name {
-            add_git_cmd_entry(COMMIT_AUTHOR_NAME, VergenKey::GitCommitAuthorName, map)?;
+            if let Ok(value) = env::var(GIT_COMMIT_AUTHOR_NAME) {
+                add_map_entry(VergenKey::GitCommitAuthorName, value, map);
+            } else {
+                add_git_cmd_entry(COMMIT_AUTHOR_NAME, VergenKey::GitCommitAuthorName, map)?;
+            }
         }
 
         if self.git_config.git_commit_count {
-            add_git_cmd_entry(COMMIT_COUNT, VergenKey::GitCommitCount, map)?;
+            if let Ok(value) = env::var(GIT_COMMIT_COUNT) {
+                add_map_entry(VergenKey::GitCommitCount, value, map);
+            } else {
+                add_git_cmd_entry(COMMIT_COUNT, VergenKey::GitCommitCount, map)?;
+            }
         }
 
         self.add_git_timestamp_entries(COMMIT_TIMESTAMP, idempotent, map, warnings)?;
 
         if self.git_config.git_commit_message {
-            add_git_cmd_entry(COMMIT_MESSAGE, VergenKey::GitCommitMessage, map)?;
+            if let Ok(value) = env::var(GIT_COMMIT_MESSAGE) {
+                add_map_entry(VergenKey::GitCommitMessage, value, map);
+            } else {
+                add_git_cmd_entry(COMMIT_MESSAGE, VergenKey::GitCommitMessage, map)?;
+            }
         }
 
         if self.git_config.git_describe {
-            let mut describe_cmd = String::from(DESCRIBE);
-            if self.git_config.git_describe_dirty {
-                describe_cmd.push_str(" --dirty");
+            if let Ok(value) = env::var(GIT_DESCRIBE_NAME) {
+                add_map_entry(VergenKey::GitDescribe, value, map);
+            } else {
+                let mut describe_cmd = String::from(DESCRIBE);
+                if self.git_config.git_describe_dirty {
+                    describe_cmd.push_str(" --dirty");
+                }
+                if self.git_config.git_describe_tags {
+                    describe_cmd.push_str(" --tags");
+                }
+                add_git_cmd_entry(&describe_cmd, VergenKey::GitDescribe, map)?;
             }
-            if self.git_config.git_describe_tags {
-                describe_cmd.push_str(" --tags");
-            }
-            add_git_cmd_entry(&describe_cmd, VergenKey::GitDescribe, map)?;
         }
 
         if self.git_config.git_sha {
-            let mut sha_cmd = String::from(SHA);
-            if self.git_config.git_sha_short {
-                sha_cmd.push_str(" --short");
+            if let Ok(value) = env::var(GIT_SHA_NAME) {
+                add_map_entry(VergenKey::GitSha, value, map);
+            } else {
+                let mut sha_cmd = String::from(SHA);
+                if self.git_config.git_sha_short {
+                    sha_cmd.push_str(" --short");
+                }
+                sha_cmd.push_str(" HEAD");
+                add_git_cmd_entry(&sha_cmd, VergenKey::GitSha, map)?;
             }
-            sha_cmd.push_str(" HEAD");
-            add_git_cmd_entry(&sha_cmd, VergenKey::GitSha, map)?;
         }
         Ok(())
     }
@@ -552,6 +585,18 @@ impl EmitBuilder {
         map: &mut RustcEnvMap,
         warnings: &mut Vec<String>,
     ) -> Result<()> {
+        let mut date_override = false;
+        if let Ok(value) = env::var(GIT_COMMIT_DATE_NAME) {
+            add_map_entry(VergenKey::GitCommitDate, value, map);
+            date_override = true;
+        }
+
+        let mut timestamp_override = false;
+        if let Ok(value) = env::var(GIT_COMMIT_TIMESTAMP_NAME) {
+            add_map_entry(VergenKey::GitCommitTimestamp, value, map);
+            timestamp_override = true;
+        }
+
         let output = run_cmd(cmd)?;
         if output.status.success() {
             let stdout = String::from_utf8_lossy(&output.stdout)
@@ -571,20 +616,20 @@ impl EmitBuilder {
             };
 
             if idempotent && !sde {
-                if self.git_config.git_commit_date {
+                if self.git_config.git_commit_date && !date_override {
                     add_default_map_entry(VergenKey::GitCommitDate, map, warnings);
                 }
 
-                if self.git_config.git_commit_timestamp {
+                if self.git_config.git_commit_timestamp && !timestamp_override {
                     add_default_map_entry(VergenKey::GitCommitTimestamp, map, warnings);
                 }
             } else {
-                if self.git_config.git_commit_date {
+                if self.git_config.git_commit_date && !date_override {
                     let format = format_description::parse("[year]-[month]-[day]")?;
                     add_map_entry(VergenKey::GitCommitDate, ts.format(&format)?, map);
                 }
 
-                if self.git_config.git_commit_timestamp {
+                if self.git_config.git_commit_timestamp && !timestamp_override {
                     add_map_entry(
                         VergenKey::GitCommitTimestamp,
                         ts.format(&Iso8601::DEFAULT)?,
@@ -593,11 +638,11 @@ impl EmitBuilder {
                 }
             }
         } else {
-            if self.git_config.git_commit_date {
+            if self.git_config.git_commit_date && !date_override {
                 add_default_map_entry(VergenKey::GitCommitDate, map, warnings);
             }
 
-            if self.git_config.git_commit_timestamp {
+            if self.git_config.git_commit_timestamp && !timestamp_override {
                 add_default_map_entry(VergenKey::GitCommitTimestamp, map, warnings);
             }
         }
@@ -875,6 +920,143 @@ mod test {
             .is_ok());
         assert_eq!(2, map.len());
         assert_eq!(2, warnings.len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn git_branch_override_works() -> Result<()> {
+        env::set_var("VERGEN_GIT_BRANCH", "this is a bad date");
+        let mut stdout_buf = vec![];
+        assert!(EmitBuilder::builder()
+            .all_git()
+            .emit_to(&mut stdout_buf)
+            .is_ok());
+        let output = String::from_utf8_lossy(&stdout_buf);
+        assert!(output.contains("cargo:rustc-env=VERGEN_GIT_BRANCH=this is a bad date"));
+        env::remove_var("VERGEN_GIT_BRANCH");
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn git_commit_author_email_override_works() -> Result<()> {
+        env::set_var("VERGEN_GIT_COMMIT_AUTHOR_EMAIL", "this is a bad date");
+        let mut stdout_buf = vec![];
+        assert!(EmitBuilder::builder()
+            .all_git()
+            .emit_to(&mut stdout_buf)
+            .is_ok());
+        let output = String::from_utf8_lossy(&stdout_buf);
+        assert!(
+            output.contains("cargo:rustc-env=VERGEN_GIT_COMMIT_AUTHOR_EMAIL=this is a bad date")
+        );
+        env::remove_var("VERGEN_GIT_COMMIT_AUTHOR_EMAIL");
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn git_commit_author_name_override_works() -> Result<()> {
+        env::set_var("VERGEN_GIT_COMMIT_AUTHOR_NAME", "this is a bad date");
+        let mut stdout_buf = vec![];
+        assert!(EmitBuilder::builder()
+            .all_git()
+            .emit_to(&mut stdout_buf)
+            .is_ok());
+        let output = String::from_utf8_lossy(&stdout_buf);
+        assert!(output.contains("cargo:rustc-env=VERGEN_GIT_COMMIT_AUTHOR_NAME=this is a bad date"));
+        env::remove_var("VERGEN_GIT_COMMIT_AUTHOR_NAME");
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn git_commit_count_override_works() -> Result<()> {
+        env::set_var("VERGEN_GIT_COMMIT_COUNT", "this is a bad date");
+        let mut stdout_buf = vec![];
+        assert!(EmitBuilder::builder()
+            .all_git()
+            .emit_to(&mut stdout_buf)
+            .is_ok());
+        let output = String::from_utf8_lossy(&stdout_buf);
+        assert!(output.contains("cargo:rustc-env=VERGEN_GIT_COMMIT_COUNT=this is a bad date"));
+        env::remove_var("VERGEN_GIT_COMMIT_COUNT");
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn git_commit_date_override_works() -> Result<()> {
+        env::set_var("VERGEN_GIT_COMMIT_DATE", "this is a bad date");
+        let mut stdout_buf = vec![];
+        assert!(EmitBuilder::builder()
+            .all_git()
+            .emit_to(&mut stdout_buf)
+            .is_ok());
+        let output = String::from_utf8_lossy(&stdout_buf);
+        assert!(output.contains("cargo:rustc-env=VERGEN_GIT_COMMIT_DATE=this is a bad date"));
+        env::remove_var("VERGEN_GIT_COMMIT_DATE");
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn git_commit_message_override_works() -> Result<()> {
+        env::set_var("VERGEN_GIT_COMMIT_MESSAGE", "this is a bad date");
+        let mut stdout_buf = vec![];
+        assert!(EmitBuilder::builder()
+            .all_git()
+            .emit_to(&mut stdout_buf)
+            .is_ok());
+        let output = String::from_utf8_lossy(&stdout_buf);
+        assert!(output.contains("cargo:rustc-env=VERGEN_GIT_COMMIT_MESSAGE=this is a bad date"));
+        env::remove_var("VERGEN_GIT_COMMIT_MESSAGE");
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn git_commit_timestamp_override_works() -> Result<()> {
+        env::set_var("VERGEN_GIT_COMMIT_TIMESTAMP", "this is a bad date");
+        let mut stdout_buf = vec![];
+        assert!(EmitBuilder::builder()
+            .all_git()
+            .emit_to(&mut stdout_buf)
+            .is_ok());
+        let output = String::from_utf8_lossy(&stdout_buf);
+        assert!(output.contains("cargo:rustc-env=VERGEN_GIT_COMMIT_TIMESTAMP=this is a bad date"));
+        env::remove_var("VERGEN_GIT_COMMIT_TIMESTAMP");
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn git_describe_override_works() -> Result<()> {
+        env::set_var("VERGEN_GIT_DESCRIBE", "this is a bad date");
+        let mut stdout_buf = vec![];
+        assert!(EmitBuilder::builder()
+            .all_git()
+            .emit_to(&mut stdout_buf)
+            .is_ok());
+        let output = String::from_utf8_lossy(&stdout_buf);
+        assert!(output.contains("cargo:rustc-env=VERGEN_GIT_DESCRIBE=this is a bad date"));
+        env::remove_var("VERGEN_GIT_DESCRIBE");
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn git_sha_override_works() -> Result<()> {
+        env::set_var("VERGEN_GIT_SHA", "this is a bad date");
+        let mut stdout_buf = vec![];
+        assert!(EmitBuilder::builder()
+            .all_git()
+            .emit_to(&mut stdout_buf)
+            .is_ok());
+        let output = String::from_utf8_lossy(&stdout_buf);
+        assert!(output.contains("cargo:rustc-env=VERGEN_GIT_SHA=this is a bad date"));
+        env::remove_var("VERGEN_GIT_SHA");
         Ok(())
     }
 }

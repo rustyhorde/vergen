@@ -192,7 +192,6 @@ impl EmitBuilder {
         self
     }
 
-    #[allow(clippy::too_many_lines)]
     pub(crate) fn add_sysinfo_map_entries(
         &self,
         idempotent: bool,
@@ -201,6 +200,24 @@ impl EmitBuilder {
     ) {
         let system = setup_system();
 
+        self.add_sysinfo_name(&system, idempotent, map, warnings);
+        self.add_sysinfo_os_verison(&system, idempotent, map, warnings);
+        self.add_sysinfo_user(&system, idempotent, map, warnings);
+        self.add_sysinfo_total_memory(&system, idempotent, map, warnings);
+        self.add_sysinfo_cpu_vendor(&system, idempotent, map, warnings);
+        self.add_sysinfo_cpu_core_count(&system, idempotent, map, warnings);
+        self.add_sysinfo_cpu_name(&system, idempotent, map, warnings);
+        self.add_sysinfo_cpu_brand(&system, idempotent, map, warnings);
+        self.add_sysinfo_cpu_frequency(&system, idempotent, map, warnings);
+    }
+
+    fn add_sysinfo_name(
+        &self,
+        system: &System,
+        idempotent: bool,
+        map: &mut RustcEnvMap,
+        warnings: &mut Vec<String>,
+    ) {
         if self.sysinfo_config.si_name {
             if let Ok(value) = env::var(SYSINFO_NAME) {
                 add_map_entry(VergenKey::SysinfoName, value, map);
@@ -214,7 +231,15 @@ impl EmitBuilder {
                 );
             }
         }
+    }
 
+    fn add_sysinfo_os_verison(
+        &self,
+        system: &System,
+        idempotent: bool,
+        map: &mut RustcEnvMap,
+        warnings: &mut Vec<String>,
+    ) {
         if self.sysinfo_config.si_os_version {
             if let Ok(value) = env::var(SYSINFO_OS_VERSION) {
                 add_map_entry(VergenKey::SysinfoOsVersion, value, map);
@@ -228,7 +253,15 @@ impl EmitBuilder {
                 );
             }
         }
+    }
 
+    fn add_sysinfo_user(
+        &self,
+        system: &System,
+        idempotent: bool,
+        map: &mut RustcEnvMap,
+        warnings: &mut Vec<String>,
+    ) {
         if self.sysinfo_config.si_user {
             if let Ok(value) = env::var(SYSINFO_USER) {
                 add_map_entry(VergenKey::SysinfoUser, value, map);
@@ -236,13 +269,21 @@ impl EmitBuilder {
                 add_sysinfo_map_entry(
                     VergenKey::SysinfoUser,
                     idempotent,
-                    self.get_user(&system),
+                    self.get_user(system),
                     map,
                     warnings,
                 );
             }
         }
+    }
 
+    fn add_sysinfo_total_memory(
+        &self,
+        system: &System,
+        idempotent: bool,
+        map: &mut RustcEnvMap,
+        warnings: &mut Vec<String>,
+    ) {
         if self.sysinfo_config.si_memory {
             if let Ok(value) = env::var(SYSINFO_MEMORY) {
                 add_map_entry(VergenKey::SysinfoMemory, value, map);
@@ -256,7 +297,15 @@ impl EmitBuilder {
                 );
             }
         }
+    }
 
+    fn add_sysinfo_cpu_vendor(
+        &self,
+        system: &System,
+        idempotent: bool,
+        map: &mut RustcEnvMap,
+        warnings: &mut Vec<String>,
+    ) {
         if self.sysinfo_config.si_cpu_vendor {
             if let Ok(value) = env::var(SYSINFO_CPU_VENDOR) {
                 add_map_entry(VergenKey::SysinfoCpuVendor, value, map);
@@ -273,7 +322,15 @@ impl EmitBuilder {
                 );
             }
         }
+    }
 
+    fn add_sysinfo_cpu_core_count(
+        &self,
+        system: &System,
+        idempotent: bool,
+        map: &mut RustcEnvMap,
+        warnings: &mut Vec<String>,
+    ) {
         if self.sysinfo_config.si_cpu_core_count {
             if let Ok(value) = env::var(SYSINFO_CPU_CORE_COUNT) {
                 add_map_entry(VergenKey::SysinfoCpuCoreCount, value, map);
@@ -287,7 +344,15 @@ impl EmitBuilder {
                 );
             }
         }
+    }
 
+    fn add_sysinfo_cpu_name(
+        &self,
+        system: &System,
+        idempotent: bool,
+        map: &mut RustcEnvMap,
+        warnings: &mut Vec<String>,
+    ) {
         if self.sysinfo_config.si_cpu_name {
             if let Ok(value) = env::var(SYSINFO_CPU_NAME) {
                 add_map_entry(VergenKey::SysinfoCpuName, value, map);
@@ -308,7 +373,15 @@ impl EmitBuilder {
                 );
             }
         }
+    }
 
+    fn add_sysinfo_cpu_brand(
+        &self,
+        system: &System,
+        idempotent: bool,
+        map: &mut RustcEnvMap,
+        warnings: &mut Vec<String>,
+    ) {
         if self.sysinfo_config.si_cpu_brand {
             if let Ok(value) = env::var(SYSINFO_CPU_BRAND) {
                 add_map_entry(VergenKey::SysinfoCpuBrand, value, map);
@@ -325,7 +398,15 @@ impl EmitBuilder {
                 );
             }
         }
+    }
 
+    fn add_sysinfo_cpu_frequency(
+        &self,
+        system: &System,
+        idempotent: bool,
+        map: &mut RustcEnvMap,
+        warnings: &mut Vec<String>,
+    ) {
         if self.sysinfo_config.si_cpu_frequency {
             if let Ok(value) = env::var(SYSINFO_CPU_FREQUENCY) {
                 add_map_entry(VergenKey::SysinfoCpuFrequency, value, map);
