@@ -7,11 +7,16 @@
 // modified, or distributed except according to those terms.
 
 use crate::{
+    constants::{
+        SYSINFO_CPU_BRAND, SYSINFO_CPU_CORE_COUNT, SYSINFO_CPU_FREQUENCY, SYSINFO_CPU_NAME,
+        SYSINFO_CPU_VENDOR, SYSINFO_MEMORY, SYSINFO_NAME, SYSINFO_OS_VERSION, SYSINFO_USER,
+    },
     emitter::{EmitBuilder, RustcEnvMap},
     key::VergenKey,
     utils::fns::{add_default_map_entry, add_map_entry},
 };
 use anyhow::{anyhow, Result};
+use std::env;
 use sysinfo::{
     get_current_pid, CpuExt, Pid, Process, ProcessExt, System, SystemExt, User, UserExt,
 };
@@ -187,6 +192,7 @@ impl EmitBuilder {
         self
     }
 
+    #[allow(clippy::too_many_lines)]
     pub(crate) fn add_sysinfo_map_entries(
         &self,
         idempotent: bool,
@@ -196,109 +202,145 @@ impl EmitBuilder {
         let system = setup_system();
 
         if self.sysinfo_config.si_name {
-            add_sysinfo_map_entry(
-                VergenKey::SysinfoName,
-                idempotent,
-                system.name(),
-                map,
-                warnings,
-            );
+            if let Ok(value) = env::var(SYSINFO_NAME) {
+                add_map_entry(VergenKey::SysinfoName, value, map);
+            } else {
+                add_sysinfo_map_entry(
+                    VergenKey::SysinfoName,
+                    idempotent,
+                    system.name(),
+                    map,
+                    warnings,
+                );
+            }
         }
 
         if self.sysinfo_config.si_os_version {
-            add_sysinfo_map_entry(
-                VergenKey::SysinfoOsVersion,
-                idempotent,
-                system.long_os_version(),
-                map,
-                warnings,
-            );
+            if let Ok(value) = env::var(SYSINFO_OS_VERSION) {
+                add_map_entry(VergenKey::SysinfoOsVersion, value, map);
+            } else {
+                add_sysinfo_map_entry(
+                    VergenKey::SysinfoOsVersion,
+                    idempotent,
+                    system.long_os_version(),
+                    map,
+                    warnings,
+                );
+            }
         }
 
         if self.sysinfo_config.si_user {
-            add_sysinfo_map_entry(
-                VergenKey::SysinfoUser,
-                idempotent,
-                self.get_user(&system),
-                map,
-                warnings,
-            );
+            if let Ok(value) = env::var(SYSINFO_USER) {
+                add_map_entry(VergenKey::SysinfoUser, value, map);
+            } else {
+                add_sysinfo_map_entry(
+                    VergenKey::SysinfoUser,
+                    idempotent,
+                    self.get_user(&system),
+                    map,
+                    warnings,
+                );
+            }
         }
 
         if self.sysinfo_config.si_memory {
-            add_sysinfo_map_entry(
-                VergenKey::SysinfoMemory,
-                idempotent,
-                Some(suffix(system.total_memory())),
-                map,
-                warnings,
-            );
+            if let Ok(value) = env::var(SYSINFO_MEMORY) {
+                add_map_entry(VergenKey::SysinfoMemory, value, map);
+            } else {
+                add_sysinfo_map_entry(
+                    VergenKey::SysinfoMemory,
+                    idempotent,
+                    Some(suffix(system.total_memory())),
+                    map,
+                    warnings,
+                );
+            }
         }
 
         if self.sysinfo_config.si_cpu_vendor {
-            add_sysinfo_map_entry(
-                VergenKey::SysinfoCpuVendor,
-                idempotent,
-                system
-                    .cpus()
-                    .get(0)
-                    .map(|proc| proc.vendor_id().to_string()),
-                map,
-                warnings,
-            );
+            if let Ok(value) = env::var(SYSINFO_CPU_VENDOR) {
+                add_map_entry(VergenKey::SysinfoCpuVendor, value, map);
+            } else {
+                add_sysinfo_map_entry(
+                    VergenKey::SysinfoCpuVendor,
+                    idempotent,
+                    system
+                        .cpus()
+                        .get(0)
+                        .map(|proc| proc.vendor_id().to_string()),
+                    map,
+                    warnings,
+                );
+            }
         }
 
         if self.sysinfo_config.si_cpu_core_count {
-            add_sysinfo_map_entry(
-                VergenKey::SysinfoCpuCoreCount,
-                idempotent,
-                system.physical_core_count().as_ref().map(usize::to_string),
-                map,
-                warnings,
-            );
+            if let Ok(value) = env::var(SYSINFO_CPU_CORE_COUNT) {
+                add_map_entry(VergenKey::SysinfoCpuCoreCount, value, map);
+            } else {
+                add_sysinfo_map_entry(
+                    VergenKey::SysinfoCpuCoreCount,
+                    idempotent,
+                    system.physical_core_count().as_ref().map(usize::to_string),
+                    map,
+                    warnings,
+                );
+            }
         }
 
         if self.sysinfo_config.si_cpu_name {
-            add_sysinfo_map_entry(
-                VergenKey::SysinfoCpuName,
-                idempotent,
-                Some(
-                    system
-                        .cpus()
-                        .iter()
-                        .map(CpuExt::name)
-                        .collect::<Vec<&str>>()
-                        .join(","),
-                ),
-                map,
-                warnings,
-            );
+            if let Ok(value) = env::var(SYSINFO_CPU_NAME) {
+                add_map_entry(VergenKey::SysinfoCpuName, value, map);
+            } else {
+                add_sysinfo_map_entry(
+                    VergenKey::SysinfoCpuName,
+                    idempotent,
+                    Some(
+                        system
+                            .cpus()
+                            .iter()
+                            .map(CpuExt::name)
+                            .collect::<Vec<&str>>()
+                            .join(","),
+                    ),
+                    map,
+                    warnings,
+                );
+            }
         }
 
         if self.sysinfo_config.si_cpu_brand {
-            add_sysinfo_map_entry(
-                VergenKey::SysinfoCpuBrand,
-                idempotent,
-                system
-                    .cpus()
-                    .get(0)
-                    .map(|processor| processor.brand().to_string()),
-                map,
-                warnings,
-            );
+            if let Ok(value) = env::var(SYSINFO_CPU_BRAND) {
+                add_map_entry(VergenKey::SysinfoCpuBrand, value, map);
+            } else {
+                add_sysinfo_map_entry(
+                    VergenKey::SysinfoCpuBrand,
+                    idempotent,
+                    system
+                        .cpus()
+                        .get(0)
+                        .map(|processor| processor.brand().to_string()),
+                    map,
+                    warnings,
+                );
+            }
         }
 
         if self.sysinfo_config.si_cpu_frequency {
-            add_sysinfo_map_entry(
-                VergenKey::SysinfoCpuFrequency,
-                idempotent,
-                system
-                    .cpus()
-                    .get(0)
-                    .map(|proc| proc.frequency().to_string()),
-                map,
-                warnings,
-            );
+            if let Ok(value) = env::var(SYSINFO_CPU_FREQUENCY) {
+                add_map_entry(VergenKey::SysinfoCpuFrequency, value, map);
+            } else {
+                add_sysinfo_map_entry(
+                    VergenKey::SysinfoCpuFrequency,
+                    idempotent,
+                    system
+                        .cpus()
+                        .get(0)
+                        .map(|proc| proc.frequency().to_string()),
+                    map,
+                    warnings,
+                );
+            }
         }
     }
 
@@ -354,14 +396,6 @@ fn setup_system() -> System {
     system
 }
 
-// #[cfg(target_os = "macos")]
-// fn setup_system() -> System {
-//     let mut system = System::new();
-//     system.refresh_memory();
-//     system.refresh_cpu();
-//     system
-// }
-
 fn check_user(process: &Process, user: &User) -> bool {
     Some(user.id()) == process.user_id()
 }
@@ -394,7 +428,7 @@ mod test {
     use super::{add_sysinfo_map_entry, suffix};
     use crate::{emitter::test::count_idempotent, key::VergenKey, EmitBuilder};
     use anyhow::Result;
-    use std::collections::BTreeMap;
+    use std::{collections::BTreeMap, env};
 
     const IDEM_COUNT: usize = 0;
     const SYSINFO_COUNT: usize = 9;
@@ -465,6 +499,141 @@ mod test {
         assert_eq!(SYSINFO_COUNT, emitter.cargo_rustc_env_map.len());
         assert_eq!(1, count_idempotent(&emitter.cargo_rustc_env_map));
         assert_eq!(1, emitter.warnings.len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn sysinfo_name_override_works() -> Result<()> {
+        env::set_var("VERGEN_SYSINFO_NAME", "this is a bad date");
+        let mut stdout_buf = vec![];
+        assert!(EmitBuilder::builder()
+            .all_sysinfo()
+            .emit_to(&mut stdout_buf)
+            .is_ok());
+        let output = String::from_utf8_lossy(&stdout_buf);
+        assert!(output.contains("cargo:rustc-env=VERGEN_SYSINFO_NAME=this is a bad date"));
+        env::remove_var("VERGEN_SYSINFO_NAME");
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn sysinfo_os_version_override_works() -> Result<()> {
+        env::set_var("VERGEN_SYSINFO_OS_VERSION", "this is a bad date");
+        let mut stdout_buf = vec![];
+        assert!(EmitBuilder::builder()
+            .all_sysinfo()
+            .emit_to(&mut stdout_buf)
+            .is_ok());
+        let output = String::from_utf8_lossy(&stdout_buf);
+        assert!(output.contains("cargo:rustc-env=VERGEN_SYSINFO_OS_VERSION=this is a bad date"));
+        env::remove_var("VERGEN_SYSINFO_OS_VERSION");
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn sysinfo_user_override_works() -> Result<()> {
+        env::set_var("VERGEN_SYSINFO_USER", "this is a bad date");
+        let mut stdout_buf = vec![];
+        assert!(EmitBuilder::builder()
+            .all_sysinfo()
+            .emit_to(&mut stdout_buf)
+            .is_ok());
+        let output = String::from_utf8_lossy(&stdout_buf);
+        assert!(output.contains("cargo:rustc-env=VERGEN_SYSINFO_USER=this is a bad date"));
+        env::remove_var("VERGEN_SYSINFO_USER");
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn sysinfo_total_memory_override_works() -> Result<()> {
+        env::set_var("VERGEN_SYSINFO_TOTAL_MEMORY", "this is a bad date");
+        let mut stdout_buf = vec![];
+        assert!(EmitBuilder::builder()
+            .all_sysinfo()
+            .emit_to(&mut stdout_buf)
+            .is_ok());
+        let output = String::from_utf8_lossy(&stdout_buf);
+        assert!(output.contains("cargo:rustc-env=VERGEN_SYSINFO_TOTAL_MEMORY=this is a bad date"));
+        env::remove_var("VERGEN_SYSINFO_TOTAL_MEMORY");
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn sysinfo_cpu_vendor_override_works() -> Result<()> {
+        env::set_var("VERGEN_SYSINFO_CPU_VENDOR", "this is a bad date");
+        let mut stdout_buf = vec![];
+        assert!(EmitBuilder::builder()
+            .all_sysinfo()
+            .emit_to(&mut stdout_buf)
+            .is_ok());
+        let output = String::from_utf8_lossy(&stdout_buf);
+        assert!(output.contains("cargo:rustc-env=VERGEN_SYSINFO_CPU_VENDOR=this is a bad date"));
+        env::remove_var("VERGEN_SYSINFO_CPU_VENDOR");
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn sysinfo_cpu_core_count_override_works() -> Result<()> {
+        env::set_var("VERGEN_SYSINFO_CPU_CORE_COUNT", "this is a bad date");
+        let mut stdout_buf = vec![];
+        assert!(EmitBuilder::builder()
+            .all_sysinfo()
+            .emit_to(&mut stdout_buf)
+            .is_ok());
+        let output = String::from_utf8_lossy(&stdout_buf);
+        assert!(output.contains("cargo:rustc-env=VERGEN_SYSINFO_CPU_CORE_COUNT=this is a bad date"));
+        env::remove_var("VERGEN_SYSINFO_CPU_CORE_COUNT");
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn sysinfo_cpu_name_override_works() -> Result<()> {
+        env::set_var("VERGEN_SYSINFO_CPU_NAME", "this is a bad date");
+        let mut stdout_buf = vec![];
+        assert!(EmitBuilder::builder()
+            .all_sysinfo()
+            .emit_to(&mut stdout_buf)
+            .is_ok());
+        let output = String::from_utf8_lossy(&stdout_buf);
+        assert!(output.contains("cargo:rustc-env=VERGEN_SYSINFO_CPU_NAME=this is a bad date"));
+        env::remove_var("VERGEN_SYSINFO_CPU_NAME");
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn sysinfo_cpu_brand_override_works() -> Result<()> {
+        env::set_var("VERGEN_SYSINFO_CPU_BRAND", "this is a bad date");
+        let mut stdout_buf = vec![];
+        assert!(EmitBuilder::builder()
+            .all_sysinfo()
+            .emit_to(&mut stdout_buf)
+            .is_ok());
+        let output = String::from_utf8_lossy(&stdout_buf);
+        assert!(output.contains("cargo:rustc-env=VERGEN_SYSINFO_CPU_BRAND=this is a bad date"));
+        env::remove_var("VERGEN_SYSINFO_CPU_BRAND");
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn sysinfo_cpu_frequency_override_works() -> Result<()> {
+        env::set_var("VERGEN_SYSINFO_CPU_FREQUENCY", "this is a bad date");
+        let mut stdout_buf = vec![];
+        assert!(EmitBuilder::builder()
+            .all_sysinfo()
+            .emit_to(&mut stdout_buf)
+            .is_ok());
+        let output = String::from_utf8_lossy(&stdout_buf);
+        assert!(output.contains("cargo:rustc-env=VERGEN_SYSINFO_CPU_FREQUENCY=this is a bad date"));
+        env::remove_var("VERGEN_SYSINFO_CPU_FREQUENCY");
         Ok(())
     }
 }

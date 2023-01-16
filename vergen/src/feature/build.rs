@@ -215,7 +215,6 @@ impl EmitBuilder {
     ) -> Result<()> {
         if self.build_config.build_timestamp {
             if let Ok(value) = env::var(BUILD_TIMESTAMP_NAME) {
-                println!("Using timestamp override");
                 add_map_entry(VergenKey::BuildTimestamp, value, map);
             } else if idempotent && !source_date_epoch {
                 add_default_map_entry(VergenKey::BuildTimestamp, map, warnings);
