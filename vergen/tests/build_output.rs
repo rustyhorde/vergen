@@ -47,7 +47,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
 "#;
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn build_all_output() -> Result<()> {
         let mut stdout_buf = vec![];
         EmitBuilder::builder()
@@ -59,7 +59,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn build_all_idempotent_output() -> Result<()> {
         let mut stdout_buf = vec![];
         EmitBuilder::builder()
@@ -72,7 +72,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn build_all_idempotent_output_quiet() -> Result<()> {
         let mut stdout_buf = vec![];
         EmitBuilder::builder()

@@ -79,6 +79,21 @@ pub(crate) struct Config {
 /// # }
 /// ```
 ///
+/// Override output with your own value
+///
+/// ```
+/// # use anyhow::Result;
+/// # use std::env;
+/// # use vergen::EmitBuilder;
+/// #
+/// # fn main() -> Result<()> {
+/// env::set_var("VERGEN_SYSINFO_NAME", "this is the name I want output");
+/// EmitBuilder::builder().all_sysinfo().emit()?;
+/// # env::remove_var("VERGEN_SYSINFO_NAME");
+/// #   Ok(())
+/// # }
+/// ```
+///
 /// # Example
 /// This feature also recognizes the idempotent flag.
 ///
@@ -515,7 +530,7 @@ mod test {
     const SYSINFO_COUNT: usize = 9;
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn sysinfo_all_idempotent() -> Result<()> {
         let config = EmitBuilder::builder()
             .idempotent()
@@ -528,7 +543,7 @@ mod test {
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn sysinfo_all() -> Result<()> {
         let config = EmitBuilder::builder().all_sysinfo().test_emit()?;
         assert_eq!(SYSINFO_COUNT, config.cargo_rustc_env_map.len());
@@ -538,7 +553,7 @@ mod test {
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn adding_none_defaults() -> Result<()> {
         let mut map = BTreeMap::new();
         let mut warnings = vec![];
@@ -553,7 +568,7 @@ mod test {
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn suffix_works() {
         assert_eq!(suffix(1023), "1023 B");
         assert_eq!(suffix(1024), "1 KiB");
@@ -571,7 +586,7 @@ mod test {
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn pid_lookup_fails() -> Result<()> {
         let mut config = EmitBuilder::builder();
         let _ = config.all_sysinfo();

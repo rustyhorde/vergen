@@ -49,7 +49,7 @@ pub(crate) struct Config {
 /// # }
 /// ```
 ///
-/// /// Override output with your own value
+/// Override output with your own value
 ///
 /// ```
 /// # use anyhow::Result;
@@ -252,7 +252,7 @@ mod test {
     use std::env;
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn build_all_idempotent() -> Result<()> {
         let config = EmitBuilder::builder()
             .idempotent()
@@ -266,7 +266,7 @@ mod test {
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn build_all() -> Result<()> {
         let config = EmitBuilder::builder().all_build().test_emit()?;
         assert_eq!(2, config.cargo_rustc_env_map.len());

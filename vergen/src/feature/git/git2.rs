@@ -83,6 +83,22 @@ pub(crate) struct Config {
 /// #   Ok(())
 /// # }
 /// ```
+///
+/// Override output with your own value
+///
+/// ```
+/// # use anyhow::Result;
+/// # use std::env;
+/// # use vergen::EmitBuilder;
+/// #
+/// # fn main() -> Result<()> {
+/// env::set_var("VERGEN_GIT_BRANCH", "this is the branch I want output");
+/// EmitBuilder::builder().all_git().emit()?;
+/// # env::remove_var("VERGEN_GIT_BRANCH");
+/// #   Ok(())
+/// # }
+/// ```
+///
 #[cfg_attr(docsrs, doc(cfg(feature = "git")))]
 impl EmitBuilder {
     /// Emit all of the `VERGEN_GIT_*` instructions
@@ -589,7 +605,7 @@ mod test {
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn empty_email_is_default() -> Result<()> {
         let mut map = BTreeMap::new();
         let mut warnings = vec![];
@@ -605,7 +621,7 @@ mod test {
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn bad_revwalk_is_default() -> Result<()> {
         let mut map = BTreeMap::new();
         let mut warnings = vec![];
@@ -618,7 +634,7 @@ mod test {
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn head_not_found_is_default() -> Result<()> {
         create_test_repo();
         clone_test_repo();
@@ -640,7 +656,7 @@ mod test {
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn git_all_idempotent() -> Result<()> {
         let config = EmitBuilder::builder()
             .idempotent()
@@ -659,7 +675,7 @@ mod test {
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn git_all_idempotent_no_warn() -> Result<()> {
         let config = EmitBuilder::builder()
             .idempotent()
@@ -679,7 +695,7 @@ mod test {
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn git_all() -> Result<()> {
         let config = EmitBuilder::builder().all_git().test_emit_at(None)?;
         assert_eq!(9, config.cargo_rustc_env_map.len());
@@ -695,7 +711,7 @@ mod test {
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn git_error_fails() -> Result<()> {
         let mut config = EmitBuilder::builder();
         let _ = config.fail_on_error();
@@ -706,7 +722,7 @@ mod test {
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn git_error_defaults() -> Result<()> {
         let mut config = EmitBuilder::builder();
         let _ = config.all_git();

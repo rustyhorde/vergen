@@ -305,7 +305,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn git_all_output_default_dir() -> Result<()> {
         let mut stdout_buf = vec![];
         let failed = EmitBuilder::builder().all_git().emit_to(&mut stdout_buf)?;
@@ -319,7 +319,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn git_all_flags_test_repo() -> Result<()> {
         create_test_repo();
         clone_test_repo();
@@ -336,7 +336,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn git_all_output_test_repo() -> Result<()> {
         create_test_repo();
         clone_test_repo();
@@ -352,7 +352,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn git_emit_at_test_repo() -> Result<()> {
         create_test_repo();
         clone_test_repo();
@@ -366,7 +366,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn git_all_idempotent_output() -> Result<()> {
         let mut stdout_buf = vec![];
         let failed = EmitBuilder::builder()
@@ -383,7 +383,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn git_all_idempotent_output_quiet() -> Result<()> {
         let mut stdout_buf = vec![];
         let failed = EmitBuilder::builder()

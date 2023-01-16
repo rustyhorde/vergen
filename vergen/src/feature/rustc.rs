@@ -66,6 +66,22 @@ pub(crate) struct Config {
 /// #   Ok(())
 /// # }
 /// ```
+///
+/// Override output with your own value
+///
+/// ```
+/// # use anyhow::Result;
+/// # use std::env;
+/// # use vergen::EmitBuilder;
+/// #
+/// # fn main() -> Result<()> {
+/// env::set_var("VERGEN_RUSTC_CHANNEL", "this is the channel I want output");
+/// EmitBuilder::builder().all_rustc().emit()?;
+/// # env::remove_var("VERGEN_BUILD_CHANNEL");
+/// #   Ok(())
+/// # }
+/// ```
+///
 #[cfg_attr(docsrs, doc(cfg(feature = "rustc")))]
 impl EmitBuilder {
     /// Enable all of the `VERGEN_RUSTC_*` options
@@ -251,7 +267,7 @@ mod test {
     use std::env;
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn rustc_all_idempotent() -> Result<()> {
         let config = EmitBuilder::builder()
             .idempotent()
@@ -264,7 +280,7 @@ mod test {
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn rustc_all() -> Result<()> {
         let config = EmitBuilder::builder().all_rustc().test_emit()?;
         assert_eq!(6, config.cargo_rustc_env_map.len());
@@ -282,7 +298,7 @@ release: 1.68.0-nightly
 "#;
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn no_llvm_in_rustc() -> Result<()> {
         let mut config = EmitBuilder::builder();
         let _ = config.fail_on_error();
@@ -305,7 +321,7 @@ LLVM version: 15.0.6
 "#;
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn rustc_dev_build() -> Result<()> {
         let mut config = EmitBuilder::builder();
         let _ = config.fail_on_error();
@@ -328,7 +344,7 @@ LLVM version: 15.0.6
 "#;
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn rustc_unknown_bits() -> Result<()> {
         let mut config = EmitBuilder::builder();
         let _ = config.fail_on_error();
@@ -342,7 +358,7 @@ LLVM version: 15.0.6
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn rustc_fails_on_bad_input() -> Result<()> {
         let mut config = EmitBuilder::builder();
         let _ = config.fail_on_error();
@@ -353,7 +369,7 @@ LLVM version: 15.0.6
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn rustc_defaults_on_bad_input() -> Result<()> {
         let mut config = EmitBuilder::builder();
         let _ = config.all_rustc();

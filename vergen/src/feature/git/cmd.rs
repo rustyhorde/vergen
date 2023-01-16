@@ -153,6 +153,21 @@ const SHA: &str = sha!();
 /// # }
 /// ```
 ///
+/// Override output with your own value
+///
+/// ```
+/// # use anyhow::Result;
+/// # use std::env;
+/// # use vergen::EmitBuilder;
+/// #
+/// # fn main() -> Result<()> {
+/// env::set_var("VERGEN_GIT_BRANCH", "this is the branch I want output");
+/// EmitBuilder::builder().all_git().emit()?;
+/// # env::remove_var("VERGEN_GIT_BRANCH");
+/// #   Ok(())
+/// # }
+/// ```
+///
 /// # Example
 /// This feature can also be used in conjuction with the [`SOURCE_DATE_EPOCH`](https://reproducible-builds.org/docs/source-date-epoch/)
 /// environment variable to generate deterministic timestamps based off the
@@ -778,7 +793,7 @@ mod test {
     use std::{collections::BTreeMap, env};
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn bad_command_is_error() -> Result<()> {
         let mut map = BTreeMap::new();
         assert!(
@@ -799,7 +814,7 @@ mod test {
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn invalid_git_is_error() -> Result<()> {
         assert!(check_git("such_a_terrible_cmd -v").is_err());
         Ok(())
@@ -820,7 +835,7 @@ mod test {
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn git_all_idempotent() -> Result<()> {
         let config = EmitBuilder::builder()
             .idempotent()
@@ -833,7 +848,7 @@ mod test {
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn git_all_idempotent_no_warn() -> Result<()> {
         let config = EmitBuilder::builder()
             .idempotent()
@@ -847,7 +862,7 @@ mod test {
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn git_all_at_path() -> Result<()> {
         create_test_repo();
         clone_test_repo();
@@ -861,7 +876,7 @@ mod test {
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn git_all() -> Result<()> {
         let config = EmitBuilder::builder().all_git().test_emit_at(None)?;
         assert_eq!(9, config.cargo_rustc_env_map.len());
@@ -871,7 +886,7 @@ mod test {
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn git_all_dirty_tags_short() -> Result<()> {
         let config = EmitBuilder::builder()
             .all_git()
@@ -885,7 +900,7 @@ mod test {
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn fails_on_bad_git_command() -> Result<()> {
         let mut config = EmitBuilder::builder();
         let _ = config.fail_on_error();
@@ -896,7 +911,7 @@ mod test {
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn defaults_on_bad_git_command() -> Result<()> {
         let mut config = EmitBuilder::builder();
         let _ = config.all_git();
@@ -909,7 +924,7 @@ mod test {
     }
 
     #[test]
-    #[serial_test::parallel]
+    #[serial_test::serial]
     fn bad_timestamp_defaults() -> Result<()> {
         let mut map = BTreeMap::new();
         let mut warnings = vec![];

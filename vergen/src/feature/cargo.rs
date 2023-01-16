@@ -74,6 +74,26 @@ pub(crate) struct Config {
 /// #   Ok(())
 /// # }
 /// ```
+///
+/// Override output with your own value
+///
+/// ```
+/// # use anyhow::Result;
+/// # use std::env;
+/// # use vergen::EmitBuilder;
+/// #
+/// # fn main() -> Result<()> {
+/// # env::set_var("DEBUG", "true");
+/// # env::set_var("OPT_LEVEL", "1");
+/// env::set_var("VERGEN_CARGO_DEBUG", "this is the debug I want output");
+/// EmitBuilder::builder().all_cargo().emit()?;
+/// # env::remove_var("VERGEN_BUILD_DATE");
+/// # env::remove_var("DEBUG");
+/// # env::remove_var("OPT_LEVEL");
+/// #   Ok(())
+/// # }
+/// ```
+///
 #[cfg_attr(docsrs, doc(cfg(feature = "cargo")))]
 impl EmitBuilder {
     /// Emit all of the `VERGEN_CARGO_*` instructions
