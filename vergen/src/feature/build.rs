@@ -49,6 +49,21 @@ pub(crate) struct Config {
 /// # }
 /// ```
 ///
+/// /// Override output with your own value
+///
+/// ```
+/// # use anyhow::Result;
+/// # use std::env;
+/// # use vergen::EmitBuilder;
+/// #
+/// # fn main() -> Result<()> {
+/// env::set_var("VERGEN_BUILD_DATE", "this is the date I want output");
+/// EmitBuilder::builder().build_date().emit()?;
+/// # env::remove_var("VERGEN_BUILD_DATE");
+/// #   Ok(())
+/// # }
+/// ```
+///
 /// # Example
 /// This feature can also be used in conjuction with the [`SOURCE_DATE_EPOCH`](https://reproducible-builds.org/docs/source-date-epoch/)
 /// environment variable to generate deterministic timestamps based off the
