@@ -384,6 +384,17 @@ impl EmitBuilder {
             }
         }
 
+        if self.git_config.git_sha {
+            if let Ok(value) = env::var(GIT_SHA_NAME) {
+                add_map_entry(VergenKey::GitSha, value, map);
+            } else if self.git_config.git_sha_short {
+                let obj = repo.revparse_single("HEAD")?;
+                add_opt_value(obj.short_id()?.as_str(), VergenKey::GitSha, map, warnings);
+            } else {
+                add_map_entry(VergenKey::GitSha, commit.id().to_string(), map);
+            }
+        }
+
         if self.git_config.git_describe {
             if let Ok(value) = env::var(GIT_DESCRIBE_NAME) {
                 add_map_entry(VergenKey::GitDescribe, value, map);
@@ -405,17 +416,6 @@ impl EmitBuilder {
                     .describe(&describe_opts)
                     .map(|x| x.format(Some(&format_opts)).map_err(Error::from))??;
                 add_map_entry(VergenKey::GitDescribe, describe, map);
-            }
-        }
-
-        if self.git_config.git_sha {
-            if let Ok(value) = env::var(GIT_SHA_NAME) {
-                add_map_entry(VergenKey::GitSha, value, map);
-            } else if self.git_config.git_sha_short {
-                let obj = repo.revparse_single("HEAD")?;
-                add_opt_value(obj.short_id()?.as_str(), VergenKey::GitSha, map, warnings);
-            } else {
-                add_map_entry(VergenKey::GitSha, commit.id().to_string(), map);
             }
         }
 
