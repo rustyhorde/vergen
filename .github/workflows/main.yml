@@ -99,7 +99,7 @@ jobs:
       - name: 🧰 Toolchain 🧰
         run: |
           rustup toolchain remove ${{ matrix.rust }}
-          rustup toolchain install ${{ matrix.rust }} --profile default
+          rustup toolchain install ${{ matrix.rust }} --profile default --no-self-update
           rustup default ${{ matrix.rust }}
       - name: 📎 Clippy 📎
         run: |
@@ -138,7 +138,7 @@ jobs:
       - name: 🧰 Toolchain 🧰
         run: |
           rustup toolchain remove ${{ matrix.rust }}
-          rustup toolchain install ${{ matrix.rust }} --profile default
+          rustup toolchain install ${{ matrix.rust }} --profile default --no-self-update
           rustup default ${{ matrix.rust }}
       - name: 📎 Clippy 📎
         run: |
@@ -321,7 +321,7 @@ jobs:
       - name: 🧰 Toolchain 🧰
         run: |
           rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
-          rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile minimal
+          rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile minimal --no-self-update
           rustup default ${{ matrix.rust }}
       - name: 💾 Install (cargo-binstall) 💾
         run: |
