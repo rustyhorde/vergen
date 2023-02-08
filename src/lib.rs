@@ -260,7 +260,6 @@
         trivial_numeric_casts,
         type_alias_bounds,
         tyvar_behind_raw_pointer,
-        unaligned_references,
         uncommon_codepoints,
         unconditional_recursion,
         uninhabited_static,
