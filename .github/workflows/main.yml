@@ -4,11 +4,14 @@ on:
   push:
     branches:
       - master
-    tags-ignore: '*'
+      - legacy/v7
+    tags-ignore: 
+      - '*'
   pull_request:
     branches:
       - '*'
-    tags-ignore: '*'
+    tags-ignore: 
+      - '*'
   schedule:
     # * is a special character in YAML so you have to quote this string
     - cron:  '13 3 * * *'
