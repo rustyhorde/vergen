@@ -7,7 +7,7 @@ mod test_git_git2 {
     use git::{create::Options, open, refs::transaction::PreviousValue};
     #[cfg(feature = "git2")]
     use git2_rs::Repository;
-    use git_repository as git;
+    use gix as git;
     use lazy_static::lazy_static;
     use regex::Regex;
     use std::{
@@ -295,7 +295,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     #[cfg(feature = "gix")]
     fn repo_exists() -> Result<()> {
         let curr_dir = env::current_dir()?;
-        let _repo = git_repository::discover(curr_dir)?;
+        let _repo = gix::discover(curr_dir)?;
         Ok(())
     }
 

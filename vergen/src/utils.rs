@@ -67,7 +67,7 @@ pub(crate) mod fns {
 pub(crate) mod repo {
     use anyhow::Result;
     use git::{create::Options, open, refs::transaction::PreviousValue};
-    use git_repository as git;
+    use gix as git;
     use std::{
         env,
         fs::{self, OpenOptions},

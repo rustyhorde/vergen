@@ -395,6 +395,6 @@ mod utils;
 
 // This is here to appease the `unused_crate_dependencies` lint
 #[cfg(test)]
-use {git_repository as _, lazy_static as _, regex as _, serial_test as _};
+use {gix as _, lazy_static as _, regex as _, serial_test as _};
 
 pub use crate::emitter::EmitBuilder;

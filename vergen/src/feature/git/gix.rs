@@ -19,7 +19,7 @@ use crate::{
 #[cfg(test)]
 use anyhow::anyhow;
 use anyhow::{Error, Result};
-use git_repository::{commit, head::Kind, Commit, Head};
+use gix::{commit, head::Kind, Commit, Head};
 use std::{
     env,
     path::{Path, PathBuf},
@@ -324,7 +324,7 @@ impl EmitBuilder {
         } else {
             env::current_dir()?
         };
-        let repo = git_repository::discover(curr_dir)?;
+        let repo = gix::discover(curr_dir)?;
         let mut head = repo.head()?;
         let git_path = repo.git_dir().to_path_buf();
         let commit = head.peel_to_commit_in_place()?;
