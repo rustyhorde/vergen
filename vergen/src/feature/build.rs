@@ -280,7 +280,7 @@ mod test {
     fn source_date_epoch_works() -> Result<()> {
         env::set_var("SOURCE_DATE_EPOCH", "1671809360");
         let mut stdout_buf = vec![];
-        let _ = EmitBuilder::builder()
+        _ = EmitBuilder::builder()
             .idempotent()
             .all_build()
             .emit_to(&mut stdout_buf)?;

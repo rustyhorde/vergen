@@ -706,20 +706,20 @@ fn run_cmd(command: &str) -> Result<Output> {
         "sh".to_string()
     };
     let mut cmd = Command::new(shell);
-    let _ = cmd.arg("-c");
-    let _ = cmd.arg(command);
-    let _ = cmd.stdout(Stdio::piped());
-    let _ = cmd.stderr(Stdio::piped());
+    _ = cmd.arg("-c");
+    _ = cmd.arg(command);
+    _ = cmd.stdout(Stdio::piped());
+    _ = cmd.stderr(Stdio::piped());
     Ok(cmd.output()?)
 }
 
 #[cfg(target_env = "msvc")]
 fn run_cmd(command: &str) -> Result<Output> {
     let mut cmd = Command::new("cmd");
-    let _ = cmd.arg("/c");
-    let _ = cmd.arg(command);
-    let _ = cmd.stdout(Stdio::piped());
-    let _ = cmd.stderr(Stdio::piped());
+    _ = cmd.arg("/c");
+    _ = cmd.arg(command);
+    _ = cmd.stdout(Stdio::piped());
+    _ = cmd.stderr(Stdio::piped());
     Ok(cmd.output()?)
 }
 
@@ -903,8 +903,8 @@ mod test {
     #[serial_test::serial]
     fn fails_on_bad_git_command() -> Result<()> {
         let mut config = EmitBuilder::builder();
-        let _ = config.fail_on_error();
-        let _ = config.all_git();
+        _ = config.fail_on_error();
+        _ = config.all_git();
         config.git_config.git_cmd = Some("this_is_not_a_git_cmd");
         assert!(config.test_emit().is_err());
         Ok(())
@@ -914,7 +914,7 @@ mod test {
     #[serial_test::serial]
     fn defaults_on_bad_git_command() -> Result<()> {
         let mut config = EmitBuilder::builder();
-        let _ = config.all_git();
+        _ = config.all_git();
         config.git_config.git_cmd = Some("this_is_not_a_git_cmd");
         let emitter = config.test_emit()?;
         assert_eq!(9, emitter.cargo_rustc_env_map.len());
@@ -929,7 +929,7 @@ mod test {
         let mut map = BTreeMap::new();
         let mut warnings = vec![];
         let mut config = EmitBuilder::builder();
-        let _ = config.all_git();
+        _ = config.all_git();
         assert!(config
             .add_git_timestamp_entries("this_is_not_a_git_cmd", false, &mut map, &mut warnings)
             .is_ok());

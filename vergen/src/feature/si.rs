@@ -589,7 +589,7 @@ mod test {
     #[serial_test::serial]
     fn pid_lookup_fails() -> Result<()> {
         let mut config = EmitBuilder::builder();
-        let _ = config.all_sysinfo();
+        _ = config.all_sysinfo();
         config.sysinfo_config.fail_pid = true;
         let emitter = config.test_emit()?;
         assert_eq!(SYSINFO_COUNT, emitter.cargo_rustc_env_map.len());

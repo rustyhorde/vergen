@@ -650,7 +650,7 @@ pub(crate) mod test {
     #[serial_test::serial]
     fn default_is_no_emit() -> Result<()> {
         let mut stdout_buf = vec![];
-        let _ = EmitBuilder::builder().emit_to(&mut stdout_buf)?;
+        _ = EmitBuilder::builder().emit_to(&mut stdout_buf)?;
         assert!(stdout_buf.is_empty());
         Ok(())
     }
@@ -675,7 +675,7 @@ pub(crate) mod test {
 
         setup();
         let mut stdout_buf = vec![];
-        let _ = EmitBuilder::builder()
+        _ = EmitBuilder::builder()
             .idempotent()
             .fail_on_error()
             .all_build()
@@ -700,7 +700,7 @@ pub(crate) mod test {
 
         setup();
         let mut stdout_buf = vec![];
-        let _ = EmitBuilder::builder()
+        _ = EmitBuilder::builder()
             .all_build()
             .all_cargo()
             .all_rustc()
@@ -728,7 +728,7 @@ pub(crate) mod test {
 
         setup();
         let mut stdout_buf = vec![];
-        let _ = EmitBuilder::builder()
+        _ = EmitBuilder::builder()
             .all_build()
             .all_cargo()
             .all_git()

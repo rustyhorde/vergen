@@ -402,14 +402,14 @@ impl EmitBuilder {
                 let mut describe_opts = DescribeOptions::new();
                 let mut format_opts = DescribeFormatOptions::new();
 
-                let _ = describe_opts.show_commit_oid_as_fallback(true);
+                _ = describe_opts.show_commit_oid_as_fallback(true);
 
                 if self.git_config.git_describe_dirty {
-                    let _ = format_opts.dirty_suffix("-dirty");
+                    _ = format_opts.dirty_suffix("-dirty");
                 }
 
                 if self.git_config.git_describe_tags {
-                    let _ = describe_opts.describe_tags();
+                    _ = describe_opts.describe_tags();
                 }
 
                 let describe = repo
@@ -714,8 +714,8 @@ mod test {
     #[serial_test::serial]
     fn git_error_fails() -> Result<()> {
         let mut config = EmitBuilder::builder();
-        let _ = config.fail_on_error();
-        let _ = config.all_git();
+        _ = config.fail_on_error();
+        _ = config.all_git();
         config.git_config.fail = true;
         assert!(config.test_emit().is_err());
         Ok(())
@@ -725,7 +725,7 @@ mod test {
     #[serial_test::serial]
     fn git_error_defaults() -> Result<()> {
         let mut config = EmitBuilder::builder();
-        let _ = config.all_git();
+        _ = config.all_git();
         config.git_config.fail = true;
         let emitter = config.test_emit()?;
         assert_eq!(9, emitter.cargo_rustc_env_map.len());

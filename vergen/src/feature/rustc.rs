@@ -301,8 +301,8 @@ release: 1.68.0-nightly
     #[serial_test::serial]
     fn no_llvm_in_rustc() -> Result<()> {
         let mut config = EmitBuilder::builder();
-        let _ = config.fail_on_error();
-        let _ = config.all_rustc();
+        _ = config.fail_on_error();
+        _ = config.all_rustc();
         config.rustc_config.rustc_str_to_test = Some(NO_LLVM);
         let emitter = config.test_emit()?;
         assert_eq!(6, emitter.cargo_rustc_env_map.len());
@@ -324,8 +324,8 @@ LLVM version: 15.0.6
     #[serial_test::serial]
     fn rustc_dev_build() -> Result<()> {
         let mut config = EmitBuilder::builder();
-        let _ = config.fail_on_error();
-        let _ = config.all_rustc();
+        _ = config.fail_on_error();
+        _ = config.all_rustc();
         config.rustc_config.rustc_str_to_test = Some(DEV_BUILD);
         let emitter = config.test_emit()?;
         assert_eq!(6, emitter.cargo_rustc_env_map.len());
@@ -347,8 +347,8 @@ LLVM version: 15.0.6
     #[serial_test::serial]
     fn rustc_unknown_bits() -> Result<()> {
         let mut config = EmitBuilder::builder();
-        let _ = config.fail_on_error();
-        let _ = config.all_rustc();
+        _ = config.fail_on_error();
+        _ = config.all_rustc();
         config.rustc_config.rustc_str_to_test = Some(UNKNOWN_BITS);
         let emitter = config.test_emit()?;
         assert_eq!(6, emitter.cargo_rustc_env_map.len());
@@ -361,8 +361,8 @@ LLVM version: 15.0.6
     #[serial_test::serial]
     fn rustc_fails_on_bad_input() -> Result<()> {
         let mut config = EmitBuilder::builder();
-        let _ = config.fail_on_error();
-        let _ = config.all_rustc();
+        _ = config.fail_on_error();
+        _ = config.all_rustc();
         config.rustc_config.rustc_str_to_test = Some("a_bad_rustcvv_string");
         assert!(config.test_emit().is_err());
         Ok(())
@@ -372,7 +372,7 @@ LLVM version: 15.0.6
     #[serial_test::serial]
     fn rustc_defaults_on_bad_input() -> Result<()> {
         let mut config = EmitBuilder::builder();
-        let _ = config.all_rustc();
+        _ = config.all_rustc();
         config.rustc_config.rustc_str_to_test = Some("a_bad_rustcvv_string");
         let emitter = config.test_emit()?;
         assert_eq!(6, emitter.cargo_rustc_env_map.len());
