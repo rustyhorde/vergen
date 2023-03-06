@@ -10,7 +10,7 @@ license = "MIT OR Apache-2.0"
 name = "vergen"
 readme = "README.md"
 repository = "https://github.com/rustyhorde/vergen"
-version = "8.0.0-beta.7"
+version = "8.0.0-beta.8"
 
 [package.metadata.cargo-all-features]
 denylist = [
@@ -40,7 +40,7 @@ si = ["sysinfo"]
 [dependencies]
 anyhow = "1.0.69"
 git2-rs = { version = "0.16.1", package = "git2", optional = true, default-features = false }
-gix = { version = "0.38.0", optional = true, default-features = false }
+gix = { version = "0.39.0", optional = true, default-features = false }
 rustc_version = { version = "0.4.0", optional = true }
 sysinfo = { version = "0.28.1", optional = true, default-features = false }
 time = { version = "0.3.20", features = [
@@ -52,7 +52,7 @@ time = { version = "0.3.20", features = [
 rustversion = "1.0.11"
 
 [dev-dependencies]
-gix = { version = "0.38.0", default-features = false, features = [
+gix = { version = "0.39.0", default-features = false, features = [
     "blocking-network-client",
 ] }
 lazy_static = "1.4.0"
