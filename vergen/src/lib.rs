@@ -394,6 +394,8 @@ mod key;
 mod utils;
 
 // This is here to appease the `unused_crate_dependencies` lint
+#[cfg(feature = "gix")]
+use gix_tempfile as _;
 #[cfg(test)]
 use {gix as _, lazy_static as _, regex as _, serial_test as _};
 

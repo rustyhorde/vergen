@@ -18,6 +18,7 @@ denylist = [
     "git2-rs",
     "gitcl",
     "gix",
+    "gix-tempfile",
     "gitoxide",
     "rustc_version",
     "sysinfo",
