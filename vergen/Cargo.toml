@@ -32,7 +32,7 @@ cargo = []
 git = []
 gitcl = ["time"]
 git2 = ["time", "git2-rs"]
-gitoxide = ["time", "gix"]
+gitoxide = ["time", "gix", "gix-tempfile"]
 rustc = ["rustc_version"]
 unstable = []
 si = ["sysinfo"]
@@ -41,6 +41,7 @@ si = ["sysinfo"]
 anyhow = "1.0.69"
 git2-rs = { version = "0.16.1", package = "git2", optional = true, default-features = false }
 gix = { version = "0.39.0", optional = true, default-features = false }
+gix-tempfile = { version = "=4.1.0", optional = true, default-features = false }
 rustc_version = { version = "0.4.0", optional = true }
 sysinfo = { version = "0.28.1", optional = true, default-features = false }
 time = { version = "0.3.20", features = [
