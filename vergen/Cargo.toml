@@ -18,7 +18,6 @@ denylist = [
     "git2-rs",
     "gitcl",
     "gix",
-    "gix-tempfile",
     "gitoxide",
     "rustc_version",
     "sysinfo",
@@ -33,7 +32,7 @@ cargo = []
 git = []
 gitcl = ["time"]
 git2 = ["time", "git2-rs"]
-gitoxide = ["time", "gix", "gix-tempfile"]
+gitoxide = ["time", "gix"]
 rustc = ["rustc_version"]
 unstable = []
 si = ["sysinfo"]
@@ -41,8 +40,7 @@ si = ["sysinfo"]
 [dependencies]
 anyhow = "1.0.69"
 git2-rs = { version = "0.16.1", package = "git2", optional = true, default-features = false }
-gix = { version = "0.40.0", optional = true, default-features = false }
-gix-tempfile = { version = "=4.1.0", optional = true, default-features = false }
+gix = { version = "0.41.0", optional = true, default-features = false }
 rustc_version = { version = "0.4.0", optional = true }
 sysinfo = { version = "0.28.1", optional = true, default-features = false }
 time = { version = "0.3.20", features = [
@@ -54,7 +52,7 @@ time = { version = "0.3.20", features = [
 rustversion = "1.0.11"
 
 [dev-dependencies]
-gix = { version = "0.40.0", default-features = false, features = [
+gix = { version = "0.41.0", default-features = false, features = [
     "blocking-network-client",
 ] }
 lazy_static = "1.4.0"
