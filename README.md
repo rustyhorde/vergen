@@ -30,15 +30,14 @@ to rerun instruction emission if the `SOURCE_DATE_EPOCH` environment variable ha
 Special thanks to the sponsors of this project
 * [tryretool](https://github.com/tryretool)
 
-# ⚠️ This documention is for the version 8 beta ⚠️
+# ⚠️ This documention is for version 8 ⚠️
 If you wish to refer to version 7 you can find that branch [`here`](https://github.com/rustyhorde/vergen/tree/legacy/v7)
 
 ## MSRV
-The current minimum supported rust version is 1.65.0 for non-Windows platforms
-The current minimum supported rust version is 1.65.0 for Windows platforms
+The current minimum supported rust version is 1.65.0
 
 ## Example Usage
-See the documentation at [docs.rs](https://docs.rs/vergen/8.0.0-beta.0/vergen/index.html#usage) for example usage
+See the documentation at [docs.rs](https://docs.rs/vergen/latest/vergen/) for example usage
 
 ## Notes about the optional `git2` dependency
 This update to git2 picked up some [security related features](https://github.blog/2022-04-12-git-security-vulnerability-announced/).  In docker environments especially, this requires a `safe.directory` configuration.   There are a couple methods for achieving this.
