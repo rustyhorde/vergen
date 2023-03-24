@@ -326,7 +326,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
         let mut stdout_buf = vec![];
         let failed = EmitBuilder::builder()
             .all_git()
-            .git_describe(true, true)
+            .git_describe(true, true, None)
             .git_sha(true)
             .emit_to_at(&mut stdout_buf, Some(clone_path()))?;
         assert!(!failed);
@@ -343,7 +343,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
         let mut stdout_buf = vec![];
         let failed = EmitBuilder::builder()
             .all_git()
-            .git_describe(true, false)
+            .git_describe(true, false, None)
             .emit_to_at(&mut stdout_buf, Some(clone_path()))?;
         assert!(!failed);
         let output = String::from_utf8_lossy(&stdout_buf);
@@ -358,7 +358,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
         clone_test_repo();
         assert!(EmitBuilder::builder()
             .all_git()
-            .git_describe(true, true)
+            .git_describe(true, true, None)
             .git_sha(true)
             .emit_at(clone_path())
             .is_ok());
