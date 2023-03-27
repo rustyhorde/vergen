@@ -400,7 +400,12 @@ impl EmitBuilder {
     /// Optionally, add the `dirty` or `tags` flag to describe.
     /// See [`git describe`](https://git-scm.com/docs/git-describe#_options) for more details
     ///
-    pub fn git_describe(&mut self, dirty: bool, tags: bool, match_pattern: Option<&'static str>) -> &mut Self {
+    pub fn git_describe(
+        &mut self,
+        dirty: bool,
+        tags: bool,
+        match_pattern: Option<&'static str>,
+    ) -> &mut Self {
         self.git_config.git_describe = true;
         self.git_config.git_describe_dirty = dirty;
         self.git_config.git_describe_tags = tags;
