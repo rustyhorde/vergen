@@ -736,7 +736,8 @@ fn add_git_cmd_entry(cmd: &str, key: VergenKey, map: &mut RustcEnvMap) -> Result
             .to_string();
         add_map_entry(key, stdout, map);
     } else {
-        return Err(anyhow!("Failed to run '{cmd}'!"));
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(anyhow!("Failed to run '{cmd}'!  {stderr}"));
     }
     Ok(())
 }
