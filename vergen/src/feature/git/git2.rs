@@ -259,7 +259,7 @@ impl EmitBuilder {
             rerun_if_changed.clear();
 
             warnings.push(format!("{e}"));
-            
+
             if self.git_config.git_branch {
                 add_default_map_entry(VergenKey::GitBranch, map, warnings);
             }
