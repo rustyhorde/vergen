@@ -605,7 +605,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
         if repo_exists().is_ok() && !failed {
             assert!(GIT_REGEX_INST.is_match(&output));
         } else {
-            assert_eq!(ALL_IDEM_OUTPUT, output);
+            assert!(ALL_IDEM_OUTPUT.is_match(&output));
         }
         Ok(())
     }
