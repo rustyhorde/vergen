@@ -55,7 +55,6 @@ pub(crate) struct Config {
     // git rev-parse HEAD (optionally with --short)
     pub(crate) git_sha: bool,
     git_sha_short: bool,
-    #[cfg(test)]
     git_cmd: Option<&'static str>,
 }
 
@@ -264,6 +263,7 @@ impl EmitBuilder {
             .git_commit_timestamp()
             .git_describe(false, false)
             .git_sha(false)
+            .git_cmd(None)
     }
 
     fn any(&self) -> bool {
@@ -426,6 +426,13 @@ impl EmitBuilder {
         self
     }
 
+    /// Set the command used to test if git exists on the path.
+    /// Defaults to `git --version` if not set explicitly.
+    pub fn git_cmd(&mut self, cmd: Option<&'static str>) -> &mut Self {
+        self.git_config.git_cmd = cmd;
+        self
+    }
+
     pub(crate) fn add_git_default(
         &self,
         e: Error,
@@ -482,7 +489,12 @@ impl EmitBuilder {
         warnings: &mut Vec<String>,
         rerun_if_changed: &mut Vec<String>,
     ) -> Result<()> {
-        check_git("git -v").and_then(check_inside_git_worktree)?;
+        let git_cmd = if let Some(cmd) = self.git_config.git_cmd {
+            cmd
+        } else {
+            "git --version"
+        };
+        check_git(git_cmd).and_then(check_inside_git_worktree)?;
         self.inner_add_git_map_entries(path, idempotent, map, warnings, rerun_if_changed)
     }
 
@@ -498,7 +510,7 @@ impl EmitBuilder {
         let git_cmd = if let Some(cmd) = self.git_config.git_cmd {
             cmd
         } else {
-            "git -v"
+            "git --version"
         };
         check_git(git_cmd).and_then(check_inside_git_worktree)?;
         self.inner_add_git_map_entries(path, idempotent, map, warnings, rerun_if_changed)
