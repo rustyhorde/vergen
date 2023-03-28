@@ -682,7 +682,7 @@ mod test {
             assert_eq!(2, config.warnings.len());
         } else {
             assert_eq!(9, count_idempotent(&config.cargo_rustc_env_map));
-            assert_eq!(9, config.warnings.len());
+            assert_eq!(10, config.warnings.len());
         }
         Ok(())
     }
@@ -702,7 +702,7 @@ mod test {
             assert_eq!(2, config.warnings.len());
         } else {
             assert_eq!(9, count_idempotent(&config.cargo_rustc_env_map));
-            assert_eq!(9, config.warnings.len());
+            assert_eq!(10, config.warnings.len());
         }
         Ok(())
     }
@@ -718,7 +718,7 @@ mod test {
             assert_eq!(0, config.warnings.len());
         } else {
             assert_eq!(9, count_idempotent(&config.cargo_rustc_env_map));
-            assert_eq!(9, config.warnings.len());
+            assert_eq!(10, config.warnings.len());
         }
         Ok(())
     }
