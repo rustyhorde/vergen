@@ -110,7 +110,7 @@ impl EmitBuilder {
             .git_commit_date()
             .git_commit_message()
             .git_commit_timestamp()
-            .git_describe(false, false)
+            .git_describe(false, false, None)
             .git_sha(false)
     }
 
@@ -214,7 +214,12 @@ impl EmitBuilder {
     /// Optionally, add the `dirty` or `tags` flag to describe.
     /// See [`git describe`](https://git-scm.com/docs/git-describe#_options) for more details
     ///
-    pub fn git_describe(&mut self, dirty: bool, tags: bool) -> &mut Self {
+    pub fn git_describe(
+        &mut self,
+        dirty: bool,
+        tags: bool,
+        _match_pattern: Option<&'static str>,
+    ) -> &mut Self {
         self.git_config.git_describe = true;
         self.git_config.git_describe_dirty = dirty;
         self.git_config.git_describe_tags = tags;

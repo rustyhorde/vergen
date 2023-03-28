@@ -47,10 +47,11 @@ pub(crate) struct Config {
     pub(crate) git_commit_date: bool,
     // git log -1 --pretty=format:'%cI'
     pub(crate) git_commit_timestamp: bool,
-    // git describe --always (optionally --tags, --dirty)
+    // git describe --always (optionally --tags, --dirty, --match)
     pub(crate) git_describe: bool,
     git_describe_dirty: bool,
     git_describe_tags: bool,
+    git_describe_match_pattern: Option<&'static str>,
     // git rev-parse HEAD (optionally with --short)
     pub(crate) git_sha: bool,
     git_sha_short: bool,
@@ -110,7 +111,7 @@ impl EmitBuilder {
             .git_commit_date()
             .git_commit_message()
             .git_commit_timestamp()
-            .git_describe(false, false)
+            .git_describe(false, false, None)
             .git_sha(false)
     }
 
@@ -214,10 +215,16 @@ impl EmitBuilder {
     /// Optionally, add the `dirty` or `tags` flag to describe.
     /// See [`git describe`](https://git-scm.com/docs/git-describe#_options) for more details
     ///
-    pub fn git_describe(&mut self, dirty: bool, tags: bool) -> &mut Self {
+    pub fn git_describe(
+        &mut self,
+        dirty: bool,
+        tags: bool,
+        match_pattern: Option<&'static str>,
+    ) -> &mut Self {
         self.git_config.git_describe = true;
         self.git_config.git_describe_dirty = dirty;
         self.git_config.git_describe_tags = tags;
+        self.git_config.git_describe_match_pattern = match_pattern;
         self
     }
 
@@ -410,6 +417,10 @@ impl EmitBuilder {
 
                 if self.git_config.git_describe_tags {
                     _ = describe_opts.describe_tags();
+                }
+
+                if let Some(pattern) = self.git_config.git_describe_match_pattern {
+                    _ = describe_opts.pattern(pattern);
                 }
 
                 let describe = repo
