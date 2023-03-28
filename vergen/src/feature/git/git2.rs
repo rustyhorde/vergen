@@ -212,7 +212,7 @@ impl EmitBuilder {
     /// cargo:rustc-env=VERGEN_GIT_DESCRIBE=<DESCRIBE>
     /// ```
     ///
-    /// Optionally, add the `dirty` or `tags` flag to describe.
+    /// Optionally, add the `dirty`, `tags`, or `match` flag to describe.
     /// See [`git describe`](https://git-scm.com/docs/git-describe#_options) for more details
     ///
     pub fn git_describe(

@@ -14,6 +14,7 @@ version = "8.0.0"
 
 [package.metadata.cargo-all-features]
 denylist = [
+    "git",
     "git2",
     "git2-rs",
     "gitcl",

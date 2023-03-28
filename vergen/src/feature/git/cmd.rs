@@ -48,10 +48,11 @@ pub(crate) struct Config {
     pub(crate) git_commit_message: bool,
     // git log -1 --pretty=format:'%cI'
     pub(crate) git_commit_timestamp: bool,
-    // git describe --always (optionally --tags, --dirty)
+    // git describe --always (optionally --tags, --dirty, --match)
     pub(crate) git_describe: bool,
     git_describe_dirty: bool,
     git_describe_tags: bool,
+    git_describe_match_pattern: Option<&'static str>,
     // git rev-parse HEAD (optionally with --short)
     pub(crate) git_sha: bool,
     git_sha_short: bool,
@@ -396,18 +397,19 @@ impl EmitBuilder {
     #[doc = concat!(describe!())]
     /// ```
     ///
-    /// Optionally, add the `dirty` or `tags` flag to describe.
+    /// Optionally, add the `dirty`, `tags`, or `match` flag to describe.
     /// See [`git describe`](https://git-scm.com/docs/git-describe#_options) for more details
     ///
     pub fn git_describe(
         &mut self,
         dirty: bool,
         tags: bool,
-        _match_pattern: Option<&'static str>,
+        match_pattern: Option<&'static str>,
     ) -> &mut Self {
         self.git_config.git_describe = true;
         self.git_config.git_describe_dirty = dirty;
         self.git_config.git_describe_tags = tags;
+        self.git_config.git_describe_match_pattern = match_pattern;
         self
     }
 
@@ -572,6 +574,10 @@ impl EmitBuilder {
                 if self.git_config.git_describe_tags {
                     describe_cmd.push_str(" --tags");
                 }
+                if let Some(pattern) = self.git_config.git_describe_match_pattern {
+                    describe_cmd.push_str(" --match ");
+                    describe_cmd.push_str(pattern);
+                }
                 add_git_cmd_entry(&describe_cmd, VergenKey::GitDescribe, map)?;
             }
         }
@@ -730,6 +736,8 @@ fn add_git_cmd_entry(cmd: &str, key: VergenKey, map: &mut RustcEnvMap) -> Result
             .to_string();
         add_map_entry(key, stdout, map);
     } else {
+        let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
+        eprintln!("{stderr}");
         return Err(anyhow!("Failed to run '{cmd}'!"));
     }
     Ok(())
