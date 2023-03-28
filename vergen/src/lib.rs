@@ -43,9 +43,9 @@
 //!
 //! [build-dependencies]
 //! # All features enabled
-//! vergen = { version = "8.0.0-beta.0", features = ["build", "cargo", "git", "gitcl", "rustc", "si"] }
+//! vergen = { version = "8.0.0", features = ["build", "cargo", "git", "gitcl", "rustc", "si"] }
 //! # or
-//! vergen = { version = "8.0.0-beta.0", features = ["build", "git", "gitcl"] }
+//! vergen = { version = "8.0.0", features = ["build", "git", "gitcl"] }
 //! # if you wish to disable certain features
 //! ```
 //!
@@ -95,14 +95,14 @@
 //!
 //! | Features | Enables |
 //! | -------- | ------- |
-//! |   gitcl  | `VERGEN_GIT_` instructions emitted via the `git` binary at the command line |
-//! |   git2   | `VERGEN_GIT_` instructions emitted via git `git2` library |
-//! |   gix    | `VERGEN_GIT_` instructions emitted via the `gitoxide` library |
+//! | gitcl    | `VERGEN_GIT_` instructions emitted via the `git` binary at the command line |
+//! | git2     | `VERGEN_GIT_` instructions emitted via git `git2` library |
+//! | gitoxide | `VERGEN_GIT_` instructions emitted via the `gitoxide` library |
 //!
 //! A common configuration would be as follows:
 //! ```toml
 //! [build-dependencies]
-//! vergen = { version = "8.0.0-beta.0", features = [ "build", "git", "gitcl" ]}
+//! vergen = { version = "8.0.0", features = [ "build", "git", "gitcl" ]}
 //! # ...
 //! ```
 //!
