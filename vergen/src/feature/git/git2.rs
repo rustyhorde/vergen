@@ -743,7 +743,7 @@ mod test {
         let emitter = config.test_emit()?;
         assert_eq!(9, emitter.cargo_rustc_env_map.len());
         assert_eq!(9, count_idempotent(&emitter.cargo_rustc_env_map));
-        assert_eq!(9, emitter.warnings.len());
+        assert_eq!(10, emitter.warnings.len());
         Ok(())
     }
 }
