@@ -47,10 +47,11 @@ pub(crate) struct Config {
     pub(crate) git_commit_date: bool,
     // git log -1 --pretty=format:'%cI'
     pub(crate) git_commit_timestamp: bool,
-    // git describe --always (optionally --tags, --dirty)
+    // git describe --always (optionally --tags, --dirty, --match)
     pub(crate) git_describe: bool,
     git_describe_dirty: bool,
     git_describe_tags: bool,
+    git_describe_match_pattern: Option<&'static str>,
     // git rev-parse HEAD (optionally with --short)
     pub(crate) git_sha: bool,
     git_sha_short: bool,
@@ -110,7 +111,7 @@ impl EmitBuilder {
             .git_commit_date()
             .git_commit_message()
             .git_commit_timestamp()
-            .git_describe(false, false)
+            .git_describe(false, false, None)
             .git_sha(false)
     }
 
@@ -211,13 +212,19 @@ impl EmitBuilder {
     /// cargo:rustc-env=VERGEN_GIT_DESCRIBE=<DESCRIBE>
     /// ```
     ///
-    /// Optionally, add the `dirty` or `tags` flag to describe.
+    /// Optionally, add the `dirty`, `tags`, or `match` flag to describe.
     /// See [`git describe`](https://git-scm.com/docs/git-describe#_options) for more details
     ///
-    pub fn git_describe(&mut self, dirty: bool, tags: bool) -> &mut Self {
+    pub fn git_describe(
+        &mut self,
+        dirty: bool,
+        tags: bool,
+        match_pattern: Option<&'static str>,
+    ) -> &mut Self {
         self.git_config.git_describe = true;
         self.git_config.git_describe_dirty = dirty;
         self.git_config.git_describe_tags = tags;
+        self.git_config.git_describe_match_pattern = match_pattern;
         self
     }
 
@@ -250,6 +257,8 @@ impl EmitBuilder {
             // Clear any previous warnings.  This should be it.
             warnings.clear();
             rerun_if_changed.clear();
+
+            warnings.push(format!("{e}"));
 
             if self.git_config.git_branch {
                 add_default_map_entry(VergenKey::GitBranch, map, warnings);
@@ -410,6 +419,10 @@ impl EmitBuilder {
 
                 if self.git_config.git_describe_tags {
                     _ = describe_opts.describe_tags();
+                }
+
+                if let Some(pattern) = self.git_config.git_describe_match_pattern {
+                    _ = describe_opts.pattern(pattern);
                 }
 
                 let describe = repo
@@ -669,7 +682,7 @@ mod test {
             assert_eq!(2, config.warnings.len());
         } else {
             assert_eq!(9, count_idempotent(&config.cargo_rustc_env_map));
-            assert_eq!(9, config.warnings.len());
+            assert_eq!(10, config.warnings.len());
         }
         Ok(())
     }
@@ -689,7 +702,7 @@ mod test {
             assert_eq!(2, config.warnings.len());
         } else {
             assert_eq!(9, count_idempotent(&config.cargo_rustc_env_map));
-            assert_eq!(9, config.warnings.len());
+            assert_eq!(10, config.warnings.len());
         }
         Ok(())
     }
@@ -705,7 +718,7 @@ mod test {
             assert_eq!(0, config.warnings.len());
         } else {
             assert_eq!(9, count_idempotent(&config.cargo_rustc_env_map));
-            assert_eq!(9, config.warnings.len());
+            assert_eq!(10, config.warnings.len());
         }
         Ok(())
     }
@@ -730,7 +743,7 @@ mod test {
         let emitter = config.test_emit()?;
         assert_eq!(9, emitter.cargo_rustc_env_map.len());
         assert_eq!(9, count_idempotent(&emitter.cargo_rustc_env_map));
-        assert_eq!(9, emitter.warnings.len());
+        assert_eq!(10, emitter.warnings.len());
         Ok(())
     }
 }

@@ -85,9 +85,9 @@ mod test_git_git2 {
             .join("\n");
             Regex::new(&re_str).unwrap()
         };
-    }
-
-    const ALL_IDEM_OUTPUT: &str = r#"cargo:rustc-env=VERGEN_GIT_BRANCH=VERGEN_IDEMPOTENT_OUTPUT
+        static ref ALL_IDEM_OUTPUT: Regex = {
+            Regex::new(
+                r#"cargo:rustc-env=VERGEN_GIT_BRANCH=VERGEN_IDEMPOTENT_OUTPUT
 cargo:rustc-env=VERGEN_GIT_COMMIT_AUTHOR_EMAIL=VERGEN_IDEMPOTENT_OUTPUT
 cargo:rustc-env=VERGEN_GIT_COMMIT_AUTHOR_NAME=VERGEN_IDEMPOTENT_OUTPUT
 cargo:rustc-env=VERGEN_GIT_COMMIT_COUNT=VERGEN_IDEMPOTENT_OUTPUT
@@ -96,6 +96,7 @@ cargo:rustc-env=VERGEN_GIT_COMMIT_MESSAGE=VERGEN_IDEMPOTENT_OUTPUT
 cargo:rustc-env=VERGEN_GIT_COMMIT_TIMESTAMP=VERGEN_IDEMPOTENT_OUTPUT
 cargo:rustc-env=VERGEN_GIT_DESCRIBE=VERGEN_IDEMPOTENT_OUTPUT
 cargo:rustc-env=VERGEN_GIT_SHA=VERGEN_IDEMPOTENT_OUTPUT
+cargo:warning=(.*?)
 cargo:warning=VERGEN_GIT_BRANCH set to default
 cargo:warning=VERGEN_GIT_COMMIT_AUTHOR_EMAIL set to default
 cargo:warning=VERGEN_GIT_COMMIT_AUTHOR_NAME set to default
@@ -108,7 +109,11 @@ cargo:warning=VERGEN_GIT_SHA set to default
 cargo:rerun-if-changed=build.rs
 cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT
 cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
-"#;
+"#,
+            )
+            .unwrap()
+        };
+    }
 
     const IDEM_QUIET_OUTPUT: &str = r#"cargo:rustc-env=VERGEN_GIT_BRANCH=VERGEN_IDEMPOTENT_OUTPUT
 cargo:rustc-env=VERGEN_GIT_COMMIT_AUTHOR_EMAIL=VERGEN_IDEMPOTENT_OUTPUT
@@ -304,6 +309,20 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
         Ok(())
     }
 
+    fn curr_shell_fish() -> bool {
+        env::var("SHELL")
+            .map(|x| x.contains("fish"))
+            .unwrap_or(false)
+    }
+
+    fn match_glob() -> Option<&'static str> {
+        Some(if curr_shell_fish() {
+            "\"0.1*\""
+        } else {
+            "0.1*"
+        })
+    }
+
     #[test]
     #[serial_test::serial]
     fn git_all_output_default_dir() -> Result<()> {
@@ -313,7 +332,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
         if repo_exists().is_ok() && !failed {
             assert!(GIT_REGEX_INST.is_match(&output));
         } else {
-            assert_eq!(ALL_IDEM_OUTPUT, output);
+            assert!(ALL_IDEM_OUTPUT.is_match(&output));
         }
         Ok(())
     }
@@ -326,7 +345,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
         let mut stdout_buf = vec![];
         let failed = EmitBuilder::builder()
             .all_git()
-            .git_describe(true, true)
+            .git_describe(true, true, match_glob())
             .git_sha(true)
             .emit_to_at(&mut stdout_buf, Some(clone_path()))?;
         assert!(!failed);
@@ -343,7 +362,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
         let mut stdout_buf = vec![];
         let failed = EmitBuilder::builder()
             .all_git()
-            .git_describe(true, false)
+            .git_describe(true, false, match_glob())
             .emit_to_at(&mut stdout_buf, Some(clone_path()))?;
         assert!(!failed);
         let output = String::from_utf8_lossy(&stdout_buf);
@@ -358,7 +377,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
         clone_test_repo();
         assert!(EmitBuilder::builder()
             .all_git()
-            .git_describe(true, true)
+            .git_describe(true, true, None)
             .git_sha(true)
             .emit_at(clone_path())
             .is_ok());
@@ -377,7 +396,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
         if repo_exists().is_ok() && !failed {
             assert!(GIT_REGEX_IDEM_INST.is_match(&output));
         } else {
-            assert_eq!(ALL_IDEM_OUTPUT, output);
+            assert!(ALL_IDEM_OUTPUT.is_match(&output));
         }
         Ok(())
     }
@@ -434,7 +453,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
         if repo_exists().is_ok() && !failed {
             assert!(output.contains("cargo:rustc-env=VERGEN_GIT_BRANCH=this is a bad date"));
         } else {
-            assert_eq!(ALL_IDEM_OUTPUT, output);
+            assert!(ALL_IDEM_OUTPUT.is_match(&output));
         }
         env::remove_var("VERGEN_GIT_BRANCH");
         Ok(())
@@ -451,7 +470,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
             assert!(output
                 .contains("cargo:rustc-env=VERGEN_GIT_COMMIT_AUTHOR_EMAIL=this is a bad date"));
         } else {
-            assert_eq!(ALL_IDEM_OUTPUT, output);
+            assert!(ALL_IDEM_OUTPUT.is_match(&output));
         }
         env::remove_var("VERGEN_GIT_COMMIT_AUTHOR_EMAIL");
         Ok(())
@@ -469,7 +488,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
                 output.contains("cargo:rustc-env=VERGEN_GIT_COMMIT_AUTHOR_NAME=this is a bad date")
             );
         } else {
-            assert_eq!(ALL_IDEM_OUTPUT, output);
+            assert!(ALL_IDEM_OUTPUT.is_match(&output));
         }
         env::remove_var("VERGEN_GIT_COMMIT_AUTHOR_NAME");
         Ok(())
@@ -485,7 +504,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
         if repo_exists().is_ok() && !failed {
             assert!(output.contains("cargo:rustc-env=VERGEN_GIT_COMMIT_COUNT=this is a bad date"));
         } else {
-            assert_eq!(ALL_IDEM_OUTPUT, output);
+            assert!(ALL_IDEM_OUTPUT.is_match(&output));
         }
         env::remove_var("VERGEN_GIT_COMMIT_COUNT");
         Ok(())
@@ -501,7 +520,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
         if repo_exists().is_ok() && !failed {
             assert!(output.contains("cargo:rustc-env=VERGEN_GIT_COMMIT_DATE=this is a bad date"));
         } else {
-            assert_eq!(ALL_IDEM_OUTPUT, output);
+            assert!(ALL_IDEM_OUTPUT.is_match(&output));
         }
         env::remove_var("VERGEN_GIT_COMMIT_DATE");
         Ok(())
@@ -517,7 +536,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
         if repo_exists().is_ok() && !failed {
             assert!(output.contains("cargo:rustc-env=VERGEN_GIT_COMMIT_MESSAGE=this is a bad date"));
         } else {
-            assert_eq!(ALL_IDEM_OUTPUT, output);
+            assert!(ALL_IDEM_OUTPUT.is_match(&output));
         }
         env::remove_var("VERGEN_GIT_COMMIT_MESSAGE");
         Ok(())
@@ -535,7 +554,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
                 output.contains("cargo:rustc-env=VERGEN_GIT_COMMIT_TIMESTAMP=this is a bad date")
             );
         } else {
-            assert_eq!(ALL_IDEM_OUTPUT, output);
+            assert!(ALL_IDEM_OUTPUT.is_match(&output));
         }
         env::remove_var("VERGEN_GIT_COMMIT_TIMESTAMP");
         Ok(())
@@ -551,7 +570,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
         if repo_exists().is_ok() && !failed {
             assert!(output.contains("cargo:rustc-env=VERGEN_GIT_DESCRIBE=this is a bad date"));
         } else {
-            assert_eq!(ALL_IDEM_OUTPUT, output);
+            assert!(ALL_IDEM_OUTPUT.is_match(&output));
         }
         env::remove_var("VERGEN_GIT_DESCRIBE");
         Ok(())
@@ -567,7 +586,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
         if repo_exists().is_ok() && !failed {
             assert!(output.contains("cargo:rustc-env=VERGEN_GIT_SHA=this is a bad date"));
         } else {
-            assert_eq!(ALL_IDEM_OUTPUT, output);
+            assert!(ALL_IDEM_OUTPUT.is_match(&output));
         }
         env::remove_var("VERGEN_GIT_SHA");
         Ok(())
@@ -586,7 +605,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
         if repo_exists().is_ok() && !failed {
             assert!(GIT_REGEX_INST.is_match(&output));
         } else {
-            assert_eq!(ALL_IDEM_OUTPUT, output);
+            assert!(ALL_IDEM_OUTPUT.is_match(&output));
         }
         Ok(())
     }
