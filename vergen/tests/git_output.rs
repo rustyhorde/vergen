@@ -86,7 +86,8 @@ mod test_git_git2 {
             Regex::new(&re_str).unwrap()
         };
         static ref ALL_IDEM_OUTPUT: Regex = {
-            Regex::new(r#"cargo:rustc-env=VERGEN_GIT_BRANCH=VERGEN_IDEMPOTENT_OUTPUT
+            Regex::new(
+                r#"cargo:rustc-env=VERGEN_GIT_BRANCH=VERGEN_IDEMPOTENT_OUTPUT
 cargo:rustc-env=VERGEN_GIT_COMMIT_AUTHOR_EMAIL=VERGEN_IDEMPOTENT_OUTPUT
 cargo:rustc-env=VERGEN_GIT_COMMIT_AUTHOR_NAME=VERGEN_IDEMPOTENT_OUTPUT
 cargo:rustc-env=VERGEN_GIT_COMMIT_COUNT=VERGEN_IDEMPOTENT_OUTPUT
@@ -108,7 +109,9 @@ cargo:warning=VERGEN_GIT_SHA set to default
 cargo:rerun-if-changed=build.rs
 cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT
 cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
-"#).unwrap()
+"#,
+            )
+            .unwrap()
         };
     }
 
