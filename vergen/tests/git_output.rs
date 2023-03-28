@@ -304,17 +304,18 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
         Ok(())
     }
 
-    fn curr_shell_fish() -> Result<bool> {
-        let curr_shell = env::var("SHELL")?;
-        Ok(curr_shell.contains("fish"))
+    fn curr_shell_fish() -> bool {
+        env::var("SHELL")
+            .map(|x| x.contains("fish"))
+            .unwrap_or(false)
     }
 
-    fn match_glob() -> Result<Option<&'static str>> {
-        Ok(Some(if curr_shell_fish()? {
+    fn match_glob() -> Option<&'static str> {
+        Some(if curr_shell_fish() {
             "\"0.1*\""
         } else {
             "0.1*"
-        }))
+        })
     }
 
     #[test]
@@ -339,7 +340,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
         let mut stdout_buf = vec![];
         let failed = EmitBuilder::builder()
             .all_git()
-            .git_describe(true, true, match_glob().unwrap_or(None))
+            .git_describe(true, true, match_glob())
             .git_sha(true)
             .emit_to_at(&mut stdout_buf, Some(clone_path()))?;
         assert!(!failed);
@@ -356,7 +357,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
         let mut stdout_buf = vec![];
         let failed = EmitBuilder::builder()
             .all_git()
-            .git_describe(true, false, match_glob().unwrap_or(None))
+            .git_describe(true, false, match_glob())
             .emit_to_at(&mut stdout_buf, Some(clone_path()))?;
         assert!(!failed);
         let output = String::from_utf8_lossy(&stdout_buf);
