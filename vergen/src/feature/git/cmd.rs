@@ -577,8 +577,9 @@ impl EmitBuilder {
                     describe_cmd.push_str(" --tags");
                 }
                 if let Some(pattern) = self.git_config.git_describe_match_pattern {
-                    describe_cmd.push_str(" --match ");
+                    describe_cmd.push_str(" --match \"");
                     describe_cmd.push_str(pattern);
+                    describe_cmd.push('\"');
                 }
                 add_git_cmd_entry(&describe_cmd, VergenKey::GitDescribe, map)?;
             }
