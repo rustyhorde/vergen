@@ -39,14 +39,20 @@ pub(crate) mod testutils {
 ))]
 pub(crate) mod fns {
     use crate::{constants::VERGEN_IDEMPOTENT_DEFAULT, emitter::RustcEnvMap, key::VergenKey};
+    use std::env;
 
     pub(crate) fn add_default_map_entry(
         key: VergenKey,
         map: &mut RustcEnvMap,
         warnings: &mut Vec<String>,
     ) {
-        let _old = map.insert(key, VERGEN_IDEMPOTENT_DEFAULT.to_string());
-        warnings.push(format!("{} set to default", key.name()));
+        if let Ok(value) = env::var(key.name()) {
+            add_map_entry(key, value, map);
+            warnings.push(format!("{} overidden", key.name()));
+        } else {
+            add_map_entry(key, VERGEN_IDEMPOTENT_DEFAULT, map);
+            warnings.push(format!("{} set to default", key.name()));
+        }
     }
 
     pub(crate) fn add_map_entry<T>(key: VergenKey, value: T, map: &mut RustcEnvMap)
