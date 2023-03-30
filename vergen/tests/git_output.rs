@@ -439,6 +439,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
         if repo_exists().is_ok() && !failed {
             assert!(output.contains("cargo:rustc-env=VERGEN_GIT_BRANCH=this is a bad date"));
         } else {
+            eprintln!("{output}");
             assert!(ALL_IDEM_OUTPUT.is_match(&output));
         }
         env::remove_var("VERGEN_GIT_BRANCH");
