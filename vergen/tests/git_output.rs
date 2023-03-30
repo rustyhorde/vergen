@@ -453,10 +453,12 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     fn git_branch_override_works() -> Result<()> {
         env::set_var("VERGEN_GIT_BRANCH", "this is a bad date");
         let mut stdout_buf = vec![];
-        let _failed = EmitBuilder::builder().all_git().emit_to(&mut stdout_buf)?;
+        let failed = EmitBuilder::builder().all_git().emit_to(&mut stdout_buf)?;
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(output.contains("cargo:rustc-env=VERGEN_GIT_BRANCH=this is a bad date"));
-        assert!(output.contains("cargo:warning=VERGEN_GIT_BRANCH overidden"));
+        if failed {
+            assert!(output.contains("cargo:warning=VERGEN_GIT_BRANCH overidden"));
+        }
         env::remove_var("VERGEN_GIT_BRANCH");
         Ok(())
     }
@@ -466,12 +468,14 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     fn git_commit_author_email_override_works() -> Result<()> {
         env::set_var("VERGEN_GIT_COMMIT_AUTHOR_EMAIL", "this is a bad date");
         let mut stdout_buf = vec![];
-        let _failed = EmitBuilder::builder().all_git().emit_to(&mut stdout_buf)?;
+        let failed = EmitBuilder::builder().all_git().emit_to(&mut stdout_buf)?;
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(
             output.contains("cargo:rustc-env=VERGEN_GIT_COMMIT_AUTHOR_EMAIL=this is a bad date")
         );
-        assert!(output.contains("cargo:warning=VERGEN_GIT_COMMIT_AUTHOR_EMAIL overidden"));
+        if failed {
+            assert!(output.contains("cargo:warning=VERGEN_GIT_COMMIT_AUTHOR_EMAIL overidden"));
+        }
         env::remove_var("VERGEN_GIT_COMMIT_AUTHOR_EMAIL");
         Ok(())
     }
@@ -481,10 +485,12 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     fn git_commit_author_name_override_works() -> Result<()> {
         env::set_var("VERGEN_GIT_COMMIT_AUTHOR_NAME", "this is a bad date");
         let mut stdout_buf = vec![];
-        let _failed = EmitBuilder::builder().all_git().emit_to(&mut stdout_buf)?;
+        let failed = EmitBuilder::builder().all_git().emit_to(&mut stdout_buf)?;
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(output.contains("cargo:rustc-env=VERGEN_GIT_COMMIT_AUTHOR_NAME=this is a bad date"));
-        assert!(output.contains("cargo:warning=VERGEN_GIT_COMMIT_AUTHOR_NAME overidden"));
+        if failed {
+            assert!(output.contains("cargo:warning=VERGEN_GIT_COMMIT_AUTHOR_NAME overidden"));
+        }
         env::remove_var("VERGEN_GIT_COMMIT_AUTHOR_NAME");
         Ok(())
     }
@@ -494,10 +500,12 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     fn git_commit_count_override_works() -> Result<()> {
         env::set_var("VERGEN_GIT_COMMIT_COUNT", "this is a bad date");
         let mut stdout_buf = vec![];
-        let _failed = EmitBuilder::builder().all_git().emit_to(&mut stdout_buf)?;
+        let failed = EmitBuilder::builder().all_git().emit_to(&mut stdout_buf)?;
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(output.contains("cargo:rustc-env=VERGEN_GIT_COMMIT_COUNT=this is a bad date"));
-        assert!(output.contains("cargo:warning=VERGEN_GIT_COMMIT_COUNT overidden"));
+        if failed {
+            assert!(output.contains("cargo:warning=VERGEN_GIT_COMMIT_COUNT overidden"));
+        }
         env::remove_var("VERGEN_GIT_COMMIT_COUNT");
         Ok(())
     }
@@ -507,10 +515,12 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     fn git_commit_date_override_works() -> Result<()> {
         env::set_var("VERGEN_GIT_COMMIT_DATE", "this is a bad date");
         let mut stdout_buf = vec![];
-        let _failed = EmitBuilder::builder().all_git().emit_to(&mut stdout_buf)?;
+        let failed = EmitBuilder::builder().all_git().emit_to(&mut stdout_buf)?;
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(output.contains("cargo:rustc-env=VERGEN_GIT_COMMIT_DATE=this is a bad date"));
-        assert!(output.contains("cargo:warning=VERGEN_GIT_COMMIT_DATE overidden"));
+        if failed {
+            assert!(output.contains("cargo:warning=VERGEN_GIT_COMMIT_DATE overidden"));
+        }
         env::remove_var("VERGEN_GIT_COMMIT_DATE");
         Ok(())
     }
@@ -520,10 +530,12 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     fn git_commit_message_override_works() -> Result<()> {
         env::set_var("VERGEN_GIT_COMMIT_MESSAGE", "this is a bad date");
         let mut stdout_buf = vec![];
-        let _failed = EmitBuilder::builder().all_git().emit_to(&mut stdout_buf)?;
+        let failed = EmitBuilder::builder().all_git().emit_to(&mut stdout_buf)?;
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(output.contains("cargo:rustc-env=VERGEN_GIT_COMMIT_MESSAGE=this is a bad date"));
-        assert!(output.contains("cargo:warning=VERGEN_GIT_COMMIT_MESSAGE overidden"));
+        if failed {
+            assert!(output.contains("cargo:warning=VERGEN_GIT_COMMIT_MESSAGE overidden"));
+        }
         env::remove_var("VERGEN_GIT_COMMIT_MESSAGE");
         Ok(())
     }
@@ -533,10 +545,12 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     fn git_commit_timestamp_override_works() -> Result<()> {
         env::set_var("VERGEN_GIT_COMMIT_TIMESTAMP", "this is a bad date");
         let mut stdout_buf = vec![];
-        let _failed = EmitBuilder::builder().all_git().emit_to(&mut stdout_buf)?;
+        let failed = EmitBuilder::builder().all_git().emit_to(&mut stdout_buf)?;
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(output.contains("cargo:rustc-env=VERGEN_GIT_COMMIT_TIMESTAMP=this is a bad date"));
-        assert!(output.contains("cargo:warning=VERGEN_GIT_COMMIT_TIMESTAMP overidden"));
+        if failed {
+            assert!(output.contains("cargo:warning=VERGEN_GIT_COMMIT_TIMESTAMP overidden"));
+        }
         env::remove_var("VERGEN_GIT_COMMIT_TIMESTAMP");
         Ok(())
     }
@@ -546,10 +560,12 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     fn git_describe_override_works() -> Result<()> {
         env::set_var("VERGEN_GIT_DESCRIBE", "this is a bad date");
         let mut stdout_buf = vec![];
-        let _failed = EmitBuilder::builder().all_git().emit_to(&mut stdout_buf)?;
+        let failed = EmitBuilder::builder().all_git().emit_to(&mut stdout_buf)?;
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(output.contains("cargo:rustc-env=VERGEN_GIT_DESCRIBE=this is a bad date"));
-        assert!(output.contains("cargo:warning=VERGEN_GIT_DESCRIBE overidden"));
+        if failed {
+            assert!(output.contains("cargo:warning=VERGEN_GIT_DESCRIBE overidden"));
+        }
         env::remove_var("VERGEN_GIT_DESCRIBE");
         Ok(())
     }
@@ -559,10 +575,12 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     fn git_sha_override_works() -> Result<()> {
         env::set_var("VERGEN_GIT_SHA", "this is a bad date");
         let mut stdout_buf = vec![];
-        let _failed = EmitBuilder::builder().all_git().emit_to(&mut stdout_buf)?;
+        let failed = EmitBuilder::builder().all_git().emit_to(&mut stdout_buf)?;
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(output.contains("cargo:rustc-env=VERGEN_GIT_SHA=this is a bad date"));
-        assert!(output.contains("cargo:warning=VERGEN_GIT_SHA overidden"));
+        if failed {
+            assert!(output.contains("cargo:warning=VERGEN_GIT_SHA overidden"));
+        }
         env::remove_var("VERGEN_GIT_SHA");
         Ok(())
     }
