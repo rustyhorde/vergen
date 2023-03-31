@@ -35,7 +35,7 @@
 //! build = "build.rs"
 //! ```
 //!
-//! 1. Add `vergen` as a build dependency in `Cargo.toml`, specifying the features you wish to enable.
+//! 2. Add `vergen` as a build dependency in `Cargo.toml`, specifying the features you wish to enable.
 //!
 //! ```toml
 //! [dependencies]
@@ -49,7 +49,7 @@
 //! # if you wish to disable certain features
 //! ```
 //!
-//! 1. Create a `build.rs` file that uses `vergen` to emit cargo instructions.  Configuration
+//! 3. Create a `build.rs` file that uses `vergen` to emit cargo instructions.  Configuration
 //! starts with [`EmitBuilder`].  Eventually you will call [`emit`](EmitBuilder::emit) to output the
 //! cargo instructions. See the [`emit`](EmitBuilder::emit) documentation for more robust examples.
 //!
@@ -64,7 +64,7 @@
 //! }
 //! ```
 //!
-//! 1. Use the [`env!`](std::env!) macro in your code to read the environment variables.
+//! 4. Use the [`env!`](std::env!) macro in your code to read the environment variables.
 //!
 //! ```compile_fail
 //! println!("Build Timestamp: {}", env!("VERGEN_BUILD_TIMESTAMP"));
