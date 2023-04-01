@@ -147,7 +147,7 @@
 //! build script, each build via cargo against the same source code should generate identical binaries. Instructions
 //! that output information that may change between builds (i.e. timestamps, sysinfo) will be defaulted.
 //! - Recognize common environment variables that support deterministic builds (i.e. [`SOURCE_DATE_EPOCH`](https://reproducible-builds.org/docs/source-date-epoch/))
-//! - Allow `build.rs` configuration overrides though enviornment variables to allow users building a binary, but
+//! - Allow `build.rs` configuration overrides though environment variables to allow users building a binary, but
 //! not controlling the source to generate deterministic binaries.
 //!
 //! # Use Cases
