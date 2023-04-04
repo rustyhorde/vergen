@@ -47,7 +47,7 @@ This update to git2 picked up some [security related features](https://github.bl
 
 ````docker run -v cargo-cache:/root/.cargo/registry -v (pwd):/volume -v ~/.gitconfig:/root/.gitconfig:ro --rm -t clux/muslrust:stable cargo build --release````
 
-See https://github.com/rustyhorde/vergen/pull/126 for more discussion on the topic.   If the solutions above do not work for your usecase, you can pin your `vergen` version to 7.4.3.   Feel free to open issues about this.   If it comes up enough, I could support a version of `vergen` with the older `git2` dependency.
+See https://github.com/rustyhorde/vergen/pull/126 for more discussion on the topic.   If the solutions above do not work for your usecase, you can pin your `vergen` version to 7.4.3, with the caveat you will be exposed to the issues described at the link above.
 
 ## Contributing
 See the documentation at [CONTRIBUTING.md](CONTRIBUTING.md)
