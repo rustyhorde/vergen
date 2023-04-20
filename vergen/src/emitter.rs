@@ -399,7 +399,7 @@ EmitBuilder::builder().fail_on_error().all_build().emit()?;
 
     /// Enable the quiet feature
     ///
-    /// Suppress the emission of the `cargo:waring` instructions.
+    /// Suppress the emission of the `cargo:warning` instructions.
     ///
     /// # Example
     ///
