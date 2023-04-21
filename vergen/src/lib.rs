@@ -20,9 +20,9 @@
 //! the [`idempotent`](EmitBuilder::idempotent) flag.
 //! - Will emit [`cargo:rerun-if-changed=build.rs`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed)
 //! to rerun instruction emission if the `build.rs` file changed.
-//! - Will emit [`cargo:rurun-if-env-changed=VERGEN_IDEMPOTENT`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed)
+//! - Will emit [`cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed)
 //! to rerun instruction emission if the `VERGEN_IDEMPOTENT` environment variable has changed.
-//! - Will emit [`cargo:rurun-if-env-changed=SOURCE_DATE_EPOCH`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed)
+//! - Will emit [`cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed)
 //! to rerun instruction emission if the `SOURCE_DATE_EPOCH` environment variable has changed.
 //!
 //! ## Usage
