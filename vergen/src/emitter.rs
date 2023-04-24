@@ -527,6 +527,27 @@ EmitBuilder::builder()
     }
 
     #[doc(hidden)]
+    #[cfg(any(
+        feature = "build",
+        feature = "cargo",
+        feature = "git",
+        feature = "rustc",
+        feature = "si"
+    ))]
+    /// Emit instructions and set environment variables for use in `build.rs`
+    pub fn emit_and_set(self) -> Result<()> {
+        self.inner_emit(None)
+            .and_then(|x| x.emit_output(self.quiet, &mut io::stdout()).map(|_| x))
+            .map(|x| {
+                for (k, v) in &x.cargo_rustc_env_map {
+                    if env::var(k.name()).is_err() {
+                        env::set_var(k.name(), v);
+                    }
+                }
+            })
+    }
+
+    #[doc(hidden)]
     /// Emit instructions from the given repository path.
     ///
     /// # Errors
