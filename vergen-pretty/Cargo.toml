@@ -47,8 +47,8 @@ vergen = { version = "8.1.0", path = "../vergen", features = [
 ], optional = true }
 
 [dev-dependencies]
-serde_json = "1.0.95"
-tracing-subscriber = { version = "0.3.16", features = ["fmt"] }
+serde_json = "1.0.96"
+tracing-subscriber = { version = "0.3.17", features = ["fmt"] }
 
 [package.metadata.docs.rs]
 features = ["color", "serde", "trace"]
