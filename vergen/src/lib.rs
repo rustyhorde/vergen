@@ -121,7 +121,7 @@
 //!
 //! ## Goals
 //! I initially wrote `vergen` (**ver**sion **gen**erator, so original) so I could embed a some git information in my
-//! personal projects.  Now, usage has grown to the point that `vergen` need to fit better in the rust ecosystem.
+//! personal projects.  Now, usage has grown to the point that `vergen` needs to fit better in the rust ecosystem.
 //!   
 //! The current goals are as follows:
 //!
