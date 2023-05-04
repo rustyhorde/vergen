@@ -379,7 +379,7 @@ impl EmitBuilder {
     ///
     /// The value is determined with the following command
     /// ```text
-    #[doc = concat!(commit_message!())]
+    #[doc = concat!(commit_timestamp!())]
     /// ```
     pub fn git_commit_timestamp(&mut self) -> &mut Self {
         self.git_config.git_commit_timestamp = true;
