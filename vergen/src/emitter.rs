@@ -319,7 +319,7 @@ impl EmitBuilder {
     ///
     /// When this feature is enabled, certain vergen output (i.e. timestamps, sysinfo)
     /// will be set to an idempotent default.  This will allow systems that
-    /// depend on deterministics builds to override user requested `vergen`
+    /// depend on deterministic builds to override user requested `vergen`
     /// impurities.  This will mainly allow for package maintainers to build
     /// packages that depend on `vergen` in a deterministic manner.
     ///
@@ -571,8 +571,8 @@ EmitBuilder::builder()
     #[doc(hidden)]
     /// Emit the cargo build script instructions to the given [`Write`](std::io::Write).
     ///
-    /// **NOTE** - This is genarally only used for testing and probably shouldn't be used
-    /// withing a `build.rs` file.
+    /// **NOTE** - This is generally only used for testing and probably shouldn't be used
+    /// within a `build.rs` file.
     ///
     /// # Errors
     /// * The [`writeln!`](std::writeln!) macro can throw a [`std::io::Error`]
@@ -589,8 +589,8 @@ EmitBuilder::builder()
     /// Emit the cargo build script instructions to the given [`Write`](std::io::Write) at
     /// the given repository path for git instructions
     ///
-    /// **NOTE** - This is genarally only used for testing and probably shouldn't be used
-    /// withing a `build.rs` file.
+    /// **NOTE** - This is generally only used for testing and probably shouldn't be used
+    /// within a `build.rs` file.
     ///
     /// # Errors
     /// * The [`writeln!`](std::writeln!) macro can throw a [`std::io::Error`]
