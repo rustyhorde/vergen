@@ -4,12 +4,10 @@ on:
   push:
     branches:
       - master
-    tags-ignore: 
+    tags-ignore:
       - "*"
   pull_request:
     branches:
-      - "*"
-    tags-ignore: 
       - "*"
   schedule:
     # * is a special character in YAML so you have to quote this string
@@ -22,7 +20,7 @@ jobs:
     name: 📌 Formatting 📌
     runs-on: ubuntu-latest
     steps:
-      - name: ✅ Checkout ✅ 
+      - name: ✅ Checkout ✅
         uses: actions/checkout@v3
       - name: ⭕ Rustfmt Check ⭕
         run: cargo fmt --all -- --check
