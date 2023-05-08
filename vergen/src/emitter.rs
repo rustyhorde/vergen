@@ -526,7 +526,61 @@ EmitBuilder::builder()
             .and_then(|x| x.emit_output(self.quiet, &mut io::stdout()))
     }
 
-    #[doc(hidden)]
+    /// Emit cargo instructions from your build script and set environment variables for use in `build.rs`
+    ///
+    /// - Will emit [`cargo:rustc-env=VAR=VALUE`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#cargorustc-envvarvalue) for each feature you have enabled.
+    #[cfg_attr(
+        feature = "git",
+        doc = r##" - Will emit [`cargo:rerun-if-changed=PATH`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed) if the git feature
+is enabled.  This is done to ensure any git variables are regenerated when commits are made.
+"##
+    )]
+    /// - Can emit [`cargo:warning`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#cargo-warning) outputs if the
+    /// [`fail_on_error`](Self::fail_on_error) feature is not enabled and the requested variable is defaulted through error or
+    /// the [`idempotent`](Self::idempotent) flag.
+    ///
+    /// # Errors
+    /// * The [`writeln!`](std::writeln!) macro can throw a [`std::io::Error`]
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use anyhow::Result;
+    /// # use std::env;
+    /// # use vergen::EmitBuilder;
+    /// #
+    /// # fn main() -> Result<()> {
+    #[cfg_attr(
+        all(
+            feature = "build",
+            feature = "cargo",
+            all(feature = "git", feature = "gitcl"),
+            feature = "rustc",
+            feature = "si"
+        ),
+        doc = r##"
+# env::set_var("CARGO_FEATURE_BUILD", "build");
+# env::set_var("CARGO_FEATURE_GIT", "git");
+# env::set_var("DEBUG", "true");
+# env::set_var("OPT_LEVEL", "1");
+# env::set_var("TARGET", "x86_64-unknown-linux-gnu");
+EmitBuilder::builder()
+  .all_build()
+  .all_cargo()
+  .all_git()
+  .all_rustc()
+  .all_sysinfo()
+  .emit_and_set()?;
+# env::remove_var("CARGO_FEATURE_BUILD");
+# env::remove_var("CARGO_FEATURE_GIT");
+# env::remove_var("DEBUG");
+# env::remove_var("OPT_LEVEL");
+# env::remove_var("TARGET");
+"##
+    )]
+    /// #   Ok(())
+    /// # }
+    /// ```
     #[cfg(any(
         feature = "build",
         feature = "cargo",
@@ -534,7 +588,6 @@ EmitBuilder::builder()
         feature = "rustc",
         feature = "si"
     ))]
-    /// Emit instructions and set environment variables for use in `build.rs`
     pub fn emit_and_set(self) -> Result<()> {
         self.inner_emit(None)
             .and_then(|x| x.emit_output(self.quiet, &mut io::stdout()).map(|_| x))
