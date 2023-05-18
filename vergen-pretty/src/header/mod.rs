@@ -45,6 +45,7 @@ where
     Ok(())
 }
 
+#[cfg(feature = "color")]
 fn output_to_writer<T>(writer: &mut T, app_style: Style, prefix: &'static str) -> Result<()>
 where
     T: Write + ?Sized,
@@ -61,6 +62,23 @@ where
     Ok(())
 }
 
+#[cfg(not(feature = "color"))]
+fn output_to_writer<T>(writer: &mut T, _app_style: Style, prefix: &'static str) -> Result<()>
+where
+    T: Write + ?Sized,
+{
+    let prefix = PrefixBuilder::default()
+        .lines(prefix.lines().map(str::to_string).collect())
+        .build()?;
+    PrettyBuilder::default()
+        .env(vergen_pretty_env!())
+        .prefix(prefix)
+        .build()?
+        .display(writer)?;
+    Ok(())
+}
+
+#[cfg(all(feature = "trace", feature = "color"))]
 fn trace(app_style: Style, prefix: &'static str) -> Result<()> {
     let prefix = PrefixBuilder::default()
         .lines(prefix.lines().map(str::to_string).collect())
@@ -71,6 +89,24 @@ fn trace(app_style: Style, prefix: &'static str) -> Result<()> {
         .prefix(prefix)
         .build()?
         .trace();
+    Ok(())
+}
+
+#[cfg(all(feature = "trace", not(feature = "color")))]
+fn trace(_app_style: Style, prefix: &'static str) -> Result<()> {
+    let prefix = PrefixBuilder::default()
+        .lines(prefix.lines().map(str::to_string).collect())
+        .build()?;
+    PrettyBuilder::default()
+        .env(vergen_pretty_env!())
+        .prefix(prefix)
+        .build()?
+        .trace();
+    Ok(())
+}
+
+#[cfg(not(feature = "trace"))]
+fn trace(_app_style: Style, _prefix: &'static str) -> Result<()> {
     Ok(())
 }
 
