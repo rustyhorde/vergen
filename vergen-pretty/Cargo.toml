@@ -13,12 +13,13 @@ repository = "https://github.com/rustyhorde/vergen"
 version = "0.1.2"
 
 [package.metadata.cargo-all-features]
-denylist = ["console", "lazy_static", "serde", "tracing", "unstable", "vergen"]
+denylist = ["console", "lazy_static", "serde", "tracing", "unstable", "vergen", "rand"]
 
 [features]
 default = []
 unstable = []
 color = ["console", "lazy_static"]
+header = ["console", "rand"]
 trace = ["tracing"]
 __vergen_test = ["vergen"]
 
@@ -28,6 +29,7 @@ console = { version = "0.15.5", optional = true }
 convert_case = "0.6.0"
 derive_builder = "0.12.0"
 lazy_static = { version = "1.4.0", optional = true }
+rand = { version = "0.8.5", optional = true }
 serde = { version = "1.0.160", features = ["derive"], optional = true }
 tracing = { version = "0.1.37", features = [
     "max_level_trace",
@@ -47,6 +49,7 @@ vergen = { version = "8.1.0", path = "../vergen", features = [
 ], optional = true }
 
 [dev-dependencies]
+regex = "1.8.1"
 serde_json = "1.0.96"
 tracing-subscriber = { version = "0.3.17", features = ["fmt"] }
 

@@ -252,11 +252,15 @@
     deny(rustdoc::missing_doc_code_examples)
 )]
 
+#[cfg(feature = "header")]
+mod header;
 mod pretty;
 mod utils;
 
 #[cfg(feature = "color")]
 pub use console::Style;
+#[cfg(feature = "header")]
+pub use header::header;
 pub use pretty::prefix::Prefix;
 pub use pretty::prefix::PrefixBuilder;
 pub use pretty::suffix::Suffix;
@@ -271,6 +275,8 @@ pub use tracing::Level;
 use serde_json as _;
 #[cfg(all(test, not(feature = "trace")))]
 use tracing_subscriber as _;
+#[cfg(all(test, not(feature = "header")))]
+use regex as _;
 
 /// Used to initialize `env` in [`PrettyBuilder`](self::PrettyBuilder)
 ///
