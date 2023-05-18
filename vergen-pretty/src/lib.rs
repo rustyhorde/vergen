@@ -271,12 +271,12 @@ pub use pretty::PrettyBuilderError;
 #[cfg(feature = "trace")]
 pub use tracing::Level;
 
+#[cfg(all(test, not(feature = "header")))]
+use regex as _;
 #[cfg(all(test, not(feature = "serde")))]
 use serde_json as _;
 #[cfg(all(test, not(feature = "trace")))]
 use tracing_subscriber as _;
-#[cfg(all(test, not(feature = "header")))]
-use regex as _;
 
 /// Used to initialize `env` in [`PrettyBuilder`](self::PrettyBuilder)
 ///
