@@ -272,6 +272,8 @@ pub use pretty::PrettyBuilderError;
 pub use tracing::Level;
 
 #[cfg(all(test, not(feature = "header")))]
+use lazy_static as _;
+#[cfg(all(test, not(feature = "header")))]
 use regex as _;
 #[cfg(all(test, not(feature = "serde")))]
 use serde_json as _;

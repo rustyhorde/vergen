@@ -112,11 +112,14 @@ fn trace(_app_style: Style, _prefix: &'static str) -> Result<()> {
 
 #[cfg(test)]
 mod test {
-    use super::{from_u8, header};
+    use super::from_u8;
+    #[cfg(feature = "__vergen_test")]
+    use super::header;
     use console::Style;
     use lazy_static::lazy_static;
     use regex::Regex;
 
+    #[cfg(feature = "__vergen_test")]
     const HEADER_PREFIX: &str = r#"██████╗ ██╗   ██╗██████╗ ██╗    ██╗
 ██╔══██╗██║   ██║██╔══██╗██║    ██║
 ██████╔╝██║   ██║██║  ██║██║ █╗ ██║
@@ -147,6 +150,7 @@ mod test {
 
     #[test]
     #[cfg(debug_assertions)]
+    #[cfg(feature = "__vergen_test")]
     fn header_writes() {
         let mut buf = vec![];
         assert!(header(HEADER_PREFIX, Some(&mut buf)).is_ok());
@@ -160,6 +164,7 @@ mod test {
 
     #[test]
     #[cfg(not(debug_assertions))]
+    #[cfg(feature = "__vergen_test")]
     fn header_writes() {
         let mut buf = vec![];
         assert!(header(&TestConfig::default(), HEADER_PREFIX, Some(&mut buf)).is_ok());
