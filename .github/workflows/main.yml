@@ -13,6 +13,13 @@ on:
     # * is a special character in YAML so you have to quote this string
     - cron: "13 3 * * *"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+
 name: 🦀 Rust 🦀
 
 jobs:

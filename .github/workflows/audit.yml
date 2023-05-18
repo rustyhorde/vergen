@@ -9,11 +9,16 @@ on:
   pull_request:
     branches:
       - "*"
-    tags-ignore: 
-      - "*"
   schedule:
     # * is a special character in YAML so you have to quote this string
     - cron: "23 3 * * *"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
 name: 💣 Audit 💣
 
