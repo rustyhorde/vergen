@@ -43,6 +43,8 @@ mod test_build {
         env::remove_var("TARGET");
     }
 
+    const DISABLED_OUTPUT: &str = r#""#;
+
     #[test]
     #[serial_test::serial]
     fn cargo_all_output() -> Result<()> {
@@ -53,6 +55,21 @@ mod test_build {
             .emit_to(&mut stdout_buf)?;
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(CARGO_REGEX.is_match(&output));
+        teardown();
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn cargo_disabled_output() -> Result<()> {
+        setup();
+        let mut stdout_buf = vec![];
+        EmitBuilder::builder()
+            .all_cargo()
+            .disable_cargo()
+            .emit_to(&mut stdout_buf)?;
+        let output = String::from_utf8_lossy(&stdout_buf);
+        assert_eq!(DISABLED_OUTPUT, output);
         teardown();
         Ok(())
     }
