@@ -298,7 +298,10 @@ impl EmitBuilder {
         warnings: &mut Vec<String>,
         rerun_if_changed: &mut Vec<String>,
     ) -> Result<()> {
-        self.inner_add_git_map_entries(path, idempotent, map, warnings, rerun_if_changed)
+        if self.any() {
+            self.inner_add_git_map_entries(path, idempotent, map, warnings, rerun_if_changed)?;
+        }
+        Ok(())
     }
 
     #[cfg(test)]
@@ -310,11 +313,13 @@ impl EmitBuilder {
         warnings: &mut Vec<String>,
         rerun_if_changed: &mut Vec<String>,
     ) -> Result<()> {
-        if self.git_config.fail {
-            Err(anyhow!("failed to create entries"))
-        } else {
-            self.inner_add_git_map_entries(path, idempotent, map, warnings, rerun_if_changed)
+        if self.any() {
+            if self.git_config.fail {
+                return Err(anyhow!("failed to create entries"));
+            }
+            self.inner_add_git_map_entries(path, idempotent, map, warnings, rerun_if_changed)?;
         }
+        Ok(())
     }
 
     #[allow(clippy::unnecessary_wraps)]

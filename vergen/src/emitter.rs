@@ -988,4 +988,27 @@ pub(crate) mod test {
         teardown();
         Ok(())
     }
+
+    #[cfg(all(
+        feature = "build",
+        feature = "rustc",
+        all(
+            feature = "git",
+            any(feature = "gitcl", feature = "git2", feature = "gix")
+        ),
+        feature = "cargo",
+        feature = "si"
+    ))]
+    #[test]
+    #[serial_test::serial]
+    fn all_features_no_output() -> Result<()> {
+        use crate::utils::testutils::{setup, teardown};
+
+        setup();
+        let mut stdout_buf = vec![];
+        _ = EmitBuilder::builder().emit_to(&mut stdout_buf)?;
+        assert!(stdout_buf.is_empty());
+        teardown();
+        Ok(())
+    }
 }

@@ -37,6 +37,20 @@ pub(crate) struct Config {
     fail_pid: bool,
 }
 
+impl Config {
+    pub(crate) fn any(&self) -> bool {
+        self.si_name
+            || self.si_os_version
+            || self.si_user
+            || self.si_memory
+            || self.si_cpu_vendor
+            || self.si_cpu_core_count
+            || self.si_cpu_name
+            || self.si_cpu_brand
+            || self.si_cpu_frequency
+    }
+}
+
 /// The `VERGEN_SYSINFO_*` configuration features
 ///
 /// | Variable | Sample |
@@ -213,17 +227,19 @@ impl EmitBuilder {
         map: &mut RustcEnvMap,
         warnings: &mut Vec<String>,
     ) {
-        let system = setup_system();
+        if self.sysinfo_config.any() {
+            let system = setup_system();
 
-        self.add_sysinfo_name(&system, idempotent, map, warnings);
-        self.add_sysinfo_os_verison(&system, idempotent, map, warnings);
-        self.add_sysinfo_user(&system, idempotent, map, warnings);
-        self.add_sysinfo_total_memory(&system, idempotent, map, warnings);
-        self.add_sysinfo_cpu_vendor(&system, idempotent, map, warnings);
-        self.add_sysinfo_cpu_core_count(&system, idempotent, map, warnings);
-        self.add_sysinfo_cpu_name(&system, idempotent, map, warnings);
-        self.add_sysinfo_cpu_brand(&system, idempotent, map, warnings);
-        self.add_sysinfo_cpu_frequency(&system, idempotent, map, warnings);
+            self.add_sysinfo_name(&system, idempotent, map, warnings);
+            self.add_sysinfo_os_verison(&system, idempotent, map, warnings);
+            self.add_sysinfo_user(&system, idempotent, map, warnings);
+            self.add_sysinfo_total_memory(&system, idempotent, map, warnings);
+            self.add_sysinfo_cpu_vendor(&system, idempotent, map, warnings);
+            self.add_sysinfo_cpu_core_count(&system, idempotent, map, warnings);
+            self.add_sysinfo_cpu_name(&system, idempotent, map, warnings);
+            self.add_sysinfo_cpu_brand(&system, idempotent, map, warnings);
+            self.add_sysinfo_cpu_frequency(&system, idempotent, map, warnings);
+        }
     }
 
     fn add_sysinfo_name(
