@@ -79,15 +79,16 @@ impl Emitter {
     fn add_build_entries(&mut self, builder: &EmitBuilder) -> Result<()> {
         let idem = builder.idempotent;
         let fail_on_error = builder.fail_on_error;
+        let mut empty = BTreeMap::new();
+        let cargo_rustc_env_map = if builder.disable_build {
+            &mut empty
+        } else {
+            &mut self.cargo_rustc_env_map
+        };
         builder
-            .add_build_map_entries(idem, &mut self.cargo_rustc_env_map, &mut self.warnings)
+            .add_build_map_entries(idem, cargo_rustc_env_map, &mut self.warnings)
             .or_else(|e| {
-                builder.add_build_default(
-                    e,
-                    fail_on_error,
-                    &mut self.cargo_rustc_env_map,
-                    &mut self.warnings,
-                )
+                builder.add_build_default(e, fail_on_error, cargo_rustc_env_map, &mut self.warnings)
             })
     }
 
@@ -104,15 +105,16 @@ impl Emitter {
     #[cfg(feature = "cargo")]
     fn add_cargo_entries(&mut self, builder: &EmitBuilder) -> Result<()> {
         let fail_on_error = builder.fail_on_error;
+        let mut empty = BTreeMap::new();
+        let cargo_rustc_env_map = if builder.disable_cargo {
+            &mut empty
+        } else {
+            &mut self.cargo_rustc_env_map
+        };
         builder
-            .add_cargo_map_entries(&mut self.cargo_rustc_env_map)
+            .add_cargo_map_entries(cargo_rustc_env_map)
             .or_else(|e| {
-                builder.add_cargo_default(
-                    e,
-                    fail_on_error,
-                    &mut self.cargo_rustc_env_map,
-                    &mut self.warnings,
-                )
+                builder.add_cargo_default(e, fail_on_error, cargo_rustc_env_map, &mut self.warnings)
             })
     }
 
@@ -133,11 +135,17 @@ impl Emitter {
     fn add_git_entries(&mut self, builder: &EmitBuilder, repo_path: Option<PathBuf>) -> Result<()> {
         let idem = builder.idempotent;
         let fail_on_error = builder.fail_on_error;
+        let mut empty = BTreeMap::new();
+        let cargo_rustc_env_map = if builder.disable_git {
+            &mut empty
+        } else {
+            &mut self.cargo_rustc_env_map
+        };
         builder
             .add_git_map_entries(
                 repo_path,
                 idem,
-                &mut self.cargo_rustc_env_map,
+                cargo_rustc_env_map,
                 &mut self.warnings,
                 &mut self.rerun_if_changed,
             )
@@ -146,7 +154,7 @@ impl Emitter {
                 builder.add_git_default(
                     e,
                     fail_on_error,
-                    &mut self.cargo_rustc_env_map,
+                    cargo_rustc_env_map,
                     &mut self.warnings,
                     &mut self.rerun_if_changed,
                 )
@@ -169,15 +177,16 @@ impl Emitter {
     #[cfg(feature = "rustc")]
     fn add_rustc_entries(&mut self, builder: &EmitBuilder) -> Result<()> {
         let fail_on_error = builder.fail_on_error;
+        let mut empty = BTreeMap::new();
+        let cargo_rustc_env_map = if builder.disable_rustc {
+            &mut empty
+        } else {
+            &mut self.cargo_rustc_env_map
+        };
         builder
-            .add_rustc_map_entries(&mut self.cargo_rustc_env_map, &mut self.warnings)
+            .add_rustc_map_entries(cargo_rustc_env_map, &mut self.warnings)
             .or_else(|e| {
-                builder.add_rustc_default(
-                    e,
-                    fail_on_error,
-                    &mut self.cargo_rustc_env_map,
-                    &mut self.warnings,
-                )
+                builder.add_rustc_default(e, fail_on_error, cargo_rustc_env_map, &mut self.warnings)
             })
     }
 
@@ -194,7 +203,13 @@ impl Emitter {
     #[cfg(feature = "si")]
     fn add_si_entries(&mut self, builder: &EmitBuilder) {
         let idem = builder.idempotent;
-        builder.add_sysinfo_map_entries(idem, &mut self.cargo_rustc_env_map, &mut self.warnings);
+        let mut empty = BTreeMap::new();
+        let cargo_rustc_env_map = if builder.disable_sysinfo {
+            &mut empty
+        } else {
+            &mut self.cargo_rustc_env_map
+        };
+        builder.add_sysinfo_map_entries(idem, cargo_rustc_env_map, &mut self.warnings);
     }
 
     #[cfg(not(feature = "si"))]
@@ -268,21 +283,35 @@ impl Emitter {
 /// Build the `vergen` configuration to enable specific cargo instruction
 /// output
 #[derive(Clone, Copy, Debug)]
+#[allow(clippy::struct_excessive_bools)]
 pub struct EmitBuilder {
     idempotent: bool,
     fail_on_error: bool,
     quiet: bool,
     #[cfg(feature = "build")]
+    disable_build: bool,
+    #[cfg(feature = "build")]
     pub(crate) build_config: BuildConfig,
+    #[cfg(feature = "cargo")]
+    disable_cargo: bool,
     #[cfg(feature = "cargo")]
     pub(crate) cargo_config: CargoConfig,
     #[cfg(all(
         feature = "git",
         any(feature = "git2", feature = "gitcl", feature = "gix")
     ))]
+    disable_git: bool,
+    #[cfg(all(
+        feature = "git",
+        any(feature = "git2", feature = "gitcl", feature = "gix")
+    ))]
     pub(crate) git_config: GitConfig,
     #[cfg(feature = "rustc")]
+    disable_rustc: bool,
+    #[cfg(feature = "rustc")]
     pub(crate) rustc_config: RustcConfig,
+    #[cfg(feature = "si")]
+    disable_sysinfo: bool,
     #[cfg(feature = "si")]
     pub(crate) sysinfo_config: SysinfoConfig,
 }
@@ -297,16 +326,29 @@ impl EmitBuilder {
             fail_on_error: false,
             quiet: false,
             #[cfg(feature = "build")]
+            disable_build: false,
+            #[cfg(feature = "build")]
             build_config: BuildConfig::default(),
+            #[cfg(feature = "cargo")]
+            disable_cargo: false,
             #[cfg(feature = "cargo")]
             cargo_config: CargoConfig::default(),
             #[cfg(all(
                 feature = "git",
                 any(feature = "git2", feature = "gitcl", feature = "gix")
             ))]
+            disable_git: false,
+            #[cfg(all(
+                feature = "git",
+                any(feature = "git2", feature = "gitcl", feature = "gix")
+            ))]
             git_config: GitConfig::default(),
             #[cfg(feature = "rustc")]
+            disable_rustc: false,
+            #[cfg(feature = "rustc")]
             rustc_config: RustcConfig::default(),
+            #[cfg(feature = "si")]
+            disable_sysinfo: false,
             #[cfg(feature = "si")]
             sysinfo_config: SysinfoConfig::default(),
         }
@@ -419,6 +461,129 @@ EmitBuilder::builder().quiet().all_build().emit()?;
     /// ```
     pub fn quiet(&mut self) -> &mut Self {
         self.quiet = true;
+        self
+    }
+
+    /// Disable the build output, even when the build feature is enabled.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use anyhow::Result;
+    /// # use vergen::EmitBuilder;
+    /// #
+    /// # fn main() -> Result<()> {
+    #[cfg_attr(
+        feature = "build",
+        doc = r##"
+EmitBuilder::builder().all_build().disable_build().emit()?;
+"##
+    )]
+    /// #   Ok(())
+    /// # }
+    /// ```
+    #[cfg(feature = "build")]
+    pub fn disable_build(&mut self) -> &mut Self {
+        self.disable_build = true;
+        self
+    }
+
+    /// Disable the cargo output, even when the cargo feature is enabled.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use anyhow::Result;
+    /// # use vergen::EmitBuilder;
+    /// #
+    /// # fn main() -> Result<()> {
+    #[cfg_attr(
+        feature = "cargo",
+        doc = r##"
+EmitBuilder::builder().all_cargo().disable_cargo().emit()?;
+"##
+    )]
+    /// #   Ok(())
+    /// # }
+    /// ```
+    #[cfg(feature = "cargo")]
+    pub fn disable_cargo(&mut self) -> &mut Self {
+        self.disable_cargo = true;
+        self
+    }
+
+    /// Disable the git output, even when the git feature is enabled.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use anyhow::Result;
+    /// # use vergen::EmitBuilder;
+    /// #
+    /// # fn main() -> Result<()> {
+    #[cfg_attr(
+        feature = "git",
+        doc = r##"
+EmitBuilder::builder().all_git().disable_git().emit()?;
+"##
+    )]
+    /// #   Ok(())
+    /// # }
+    /// ```
+    #[cfg(all(
+        feature = "git",
+        any(feature = "git2", feature = "gitcl", feature = "gix")
+    ))]
+    pub fn disable_git(&mut self) -> &mut Self {
+        self.disable_git = true;
+        self
+    }
+
+    /// Disable the rustc output, even when the rustc feature is enabled.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use anyhow::Result;
+    /// # use vergen::EmitBuilder;
+    /// #
+    /// # fn main() -> Result<()> {
+    #[cfg_attr(
+        feature = "rustc",
+        doc = r##"
+EmitBuilder::builder().all_rustc().disable_rustc().emit()?;
+"##
+    )]
+    /// #   Ok(())
+    /// # }
+    /// ```
+    #[cfg(feature = "rustc")]
+    pub fn disable_rustc(&mut self) -> &mut Self {
+        self.disable_rustc = true;
+        self
+    }
+
+    /// Disable the sysinfo output, even when the sysinfo feature is enabled.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use anyhow::Result;
+    /// # use vergen::EmitBuilder;
+    /// #
+    /// # fn main() -> Result<()> {
+    #[cfg_attr(
+        feature = "si",
+        doc = r##"
+EmitBuilder::builder().all_sysinfo().disable_sysinfo().emit()?;
+"##
+    )]
+    /// #   Ok(())
+    /// # }
+    /// ```
+    #[cfg(feature = "si")]
+    pub fn disable_sysinfo(&mut self) -> &mut Self {
+        self.disable_sysinfo = true;
         self
     }
 

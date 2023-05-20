@@ -32,6 +32,8 @@ cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT
 cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
 "#;
 
+    const DISABLED_OUTPUT: &str = r#""#;
+
     const SOURCE_DATE_EPOCH_IDEM_OUTPUT: &str = r#"cargo:rustc-env=VERGEN_BUILD_DATE=2022-12-23
 cargo:rustc-env=VERGEN_BUILD_TIMESTAMP=2022-12-23T15:29:20.000000000Z
 cargo:rerun-if-changed=build.rs
@@ -55,6 +57,19 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
             .emit_to(&mut stdout_buf)?;
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(BUILD_REGEX_INST.is_match(&output));
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn build_disabled_output() -> Result<()> {
+        let mut stdout_buf = vec![];
+        EmitBuilder::builder()
+            .all_build()
+            .disable_build()
+            .emit_to(&mut stdout_buf)?;
+        let output = String::from_utf8_lossy(&stdout_buf);
+        assert_eq!(DISABLED_OUTPUT, output);
         Ok(())
     }
 

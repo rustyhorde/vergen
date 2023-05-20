@@ -79,6 +79,8 @@ cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT
 cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
 "#;
 
+    const DISABLED_OUTPUT: &str = r#""#;
+
     #[test]
     fn sysinfo_all_output() -> Result<()> {
         let mut stdout_buf = vec![];
@@ -87,6 +89,19 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
             .emit_to(&mut stdout_buf)?;
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(SYSINFO_REGEX_INST.is_match(&output));
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn sysinfo_disabled_output() -> Result<()> {
+        let mut stdout_buf = vec![];
+        EmitBuilder::builder()
+            .all_sysinfo()
+            .disable_sysinfo()
+            .emit_to(&mut stdout_buf)?;
+        let output = String::from_utf8_lossy(&stdout_buf);
+        assert_eq!(DISABLED_OUTPUT, output);
         Ok(())
     }
 

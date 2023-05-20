@@ -30,6 +30,8 @@ mod test_rustc {
         };
     }
 
+    const DISABLED_OUTPUT: &str = r#""#;
+
     #[test]
     fn rustc_all_output() -> Result<()> {
         let mut stdout_buf = vec![];
@@ -38,6 +40,19 @@ mod test_rustc {
             .emit_to(&mut stdout_buf)?;
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(RUSTC_REGEX.is_match(&output));
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn rustc_disabled_output() -> Result<()> {
+        let mut stdout_buf = vec![];
+        EmitBuilder::builder()
+            .all_rustc()
+            .disable_rustc()
+            .emit_to(&mut stdout_buf)?;
+        let output = String::from_utf8_lossy(&stdout_buf);
+        assert_eq!(DISABLED_OUTPUT, output);
         Ok(())
     }
 

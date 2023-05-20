@@ -148,6 +148,8 @@ cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT
 cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
 "#;
 
+    const DISABLED_OUTPUT: &str = r#""#;
+
     const BARE_REPO_NAME: &str = "vergen_tmp.git";
     const CLONE_NAME: &str = "vergen_tmp";
 
@@ -372,6 +374,19 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
         assert!(!failed);
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(GIT_REGEX_INST.is_match(&output));
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn git_disabled_output() -> Result<()> {
+        let mut stdout_buf = vec![];
+        EmitBuilder::builder()
+            .all_git()
+            .disable_git()
+            .emit_to(&mut stdout_buf)?;
+        let output = String::from_utf8_lossy(&stdout_buf);
+        assert_eq!(DISABLED_OUTPUT, output);
         Ok(())
     }
 
