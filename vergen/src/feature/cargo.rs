@@ -24,6 +24,12 @@ pub(crate) struct Config {
     pub(crate) cargo_target_triple: bool,
 }
 
+impl Config {
+    pub(crate) fn any(self) -> bool {
+        self.cargo_debug || self.cargo_features || self.cargo_opt_level || self.cargo_target_triple
+    }
+}
+
 /// Copnfigure the emission of `VERGEN_CARGO_*` instructions
 ///
 /// **NOTE** - All cargo instructions are considered deterministic.  If you change
@@ -176,40 +182,41 @@ impl EmitBuilder {
     }
 
     pub(crate) fn add_cargo_map_entries(&self, map: &mut RustcEnvMap) -> Result<()> {
-        if self.cargo_config.cargo_debug {
-            if let Ok(value) = env::var(CARGO_DEBUG) {
-                add_map_entry(VergenKey::CargoDebug, value, map);
-            } else {
-                add_map_entry(VergenKey::CargoDebug, env::var("DEBUG")?, map);
+        if self.cargo_config.any() {
+            if self.cargo_config.cargo_debug {
+                if let Ok(value) = env::var(CARGO_DEBUG) {
+                    add_map_entry(VergenKey::CargoDebug, value, map);
+                } else {
+                    add_map_entry(VergenKey::CargoDebug, env::var("DEBUG")?, map);
+                }
+            }
+
+            if self.cargo_config.cargo_features {
+                if let Ok(value) = env::var(CARGO_FEATURES) {
+                    add_map_entry(VergenKey::CargoFeatures, value, map);
+                } else {
+                    let features: Vec<String> = env::vars().filter_map(is_cargo_feature).collect();
+                    let feature_str = features.as_slice().join(",");
+                    add_map_entry(VergenKey::CargoFeatures, feature_str, map);
+                }
+            }
+
+            if self.cargo_config.cargo_opt_level {
+                if let Ok(value) = env::var(CARGO_OPT_LEVEL) {
+                    add_map_entry(VergenKey::CargoOptLevel, value, map);
+                } else {
+                    add_map_entry(VergenKey::CargoOptLevel, env::var("OPT_LEVEL")?, map);
+                }
+            }
+
+            if self.cargo_config.cargo_target_triple {
+                if let Ok(value) = env::var(CARGO_TARGET_TRIPLE) {
+                    add_map_entry(VergenKey::CargoTargetTriple, value, map);
+                } else {
+                    add_map_entry(VergenKey::CargoTargetTriple, env::var("TARGET")?, map);
+                }
             }
         }
-
-        if self.cargo_config.cargo_features {
-            if let Ok(value) = env::var(CARGO_FEATURES) {
-                add_map_entry(VergenKey::CargoFeatures, value, map);
-            } else {
-                let features: Vec<String> = env::vars().filter_map(is_cargo_feature).collect();
-                let feature_str = features.as_slice().join(",");
-                add_map_entry(VergenKey::CargoFeatures, feature_str, map);
-            }
-        }
-
-        if self.cargo_config.cargo_opt_level {
-            if let Ok(value) = env::var(CARGO_OPT_LEVEL) {
-                add_map_entry(VergenKey::CargoOptLevel, value, map);
-            } else {
-                add_map_entry(VergenKey::CargoOptLevel, env::var("OPT_LEVEL")?, map);
-            }
-        }
-
-        if self.cargo_config.cargo_target_triple {
-            if let Ok(value) = env::var(CARGO_TARGET_TRIPLE) {
-                add_map_entry(VergenKey::CargoTargetTriple, value, map);
-            } else {
-                add_map_entry(VergenKey::CargoTargetTriple, env::var("TARGET")?, map);
-            }
-        }
-
         Ok(())
     }
 }

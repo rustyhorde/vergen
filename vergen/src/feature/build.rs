@@ -17,6 +17,12 @@ pub(crate) struct Config {
     pub(crate) build_timestamp: bool,
 }
 
+impl Config {
+    pub(crate) fn any(self) -> bool {
+        self.build_date || self.build_timestamp
+    }
+}
+
 /// The `VERGEN_BUILD_*` configuration features
 ///
 /// | Variable | Sample |
@@ -175,7 +181,9 @@ impl EmitBuilder {
         map: &mut RustcEnvMap,
         warnings: &mut Vec<String>,
     ) -> Result<()> {
-        self.add_timestamp_entries(idempotent, map, warnings)?;
+        if self.build_config.any() {
+            self.add_timestamp_entries(idempotent, map, warnings)?;
+        }
         Ok(())
     }
 

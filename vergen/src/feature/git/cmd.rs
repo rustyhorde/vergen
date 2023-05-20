@@ -497,13 +497,16 @@ impl EmitBuilder {
         warnings: &mut Vec<String>,
         rerun_if_changed: &mut Vec<String>,
     ) -> Result<()> {
-        let git_cmd = if let Some(cmd) = self.git_config.git_cmd {
-            cmd
-        } else {
-            "git --version"
-        };
-        check_git(git_cmd).and_then(check_inside_git_worktree)?;
-        self.inner_add_git_map_entries(path, idempotent, map, warnings, rerun_if_changed)
+        if self.any() {
+            let git_cmd = if let Some(cmd) = self.git_config.git_cmd {
+                cmd
+            } else {
+                "git --version"
+            };
+            check_git(git_cmd).and_then(check_inside_git_worktree)?;
+            self.inner_add_git_map_entries(path, idempotent, map, warnings, rerun_if_changed)?;
+        }
+        Ok(())
     }
 
     #[allow(clippy::needless_pass_by_value)]

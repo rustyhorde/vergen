@@ -24,6 +24,17 @@ pub(crate) struct Config {
     rustc_str_to_test: Option<&'static str>,
 }
 
+impl Config {
+    pub(crate) fn any(self) -> bool {
+        self.rustc_channel
+            || self.rustc_commit_date
+            || self.rustc_commit_hash
+            || self.rustc_host_triple
+            || self.rustc_llvm_version
+            || self.rustc_semver
+    }
+}
+
 /// The `VERGEN_RUSTC_*` configuration features
 ///
 /// **NOTE** - All rustc instructions are considered deterministic.  If you change
@@ -169,7 +180,10 @@ impl EmitBuilder {
         map: &mut RustcEnvMap,
         warnings: &mut Vec<String>,
     ) -> Result<()> {
-        self.add_rustc_to_map(version_meta(), map, warnings)
+        if self.rustc_config.any() {
+            self.add_rustc_to_map(version_meta(), map, warnings)?;
+        }
+        Ok(())
     }
 
     #[cfg(test)]
@@ -185,7 +199,10 @@ impl EmitBuilder {
         } else {
             version_meta()
         };
-        self.add_rustc_to_map(vm, map, warnings)
+        if self.rustc_config.any() {
+            self.add_rustc_to_map(vm, map, warnings)?;
+        }
+        Ok(())
     }
 
     fn add_rustc_to_map(
