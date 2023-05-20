@@ -135,19 +135,28 @@ impl Emitter {
     fn add_git_entries(&mut self, builder: &EmitBuilder, repo_path: Option<PathBuf>) -> Result<()> {
         let idem = builder.idempotent;
         let fail_on_error = builder.fail_on_error;
-        let mut empty = BTreeMap::new();
+        let mut empty_cargo_rustc_env_map = BTreeMap::new();
         let mut empty_rerun_if_changed = vec![];
-        let (cargo_rustc_env_map, rerun_if_changed) = if builder.disable_git {
-            (&mut empty, &mut empty_rerun_if_changed)
+        let mut empty_warnings = vec![];
+        let (cargo_rustc_env_map, rerun_if_changed, warnings) = if builder.disable_git {
+            (
+                &mut empty_cargo_rustc_env_map,
+                &mut empty_rerun_if_changed,
+                &mut empty_warnings,
+            )
         } else {
-            (&mut self.cargo_rustc_env_map, &mut self.rerun_if_changed)
+            (
+                &mut self.cargo_rustc_env_map,
+                &mut self.rerun_if_changed,
+                &mut self.warnings,
+            )
         };
         builder
             .add_git_map_entries(
                 repo_path,
                 idem,
                 cargo_rustc_env_map,
-                &mut self.warnings,
+                warnings,
                 rerun_if_changed,
             )
             .or_else(|e| {
@@ -156,7 +165,7 @@ impl Emitter {
                     e,
                     fail_on_error,
                     cargo_rustc_env_map,
-                    &mut self.warnings,
+                    warnings,
                     rerun_if_changed,
                 )
             })
