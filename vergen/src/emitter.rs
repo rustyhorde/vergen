@@ -136,10 +136,11 @@ impl Emitter {
         let idem = builder.idempotent;
         let fail_on_error = builder.fail_on_error;
         let mut empty = BTreeMap::new();
-        let cargo_rustc_env_map = if builder.disable_git {
-            &mut empty
+        let mut empty_rerun_if_changed = vec![];
+        let (cargo_rustc_env_map, rerun_if_changed) = if builder.disable_git {
+            (&mut empty, &mut empty_rerun_if_changed)
         } else {
-            &mut self.cargo_rustc_env_map
+            (&mut self.cargo_rustc_env_map, &mut self.rerun_if_changed)
         };
         builder
             .add_git_map_entries(
@@ -147,7 +148,7 @@ impl Emitter {
                 idem,
                 cargo_rustc_env_map,
                 &mut self.warnings,
-                &mut self.rerun_if_changed,
+                rerun_if_changed,
             )
             .or_else(|e| {
                 self.failed = true;
@@ -156,7 +157,7 @@ impl Emitter {
                     fail_on_error,
                     cargo_rustc_env_map,
                     &mut self.warnings,
-                    &mut self.rerun_if_changed,
+                    rerun_if_changed,
                 )
             })
     }
