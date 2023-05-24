@@ -625,6 +625,9 @@ impl EmitBuilder {
         let output = run_cmd(cmd)?;
         if output.status.success() {
             let stdout = String::from_utf8_lossy(&output.stdout)
+                .lines()
+                .last()
+                .ok_or_else(|| anyhow!("invalid 'git log' output"))?
                 .trim()
                 .trim_matches('\'')
                 .to_string();
