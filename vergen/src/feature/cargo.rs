@@ -161,7 +161,6 @@ impl EmitBuilder {
         map: &mut RustcEnvMap,
         warnings: &mut Vec<String>,
     ) -> Result<()> {
-        println!("{e:?}");
         if fail_on_error {
             Err(e)
         } else {
@@ -317,7 +316,6 @@ mod test {
             .emit_to(&mut stdout_buf)
             .is_ok());
         let output = String::from_utf8_lossy(&stdout_buf);
-        println!("{output}");
         assert!(output.contains("cargo:rustc-env=VERGEN_CARGO_FEATURES=this is a bad date"));
         env::remove_var("VERGEN_CARGO_FEATURES");
         teardown();

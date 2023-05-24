@@ -216,6 +216,11 @@ mod test {
 4a61736f6e204f7a696173
 "#;
 
+    #[cfg(feature = "__vergen_test")]
+    const HEADER_SUFFIX: &str = r#"
+4a61736f6e204f7a696173
+"#;
+
     lazy_static! {
         static ref BUILD_TIMESTAMP: Regex = Regex::new(r#"Timestamp \(  build\)"#).unwrap();
         static ref BUILD_SEMVER: Regex = Regex::new(r#"Semver \(  rustc\)"#).unwrap();
@@ -236,6 +241,88 @@ mod test {
     }
 
     #[test]
+    #[cfg(feature = "__vergen_test")]
+    fn header_default() -> Result<()> {
+        use super::ConfigBuilder;
+        use crate::vergen_pretty_env;
+
+        let mut buf = vec![];
+        let config = ConfigBuilder::default().env(vergen_pretty_env!()).build()?;
+        assert!(header(&config, Some(&mut buf)).is_ok());
+        assert!(!buf.is_empty());
+        let header_str = String::from_utf8_lossy(&buf);
+        assert!(BUILD_TIMESTAMP.is_match(&header_str));
+        assert!(BUILD_SEMVER.is_match(&header_str));
+        assert!(GIT_BRANCH.is_match(&header_str));
+        Ok(())
+    }
+
+    #[test]
+    #[cfg(feature = "__vergen_test")]
+    fn header_all() -> Result<()> {
+        use super::ConfigBuilder;
+        use crate::vergen_pretty_env;
+
+        let mut buf = vec![];
+        let config = ConfigBuilder::default()
+            .prefix(HEADER_PREFIX)
+            .env(vergen_pretty_env!())
+            .suffix(HEADER_SUFFIX)
+            .build()?;
+        assert!(header(&config, Some(&mut buf)).is_ok());
+        assert!(!buf.is_empty());
+        let header_str = String::from_utf8_lossy(&buf);
+        assert!(BUILD_TIMESTAMP.is_match(&header_str));
+        assert!(BUILD_SEMVER.is_match(&header_str));
+        assert!(GIT_BRANCH.is_match(&header_str));
+        Ok(())
+    }
+
+    #[test]
+    #[cfg(all(feature = "__vergen_test", feature = "color"))]
+    fn header_all_color_random() -> Result<()> {
+        use super::ConfigBuilder;
+        use crate::vergen_pretty_env;
+
+        let mut buf = vec![];
+        let config = ConfigBuilder::default()
+            .random_style(true)
+            .prefix(HEADER_PREFIX)
+            .env(vergen_pretty_env!())
+            .suffix(HEADER_SUFFIX)
+            .build()?;
+        assert!(header(&config, Some(&mut buf)).is_ok());
+        assert!(!buf.is_empty());
+        let header_str = String::from_utf8_lossy(&buf);
+        assert!(BUILD_TIMESTAMP.is_match(&header_str));
+        assert!(BUILD_SEMVER.is_match(&header_str));
+        assert!(GIT_BRANCH.is_match(&header_str));
+        Ok(())
+    }
+
+    #[test]
+    #[cfg(all(feature = "__vergen_test", feature = "color"))]
+    fn header_all_color_specific() -> Result<()> {
+        use super::ConfigBuilder;
+        use crate::vergen_pretty_env;
+
+        let mut buf = vec![];
+        let config = ConfigBuilder::default()
+            .style(Style::new().green())
+            .prefix(HEADER_PREFIX)
+            .env(vergen_pretty_env!())
+            .suffix(HEADER_SUFFIX)
+            .build()?;
+        assert!(header(&config, Some(&mut buf)).is_ok());
+        assert!(!buf.is_empty());
+        let header_str = String::from_utf8_lossy(&buf);
+        assert!(BUILD_TIMESTAMP.is_match(&header_str));
+        assert!(BUILD_SEMVER.is_match(&header_str));
+        assert!(GIT_BRANCH.is_match(&header_str));
+        Ok(())
+    }
+
+    #[test]
     #[cfg(debug_assertions)]
     #[cfg(feature = "__vergen_test")]
     fn header_writes() -> Result<()> {
@@ -250,7 +337,6 @@ mod test {
         assert!(header(&config, Some(&mut buf)).is_ok());
         assert!(!buf.is_empty());
         let header_str = String::from_utf8_lossy(&buf);
-        println!("{header_str}");
         assert!(BUILD_TIMESTAMP.is_match(&header_str));
         assert!(BUILD_SEMVER.is_match(&header_str));
         assert!(GIT_BRANCH.is_match(&header_str));
