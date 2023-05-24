@@ -8,13 +8,16 @@
 
 // Header
 
-use crate::{vergen_pretty_env, PrefixBuilder, PrettyBuilder};
+use crate::{Prefix, PrefixBuilder, PrettyBuilder, Suffix, SuffixBuilder};
 
 use anyhow::Result;
 use console::Style;
+use derive_builder::Builder;
+#[cfg(feature = "color")]
 use rand::Rng;
-use std::io::Write;
+use std::{collections::BTreeMap, io::Write};
 
+#[cfg(feature = "color")]
 fn from_u8(val: u8) -> Style {
     let style = Style::new();
     match val {
@@ -28,93 +31,176 @@ fn from_u8(val: u8) -> Style {
     }
 }
 
+/// Environment tree type alias
+pub type Env = BTreeMap<&'static str, Option<&'static str>>;
+
+/// Header Configuration
+#[derive(Builder, Clone, Debug, Default)]
+pub struct Config {
+    #[cfg(feature = "color")]
+    #[builder(default)]
+    /// Use a random [`Style`] color for the output
+    random_style: bool,
+    #[cfg(feature = "color")]
+    #[builder(setter(into, strip_option), default)]
+    /// Use the given [`Style`] for the output (mutually exclusive with `random_style`)
+    style: Option<Style>,
+    /// An optional prefix string
+    #[builder(setter(into, strip_option), default)]
+    prefix: Option<&'static str>,
+    /// The vergen env (generated with the [`vergen_pretty_env`](crate::vergen_pretty_env) macro)
+    env: Env,
+    /// An optional suffix string
+    #[builder(setter(into, strip_option), default)]
+    suffix: Option<&'static str>,
+}
+
 /// Generate a pretty header
 ///
 /// # Errors
 ///
-pub fn header<T>(prefix: &'static str, writer: Option<&mut T>) -> Result<()>
+pub fn header<T>(config: &Config, writer: Option<&mut T>) -> Result<()>
 where
     T: Write + ?Sized,
 {
-    let mut rng = rand::thread_rng();
-    let app_style = from_u8(rng.gen_range(0..7));
     if let Some(writer) = writer {
-        output_to_writer(writer, app_style.clone(), prefix)?;
+        output_to_writer(writer, config)?;
     }
-    trace(app_style, prefix)?;
+    trace(config)?;
     Ok(())
 }
 
 #[cfg(feature = "color")]
-fn output_to_writer<T>(writer: &mut T, app_style: Style, prefix: &'static str) -> Result<()>
+fn output_to_writer<T>(writer: &mut T, config: &Config) -> Result<()>
 where
     T: Write + ?Sized,
 {
-    let prefix = PrefixBuilder::default()
-        .lines(prefix.lines().map(str::to_string).collect())
-        .style(app_style)
-        .build()?;
+    let app_style = get_style(config.random_style, config.style.clone());
     PrettyBuilder::default()
-        .env(vergen_pretty_env!())
-        .prefix(prefix)
+        .env(config.env.clone())
+        .prefix(get_prefix(config.prefix, &app_style)?)
+        .suffix(get_suffix(config.suffix, &app_style)?)
         .build()?
         .display(writer)?;
     Ok(())
 }
 
 #[cfg(not(feature = "color"))]
-fn output_to_writer<T>(writer: &mut T, _app_style: Style, prefix: &'static str) -> Result<()>
+fn output_to_writer<T>(writer: &mut T, config: &Config) -> Result<()>
 where
     T: Write + ?Sized,
 {
-    let prefix = PrefixBuilder::default()
-        .lines(prefix.lines().map(str::to_string).collect())
-        .build()?;
+    let app_style = get_style(false, None);
     PrettyBuilder::default()
-        .env(vergen_pretty_env!())
-        .prefix(prefix)
+        .env(config.env.clone())
+        .prefix(get_prefix(config.prefix, &app_style)?)
+        .suffix(get_suffix(config.suffix, &app_style)?)
         .build()?
         .display(writer)?;
     Ok(())
 }
 
 #[cfg(all(feature = "trace", feature = "color"))]
-fn trace(app_style: Style, prefix: &'static str) -> Result<()> {
-    let prefix = PrefixBuilder::default()
-        .lines(prefix.lines().map(str::to_string).collect())
-        .style(app_style)
-        .build()?;
+fn trace(config: &Config) -> Result<()> {
+    let app_style = get_style(config.random_style, config.style.clone());
     PrettyBuilder::default()
-        .env(vergen_pretty_env!())
-        .prefix(prefix)
+        .env(config.env.clone())
+        .prefix(get_prefix(config.prefix, &app_style)?)
+        .suffix(get_suffix(config.suffix, &app_style)?)
         .build()?
         .trace();
     Ok(())
 }
 
 #[cfg(all(feature = "trace", not(feature = "color")))]
-fn trace(_app_style: Style, prefix: &'static str) -> Result<()> {
-    let prefix = PrefixBuilder::default()
-        .lines(prefix.lines().map(str::to_string).collect())
-        .build()?;
+fn trace(config: &Config) -> Result<()> {
+    let app_style = get_style(false, None);
     PrettyBuilder::default()
-        .env(vergen_pretty_env!())
-        .prefix(prefix)
+        .env(config.env.clone())
+        .prefix(get_prefix(config.prefix, &app_style)?)
+        .suffix(get_suffix(config.suffix, &app_style)?)
         .build()?
         .trace();
     Ok(())
 }
 
 #[cfg(not(feature = "trace"))]
-fn trace(_app_style: Style, _prefix: &'static str) -> Result<()> {
+fn trace(_config: &Config) -> Result<()> {
     Ok(())
+}
+
+#[cfg(feature = "color")]
+fn get_style(random_style: bool, style_opt: Option<Style>) -> Style {
+    if random_style {
+        let mut rng = rand::thread_rng();
+        from_u8(rng.gen_range(0..7))
+    } else if let Some(style) = style_opt {
+        style
+    } else {
+        Style::new()
+    }
+}
+
+#[cfg(not(feature = "color"))]
+fn get_style(_random_style: bool, _style_opt: Option<Style>) -> Style {
+    Style::new()
+}
+
+#[cfg(feature = "color")]
+fn get_prefix(prefix_opt: Option<&'static str>, app_style: &Style) -> Result<Prefix> {
+    Ok(if let Some(prefix) = prefix_opt {
+        PrefixBuilder::default()
+            .lines(prefix.lines().map(str::to_string).collect())
+            .style(app_style.clone())
+            .build()?
+    } else {
+        PrefixBuilder::default().lines(vec![]).build()?
+    })
+}
+
+#[cfg(not(feature = "color"))]
+fn get_prefix(prefix_opt: Option<&'static str>, _app_style: &Style) -> Result<Prefix> {
+    Ok(if let Some(prefix) = prefix_opt {
+        PrefixBuilder::default()
+            .lines(prefix.lines().map(str::to_string).collect())
+            .build()?
+    } else {
+        PrefixBuilder::default().lines(vec![]).build()?
+    })
+}
+
+#[cfg(feature = "color")]
+fn get_suffix(suffix_opt: Option<&'static str>, app_style: &Style) -> Result<Suffix> {
+    Ok(if let Some(suffix) = suffix_opt {
+        SuffixBuilder::default()
+            .lines(suffix.lines().map(str::to_string).collect())
+            .style(app_style.clone())
+            .build()?
+    } else {
+        SuffixBuilder::default().lines(vec![]).build()?
+    })
+}
+
+#[cfg(not(feature = "color"))]
+fn get_suffix(suffix_opt: Option<&'static str>, _app_style: &Style) -> Result<Suffix> {
+    Ok(if let Some(suffix) = suffix_opt {
+        SuffixBuilder::default()
+            .lines(suffix.lines().map(str::to_string).collect())
+            .build()?
+    } else {
+        SuffixBuilder::default().lines(vec![]).build()?
+    })
 }
 
 #[cfg(test)]
 mod test {
+    #[cfg(feature = "color")]
     use super::from_u8;
     #[cfg(feature = "__vergen_test")]
     use super::header;
+    #[cfg(feature = "__vergen_test")]
+    use anyhow::Result;
+    #[cfg(feature = "color")]
     use console::Style;
     use lazy_static::lazy_static;
     use regex::Regex;
@@ -137,6 +223,7 @@ mod test {
     }
 
     #[test]
+    #[cfg(feature = "color")]
     fn from_u8_works() {
         assert_eq!(from_u8(0), Style::new().green());
         assert_eq!(from_u8(1), Style::new().yellow());
@@ -151,27 +238,43 @@ mod test {
     #[test]
     #[cfg(debug_assertions)]
     #[cfg(feature = "__vergen_test")]
-    fn header_writes() {
+    fn header_writes() -> Result<()> {
+        use super::ConfigBuilder;
+        use crate::vergen_pretty_env;
+
         let mut buf = vec![];
-        assert!(header(HEADER_PREFIX, Some(&mut buf)).is_ok());
+        let config = ConfigBuilder::default()
+            .prefix(HEADER_PREFIX)
+            .env(vergen_pretty_env!())
+            .build()?;
+        assert!(header(&config, Some(&mut buf)).is_ok());
         assert!(!buf.is_empty());
         let header_str = String::from_utf8_lossy(&buf);
         println!("{header_str}");
         assert!(BUILD_TIMESTAMP.is_match(&header_str));
         assert!(BUILD_SEMVER.is_match(&header_str));
         assert!(GIT_BRANCH.is_match(&header_str));
+        Ok(())
     }
 
     #[test]
     #[cfg(not(debug_assertions))]
     #[cfg(feature = "__vergen_test")]
-    fn header_writes() {
+    fn header_writes() -> Result<()> {
+        use super::ConfigBuilder;
+        use crate::vergen_pretty_env;
+
         let mut buf = vec![];
-        assert!(header(&TestConfig::default(), HEADER_PREFIX, Some(&mut buf)).is_ok());
+        let config = ConfigBuilder::default()
+            .prefix(HEADER_PREFIX)
+            .env(vergen_pretty_env!())
+            .build()?;
+        assert!(header(&config, Some(&mut buf)).is_ok());
         assert!(!buf.is_empty());
         let header_str = String::from_utf8_lossy(&buf);
         assert!(BUILD_TIMESTAMP.is_match(&header_str));
         assert!(BUILD_SEMVER.is_match(&header_str));
         assert!(GIT_BRANCH.is_match(&header_str));
+        Ok(())
     }
 }

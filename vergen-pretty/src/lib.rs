@@ -258,9 +258,16 @@ mod pretty;
 mod utils;
 
 #[cfg(feature = "color")]
+#[doc(inline)]
 pub use console::Style;
 #[cfg(feature = "header")]
 pub use header::header;
+#[cfg(feature = "header")]
+pub use header::Config;
+#[cfg(feature = "header")]
+pub use header::ConfigBuilder;
+#[cfg(feature = "header")]
+pub use header::Env;
 pub use pretty::prefix::Prefix;
 pub use pretty::prefix::PrefixBuilder;
 pub use pretty::suffix::Suffix;
@@ -269,10 +276,13 @@ pub use pretty::Pretty;
 pub use pretty::PrettyBuilder;
 pub use pretty::PrettyBuilderError;
 #[cfg(feature = "trace")]
+#[doc(inline)]
 pub use tracing::Level;
 
 #[cfg(all(test, not(feature = "header")))]
 use lazy_static as _;
+#[cfg(all(feature = "header", not(feature = "color")))]
+use rand as _;
 #[cfg(all(test, not(feature = "header")))]
 use regex as _;
 #[cfg(all(test, not(feature = "serde")))]
