@@ -454,7 +454,7 @@ impl EmitBuilder {
             ),
             Err(std::env::VarError::NotPresent) => (
                 false,
-                OffsetDateTime::from_unix_timestamp(commit.time()?.seconds.try_into()?)?,
+                OffsetDateTime::from_unix_timestamp(commit.time()?.seconds)?,
             ),
             Err(e) => return Err(e.into()),
         };
