@@ -11,6 +11,7 @@ use std::{
     env,
     io::{self, Write},
 };
+
 #[cfg(any(
     feature = "build",
     feature = "cargo",
@@ -230,11 +231,16 @@ impl Emitter {
     )]
     fn add_si_entries(&mut self, _builder: &EmitBuilder) {}
 
-    fn emit_output<T>(&self, quiet: bool, stdout: &mut T) -> Result<()>
+    fn emit_output<T>(
+        &self,
+        quiet: bool,
+        custom_buildrs: Option<&'static str>,
+        stdout: &mut T,
+    ) -> Result<()>
     where
         T: Write,
     {
-        self.emit_instructions(quiet, stdout)
+        self.emit_instructions(quiet, custom_buildrs, stdout)
     }
 
     #[cfg(not(any(
@@ -245,7 +251,12 @@ impl Emitter {
         feature = "si"
     )))]
     #[allow(clippy::unused_self, clippy::unnecessary_wraps)]
-    fn emit_instructions<T>(&self, _quiet: bool, _stdout: &mut T) -> Result<()>
+    fn emit_instructions<T>(
+        &self,
+        _quiet: bool,
+        _custom_buildrs: Option<&'static str>,
+        _stdout: &mut T,
+    ) -> Result<()>
     where
         T: Write,
     {
@@ -259,7 +270,12 @@ impl Emitter {
         feature = "rustc",
         feature = "si"
     ))]
-    fn emit_instructions<T>(&self, quiet: bool, stdout: &mut T) -> Result<()>
+    fn emit_instructions<T>(
+        &self,
+        quiet: bool,
+        custom_buildrs: Option<&'static str>,
+        stdout: &mut T,
+    ) -> Result<()>
     where
         T: Write,
     {
@@ -282,7 +298,12 @@ impl Emitter {
 
         // Emit the 'cargo:rerun-if-changed' instructions
         if !self.cargo_rustc_env_map.is_empty() || !self.warnings.is_empty() {
-            writeln!(stdout, "cargo:rerun-if-changed=build.rs")?;
+            let buildrs = if let Some(path) = custom_buildrs {
+                path
+            } else {
+                "build.rs"
+            };
+            writeln!(stdout, "cargo:rerun-if-changed={buildrs}")?;
             writeln!(stdout, "cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT")?;
             writeln!(stdout, "cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH")?;
         }
@@ -298,6 +319,7 @@ pub struct EmitBuilder {
     idempotent: bool,
     fail_on_error: bool,
     quiet: bool,
+    custom_buildrs: Option<&'static str>,
     #[cfg(feature = "build")]
     disable_build: bool,
     #[cfg(feature = "build")]
@@ -335,6 +357,7 @@ impl EmitBuilder {
             idempotent,
             fail_on_error: false,
             quiet: false,
+            custom_buildrs: None,
             #[cfg(feature = "build")]
             disable_build: false,
             #[cfg(feature = "build")]
@@ -446,6 +469,33 @@ EmitBuilder::builder().fail_on_error().all_build().emit()?;
     /// ```
     pub fn fail_on_error(&mut self) -> &mut Self {
         self.fail_on_error = true;
+        self
+    }
+
+    /// Set a custom build.rs path if you are using a non-standard path
+    ///
+    /// By default `vergen` will use `build.rs` as the build path for the
+    /// `cargo:rerun-if-changed` emit.  You can specify a custom `build.rs`
+    /// path here if you have changed this default
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use anyhow::Result;
+    /// # use vergen::EmitBuilder;
+    /// #
+    /// # fn main() -> Result<()> {
+    #[cfg_attr(
+        feature = "build",
+        doc = r##"
+EmitBuilder::builder().custom_build_rs("my/custom/build.rs").all_build().emit()?;
+"##
+    )]
+    /// #   Ok(())
+    /// # }
+    /// ```
+    pub fn custom_build_rs(&mut self, path: &'static str) -> &mut Self {
+        self.custom_buildrs = Some(path);
         self
     }
 
@@ -698,7 +748,7 @@ EmitBuilder::builder()
     ///
     pub fn emit(self) -> Result<()> {
         self.inner_emit(None)
-            .and_then(|x| x.emit_output(self.quiet, &mut io::stdout()))
+            .and_then(|x| x.emit_output(self.quiet, self.custom_buildrs, &mut io::stdout()))
     }
 
     /// Emit cargo instructions from your build script and set environment variables for use in `build.rs`
@@ -765,7 +815,10 @@ EmitBuilder::builder()
     ))]
     pub fn emit_and_set(self) -> Result<()> {
         self.inner_emit(None)
-            .and_then(|x| x.emit_output(self.quiet, &mut io::stdout()).map(|_| x))
+            .and_then(|x| {
+                x.emit_output(self.quiet, self.custom_buildrs, &mut io::stdout())
+                    .map(|_| x)
+            })
             .map(|x| {
                 for (k, v) in &x.cargo_rustc_env_map {
                     if env::var(k.name()).is_err() {
@@ -786,7 +839,7 @@ EmitBuilder::builder()
     ))]
     pub fn emit_at(self, repo_path: PathBuf) -> Result<()> {
         self.inner_emit(Some(repo_path))
-            .and_then(|x| x.emit_output(self.quiet, &mut io::stdout()))
+            .and_then(|x| x.emit_output(self.quiet, self.custom_buildrs, &mut io::stdout()))
     }
 
     #[cfg(all(
@@ -830,8 +883,10 @@ EmitBuilder::builder()
     where
         T: Write,
     {
-        self.inner_emit(None)
-            .and_then(|x| x.emit_output(self.quiet, stdout).map(|_| x.failed))
+        self.inner_emit(None).and_then(|x| {
+            x.emit_output(self.quiet, self.custom_buildrs, stdout)
+                .map(|_| x.failed)
+        })
     }
 
     #[doc(hidden)]
@@ -848,8 +903,10 @@ EmitBuilder::builder()
     where
         T: Write,
     {
-        self.inner_emit(path)
-            .and_then(|x| x.emit_output(self.quiet, stdout).map(|_| x.failed))
+        self.inner_emit(path).and_then(|x| {
+            x.emit_output(self.quiet, self.custom_buildrs, stdout)
+                .map(|_| x.failed)
+        })
     }
 
     fn inner_emit(self, path: Option<PathBuf>) -> Result<Emitter> {

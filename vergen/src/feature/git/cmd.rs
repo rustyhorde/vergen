@@ -28,7 +28,7 @@ use time::{
         self,
         well_known::{Iso8601, Rfc3339},
     },
-    OffsetDateTime,
+    OffsetDateTime, UtcOffset,
 };
 
 #[derive(Clone, Copy, Debug, Default)]
@@ -57,6 +57,7 @@ pub(crate) struct Config {
     pub(crate) git_sha: bool,
     git_sha_short: bool,
     git_cmd: Option<&'static str>,
+    use_local: bool,
 }
 
 // This funkiness allows the command to be output in the docs
@@ -440,6 +441,12 @@ impl EmitBuilder {
         self
     }
 
+    /// Enable local offset date/timestamp output
+    pub fn use_local_git(&mut self) -> &mut Self {
+        self.git_config.use_local = true;
+        self
+    }
+
     pub(crate) fn add_git_default(
         &self,
         e: Error,
@@ -638,7 +645,14 @@ impl EmitBuilder {
                     OffsetDateTime::from_unix_timestamp(i64::from_str(&v)?)?,
                 ),
                 Err(std::env::VarError::NotPresent) => {
-                    (false, OffsetDateTime::parse(&stdout, &Rfc3339)?)
+                    let no_offset = OffsetDateTime::parse(&stdout, &Rfc3339)?;
+                    if self.git_config.use_local {
+                        let local = UtcOffset::local_offset_at(no_offset)?;
+                        let local_offset = no_offset.checked_to_offset(local).unwrap_or(no_offset);
+                        (false, local_offset)
+                    } else {
+                        (false, no_offset)
+                    }
                 }
                 Err(e) => return Err(e.into()),
             };
