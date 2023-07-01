@@ -32,6 +32,15 @@ cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT
 cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
 "#;
 
+    const IDEM_OUTPUT_CUSTOM_BUILDRS: &str = r#"cargo:rustc-env=VERGEN_BUILD_DATE=VERGEN_IDEMPOTENT_OUTPUT
+cargo:rustc-env=VERGEN_BUILD_TIMESTAMP=VERGEN_IDEMPOTENT_OUTPUT
+cargo:warning=VERGEN_BUILD_DATE set to default
+cargo:warning=VERGEN_BUILD_TIMESTAMP set to default
+cargo:rerun-if-changed=a/custom_build.rs
+cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT
+cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
+"#;
+
     const DISABLED_OUTPUT: &str = r#""#;
 
     const SOURCE_DATE_EPOCH_IDEM_OUTPUT: &str = r#"cargo:rustc-env=VERGEN_BUILD_DATE=2022-12-23
@@ -83,6 +92,20 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
             .emit_to(&mut stdout_buf)?;
         let output = String::from_utf8_lossy(&stdout_buf);
         assert_eq!(IDEM_OUTPUT, output);
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn build_all_idempotent_custom_buildrs_output() -> Result<()> {
+        let mut stdout_buf = vec![];
+        EmitBuilder::builder()
+            .idempotent()
+            .custom_build_rs("a/custom_build.rs")
+            .all_build()
+            .emit_to(&mut stdout_buf)?;
+        let output = String::from_utf8_lossy(&stdout_buf);
+        assert_eq!(IDEM_OUTPUT_CUSTOM_BUILDRS, output);
         Ok(())
     }
 
