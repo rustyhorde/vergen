@@ -15,6 +15,7 @@ use time::{
 pub(crate) struct Config {
     pub(crate) build_date: bool,
     pub(crate) build_timestamp: bool,
+    use_local: bool,
 }
 
 impl Config {
@@ -155,6 +156,12 @@ impl EmitBuilder {
         self
     }
 
+    /// Enable local offset date/timestamp output
+    pub fn use_local_build(&mut self) -> &mut Self {
+        self.build_config.use_local = true;
+        self
+    }
+
     pub(crate) fn add_build_default(
         &self,
         e: Error,
@@ -198,7 +205,13 @@ impl EmitBuilder {
                 true,
                 OffsetDateTime::from_unix_timestamp(i64::from_str(&v)?)?,
             ),
-            Err(std::env::VarError::NotPresent) => (false, OffsetDateTime::now_utc()),
+            Err(std::env::VarError::NotPresent) => {
+                if self.build_config.use_local {
+                    (false, OffsetDateTime::now_local()?)
+                } else {
+                    (false, OffsetDateTime::now_utc())
+                }
+            }
             Err(e) => return Err(e.into()),
         };
 

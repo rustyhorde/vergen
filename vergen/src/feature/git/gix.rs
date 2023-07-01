@@ -27,7 +27,7 @@ use std::{
 };
 use time::{
     format_description::{self, well_known::Iso8601},
-    OffsetDateTime,
+    OffsetDateTime, UtcOffset,
 };
 
 #[derive(Clone, Copy, Debug, Default)]
@@ -54,6 +54,7 @@ pub(crate) struct Config {
     // git rev-parse HEAD (optionally with --short)
     pub(crate) git_sha: bool,
     git_sha_short: bool,
+    use_local: bool,
     #[cfg(test)]
     fail: bool,
 }
@@ -289,6 +290,12 @@ impl EmitBuilder {
         }
     }
 
+    /// Enable local offset date/timestamp output
+    pub fn use_local_git(&mut self) -> &mut Self {
+        self.git_config.use_local = true;
+        self
+    }
+
     #[cfg(not(test))]
     pub(crate) fn add_git_map_entries(
         &self,
@@ -452,10 +459,16 @@ impl EmitBuilder {
                 true,
                 OffsetDateTime::from_unix_timestamp(i64::from_str(&v)?)?,
             ),
-            Err(std::env::VarError::NotPresent) => (
-                false,
-                OffsetDateTime::from_unix_timestamp(commit.time()?.seconds)?,
-            ),
+            Err(std::env::VarError::NotPresent) => {
+                let no_offset = OffsetDateTime::from_unix_timestamp(commit.time()?.seconds)?;
+                if self.git_config.use_local {
+                    let local = UtcOffset::local_offset_at(no_offset)?;
+                    let local_offset = no_offset.checked_to_offset(local).unwrap_or(no_offset);
+                    (false, local_offset)
+                } else {
+                    (false, no_offset)
+                }
+            }
             Err(e) => return Err(e.into()),
         };
 
