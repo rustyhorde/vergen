@@ -363,6 +363,34 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
 
     #[test]
     #[serial_test::serial]
+    fn git_all_flags_test_repo_local() -> Result<()> {
+        create_test_repo();
+        clone_test_repo();
+        let mut stdout_buf = vec![];
+        let result = EmitBuilder::builder()
+            .all_git()
+            .git_describe(true, true, Some("0.1*"))
+            .git_sha(true)
+            .use_local_git()
+            .emit_to_at(&mut stdout_buf, Some(clone_path()));
+        check_local_result(result, &stdout_buf);
+        Ok(())
+    }
+
+    #[cfg(not(target_os = "linux"))]
+    fn check_local_result(result: Result<bool>, stdout_buf: &[u8]) {
+        assert!(result.is_ok());
+        let output = String::from_utf8_lossy(&stdout_buf);
+        assert!(GIT_REGEX_SHORT_INST.is_match(&output));
+    }
+
+    #[cfg(target_os = "linux")]
+    fn check_local_result(result: Result<bool>, _stdout_buf: &[u8]) {
+        assert!(result.is_err());
+    }
+
+    #[test]
+    #[serial_test::serial]
     fn git_all_output_test_repo() -> Result<()> {
         create_test_repo();
         clone_test_repo();
