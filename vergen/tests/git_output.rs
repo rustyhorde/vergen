@@ -372,6 +372,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
             .git_describe(true, true, Some("0.1*"))
             .git_sha(true)
             .use_local_git()
+            .fail_on_error()
             .emit_to_at(&mut stdout_buf, Some(clone_path()));
         check_local_result(result, &stdout_buf);
         Ok(())
