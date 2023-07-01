@@ -71,6 +71,30 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
 
     #[test]
     #[serial_test::serial]
+    fn build_all_output_local() -> Result<()> {
+        let mut stdout_buf = vec![];
+        let result = EmitBuilder::builder()
+            .all_build()
+            .use_local_build()
+            .fail_on_error()
+            .emit_to(&mut stdout_buf);
+        check_local_result(result, &stdout_buf);
+        Ok(())
+    }
+
+    #[cfg(not(target_family = "unix"))]
+    fn check_local_result(result: Result<bool>, stdout_buf: &[u8]) {
+        let output = String::from_utf8_lossy(stdout_buf);
+        assert!(BUILD_REGEX_INST.is_match(&output));
+    }
+
+    #[cfg(target_family = "unix")]
+    fn check_local_result(result: Result<bool>, _stdout_buf: &[u8]) {
+        assert!(result.is_err())
+    }
+
+    #[test]
+    #[serial_test::serial]
     fn build_disabled_output() -> Result<()> {
         let mut stdout_buf = vec![];
         EmitBuilder::builder()
