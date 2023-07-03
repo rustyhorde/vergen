@@ -12,11 +12,11 @@ mod test_build {
         static ref CARGO_FEA_RE_STR: &'static str =
             r#"cargo:rustc-env=VERGEN_CARGO_FEATURES=[a-zA-Z0-9-_]+,[a-zA-Z0-9-_]+"#;
         static ref CARGO_OPT_LEVEL_RE_STR: &'static str =
-            r#"cargo:rustc-env=VERGEN_CARGO_OPT_LEVEL=\d{1}"#;
+            r"cargo:rustc-env=VERGEN_CARGO_OPT_LEVEL=\d{1}";
         static ref CARGO_TT_RE_STR: &'static str =
             r#"cargo:rustc-env=VERGEN_CARGO_TARGET_TRIPLE=[a-zA-Z0-9-_]+"#;
         static ref CARGO_REGEX: Regex = {
-            let re_str = vec![
+            let re_str = [
                 *CARGO_DEBUG_RE_STR,
                 *CARGO_FEA_RE_STR,
                 *CARGO_OPT_LEVEL_RE_STR,
