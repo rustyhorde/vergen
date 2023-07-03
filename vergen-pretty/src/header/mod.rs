@@ -222,9 +222,9 @@ mod test {
 "#;
 
     lazy_static! {
-        static ref BUILD_TIMESTAMP: Regex = Regex::new(r#"Timestamp \(  build\)"#).unwrap();
-        static ref BUILD_SEMVER: Regex = Regex::new(r#"Semver \(  rustc\)"#).unwrap();
-        static ref GIT_BRANCH: Regex = Regex::new(r#"Branch \(    git\)"#).unwrap();
+        static ref BUILD_TIMESTAMP: Regex = Regex::new(r"Timestamp \(  build\)").unwrap();
+        static ref BUILD_SEMVER: Regex = Regex::new(r"Semver \(  rustc\)").unwrap();
+        static ref GIT_BRANCH: Regex = Regex::new(r"Branch \(    git\)").unwrap();
     }
 
     #[test]

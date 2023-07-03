@@ -8,17 +8,17 @@ mod test_build {
 
     lazy_static! {
         static ref DATE_RE_STR: &'static str =
-            r#"cargo:rustc-env=VERGEN_BUILD_DATE=\d{4}-\d{2}-\d{2}"#;
+            r"cargo:rustc-env=VERGEN_BUILD_DATE=\d{4}-\d{2}-\d{2}";
         static ref DATE_IDEM_RE_STR: &'static str =
             r#"cargo:rustc-env=VERGEN_BUILD_DATE=VERGEN_IDEMPOTENT_OUTPUT"#;
-        static ref TIMESTAMP_RE_STR: &'static str = r#"cargo:rustc-env=VERGEN_BUILD_TIMESTAMP=([0-9]+)-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])[Tt]([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9]|60)(\.[0-9]+)?(([Zz])|([\+|\-]([01][0-9]|2[0-3]):[0-5][0-9]))"#;
+        static ref TIMESTAMP_RE_STR: &'static str = r"cargo:rustc-env=VERGEN_BUILD_TIMESTAMP=([0-9]+)-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])[Tt]([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9]|60)(\.[0-9]+)?(([Zz])|([\+|\-]([01][0-9]|2[0-3]):[0-5][0-9]))";
         static ref TIMESTAMP_IDEM_RE_STR: &'static str =
             r#"cargo:rustc-env=VERGEN_BUILD_TIMESTAMP=VERGEN_IDEMPOTENT_OUTPUT"#;
         static ref DATE_WARNING: &'static str = r#"cargo:warning=VERGEN_BUILD_DATE set to default"#;
         static ref TIMESTAMP_WARNING: &'static str =
             r#"cargo:warning=VERGEN_BUILD_TIMESTAMP set to default"#;
         static ref BUILD_REGEX_INST: Regex = {
-            let re_str = vec![*DATE_RE_STR, *TIMESTAMP_RE_STR].join("\n");
+            let re_str = [*DATE_RE_STR, *TIMESTAMP_RE_STR].join("\n");
             Regex::new(&re_str).unwrap()
         };
     }

@@ -23,7 +23,7 @@ mod test_git_git2 {
     lazy_static! {
         static ref GIT_BRANCH_RE_STR: &'static str = r#"cargo:rustc-env=VERGEN_GIT_BRANCH=.*"#;
         static ref GIT_CAE_RE_STR: &'static str =
-            r#"cargo:rustc-env=VERGEN_GIT_COMMIT_AUTHOR_EMAIL=\S+@\S+"#;
+            r"cargo:rustc-env=VERGEN_GIT_COMMIT_AUTHOR_EMAIL=\S+@\S+";
         static ref GIT_CAN_RE_STR: &'static str =
             r#"cargo:rustc-env=VERGEN_GIT_COMMIT_AUTHOR_NAME=.*"#;
         static ref GIT_CC_RE_STR: &'static str =
@@ -32,8 +32,8 @@ mod test_git_git2 {
         static ref GIT_CD_IDEM_RE_STR: &'static str =
             r#"cargo:rustc-env=VERGEN_GIT_COMMIT_DATE=VERGEN_IDEMPOTENT_OUTPUT"#;
         static ref GIT_CM_RE_STR: &'static str =
-            r#"cargo:rustc-env=VERGEN_GIT_COMMIT_MESSAGE=[\s\S]+"#;
-        static ref GIT_CT_RE_STR: &'static str = r#"cargo:rustc-env=VERGEN_GIT_COMMIT_TIMESTAMP=([0-9]+)-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])[Tt]([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9]|60)(\.[0-9]+)?(([Zz])|([\+|\-]([01][0-9]|2[0-3]):[0-5][0-9]))"#;
+            r"cargo:rustc-env=VERGEN_GIT_COMMIT_MESSAGE=[\s\S]+";
+        static ref GIT_CT_RE_STR: &'static str = r"cargo:rustc-env=VERGEN_GIT_COMMIT_TIMESTAMP=([0-9]+)-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])[Tt]([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9]|60)(\.[0-9]+)?(([Zz])|([\+|\-]([01][0-9]|2[0-3]):[0-5][0-9]))";
         static ref GIT_CT_IDEM_RE_STR: &'static str =
             r#"cargo:rustc-env=VERGEN_GIT_COMMIT_TIMESTAMP=VERGEN_IDEMPOTENT_OUTPUT"#;
         static ref GIT_DESCRIBE_RE_STR: &'static str = r#"cargo:rustc-env=VERGEN_GIT_DESCRIBE=.*"#;
@@ -72,7 +72,7 @@ cargo:rerun-if-changed=build.rs
 cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT
 cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH"#;
         static ref GIT_REGEX_INST: Regex = {
-            let re_str = vec![
+            let re_str = [
                 *GIT_BRANCH_RE_STR,
                 *GIT_CAE_RE_STR,
                 *GIT_CAN_RE_STR,
@@ -87,7 +87,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH"#;
             Regex::new(&re_str).unwrap()
         };
         static ref GIT_REGEX_SHORT_INST: Regex = {
-            let re_str = vec![
+            let re_str = [
                 *GIT_BRANCH_RE_STR,
                 *GIT_CAE_RE_STR,
                 *GIT_CAN_RE_STR,
@@ -102,7 +102,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH"#;
             Regex::new(&re_str).unwrap()
         };
         static ref GIT_REGEX_IDEM_INST: Regex = {
-            let re_str = vec![
+            let re_str = [
                 *GIT_BRANCH_RE_STR,
                 *GIT_CAE_RE_STR,
                 *GIT_CAN_RE_STR,
@@ -117,7 +117,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH"#;
             Regex::new(&re_str).unwrap()
         };
         static ref ALL_IDEM_OUTPUT: Regex = {
-            let re_str = vec![
+            let re_str = [
                 *GIT_BRANCH_IDEM_RE_STR,
                 *GIT_COMMIT_AUTHOR_EMAIL_IDEM_RE_STR,
                 *GIT_COMMIT_AUTHOR_NAME_IDEM_RE_STR,

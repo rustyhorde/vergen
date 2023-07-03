@@ -29,7 +29,7 @@ mod test_sysinfo {
         static ref CPU_CORE_IDEM_RE_STR: &'static str =
             r#"cargo:rustc-env=VERGEN_SYSINFO_CPU_CORE_COUNT=VERGEN_IDEMPOTENT_OUTPUT"#;
         static ref SYSINFO_REGEX_INST: Regex = {
-            let re_str = vec![
+            let re_str = [
                 *NAME_RE_STR,
                 *OS_VERSION_RE_STR,
                 *USER_RE_STR,
