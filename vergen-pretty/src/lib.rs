@@ -65,11 +65,12 @@
 #![cfg_attr(
     all(msrv, feature = "unstable", nightly),
     feature(
-        c_unwind,
         lint_reasons,
+        multiple_supertrait_upcastable,
         must_not_suspend,
         non_exhaustive_omitted_patterns_lint,
         strict_provenance,
+        type_privacy_lints,
         rustdoc_missing_doc_code_examples,
     )
 )]
@@ -82,8 +83,7 @@
         asm_sub_register,
         bad_asm_style,
         bare_trait_objects,
-        bindings_with_variant_name,
-        box_pointers,
+        // box_pointers,
         break_with_label_and_loop,
         clashing_extern_declarations,
         coherence_leak_check,
@@ -163,6 +163,7 @@
         uncommon_codepoints,
         unconditional_recursion,
         unexpected_cfgs,
+        ungated_async_fn_track_caller,
         uninhabited_static,
         unknown_lints,
         unnameable_test_items,
@@ -171,6 +172,7 @@
         unreachable_pub,
         unsafe_code,
         unsafe_op_in_unsafe_fn,
+        unstable_features,
         unstable_name_collisions,
         unstable_syntax_pre_expansion,
         unsupported_calling_conventions,
@@ -202,8 +204,12 @@
         while_true,
     )
 )]
-// If nightly and unstable, allow `unstable_features`
-#![cfg_attr(all(msrv, feature = "unstable", nightly), allow(unstable_features))]
+#![cfg_attr(msrv, allow(single_use_lifetimes))]
+// If nightly or beta and unstable, allow `unstable_features`
+#![cfg_attr(
+    all(msrv, feature = "unstable", any(nightly, beta)),
+    allow(unstable_features)
+)]
 // The unstable lints
 #![cfg_attr(
     all(msrv, feature = "unstable", nightly),
@@ -211,26 +217,56 @@
         ffi_unwind_calls,
         fuzzy_provenance_casts,
         lossy_provenance_casts,
+        multiple_supertrait_upcastable,
         must_not_suspend,
         non_exhaustive_omitted_patterns,
+        private_bounds,
+        private_interfaces,
         unfulfilled_lint_expectations,
+        unnameable_types,
     )
 )]
 // If nightly and not unstable, deny `unstable_features`
 #![cfg_attr(all(msrv, not(feature = "unstable"), nightly), deny(unstable_features))]
 // nightly only lints
-// #![cfg_attr(all(msrv, nightly),deny())]
+#![cfg_attr(
+    all(msrv, nightly),
+    deny(
+        ambiguous_glob_imports,
+        incorrect_fn_null_checks,
+        invalid_reference_casting,
+        unknown_diagnostic_attributes
+    )
+)]
 // nightly or beta only lints
 #![cfg_attr(
     all(msrv, any(beta, nightly)),
-    deny(implied_bounds_entailment, ungated_async_fn_track_caller,)
+    deny(
+        ambiguous_glob_reexports,
+        byte_slice_in_packed_struct_with_derive,
+        dropping_copy_types,
+        dropping_references,
+        forgetting_copy_types,
+        forgetting_references,
+        hidden_glob_reexports,
+        invalid_from_utf8,
+        invalid_macro_export_arguments,
+        invalid_nan_comparisons,
+        map_unit_fn,
+        suspicious_double_ref_op,
+        undefined_naked_function_abi,
+        unused_associated_type_bounds,
+    )
 )]
 // beta only lints
 // #![cfg_attr( all(msrv, beta), deny())]
 // beta or stable only lints
 // #![cfg_attr(all(msrv, any(beta, stable)), deny())]
 // stable only lints
-// #![cfg_attr(all(msrv, stable), deny())]
+#![cfg_attr(
+    all(msrv, stable),
+    deny(bindings_with_variant_name, implied_bounds_entailment)
+)]
 // clippy lints
 #![cfg_attr(msrv, deny(clippy::all, clippy::pedantic))]
 // #![cfg_attr(msrv, allow())]
@@ -251,6 +287,8 @@
     all(msrv, feature = "unstable", nightly),
     deny(rustdoc::missing_doc_code_examples)
 )]
+#![cfg_attr(all(doc, nightly), feature(doc_auto_cfg))]
+#![cfg_attr(all(docsrs, nightly), feature(doc_cfg))]
 
 #[cfg(feature = "header")]
 mod header;
