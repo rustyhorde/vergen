@@ -30,10 +30,10 @@ fn stable() {
 #[rustversion::not(stable)]
 fn stable() {}
 
-#[rustversion::before(1.66)]
+#[rustversion::before(1.67)]
 fn msrv() {}
 
-#[rustversion::since(1.66)]
+#[rustversion::since(1.67)]
 fn msrv() {
     println!("cargo:rustc-cfg=msrv");
 }
