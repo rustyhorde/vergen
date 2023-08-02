@@ -40,13 +40,13 @@ impl Pretty {
         let key = if let Some(style) = &self.key_style {
             style
         } else {
-            &*BOLD_BLUE
+            &BOLD_BLUE
         }
         .apply_to(key);
         let value = if let Some(style) = &self.value_style {
             style
         } else {
-            &*BOLD_GREEN
+            &BOLD_GREEN
         }
         .apply_to(value);
         match self.level {
