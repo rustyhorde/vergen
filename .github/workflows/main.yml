@@ -69,6 +69,7 @@ jobs:
           rustup default ${{ matrix.rust }}
       - name: 📎 Clippy 📎
         run: |
+          cargo update
           cargo clippy -p vergen --all-targets --features build,cargo,git,gitcl,rustc,si -- -Dwarnings
           cargo clippy -p vergen --all-targets --features build,cargo,git,git2,rustc,si -- -Dwarnings
           cargo clippy -p vergen --all-targets --features build,cargo,git,gix,rustc,si -- -Dwarnings
@@ -108,6 +109,7 @@ jobs:
           rustup default ${{ matrix.rust }}
       - name: 📎 Clippy 📎
         run: |
+          cargo update
           cargo clippy -p vergen --all-targets --features build,cargo,git,gitcl,rustc,si -- -Dwarnings
           cargo clippy -p vergen --all-targets --features build,cargo,git,git2,rustc,si -- -Dwarnings
           cargo clippy -p vergen --all-targets --features build,cargo,git,gix,rustc,si -- -Dwarnings
@@ -147,6 +149,7 @@ jobs:
           rustup default ${{ matrix.rust }}
       - name: 📎 Clippy 📎
         run: |
+          cargo update
           cargo clippy -p vergen --all-targets --features build,cargo,git,gitcl,rustc,si -- -Dwarnings
           cargo clippy -p vergen --all-targets --features build,cargo,git,git2,rustc,si -- -Dwarnings
           cargo clippy -p vergen --all-targets --features build,cargo,git,gix,rustc,si -- -Dwarnings
@@ -200,6 +203,7 @@ jobs:
         run: cargo binstall --no-confirm --no-symlinks cargo-tarpaulin cargo-all-features
       - name: 🧪 Test 🧪
         run: |
+          cargo update
           cargo test-all-features
           cargo test -p vergen -F build,cargo,git,gitcl,rustc,si
           cargo test -p vergen -F build,cargo,git,git2,rustc,si
@@ -268,6 +272,7 @@ jobs:
         run: cargo binstall --no-confirm --no-symlinks cargo-all-features
       - name: 🧪 Test 🧪
         run: |
+          cargo update
           cargo test-all-features
           cargo test -p vergen -F build,cargo,git,gitcl,rustc,si
           cargo test -p vergen -F build,cargo,git,git2,rustc,si
@@ -340,6 +345,7 @@ jobs:
         run: cargo binstall --no-confirm --no-symlinks cargo-all-features
       - name: 🧪 Test 🧪
         run: |
+          cargo update
           cargo test-all-features
           cargo test -p vergen -F build,cargo,git,gitcl,rustc,si
           cargo test -p vergen -F build,cargo,git,git2,rustc,si
