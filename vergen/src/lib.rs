@@ -368,7 +368,6 @@
     all(msrv, nightly),
     deny(
         ambiguous_glob_imports,
-        incorrect_fn_null_checks,
         invalid_reference_casting,
         unknown_diagnostic_attributes
     )
