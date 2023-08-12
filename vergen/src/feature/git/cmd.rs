@@ -701,7 +701,7 @@ fn check_git(cmd: &str) -> Result<()> {
     }
 }
 
-fn check_inside_git_worktree(_: ()) -> Result<()> {
+fn check_inside_git_worktree((): ()) -> Result<()> {
     if inside_git_worktree() {
         Ok(())
     } else {
