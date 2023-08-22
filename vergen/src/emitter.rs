@@ -817,7 +817,7 @@ EmitBuilder::builder()
         self.inner_emit(None)
             .and_then(|x| {
                 x.emit_output(self.quiet, self.custom_buildrs, &mut io::stdout())
-                    .map(|_| x)
+                    .map(|()| x)
             })
             .map(|x| {
                 for (k, v) in &x.cargo_rustc_env_map {
@@ -885,7 +885,7 @@ EmitBuilder::builder()
     {
         self.inner_emit(None).and_then(|x| {
             x.emit_output(self.quiet, self.custom_buildrs, stdout)
-                .map(|_| x.failed)
+                .map(|()| x.failed)
         })
     }
 
@@ -905,7 +905,7 @@ EmitBuilder::builder()
     {
         self.inner_emit(path).and_then(|x| {
             x.emit_output(self.quiet, self.custom_buildrs, stdout)
-                .map(|_| x.failed)
+                .map(|()| x.failed)
         })
     }
 
