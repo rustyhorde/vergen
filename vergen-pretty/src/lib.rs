@@ -48,7 +48,7 @@
 //! # }
 //! ```
 //!
-//! See the [`Pretty`](crate::Pretty) documentation for more examples
+//! See the [`Pretty`] documentation for more examples
 //!
 //! ## Features
 //! `vergen-pretty` has two feature toggles allowing you to customize your output. No features are enabled by default.  
