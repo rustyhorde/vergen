@@ -262,7 +262,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
                     fs::create_dir_all(&clone_path)?;
 
                     // Clone into the directory
-                    let _res = git::interrupt::init_handler(|| {})?;
+                    let _res = git::interrupt::init_handler(0, || {})?;
                     let url =
                         git::url::parse(git::path::os_str_into_bstr(bare_repo_path.as_os_str())?)?;
                     let opts = open::Options::isolated()
