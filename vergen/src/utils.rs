@@ -192,7 +192,7 @@ pub(crate) mod repo {
 
                 if !clone_path.exists() {
                     fs::create_dir_all(&clone_path)?;
-                    let _res = git::interrupt::init_handler(|| {})?;
+                    let _res = git::interrupt::init_handler(0, || {})?;
                     let url =
                         git::url::parse(git::path::os_str_into_bstr(bare_repo_path.as_os_str())?)?;
                     let opts = open::Options::isolated()
