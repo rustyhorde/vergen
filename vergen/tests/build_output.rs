@@ -80,20 +80,10 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
             .fail_on_error()
             .emit_to(&mut stdout_buf);
         env::remove_var("SOURCE_DATE_EPOCH");
-        check_local_result(result, &stdout_buf);
-        Ok(())
-    }
-
-    #[cfg(not(target_os = "linux"))]
-    fn check_local_result(result: Result<bool>, stdout_buf: &[u8]) {
         assert!(result.is_ok());
-        let output = String::from_utf8_lossy(stdout_buf);
+        let output = String::from_utf8_lossy(&stdout_buf);
         assert!(BUILD_REGEX_INST.is_match(&output));
-    }
-
-    #[cfg(target_os = "linux")]
-    fn check_local_result(result: Result<bool>, _stdout_buf: &[u8]) {
-        assert!(result.is_err());
+        Ok(())
     }
 
     #[test]
