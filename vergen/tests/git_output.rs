@@ -378,14 +378,14 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
         Ok(())
     }
 
-    #[cfg(not(target_os = "linux"))]
+    #[cfg(target_os = "windows")]
     fn check_local_result(result: Result<bool>, stdout_buf: &[u8]) {
         assert!(result.is_ok());
         let output = String::from_utf8_lossy(stdout_buf);
         assert!(GIT_REGEX_SHORT_INST.is_match(&output));
     }
 
-    #[cfg(target_os = "linux")]
+    #[cfg(any(target_os = "linux", target_os = "macos"))]
     fn check_local_result(result: Result<bool>, _stdout_buf: &[u8]) {
         assert!(result.is_err());
     }
