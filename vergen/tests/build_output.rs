@@ -72,26 +72,18 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     #[test]
     #[serial_test::serial]
     fn build_all_output_local() -> Result<()> {
+        env::set_var("SOURCE_DATE_EPOCH", "1671809360");
         let mut stdout_buf = vec![];
         let result = EmitBuilder::builder()
             .all_build()
             .use_local_build()
             .fail_on_error()
             .emit_to(&mut stdout_buf);
-        check_local_result(result, &stdout_buf);
-        Ok(())
-    }
-
-    #[cfg(not(target_os = "linux"))]
-    fn check_local_result(result: Result<bool>, stdout_buf: &[u8]) {
+        env::remove_var("SOURCE_DATE_EPOCH");
         assert!(result.is_ok());
-        let output = String::from_utf8_lossy(stdout_buf);
+        let output = String::from_utf8_lossy(&stdout_buf);
         assert!(BUILD_REGEX_INST.is_match(&output));
-    }
-
-    #[cfg(target_os = "linux")]
-    fn check_local_result(result: Result<bool>, _stdout_buf: &[u8]) {
-        assert!(result.is_err());
+        Ok(())
     }
 
     #[test]

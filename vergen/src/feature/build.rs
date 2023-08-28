@@ -4,7 +4,7 @@ use crate::{
     key::VergenKey,
     utils::fns::{add_default_map_entry, add_map_entry},
 };
-use anyhow::{Error, Result};
+use anyhow::{Context, Error, Result};
 use std::{env, str::FromStr};
 use time::{
     format_description::{self, well_known::Iso8601},
@@ -189,7 +189,8 @@ impl EmitBuilder {
         warnings: &mut Vec<String>,
     ) -> Result<()> {
         if self.build_config.any() {
-            self.add_timestamp_entries(idempotent, map, warnings)?;
+            self.add_timestamp_entries(idempotent, map, warnings)
+                .with_context(|| "Error adding build timestamp entries")?;
         }
         Ok(())
     }
