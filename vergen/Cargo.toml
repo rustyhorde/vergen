@@ -55,6 +55,7 @@ rustversion = "1.0.14"
 
 [dev-dependencies]
 gix = { version = "0.53.0", default-features = false, features = [
+    "interrupt",
     "worktree-mutation",
     "blocking-network-client",
 ] }
