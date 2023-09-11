@@ -828,7 +828,6 @@ EmitBuilder::builder()
             })
     }
 
-    #[doc(hidden)]
     /// Emit instructions from the given repository path.
     ///
     /// # Errors
