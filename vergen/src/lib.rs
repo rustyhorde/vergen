@@ -365,11 +365,7 @@
 // nightly only lints
 #![cfg_attr(
     all(msrv, nightly),
-    deny(
-        ambiguous_glob_imports,
-        invalid_reference_casting,
-        unknown_diagnostic_attributes
-    )
+    deny(ambiguous_glob_imports, invalid_reference_casting)
 )]
 // nightly or beta only lints
 #![cfg_attr(
