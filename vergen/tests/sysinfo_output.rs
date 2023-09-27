@@ -6,28 +6,28 @@ mod test_sysinfo {
     use vergen::EmitBuilder;
 
     lazy_static! {
-        static ref NAME_RE_STR: &'static str = r#"cargo:rustc-env=VERGEN_SYSINFO_NAME=.*"#;
+        static ref NAME_RE_STR: &'static str = r"cargo:rustc-env=VERGEN_SYSINFO_NAME=.*";
         static ref NAME_IDEM_RE_STR: &'static str =
-            r#"cargo:rustc-env=VERGEN_SYSINFO_NAME=VERGEN_IDEMPOTENT_OUTPUT"#;
+            r"cargo:rustc-env=VERGEN_SYSINFO_NAME=VERGEN_IDEMPOTENT_OUTPUT";
         static ref OS_VERSION_RE_STR: &'static str =
-            r#"cargo:rustc-env=VERGEN_SYSINFO_OS_VERSION=.*"#;
+            r"cargo:rustc-env=VERGEN_SYSINFO_OS_VERSION=.*";
         static ref OS_VERSION_IDEM_RE_STR: &'static str =
-            r#"cargo:rustc-env=VERGEN_SYSINFO_OS_VERSION=VERGEN_IDEMPOTENT_OUTPUT"#;
-        static ref USER_RE_STR: &'static str = r#"cargo:rustc-env=VERGEN_SYSINFO_USER=.*"#;
+            r"cargo:rustc-env=VERGEN_SYSINFO_OS_VERSION=VERGEN_IDEMPOTENT_OUTPUT";
+        static ref USER_RE_STR: &'static str = r"cargo:rustc-env=VERGEN_SYSINFO_USER=.*";
         static ref USER_IDEM_RE_STR: &'static str =
-            r#"cargo:rustc-env=VERGEN_SYSINFO_USER=VERGEN_IDEMPOTENT_OUTPUT"#;
+            r"cargo:rustc-env=VERGEN_SYSINFO_USER=VERGEN_IDEMPOTENT_OUTPUT";
         static ref TOTAL_MEMORY_RE_STR: &'static str =
-            r#"cargo:rustc-env=VERGEN_SYSINFO_TOTAL_MEMORY=.*"#;
+            r"cargo:rustc-env=VERGEN_SYSINFO_TOTAL_MEMORY=.*";
         static ref TOTAL_MEMORY_IDEM_RE_STR: &'static str =
-            r#"cargo:rustc-env=VERGEN_SYSINFO_TOTAL_MEMORY=VERGEN_IDEMPOTENT_OUTPUT"#;
+            r"cargo:rustc-env=VERGEN_SYSINFO_TOTAL_MEMORY=VERGEN_IDEMPOTENT_OUTPUT";
         static ref CPU_VENDOR_RE_STR: &'static str =
-            r#"cargo:rustc-env=VERGEN_SYSINFO_CPU_VENDOR=.*"#;
+            r"cargo:rustc-env=VERGEN_SYSINFO_CPU_VENDOR=.*";
         static ref CPU_VENDOR_IDEM_RE_STR: &'static str =
-            r#"cargo:rustc-env=VERGEN_SYSINFO_CPU_VENDOR=VERGEN_IDEMPOTENT_OUTPUT"#;
+            r"cargo:rustc-env=VERGEN_SYSINFO_CPU_VENDOR=VERGEN_IDEMPOTENT_OUTPUT";
         static ref CPU_CORE_RE_STR: &'static str =
-            r#"cargo:rustc-env=VERGEN_SYSINFO_CPU_CORE_COUNT=.*"#;
+            r"cargo:rustc-env=VERGEN_SYSINFO_CPU_CORE_COUNT=.*";
         static ref CPU_CORE_IDEM_RE_STR: &'static str =
-            r#"cargo:rustc-env=VERGEN_SYSINFO_CPU_CORE_COUNT=VERGEN_IDEMPOTENT_OUTPUT"#;
+            r"cargo:rustc-env=VERGEN_SYSINFO_CPU_CORE_COUNT=VERGEN_IDEMPOTENT_OUTPUT";
         static ref SYSINFO_REGEX_INST: Regex = {
             let re_str = [
                 *NAME_RE_STR,
@@ -42,7 +42,7 @@ mod test_sysinfo {
         };
     }
 
-    const IDEM_OUTPUT: &str = r#"cargo:rustc-env=VERGEN_SYSINFO_NAME=VERGEN_IDEMPOTENT_OUTPUT
+    const IDEM_OUTPUT: &str = r"cargo:rustc-env=VERGEN_SYSINFO_NAME=VERGEN_IDEMPOTENT_OUTPUT
 cargo:rustc-env=VERGEN_SYSINFO_OS_VERSION=VERGEN_IDEMPOTENT_OUTPUT
 cargo:rustc-env=VERGEN_SYSINFO_USER=VERGEN_IDEMPOTENT_OUTPUT
 cargo:rustc-env=VERGEN_SYSINFO_TOTAL_MEMORY=VERGEN_IDEMPOTENT_OUTPUT
@@ -63,9 +63,9 @@ cargo:warning=VERGEN_SYSINFO_CPU_FREQUENCY set to default
 cargo:rerun-if-changed=build.rs
 cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT
 cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
-"#;
+";
 
-    const IDEM_QUITE_OUTPUT: &str = r#"cargo:rustc-env=VERGEN_SYSINFO_NAME=VERGEN_IDEMPOTENT_OUTPUT
+    const IDEM_QUITE_OUTPUT: &str = r"cargo:rustc-env=VERGEN_SYSINFO_NAME=VERGEN_IDEMPOTENT_OUTPUT
 cargo:rustc-env=VERGEN_SYSINFO_OS_VERSION=VERGEN_IDEMPOTENT_OUTPUT
 cargo:rustc-env=VERGEN_SYSINFO_USER=VERGEN_IDEMPOTENT_OUTPUT
 cargo:rustc-env=VERGEN_SYSINFO_TOTAL_MEMORY=VERGEN_IDEMPOTENT_OUTPUT
@@ -77,9 +77,9 @@ cargo:rustc-env=VERGEN_SYSINFO_CPU_FREQUENCY=VERGEN_IDEMPOTENT_OUTPUT
 cargo:rerun-if-changed=build.rs
 cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT
 cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
-"#;
+";
 
-    const DISABLED_OUTPUT: &str = r#""#;
+    const DISABLED_OUTPUT: &str = r"";
 
     #[test]
     fn sysinfo_all_output() -> Result<()> {

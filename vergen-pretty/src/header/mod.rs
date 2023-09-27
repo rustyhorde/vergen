@@ -206,7 +206,7 @@ mod test {
     use regex::Regex;
 
     #[cfg(feature = "__vergen_test")]
-    const HEADER_PREFIX: &str = r#"██████╗ ██╗   ██╗██████╗ ██╗    ██╗
+    const HEADER_PREFIX: &str = r"██████╗ ██╗   ██╗██████╗ ██╗    ██╗
 ██╔══██╗██║   ██║██╔══██╗██║    ██║
 ██████╔╝██║   ██║██║  ██║██║ █╗ ██║
 ██╔═══╝ ██║   ██║██║  ██║██║███╗██║
@@ -214,12 +214,12 @@ mod test {
 ╚═╝      ╚═════╝ ╚═════╝  ╚══╝╚══╝ 
 
 4a61736f6e204f7a696173
-"#;
+";
 
     #[cfg(feature = "__vergen_test")]
-    const HEADER_SUFFIX: &str = r#"
+    const HEADER_SUFFIX: &str = r"
 4a61736f6e204f7a696173
-"#;
+";
 
     lazy_static! {
         static ref BUILD_TIMESTAMP: Regex = Regex::new(r"Timestamp \(  build\)").unwrap();
