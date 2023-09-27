@@ -306,13 +306,13 @@ mod test {
         Ok(())
     }
 
-    const NO_LLVM: &str = r#"rustc 1.68.0-nightly (270c94e48 2022-12-28)
+    const NO_LLVM: &str = r"rustc 1.68.0-nightly (270c94e48 2022-12-28)
 binary: rustc
 commit-hash: 270c94e484e19764a2832ef918c95224eb3f17c7
 commit-date: 2022-12-28
 host: x86_64-unknown-linux-gnu
 release: 1.68.0-nightly
-"#;
+";
 
     #[test]
     #[serial_test::serial]
@@ -328,14 +328,14 @@ release: 1.68.0-nightly
         Ok(())
     }
 
-    const DEV_BUILD: &str = r#"rustc 1.68.0-nightly (270c94e48 2022-12-28)
+    const DEV_BUILD: &str = r"rustc 1.68.0-nightly (270c94e48 2022-12-28)
 binary: rustc
 commit-hash: 270c94e484e19764a2832ef918c95224eb3f17c7
 commit-date: 2022-12-28
 host: x86_64-unknown-linux-gnu
 release: 1.68.0-dev
 LLVM version: 15.0.6
-"#;
+";
 
     #[test]
     #[serial_test::serial]
@@ -351,14 +351,14 @@ LLVM version: 15.0.6
         Ok(())
     }
 
-    const UNKNOWN_BITS: &str = r#"rustc 1.68.0-nightly (270c94e48 2022-12-28)
+    const UNKNOWN_BITS: &str = r"rustc 1.68.0-nightly (270c94e48 2022-12-28)
 binary: rustc
 commit-hash: unknown
 commit-date: unknown
 host: x86_64-unknown-linux-gnu
 release: 1.68.0-dev
 LLVM version: 15.0.6
-"#;
+";
 
     #[test]
     #[serial_test::serial]

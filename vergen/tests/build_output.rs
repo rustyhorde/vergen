@@ -10,52 +10,52 @@ mod test_build {
         static ref DATE_RE_STR: &'static str =
             r"cargo:rustc-env=VERGEN_BUILD_DATE=\d{4}-\d{2}-\d{2}";
         static ref DATE_IDEM_RE_STR: &'static str =
-            r#"cargo:rustc-env=VERGEN_BUILD_DATE=VERGEN_IDEMPOTENT_OUTPUT"#;
+            r"cargo:rustc-env=VERGEN_BUILD_DATE=VERGEN_IDEMPOTENT_OUTPUT";
         static ref TIMESTAMP_RE_STR: &'static str = r"cargo:rustc-env=VERGEN_BUILD_TIMESTAMP=([0-9]+)-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])[Tt]([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9]|60)(\.[0-9]+)?(([Zz])|([\+|\-]([01][0-9]|2[0-3]):[0-5][0-9]))";
         static ref TIMESTAMP_IDEM_RE_STR: &'static str =
-            r#"cargo:rustc-env=VERGEN_BUILD_TIMESTAMP=VERGEN_IDEMPOTENT_OUTPUT"#;
-        static ref DATE_WARNING: &'static str = r#"cargo:warning=VERGEN_BUILD_DATE set to default"#;
+            r"cargo:rustc-env=VERGEN_BUILD_TIMESTAMP=VERGEN_IDEMPOTENT_OUTPUT";
+        static ref DATE_WARNING: &'static str = r"cargo:warning=VERGEN_BUILD_DATE set to default";
         static ref TIMESTAMP_WARNING: &'static str =
-            r#"cargo:warning=VERGEN_BUILD_TIMESTAMP set to default"#;
+            r"cargo:warning=VERGEN_BUILD_TIMESTAMP set to default";
         static ref BUILD_REGEX_INST: Regex = {
             let re_str = [*DATE_RE_STR, *TIMESTAMP_RE_STR].join("\n");
             Regex::new(&re_str).unwrap()
         };
     }
 
-    const IDEM_OUTPUT: &str = r#"cargo:rustc-env=VERGEN_BUILD_DATE=VERGEN_IDEMPOTENT_OUTPUT
+    const IDEM_OUTPUT: &str = r"cargo:rustc-env=VERGEN_BUILD_DATE=VERGEN_IDEMPOTENT_OUTPUT
 cargo:rustc-env=VERGEN_BUILD_TIMESTAMP=VERGEN_IDEMPOTENT_OUTPUT
 cargo:warning=VERGEN_BUILD_DATE set to default
 cargo:warning=VERGEN_BUILD_TIMESTAMP set to default
 cargo:rerun-if-changed=build.rs
 cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT
 cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
-"#;
+";
 
-    const IDEM_OUTPUT_CUSTOM_BUILDRS: &str = r#"cargo:rustc-env=VERGEN_BUILD_DATE=VERGEN_IDEMPOTENT_OUTPUT
+    const IDEM_OUTPUT_CUSTOM_BUILDRS: &str = r"cargo:rustc-env=VERGEN_BUILD_DATE=VERGEN_IDEMPOTENT_OUTPUT
 cargo:rustc-env=VERGEN_BUILD_TIMESTAMP=VERGEN_IDEMPOTENT_OUTPUT
 cargo:warning=VERGEN_BUILD_DATE set to default
 cargo:warning=VERGEN_BUILD_TIMESTAMP set to default
 cargo:rerun-if-changed=a/custom_build.rs
 cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT
 cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
-"#;
+";
 
-    const DISABLED_OUTPUT: &str = r#""#;
+    const DISABLED_OUTPUT: &str = r"";
 
-    const SOURCE_DATE_EPOCH_IDEM_OUTPUT: &str = r#"cargo:rustc-env=VERGEN_BUILD_DATE=2022-12-23
+    const SOURCE_DATE_EPOCH_IDEM_OUTPUT: &str = r"cargo:rustc-env=VERGEN_BUILD_DATE=2022-12-23
 cargo:rustc-env=VERGEN_BUILD_TIMESTAMP=2022-12-23T15:29:20.000000000Z
 cargo:rerun-if-changed=build.rs
 cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT
 cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
-"#;
+";
 
-    const QUIET_IDEM_OUTPUT: &str = r#"cargo:rustc-env=VERGEN_BUILD_DATE=VERGEN_IDEMPOTENT_OUTPUT
+    const QUIET_IDEM_OUTPUT: &str = r"cargo:rustc-env=VERGEN_BUILD_DATE=VERGEN_IDEMPOTENT_OUTPUT
 cargo:rustc-env=VERGEN_BUILD_TIMESTAMP=VERGEN_IDEMPOTENT_OUTPUT
 cargo:rerun-if-changed=build.rs
 cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT
 cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
-"#;
+";
 
     #[test]
     #[serial_test::serial]

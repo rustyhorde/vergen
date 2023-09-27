@@ -6,13 +6,12 @@ mod test_rustc {
     use vergen::EmitBuilder;
 
     lazy_static! {
-        static ref RUSTC_CHANNEL_RE_STR: &'static str =
-            r#"cargo:rustc-env=VERGEN_RUSTC_CHANNEL=.*"#;
+        static ref RUSTC_CHANNEL_RE_STR: &'static str = r"cargo:rustc-env=VERGEN_RUSTC_CHANNEL=.*";
         static ref RUSTC_CD_RE_STR: &'static str =
             r"cargo:rustc-env=VERGEN_RUSTC_COMMIT_DATE=\d{4}-\d{2}-\d{2}";
         static ref RUSTC_CH_RE_STR: &'static str =
-            r#"cargo:rustc-env=VERGEN_RUSTC_COMMIT_HASH=[0-9a-f]{40}"#;
-        static ref RUSTC_HT_RE_STR: &'static str = r#"cargo:rustc-env=VERGEN_RUSTC_HOST_TRIPLE=.*"#;
+            r"cargo:rustc-env=VERGEN_RUSTC_COMMIT_HASH=[0-9a-f]{40}";
+        static ref RUSTC_HT_RE_STR: &'static str = r"cargo:rustc-env=VERGEN_RUSTC_HOST_TRIPLE=.*";
         static ref RUSTC_LLVM_RE_STR: &'static str =
             r"cargo:rustc-env=VERGEN_RUSTC_LLVM_VERSION=\d{2}\.\d{1}";
         static ref RUSTC_SEMVER_RE_STR: &'static str = r"cargo:rustc-env=VERGEN_RUSTC_SEMVER=(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)(?:-(?P<prerelease>(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+(?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?";
@@ -30,7 +29,7 @@ mod test_rustc {
         };
     }
 
-    const DISABLED_OUTPUT: &str = r#""#;
+    const DISABLED_OUTPUT: &str = r"";
 
     #[test]
     fn rustc_all_output() -> Result<()> {
