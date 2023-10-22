@@ -346,7 +346,7 @@ impl EmitBuilder {
                     idempotent,
                     system
                         .cpus()
-                        .get(0)
+                        .first()
                         .map(|proc| proc.vendor_id().to_string()),
                     map,
                     warnings,
@@ -422,7 +422,7 @@ impl EmitBuilder {
                     idempotent,
                     system
                         .cpus()
-                        .get(0)
+                        .first()
                         .map(|processor| processor.brand().to_string()),
                     map,
                     warnings,
@@ -447,7 +447,7 @@ impl EmitBuilder {
                     idempotent,
                     system
                         .cpus()
-                        .get(0)
+                        .first()
                         .map(|proc| proc.frequency().to_string()),
                     map,
                     warnings,

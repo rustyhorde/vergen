@@ -398,7 +398,7 @@
 )]
 // clippy lints
 #![cfg_attr(msrv, deny(clippy::all, clippy::pedantic))]
-// #![cfg_attr(msrv, allow())]
+#![cfg_attr(all(msrv, nightly), allow(clippy::struct_field_names))]
 // rustdoc lints
 #![cfg_attr(
     msrv,
