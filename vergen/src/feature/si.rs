@@ -22,7 +22,7 @@ use sysinfo::{
 };
 
 #[derive(Clone, Copy, Debug, Default)]
-#[allow(clippy::struct_excessive_bools, clippy::struct_field_names)]
+#[allow(clippy::struct_excessive_bools)]
 pub(crate) struct Config {
     pub(crate) si_name: bool,
     pub(crate) si_os_version: bool,
