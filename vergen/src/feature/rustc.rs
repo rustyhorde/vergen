@@ -12,7 +12,7 @@ use rustc_version::{version_meta, Channel, VersionMeta};
 use std::env;
 
 #[derive(Clone, Copy, Debug, Default)]
-#[allow(clippy::struct_excessive_bools)]
+#[allow(clippy::struct_excessive_bools, clippy::struct_field_names)]
 pub(crate) struct Config {
     pub(crate) rustc_channel: bool,
     pub(crate) rustc_commit_date: bool,
