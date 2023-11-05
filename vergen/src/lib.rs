@@ -195,7 +195,7 @@
 //! [cargo:rustc-env]: https://doc.rust-lang.org/cargo/reference/build-scripts.html#rustc-env
 //! [cargo:rerun-if-changed]: https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed
 //!
-#![cfg_attr(docsrs, feature(doc_cfg))]
+
 // rustc lints
 #![cfg_attr(
     all(msrv, feature = "unstable", nightly),
