@@ -501,7 +501,7 @@ fn add_sysinfo_map_entry(
 }
 
 fn setup_system() -> System {
-    let mut system = System::new_all();
+    let mut system = System::new();
     system.refresh_all();
     system
 }
