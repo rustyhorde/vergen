@@ -39,7 +39,7 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            rust: "1.67.0"
+            rust: "1.70.0"
           - os: ubuntu-latest
             rust: stable
           - os: ubuntu-latest
@@ -82,7 +82,7 @@ jobs:
       matrix:
         include:
           - os: macos-latest
-            rust: "1.67.0"
+            rust: "1.70.0"
           - os: macos-latest
             rust: stable
           - os: macos-latest
@@ -122,7 +122,7 @@ jobs:
       matrix:
         include:
           - os: windows-latest
-            rust: "1.67.0"
+            rust: "1.70.0"
           - os: windows-latest
             rust: stable
           - os: windows-latest
@@ -162,7 +162,7 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            rust: "1.67.0"
+            rust: "1.70.0"
             target: x86_64-unknown-linux-gnu
           - os: ubuntu-latest
             rust: stable
@@ -229,7 +229,7 @@ jobs:
       matrix:
         include:
           - os: macos-latest
-            rust: "1.67.0"
+            rust: "1.70.0"
             target: x86_64-apple-darwin
           - os: macos-latest
             rust: stable
@@ -287,7 +287,7 @@ jobs:
       matrix:
         include:
           - os: windows-latest
-            rust: "1.67.0"
+            rust: "1.70.0"
             target: x86_64-pc-windows-msvc
           - os: windows-latest
             rust: stable
@@ -299,7 +299,7 @@ jobs:
             rust: nightly
             target: x86_64-pc-windows-msvc
           - os: windows-latest
-            rust: "1.67.0"
+            rust: "1.70.0"
             target: x86_64-pc-windows-gnu
           - os: windows-latest
             rust: stable
