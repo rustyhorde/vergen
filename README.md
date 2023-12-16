@@ -34,7 +34,7 @@ Special thanks to the sponsors of this project
 If you wish to refer to version 7 you can find that branch [`here`](https://github.com/rustyhorde/vergen/tree/legacy/v7)
 
 ## MSRV
-The current minimum supported rust version is 1.67.0
+The current minimum supported rust version is 1.70.0
 
 ## Example Usage
 See the documentation at [docs.rs](https://docs.rs/vergen/latest/vergen/) for example usage
