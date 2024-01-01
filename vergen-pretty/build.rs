@@ -8,6 +8,7 @@ fn main() -> Result<()> {
     beta();
     stable();
     msrv();
+    lints_fix();
     setup_env()
 }
 
@@ -59,10 +60,18 @@ fn stable() {
 #[rustversion::not(stable)]
 fn stable() {}
 
-#[rustversion::before(1.67)]
+#[rustversion::before(1.70)]
 fn msrv() {}
 
-#[rustversion::since(1.67)]
+#[rustversion::since(1.70)]
 fn msrv() {
     println!("cargo:rustc-cfg=msrv");
+}
+
+#[rustversion::before(1.75)]
+fn lints_fix() {}
+
+#[rustversion::since(1.75)]
+fn lints_fix() {
+    println!("cargo:rustc-cfg=lints_fix")
 }
