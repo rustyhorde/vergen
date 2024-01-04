@@ -2,3 +2,4 @@ target
 Cargo.lock
 .ssh
 *.bk
+.DS_Store

@@ -17,9 +17,7 @@ use crate::{
 };
 use anyhow::{anyhow, Result};
 use std::env;
-use sysinfo::{
-    get_current_pid, CpuExt, Pid, Process, ProcessExt, System, SystemExt, User, UserExt,
-};
+use sysinfo::{get_current_pid, Cpu, Pid, Process, System, User, Users};
 
 #[derive(Clone, Copy, Debug, Default)]
 #[allow(clippy::struct_excessive_bools)]
@@ -244,7 +242,7 @@ impl EmitBuilder {
 
     fn add_sysinfo_name(
         &self,
-        system: &System,
+        _system: &System,
         idempotent: bool,
         map: &mut RustcEnvMap,
         warnings: &mut Vec<String>,
@@ -256,7 +254,7 @@ impl EmitBuilder {
                 add_sysinfo_map_entry(
                     VergenKey::SysinfoName,
                     idempotent,
-                    system.name(),
+                    System::name(),
                     map,
                     warnings,
                 );
@@ -266,7 +264,7 @@ impl EmitBuilder {
 
     fn add_sysinfo_os_verison(
         &self,
-        system: &System,
+        _system: &System,
         idempotent: bool,
         map: &mut RustcEnvMap,
         warnings: &mut Vec<String>,
@@ -278,7 +276,7 @@ impl EmitBuilder {
                 add_sysinfo_map_entry(
                     VergenKey::SysinfoOsVersion,
                     idempotent,
-                    system.long_os_version(),
+                    System::long_os_version(),
                     map,
                     warnings,
                 );
@@ -395,7 +393,7 @@ impl EmitBuilder {
                         system
                             .cpus()
                             .iter()
-                            .map(CpuExt::name)
+                            .map(Cpu::name)
                             .collect::<Vec<&str>>()
                             .join(","),
                     ),
@@ -459,7 +457,8 @@ impl EmitBuilder {
     fn get_user(&self, system: &System) -> Option<String> {
         if let Ok(pid) = self.get_pid() {
             if let Some(process) = system.process(pid) {
-                for user in system.users() {
+                let users = Users::new_with_refreshed_list();
+                for user in &users {
                     if check_user(process, user) {
                         return Some(user.name().to_string());
                     }
@@ -504,7 +503,6 @@ fn add_sysinfo_map_entry(
 fn setup_system() -> System {
     let mut system = System::new_all();
     system.refresh_all();
-    system.refresh_users_list();
     system
 }
 
