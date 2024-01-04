@@ -72,7 +72,12 @@ pub(crate) mod fns {
 ))]
 pub(crate) mod repo {
     use anyhow::Result;
-    use git::{create::Options, open, refs::transaction::PreviousValue};
+    use git::{
+        create::Options,
+        objs::tree::{Entry, EntryKind},
+        open,
+        refs::transaction::PreviousValue,
+    };
     use gix as git;
     use std::{
         env,
@@ -121,8 +126,8 @@ pub(crate) mod repo {
 
                         // Create a BLOB to commit, along with the corresponding tree entry
                         let first_blob_id = committer.write_blob("hello, world")?.into();
-                        let entry = git::objs::tree::Entry {
-                            mode: git::objs::tree::EntryMode::Blob,
+                        let entry = Entry {
+                            mode: EntryKind::Blob.into(),
                             filename: "foo.txt".into(),
                             oid: first_blob_id,
                         };
@@ -151,8 +156,8 @@ pub(crate) mod repo {
 
                         // Create a new BLOB to commit
                         let second_blob_id = committer.write_blob("Hello, World!")?.into();
-                        let entry = git::objs::tree::Entry {
-                            mode: git::objs::tree::EntryMode::Blob,
+                        let entry = Entry {
+                            mode: EntryKind::Blob.into(),
                             oid: second_blob_id,
                             filename: "foo.txt".into(),
                         };
@@ -192,7 +197,6 @@ pub(crate) mod repo {
 
                 if !clone_path.exists() {
                     fs::create_dir_all(&clone_path)?;
-                    let _res = git::interrupt::init_handler(0, || {})?;
                     let url =
                         git::url::parse(git::path::os_str_into_bstr(bare_repo_path.as_os_str())?)?;
                     let opts = open::Options::isolated()
