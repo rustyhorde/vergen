@@ -195,7 +195,6 @@
         unused_parens,
         unused_qualifications,
         unused_results,
-        unused_tuple_struct_fields,
         unused_unsafe,
         unused_variables,
         variant_size_differences,
@@ -255,7 +254,7 @@
 // beta only lints
 // #![cfg_attr( all(msrv, beta), deny())]
 // beta or stable only lints
-// #![cfg_attr(all(msrv, any(beta, stable)), deny())]
+#![cfg_attr(all(msrv, any(beta, stable)), deny(unused_tuple_struct_fields))]
 // stable only lints
 #![cfg_attr(
     all(msrv, stable),
