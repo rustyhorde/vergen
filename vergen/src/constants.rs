@@ -96,6 +96,8 @@ mod features {
         any(feature = "gitcl", feature = "git2", feature = "gix")
     ))]
     pub(crate) const GIT_SHA_NAME: &str = "VERGEN_GIT_SHA";
+    #[cfg(all(feature = "git", any(feature = "gitcl", feature = "git2")))]
+    pub(crate) const GIT_DIRTY_NAME: &str = "VERGEN_GIT_DIRTY";
 
     // rustc Constants
     #[cfg(feature = "rustc")]
@@ -190,6 +192,7 @@ mod test {
         assert_eq!(GIT_COMMIT_TIMESTAMP_NAME, "VERGEN_GIT_COMMIT_TIMESTAMP");
         assert_eq!(GIT_DESCRIBE_NAME, "VERGEN_GIT_DESCRIBE");
         assert_eq!(GIT_SHA_NAME, "VERGEN_GIT_SHA");
+        assert_eq!(GIT_DIRTY_NAME, "VERGEN_GIT_DIRTY");
     }
 
     #[cfg(feature = "rustc")]
