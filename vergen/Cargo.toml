@@ -61,7 +61,7 @@ gix = { version = "0.57.1", default-features = false, features = [
 ] }
 lazy_static = "1.4.0"
 regex = "1.9.1"
-serial_test = "2.0.0"
+serial_test = "3.0.0"
 
 [package.metadata.docs.rs]
 features = ["build", "cargo", "git", "gitcl", "rustc", "si"]
