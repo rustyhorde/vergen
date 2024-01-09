@@ -1,7 +1,7 @@
-#[cfg(all(
-    feature = "git",
-    any(feature = "gitcl", feature = "git2", feature = "gix")
-))]
+//#[cfg(all(
+//    feature = "git",
+//    any(feature = "gitcl", feature = "git2", feature = "gix")
+//))]
 mod test_git_git2 {
     use anyhow::Result;
     use git::{
@@ -20,7 +20,7 @@ mod test_git_git2 {
         fs::{self, File, OpenOptions},
         io::BufWriter,
         io::Write,
-        path::PathBuf,
+        path::{PathBuf, Path},
     };
     use vergen::EmitBuilder;
 
@@ -178,12 +178,12 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     fn create_test_repo(path: &PathBuf) -> Result<()> {
         // Always make sure to re-create repo in CI
         if let Ok(_ci) = env::var("CI") {
-            let _res = fs::remove_dir_all(&path);
+            let _res = fs::remove_dir_all(path);
         }
         if !path.exists() {
             let create_repo_result = || -> Result<()> {
                 // Initialize a bare repository
-                let mut repo = git::init_bare(&path)?;
+                let mut repo = git::init_bare(path)?;
 
                 // Create an empty tree for the initial commit
                 let mut tree = git::objs::Tree::empty();
@@ -259,7 +259,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
             }();
 
             if create_repo_result.is_err() {
-                let _res = fs::remove_dir_all(&path);
+                let _res = fs::remove_dir_all(path);
             }
             create_repo_result
         } else {
@@ -271,16 +271,16 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
         }
     }
 
-    fn clone_test_repo(bare_repo_path: &PathBuf, clone_path: &PathBuf) -> Result<()> {
+    fn clone_test_repo(bare_repo_path: &Path, clone_path: &PathBuf) -> Result<()> {
         // Always make sure to clone a fresh directory in CI
         if let Ok(_ci) = env::var("CI") {
-            let _res = fs::remove_dir_all(&clone_path);
+            let _res = fs::remove_dir_all(clone_path);
         }
 
         if !clone_path.exists() {
             let clone_result = || -> Result<()> {
                 // Setup the directory
-                fs::create_dir_all(&clone_path)?;
+                fs::create_dir_all(clone_path)?;
 
                 // Clone into the directory
                 let url =
@@ -289,7 +289,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
                     .config_overrides(["user.name=Vergen Test", "user.email=vergen@blah.com"]);
                 let mut prep = git::clone::PrepareFetch::new(
                     url,
-                    &clone_path,
+                    clone_path,
                     git::create::Kind::WithWorktree,
                     Options::default(),
                     opts,
@@ -303,7 +303,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
             }();
 
             if clone_result.is_err() {
-                let _res = fs::remove_dir_all(&clone_path);
+                let _res = fs::remove_dir_all(clone_path);
             }
 
             clone_result
