@@ -647,7 +647,7 @@ impl EmitBuilder {
                 }
                 let output = run_cmd(&dirty_cmd)?;
 
-                if output.stdout.len() > 0 {
+                if !output.stdout.is_empty() {
                     add_map_entry(VergenKey::GitDirty, "true", map);
                 } else {
                     add_map_entry(VergenKey::GitDirty, "false", map);

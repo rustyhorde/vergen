@@ -227,6 +227,7 @@ impl Pretty {
     }
 
     #[cfg(not(feature = "color"))]
+    #[allow(clippy::unused_self)]
     fn inner_display<T>(&self, writer: &mut T, key: &str, value: &str) -> Result<()>
     where
         T: Write + ?Sized,
