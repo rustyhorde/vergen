@@ -20,7 +20,7 @@ mod test_git_git2 {
         fs::{self, File, OpenOptions},
         io::BufWriter,
         io::Write,
-        path::{PathBuf, Path},
+        path::{Path, PathBuf},
     };
     use vergen::EmitBuilder;
 

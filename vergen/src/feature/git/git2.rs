@@ -357,6 +357,7 @@ impl EmitBuilder {
         Ok(())
     }
 
+    #[allow(clippy::too_many_lines)]
     fn inner_add_git_map_entries(
         &self,
         path: Option<PathBuf>,
