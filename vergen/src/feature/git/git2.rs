@@ -10,7 +10,7 @@ use crate::{
     constants::{
         GIT_BRANCH_NAME, GIT_COMMIT_AUTHOR_EMAIL, GIT_COMMIT_AUTHOR_NAME, GIT_COMMIT_COUNT,
         GIT_COMMIT_DATE_NAME, GIT_COMMIT_MESSAGE, GIT_COMMIT_TIMESTAMP_NAME, GIT_DESCRIBE_NAME,
-        GIT_SHA_NAME,
+        GIT_DIRTY_NAME, GIT_SHA_NAME,
     },
     emitter::{EmitBuilder, RustcEnvMap},
     key::VergenKey,
@@ -19,7 +19,10 @@ use crate::{
 #[cfg(test)]
 use anyhow::anyhow;
 use anyhow::{Error, Result};
-use git2_rs::{BranchType, Commit, DescribeFormatOptions, DescribeOptions, Reference, Repository};
+use git2_rs::{
+    BranchType, Commit, DescribeFormatOptions, DescribeOptions, Reference, Repository,
+    StatusOptions,
+};
 use std::{
     env,
     path::{Path, PathBuf},
@@ -55,6 +58,10 @@ pub(crate) struct Config {
     // git rev-parse HEAD (optionally with --short)
     pub(crate) git_sha: bool,
     git_sha_short: bool,
+    // if output from:
+    // git status --porcelain (optionally with "--untracked-files=no")
+    pub(crate) git_dirty: bool,
+    git_dirty_include_untracked: bool,
     use_local: bool,
     #[cfg(test)]
     fail: bool,
@@ -73,6 +80,7 @@ pub(crate) struct Config {
 /// | `VERGEN_GIT_COMMIT_TIMESTAMP` | 2021-02-24T20:55:21+00:00 |
 /// | `VERGEN_GIT_DESCRIBE` | 5.0.0-2-gf49246c |
 /// | `VERGEN_GIT_SHA` | f49246ce334567bff9f950bfd0f3078184a2738a |
+/// | `VERGEN_GIT_DIRTY` | true |
 ///
 /// # Example
 ///
@@ -114,6 +122,7 @@ impl EmitBuilder {
             .git_commit_timestamp()
             .git_describe(false, false, None)
             .git_sha(false)
+            .git_dirty(false)
     }
 
     fn any(&self) -> bool {
@@ -128,6 +137,7 @@ impl EmitBuilder {
             || cfg.git_commit_timestamp
             || cfg.git_describe
             || cfg.git_sha
+            || cfg.git_dirty
     }
 
     /// Emit the current git branch
@@ -244,6 +254,19 @@ impl EmitBuilder {
         self
     }
 
+    /// Emit the dirty state of the git repository
+    /// ```text
+    /// cargo:rustc-env=VERGEN_GIT_DIRTY=(true|false)
+    /// ```
+    ///
+    /// Optionally, include/ignore untracked files in deciding whether the repository
+    /// is dirty.
+    pub fn git_dirty(&mut self, include_untracked_files: bool) -> &mut Self {
+        self.git_config.git_dirty = true;
+        self.git_config.git_dirty_include_untracked = include_untracked_files;
+        self
+    }
+
     /// Enable local offset date/timestamp output
     pub fn use_local_git(&mut self) -> &mut Self {
         self.git_config.use_local = true;
@@ -294,6 +317,9 @@ impl EmitBuilder {
             if self.git_config.git_sha {
                 add_default_map_entry(VergenKey::GitSha, map, warnings);
             }
+            if self.git_config.git_dirty {
+                add_default_map_entry(VergenKey::GitDirty, map, warnings);
+            }
             Ok(())
         }
     }
@@ -331,6 +357,7 @@ impl EmitBuilder {
         Ok(())
     }
 
+    #[allow(clippy::too_many_lines)]
     fn inner_add_git_map_entries(
         &self,
         path: Option<PathBuf>,
@@ -413,6 +440,24 @@ impl EmitBuilder {
                 add_opt_value(obj.short_id()?.as_str(), VergenKey::GitSha, map, warnings);
             } else {
                 add_map_entry(VergenKey::GitSha, commit.id().to_string(), map);
+            }
+        }
+
+        if self.git_config.git_dirty {
+            if let Ok(value) = env::var(GIT_DIRTY_NAME) {
+                add_map_entry(VergenKey::GitDirty, value, map);
+            } else {
+                let mut status_options = StatusOptions::new();
+
+                _ = status_options.include_untracked(self.git_config.git_dirty_include_untracked);
+                let statuses = repo.statuses(Some(&mut status_options))?;
+
+                let n_dirty = statuses
+                    .iter()
+                    .filter(|each_status| !each_status.status().is_ignored())
+                    .count();
+
+                add_map_entry(VergenKey::GitDirty, format!("{}", n_dirty > 0), map);
             }
         }
 
@@ -619,14 +664,10 @@ fn add_branch_name(
 #[cfg(test)]
 mod test {
     use super::{add_branch_name, add_commit_count, add_opt_value};
-    use crate::{
-        emitter::test::count_idempotent,
-        key::VergenKey,
-        utils::repo::{clone_path, clone_test_repo, create_test_repo},
-        EmitBuilder,
-    };
+    use crate::{emitter::test::count_idempotent, key::VergenKey, EmitBuilder};
     use anyhow::Result;
     use git2_rs::Repository;
+    use repo_util::TestRepos;
     use std::{collections::BTreeMap, env, vec};
 
     fn repo_exists() -> Result<bool> {
@@ -667,8 +708,7 @@ mod test {
     #[test]
     #[serial_test::serial]
     fn head_not_found_is_default() -> Result<()> {
-        create_test_repo();
-        clone_test_repo();
+        let repo = TestRepos::new(false, false)?;
         let mut map = BTreeMap::new();
         let mut warnings = vec![];
         if let Ok(repo) = Repository::discover(env::current_dir()?) {
@@ -678,7 +718,7 @@ mod test {
         }
         let mut map = BTreeMap::new();
         let mut warnings = vec![];
-        if let Ok(repo) = Repository::discover(clone_path()) {
+        if let Ok(repo) = Repository::discover(repo.path()) {
             add_branch_name(true, &repo, &mut map, &mut warnings)?;
             assert_eq!(1, map.len());
             assert_eq!(1, warnings.len());
@@ -693,14 +733,14 @@ mod test {
             .idempotent()
             .all_git()
             .test_emit_at(None)?;
-        assert_eq!(9, config.cargo_rustc_env_map.len());
+        assert_eq!(10, config.cargo_rustc_env_map.len());
 
         if repo_exists().is_ok() && !config.failed {
             assert_eq!(2, count_idempotent(&config.cargo_rustc_env_map));
             assert_eq!(2, config.warnings.len());
         } else {
-            assert_eq!(9, count_idempotent(&config.cargo_rustc_env_map));
-            assert_eq!(10, config.warnings.len());
+            assert_eq!(10, count_idempotent(&config.cargo_rustc_env_map));
+            assert_eq!(11, config.warnings.len());
         }
         Ok(())
     }
@@ -713,7 +753,8 @@ mod test {
             .quiet()
             .all_git()
             .test_emit_at(None)?;
-        assert_eq!(9, config.cargo_rustc_env_map.len());
+
+        assert_eq!(10, config.cargo_rustc_env_map.len());
 
         if repo_exists().is_ok() && !config.failed {
             assert_eq!(2, count_idempotent(&config.cargo_rustc_env_map));
@@ -729,7 +770,7 @@ mod test {
     #[serial_test::serial]
     fn git_all() -> Result<()> {
         let config = EmitBuilder::builder().all_git().test_emit_at(None)?;
-        assert_eq!(9, config.cargo_rustc_env_map.len());
+        assert_eq!(10, config.cargo_rustc_env_map.len());
 
         if repo_exists().is_ok() && !config.failed {
             assert_eq!(0, count_idempotent(&config.cargo_rustc_env_map));
@@ -759,9 +800,9 @@ mod test {
         _ = config.all_git();
         config.git_config.fail = true;
         let emitter = config.test_emit()?;
-        assert_eq!(9, emitter.cargo_rustc_env_map.len());
-        assert_eq!(9, count_idempotent(&emitter.cargo_rustc_env_map));
-        assert_eq!(10, emitter.warnings.len());
+        assert_eq!(10, emitter.cargo_rustc_env_map.len());
+        assert_eq!(10, count_idempotent(&emitter.cargo_rustc_env_map));
+        assert_eq!(11, emitter.warnings.len());
         Ok(())
     }
 }

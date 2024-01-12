@@ -66,7 +66,7 @@
 //!
 //! 4. Use the [`env!`](std::env!) macro in your code to read the environment variables.
 //!
-//! ```compile_fail
+//! ```ignore
 //! println!("Build Timestamp: {}", env!("VERGEN_BUILD_TIMESTAMP"));
 //! println!("git describe: {}", env!("VERGEN_GIT_DESCRIBE"));
 //! ```
@@ -426,6 +426,6 @@ mod utils;
 
 // This is here to appease the `unused_crate_dependencies` lint
 #[cfg(test)]
-use {gix as _, lazy_static as _, regex as _, serial_test as _};
+use {gix as _, lazy_static as _, regex as _, repo_util as _, serial_test as _, temp_env as _};
 
 pub use crate::emitter::EmitBuilder;

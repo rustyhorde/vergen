@@ -41,7 +41,10 @@ si = ["sysinfo"]
 [dependencies]
 anyhow = "1.0.72"
 git2-rs = { version = "0.18.0", package = "git2", optional = true, default-features = false }
-gix = { version = "0.57.1", optional = true, default-features = false, features = ["revision", "interrupt"] }
+gix = { version = "0.57.1", optional = true, default-features = false, features = [
+    "revision",
+    "interrupt",
+] }
 rustc_version = { version = "0.4.0", optional = true }
 sysinfo = { version = "0.30.4", optional = true, default-features = false }
 time = { version = "0.3.23", features = [
@@ -54,14 +57,12 @@ time = { version = "0.3.23", features = [
 rustversion = "1.0.14"
 
 [dev-dependencies]
-gix = { version = "0.57.1", default-features = false, features = [
-    "interrupt",
-    "worktree-mutation",
-    "blocking-network-client",
-] }
+gix = "0.57.1"
 lazy_static = "1.4.0"
 regex = "1.9.1"
+repo_util = { path = "../repo_util" }
 serial_test = "3.0.0"
+temp-env = "0.3.6"
 
 [package.metadata.docs.rs]
 features = ["build", "cargo", "git", "gitcl", "rustc", "si"]

@@ -179,7 +179,8 @@ impl Emitter {
     #[allow(
         clippy::unnecessary_wraps,
         clippy::trivially_copy_pass_by_ref,
-        clippy::unused_self
+        clippy::unused_self,
+        clippy::needless_pass_by_value
     )]
     fn add_git_entries(&mut self, _builder: &EmitBuilder, _path: Option<PathBuf>) -> Result<()> {
         Ok(())

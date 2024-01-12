@@ -34,7 +34,7 @@ mod keys {
     use crate::constants::{
         GIT_BRANCH_NAME, GIT_COMMIT_AUTHOR_EMAIL, GIT_COMMIT_AUTHOR_NAME, GIT_COMMIT_COUNT,
         GIT_COMMIT_DATE_NAME, GIT_COMMIT_MESSAGE, GIT_COMMIT_TIMESTAMP_NAME, GIT_DESCRIBE_NAME,
-        GIT_SHA_NAME,
+        GIT_DIRTY_NAME, GIT_SHA_NAME,
     };
     #[cfg(feature = "rustc")]
     use crate::constants::{
@@ -122,6 +122,12 @@ mod keys {
             any(feature = "gitcl", feature = "git2", feature = "gix")
         ))]
         GitSha,
+        /// Whether the repository is dirty. (VERGEN_GIT_DIRTY)
+        #[cfg(all(
+            feature = "git",
+            any(feature = "gitcl", feature = "git2", feature = "gix")
+        ))]
+        GitDirty,
         /// The release channel of the rust compiler. (VERGEN_RUSTC_CHANNEL)
         #[cfg(feature = "rustc")]
         RustcChannel,
@@ -230,6 +236,11 @@ mod keys {
                     any(feature = "gitcl", feature = "git2", feature = "gix")
                 ))]
                 VergenKey::GitSha => GIT_SHA_NAME,
+                #[cfg(all(
+                    feature = "git",
+                    any(feature = "gitcl", feature = "git2", feature = "gix")
+                ))]
+                VergenKey::GitDirty => GIT_DIRTY_NAME,
                 #[cfg(feature = "rustc")]
                 VergenKey::RustcChannel => RUSTC_CHANNEL_NAME,
                 #[cfg(feature = "rustc")]
