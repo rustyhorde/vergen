@@ -35,8 +35,8 @@ impl TestRepos {
         let clone_path = Self::clone_path();
 
         let mut test_repo = TestRepos {
-            bare_repo_path: bare_repo_path.clone(),
-            clone_path: clone_path.clone(),
+            bare_repo_path,
+            clone_path,
         };
 
         test_repo.create_repository()?;

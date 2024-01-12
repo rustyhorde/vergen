@@ -74,6 +74,7 @@ jobs:
           cargo clippy -p vergen --all-targets --features build,cargo,git,git2,rustc,si -- -Dwarnings
           cargo clippy -p vergen --all-targets --features build,cargo,git,gix,rustc,si -- -Dwarnings
           cargo clippy -p vergen-pretty --all-targets --all-features -- -Dwarnings
+          cargo clippy -p repo_util --all-targets --all-features -- -Dwarnings
   lints-macos:
     name: 🕳️ Lints MacOS 🕳️
     needs: rustfmt
@@ -114,6 +115,7 @@ jobs:
           cargo clippy -p vergen --all-targets --features build,cargo,git,git2,rustc,si -- -Dwarnings
           cargo clippy -p vergen --all-targets --features build,cargo,git,gix,rustc,si -- -Dwarnings
           cargo clippy -p vergen-pretty --all-targets --all-features -- -Dwarnings
+          cargo clippy -p repo_util --all-targets --all-features -- -Dwarnings
   lints-windows:
     name: 🕳️ Lints Windows 🕳️
     needs: rustfmt
@@ -154,6 +156,7 @@ jobs:
           cargo clippy -p vergen --all-targets --features build,cargo,git,git2,rustc,si -- -Dwarnings
           cargo clippy -p vergen --all-targets --features build,cargo,git,gix,rustc,si -- -Dwarnings
           cargo clippy -p vergen-pretty --all-targets --all-features -- -Dwarnings
+          cargo clippy -p repo_util --all-targets --all-features -- -Dwarnings
   test-linux:
     name: 🧪 Linux 🧪
     needs: lints-linux
