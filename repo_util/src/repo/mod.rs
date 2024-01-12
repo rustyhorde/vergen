@@ -245,7 +245,7 @@ impl TestRepos {
 
 impl Drop for TestRepos {
     fn drop(&mut self) {
-        // let _res = fs::remove_dir_all(&self.clone_path);
+        let _res = fs::remove_dir_all(&self.clone_path);
         let _res = fs::remove_dir_all(&self.bare_repo_path);
     }
 }
