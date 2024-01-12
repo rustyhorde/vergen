@@ -136,21 +136,6 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
         };
     }
 
-    //     const IDEM_QUIET_OUTPUT: &str = r"cargo:rustc-env=VERGEN_GIT_BRANCH=VERGEN_IDEMPOTENT_OUTPUT
-    // cargo:rustc-env=VERGEN_GIT_COMMIT_AUTHOR_EMAIL=VERGEN_IDEMPOTENT_OUTPUT
-    // cargo:rustc-env=VERGEN_GIT_COMMIT_AUTHOR_NAME=VERGEN_IDEMPOTENT_OUTPUT
-    // cargo:rustc-env=VERGEN_GIT_COMMIT_COUNT=VERGEN_IDEMPOTENT_OUTPUT
-    // cargo:rustc-env=VERGEN_GIT_COMMIT_DATE=VERGEN_IDEMPOTENT_OUTPUT
-    // cargo:rustc-env=VERGEN_GIT_COMMIT_MESSAGE=VERGEN_IDEMPOTENT_OUTPUT
-    // cargo:rustc-env=VERGEN_GIT_COMMIT_TIMESTAMP=VERGEN_IDEMPOTENT_OUTPUT
-    // cargo:rustc-env=VERGEN_GIT_DESCRIBE=VERGEN_IDEMPOTENT_OUTPUT
-    // cargo:rustc-env=VERGEN_GIT_SHA=VERGEN_IDEMPOTENT_OUTPUT
-    // cargo:rustc-env=VERGEN_GIT_DIRTY=VERGEN_IDEMPOTENT_OUTPUT
-    // cargo:rerun-if-changed=build.rs
-    // cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT
-    // cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
-    // ";
-
     const DISABLED_OUTPUT: &str = r"";
 
     #[cfg(feature = "git2")]
