@@ -96,7 +96,10 @@ mod features {
         any(feature = "gitcl", feature = "git2", feature = "gix")
     ))]
     pub(crate) const GIT_SHA_NAME: &str = "VERGEN_GIT_SHA";
-    #[cfg(all(feature = "git", any(feature = "gitcl", feature = "git2")))]
+    #[cfg(all(
+        feature = "git",
+        any(feature = "gitcl", feature = "git2", feature = "gix")
+    ))]
     pub(crate) const GIT_DIRTY_NAME: &str = "VERGEN_GIT_DIRTY";
 
     // rustc Constants

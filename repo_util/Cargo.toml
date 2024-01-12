@@ -1,0 +1,12 @@
+[package]
+name = "repo_util"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.79"
+gix = { version = "0.57.1", default-features = false, features = [
+    "worktree-mutation",
+    "blocking-network-client",
+] }
+rand = "0.8.5"

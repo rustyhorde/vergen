@@ -280,7 +280,6 @@ mod test {
             .idempotent()
             .all_build()
             .test_emit()?;
-        println!("{:?}", config.cargo_rustc_env_map);
         assert_eq!(2, config.cargo_rustc_env_map.len());
         assert_eq!(2, count_idempotent(&config.cargo_rustc_env_map));
         assert_eq!(2, config.warnings.len());

@@ -61,7 +61,7 @@ pub(crate) struct Config {
     // if output from:
     // git status --porcelain (optionally with "--untracked-files=no")
     pub(crate) git_dirty: bool,
-    git_dirty_ignore_untracked: bool,
+    git_dirty_include_untracked: bool,
     use_local: bool,
     #[cfg(test)]
     fail: bool,
@@ -259,11 +259,11 @@ impl EmitBuilder {
     /// cargo:rustc-env=VERGEN_GIT_DIRTY=(true|false)
     /// ```
     ///
-    /// Optionally ignore untracked files in deciding whether the repository
+    /// Optionally, include/ignore untracked files in deciding whether the repository
     /// is dirty.
-    pub fn git_dirty(&mut self, ignore_untracked_files: bool) -> &mut Self {
+    pub fn git_dirty(&mut self, include_untracked_files: bool) -> &mut Self {
         self.git_config.git_dirty = true;
-        self.git_config.git_dirty_ignore_untracked = ignore_untracked_files;
+        self.git_config.git_dirty_include_untracked = include_untracked_files;
         self
     }
 
@@ -449,7 +449,7 @@ impl EmitBuilder {
             } else {
                 let mut status_options = StatusOptions::new();
 
-                _ = status_options.include_untracked(self.git_config.git_dirty_ignore_untracked);
+                _ = status_options.include_untracked(self.git_config.git_dirty_include_untracked);
                 let statuses = repo.statuses(Some(&mut status_options))?;
 
                 let n_dirty = statuses
@@ -664,14 +664,10 @@ fn add_branch_name(
 #[cfg(test)]
 mod test {
     use super::{add_branch_name, add_commit_count, add_opt_value};
-    use crate::{
-        emitter::test::count_idempotent,
-        key::VergenKey,
-        utils::repo::{clone_path, clone_test_repo, create_test_repo},
-        EmitBuilder,
-    };
+    use crate::{emitter::test::count_idempotent, key::VergenKey, EmitBuilder};
     use anyhow::Result;
     use git2_rs::Repository;
+    use repo_util::TestRepos;
     use std::{collections::BTreeMap, env, vec};
 
     fn repo_exists() -> Result<bool> {
@@ -712,8 +708,7 @@ mod test {
     #[test]
     #[serial_test::serial]
     fn head_not_found_is_default() -> Result<()> {
-        create_test_repo();
-        clone_test_repo();
+        let repo = TestRepos::new(false, false)?;
         let mut map = BTreeMap::new();
         let mut warnings = vec![];
         if let Ok(repo) = Repository::discover(env::current_dir()?) {
@@ -723,7 +718,7 @@ mod test {
         }
         let mut map = BTreeMap::new();
         let mut warnings = vec![];
-        if let Ok(repo) = Repository::discover(clone_path()) {
+        if let Ok(repo) = Repository::discover(repo.path()) {
             add_branch_name(true, &repo, &mut map, &mut warnings)?;
             assert_eq!(1, map.len());
             assert_eq!(1, warnings.len());
