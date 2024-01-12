@@ -23,6 +23,7 @@ use std::{
 const BARE_REPO_PREFIX: &str = "vergen_tmp";
 const BARE_REPO_SUFFIX: &str = ".git";
 const CLONE_NAME_PREFIX: &str = "vergen_tmp";
+const RUNNER_TEMP_ENV: &str = "RUNNER_TEMP";
 
 /// Utility to create a temporary bare repository and a repository cloned from the
 /// bare repository.
@@ -214,7 +215,7 @@ impl TestRepos {
     }
 
     fn temp_path() -> PathBuf {
-        if let Ok(temp_path) = env::var("RUNNER_TEMP") {
+        if let Ok(temp_path) = env::var(RUNNER_TEMP_ENV) {
             PathBuf::from(temp_path)
         } else {
             env::temp_dir()
@@ -251,13 +252,13 @@ impl Drop for TestRepos {
 
 #[cfg(test)]
 mod test {
-    use super::TestRepos;
+    use super::{TestRepos, RUNNER_TEMP_ENV};
     use anyhow::Result;
 
     #[test]
     #[serial_test::serial]
     fn temp_dir_works() -> Result<()> {
-        temp_env::with_var("RUNNER", None::<String>, || {
+        temp_env::with_var(RUNNER_TEMP_ENV, None::<String>, || {
             let repo = || -> Result<TestRepos> {
                 let repo = TestRepos::new(false, false)?;
                 Ok(repo)
