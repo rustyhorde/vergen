@@ -1,4 +1,4 @@
-use anyhow::{Context, Result};
+use anyhow::Result;
 use git::{
     config::CommitAutoRollback,
     create::Options,
@@ -24,12 +24,22 @@ const BARE_REPO_PREFIX: &str = "vergen_tmp";
 const BARE_REPO_SUFFIX: &str = ".git";
 const CLONE_NAME_PREFIX: &str = "vergen_tmp";
 
+/// Utility to create a temporary bare repository and a repository cloned from the
+/// bare repository.
+#[derive(Clone, Debug)]
 pub struct TestRepos {
     bare_repo_path: PathBuf,
     clone_path: PathBuf,
 }
 
 impl TestRepos {
+    /// Create a new bare repository and a repository cloned from the bare repository.
+    ///
+    /// Optionally, modify a tracked file
+    /// Optionally, include an untracked file
+    ///
+    /// # Errors
+    ///
     pub fn new(modify_tracked: bool, include_untracked: bool) -> Result<Self> {
         let bare_repo_path = Self::repo_path();
         let clone_path = Self::clone_path();
@@ -62,13 +72,7 @@ impl TestRepos {
         }
 
         // Initialize a bare repository
-        let mut repo = git::init_bare(path).with_context(|| {
-            format!(
-                "Cannot initialize a bare directory at {} ({:?})",
-                path.display(),
-                env::current_dir()
-            )
-        })?;
+        let mut repo = git::init_bare(path)?;
 
         // Create an empty tree for the initial commit
         let mut tree = Tree::empty();
@@ -92,7 +96,7 @@ impl TestRepos {
             )?;
 
             // Create a commit
-            let first_commit_id = self.create_commit(
+            let first_commit_id = Self::create_commit(
                 &mut tree,
                 &committer,
                 b"hello, world",
@@ -113,7 +117,7 @@ impl TestRepos {
 
             // Create a second commit
             let mut second_tree = git::objs::Tree::empty();
-            let _second_commit_id = self.create_commit(
+            let _second_commit_id = Self::create_commit(
                 &mut second_tree,
                 &committer,
                 b"Hello, World!",
@@ -158,7 +162,6 @@ impl TestRepos {
     }
 
     fn create_commit<'a>(
-        &mut self,
         tree: &mut Tree,
         committer: &'a CommitAutoRollback<'_>,
         blob: &[u8],
@@ -194,11 +197,13 @@ impl TestRepos {
         Ok(())
     }
 
+    /// Get the path of the cloned repository
+    #[must_use]
     pub fn path(&self) -> PathBuf {
         self.clone_path.clone()
     }
 
-    /// Create a new file that is not under git control
+    // Create a new file that is not under git control
     fn create_untracked_file(&mut self) -> Result<()> {
         let file_path = self.clone_path.join("bar.txt");
         let bar = File::create(file_path)?;
@@ -239,7 +244,26 @@ impl TestRepos {
 
 impl Drop for TestRepos {
     fn drop(&mut self) {
-        let _res = fs::remove_dir_all(&self.clone_path);
+        // let _res = fs::remove_dir_all(&self.clone_path);
         let _res = fs::remove_dir_all(&self.bare_repo_path);
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::TestRepos;
+    use anyhow::Result;
+
+    #[test]
+    #[serial_test::serial]
+    fn temp_dir_works() -> Result<()> {
+        temp_env::with_var("RUNNER", None::<String>, || {
+            let repo = || -> Result<TestRepos> {
+                let repo = TestRepos::new(false, false)?;
+                Ok(repo)
+            }();
+            assert!(repo.is_ok());
+        });
+        Ok(())
     }
 }

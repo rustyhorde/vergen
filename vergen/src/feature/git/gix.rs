@@ -19,7 +19,7 @@ use crate::{
 #[cfg(test)]
 use anyhow::anyhow;
 use anyhow::{Error, Result};
-use gix::{commit, head::Kind, revision::plumbing::describe::Format, Commit, Head};
+use gix::{head::Kind, Commit, Head};
 use std::{
     env,
     path::{Path, PathBuf},
@@ -373,6 +373,7 @@ impl EmitBuilder {
         let mut head = repo.head()?;
         let git_path = repo.git_dir().to_path_buf();
         let commit = head.peel_to_commit_in_place()?;
+        eprintln!("Commit ID: {}", commit.id);
 
         if !idempotent && self.any() {
             self.add_rerun_if_changed(&head, &git_path, rerun_if_changed);
@@ -438,12 +439,14 @@ impl EmitBuilder {
             if let Ok(value) = env::var(GIT_DESCRIBE_NAME) {
                 add_map_entry(VergenKey::GitDescribe, value, map);
             } else {
-                let describe = self.describe_commit(&commit).map(|mut fmt| {
+                let describe = if let Some(mut fmt) = commit.describe().try_format()? {
                     if fmt.depth > 0 && self.git_config.git_describe_dirty {
                         fmt.dirty_suffix = Some("dirty".to_string());
                     }
                     fmt.to_string()
-                })?;
+                } else {
+                    String::new()
+                };
                 add_map_entry(VergenKey::GitDescribe, describe, map);
             }
         }
@@ -469,19 +472,6 @@ impl EmitBuilder {
             }
         }
         Ok(())
-    }
-
-    fn describe_commit(&self, commit: &Commit<'_>) -> Result<Format<'_>> {
-        let names = if self.git_config.git_describe_tags {
-            commit::describe::SelectRef::AllTags
-        } else {
-            commit::describe::SelectRef::AnnotatedTags
-        };
-        Ok(commit
-            .describe()
-            .names(names)
-            // note: this turns on id_as_fallback
-            .format()?)
     }
 
     fn add_git_timestamp_entries(
