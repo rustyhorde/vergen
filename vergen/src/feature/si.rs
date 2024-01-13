@@ -171,6 +171,31 @@ impl EmitBuilder {
     ///
     /// This allows the user to control at a more fine level what `sysinfo`
     /// will refresh on initialization.
+    ///
+    /// # Example
+    /// ```
+    /// # use anyhow::Result;
+    /// # #[cfg(feature = "si")]
+    /// # use sysinfo::{CpuRefreshKind, RefreshKind};
+    /// # use vergen::EmitBuilder;
+    /// #
+    /// # pub fn main() -> Result<()> {
+    #[cfg_attr(
+        feature = "si",
+        doc = r##"
+        let refresh_kind = RefreshKind::new();
+        let cpu_refresh_kind = CpuRefreshKind::everything()
+            .without_cpu_usage()
+            .without_frequency();
+        let config = EmitBuilder::builder()
+            .sysinfo_refresh_kind(Some(refresh_kind.with_cpu(cpu_refresh_kind)))
+            .sysinfo_cpu_brand()
+            .emit()?;
+"##
+    )]
+    ///     Ok(())
+    /// }
+    /// ```
     pub fn sysinfo_refresh_kind(&mut self, refresh_kind: Option<RefreshKind>) -> &mut Self {
         self.sysinfo_config.si_refresh_kind = refresh_kind;
         self
@@ -586,8 +611,11 @@ mod test {
     #[serial_test::serial]
     fn sysinfo_refresh_kind() -> Result<()> {
         let refresh_kind = RefreshKind::new();
+        let cpu_refresh_kind = CpuRefreshKind::everything()
+            .without_cpu_usage()
+            .without_frequency();
         let config = EmitBuilder::builder()
-            .sysinfo_refresh_kind(Some(refresh_kind.with_cpu(CpuRefreshKind::everything())))
+            .sysinfo_refresh_kind(Some(refresh_kind.with_cpu(cpu_refresh_kind)))
             .sysinfo_cpu_brand()
             .test_emit()?;
         assert_eq!(1, config.cargo_rustc_env_map.len());
