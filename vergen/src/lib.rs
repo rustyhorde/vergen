@@ -52,14 +52,14 @@
 //! 3. Create a `build.rs` file that uses `vergen` to emit cargo instructions.  Configuration
 //! starts with [`EmitBuilder`].  Eventually you will call [`emit`](EmitBuilder::emit) to output the
 //! cargo instructions. See the [`emit`](EmitBuilder::emit) documentation for more robust examples.
-//! 
+//!
 //! #### Generate all output
 //!
 //! ```
 //! use anyhow::Result;
 //! # use std::env;
 //! use vergen::EmitBuilder;
-//! 
+//!
 //! pub fn main() -> Result<()> {
 #![cfg_attr(
     all(
@@ -96,18 +96,15 @@
 //! ```
 //!
 //! #### Generate specific output
-//! 
+//!
 //! ```
 //! use anyhow::Result;
 //! # use std::env;
 //! use vergen::EmitBuilder;
-//! 
+//!
 //! pub fn main() -> Result<()> {
 #![cfg_attr(
-    all(
-        feature = "build",
-        all(feature = "git", feature = "gitcl"),
-    ),
+    all(feature = "build", all(feature = "git", feature = "gitcl"),),
     doc = r##"
     // NOTE: This will output only a build timestamp and long SHA from git.
     // NOTE: This set requires the build and git features.
@@ -121,7 +118,7 @@
 //!     Ok(())
 //! }
 //! ```
-//! 
+//!
 //! 4. Use the [`env!`](std::env!) macro in your code to read the environment variables.
 //!
 //! ```ignore
