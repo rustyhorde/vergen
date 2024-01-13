@@ -183,18 +183,18 @@ impl EmitBuilder {
     #[cfg_attr(
         feature = "si",
         doc = r##"
-        let refresh_kind = RefreshKind::new();
-        let cpu_refresh_kind = CpuRefreshKind::everything()
-            .without_cpu_usage()
-            .without_frequency();
-        let config = EmitBuilder::builder()
-            .sysinfo_refresh_kind(Some(refresh_kind.with_cpu(cpu_refresh_kind)))
-            .sysinfo_cpu_brand()
-            .emit()?;
+let refresh_kind = RefreshKind::new();
+let cpu_refresh_kind = CpuRefreshKind::everything()
+    .without_cpu_usage()
+    .without_frequency();
+let config = EmitBuilder::builder()
+    .sysinfo_refresh_kind(Some(refresh_kind.with_cpu(cpu_refresh_kind)))
+    .sysinfo_cpu_brand()
+    .emit()?;
 "##
     )]
-    ///     Ok(())
-    /// }
+    /// #    Ok(())
+    /// # }
     /// ```
     pub fn sysinfo_refresh_kind(&mut self, refresh_kind: Option<RefreshKind>) -> &mut Self {
         self.sysinfo_config.si_refresh_kind = refresh_kind;
