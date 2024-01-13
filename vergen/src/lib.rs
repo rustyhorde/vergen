@@ -52,18 +52,76 @@
 //! 3. Create a `build.rs` file that uses `vergen` to emit cargo instructions.  Configuration
 //! starts with [`EmitBuilder`].  Eventually you will call [`emit`](EmitBuilder::emit) to output the
 //! cargo instructions. See the [`emit`](EmitBuilder::emit) documentation for more robust examples.
+//! 
+//! #### Generate all output
 //!
 //! ```
-//! use std::error::Error;
+//! use anyhow::Result;
+//! # use std::env;
 //! use vergen::EmitBuilder;
-//!
-//! fn main() -> Result<(), Box<dyn Error>> {
-//!     // Emit the instructions
-//!     EmitBuilder::builder().emit()?;
+//! 
+//! pub fn main() -> Result<()> {
+#![cfg_attr(
+    all(
+        feature = "build",
+        feature = "cargo",
+        all(feature = "git", feature = "gitcl"),
+        feature = "rustc",
+        feature = "si"
+    ),
+    doc = r##"
+# env::set_var("CARGO_FEATURE_BUILD", "build");
+# env::set_var("CARGO_FEATURE_GIT", "git");
+# env::set_var("DEBUG", "true");
+# env::set_var("OPT_LEVEL", "1");
+# env::set_var("TARGET", "x86_64-unknown-linux-gnu");
+    // NOTE: This will output everything, and requires all features enabled.
+    // NOTE: See the EmitBuilder documentation for configuration options.
+    EmitBuilder::builder()
+        .all_build()
+        .all_cargo()
+        .all_git()
+        .all_rustc()
+        .all_sysinfo()
+        .emit()?;
+# env::remove_var("CARGO_FEATURE_BUILD");
+# env::remove_var("CARGO_FEATURE_GIT");
+# env::remove_var("DEBUG");
+# env::remove_var("OPT_LEVEL");
+# env::remove_var("TARGET");
+"##
+)]
 //!     Ok(())
 //! }
 //! ```
 //!
+//! #### Generate specific output
+//! 
+//! ```
+//! use anyhow::Result;
+//! # use std::env;
+//! use vergen::EmitBuilder;
+//! 
+//! pub fn main() -> Result<()> {
+#![cfg_attr(
+    all(
+        feature = "build",
+        all(feature = "git", feature = "gitcl"),
+    ),
+    doc = r##"
+    // NOTE: This will output only a build timestamp and long SHA from git.
+    // NOTE: This set requires the build and git features.
+    // NOTE: See the EmitBuilder documentation for configuration options.
+    EmitBuilder::builder()
+        .build_timestamp()
+        .git_sha(false)
+        .emit()?;
+"##
+)]
+//!     Ok(())
+//! }
+//! ```
+//! 
 //! 4. Use the [`env!`](std::env!) macro in your code to read the environment variables.
 //!
 //! ```ignore
