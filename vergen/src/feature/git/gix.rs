@@ -483,7 +483,7 @@ impl EmitBuilder {
     }
 
     fn get_id<'a>(head: &mut Head<'a>) -> Result<Option<Id<'a>>> {
-        head.try_peel_to_id_in_place().map_err(|e| e.into())
+        head.try_peel_to_id_in_place().map_err(Into::into)
     }
 
     fn add_git_timestamp_entries(
