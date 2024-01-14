@@ -952,7 +952,7 @@ mod test {
     #[test]
     #[serial_test::serial]
     fn git_all_at_path() -> Result<()> {
-        let repo = TestRepos::new(false, false)?;
+        let repo = TestRepos::new(false, false, false)?;
         let config = EmitBuilder::builder()
             .all_git()
             .test_emit_at(Some(repo.path()))?;

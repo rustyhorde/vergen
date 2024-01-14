@@ -18,7 +18,7 @@ use crate::{
 };
 use anyhow::anyhow;
 use anyhow::{Error, Result};
-use gix::{head::Kind, Commit, Head};
+use gix::{head::Kind, Commit, Head, Repository};
 use std::{
     env,
     path::{Path, PathBuf},
@@ -371,17 +371,7 @@ impl EmitBuilder {
         let repo = gix::discover(curr_dir)?;
         let mut head = repo.head()?;
         let git_path = repo.git_dir().to_path_buf();
-
-        let commit = if repo.is_shallow() {
-            let id = head
-                .try_peel_to_id_in_place()?
-                .ok_or_else(|| anyhow!("Not an Id"))?;
-            let object = id.try_object()?.ok_or_else(|| anyhow!("Not an Object"))?;
-            let commit = object.try_into_commit()?;
-            commit
-        } else {
-            head.peel_to_commit_in_place()?
-        };
+        let commit = Self::get_commit(&repo, &mut head)?;
 
         if !idempotent && self.any() {
             self.add_rerun_if_changed(&head, &git_path, rerun_if_changed);
@@ -480,6 +470,18 @@ impl EmitBuilder {
             }
         }
         Ok(())
+    }
+
+    fn get_commit<'a>(repo: &Repository, head: &mut Head<'a>) -> Result<Commit<'a>> {
+        Ok(if repo.is_shallow() {
+            let id = head
+                .try_peel_to_id_in_place()?
+                .ok_or_else(|| anyhow!("Not an Id"))?;
+            let object = id.try_object()?.ok_or_else(|| anyhow!("Not an Object"))?;
+            object.try_into_commit()?
+        } else {
+            head.peel_to_commit_in_place()?
+        })
     }
 
     fn add_git_timestamp_entries(

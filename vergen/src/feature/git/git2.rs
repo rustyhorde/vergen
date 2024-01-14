@@ -708,7 +708,7 @@ mod test {
     #[test]
     #[serial_test::serial]
     fn head_not_found_is_default() -> Result<()> {
-        let repo = TestRepos::new(false, false)?;
+        let repo = TestRepos::new(false, false, false)?;
         let mut map = BTreeMap::new();
         let mut warnings = vec![];
         if let Ok(repo) = Repository::discover(env::current_dir()?) {

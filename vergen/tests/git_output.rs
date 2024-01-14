@@ -293,7 +293,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
         fn git_dirty_ignore_untracked_no_modified_no_untracked() -> Result<()> {
             // On a repository with no modified files and no untracked files,
             // dirty should be false.
-            let repo = TestRepos::new(false, false)?;
+            let repo = TestRepos::new(false, false, false)?;
 
             let mut stdout_buf = vec![];
             EmitBuilder::builder()
@@ -311,7 +311,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
         fn git_dirty_include_untracked_no_modified_no_untracked() -> Result<()> {
             // On a repository with no modified files and no untracked files,
             // dirty should be false.
-            let repo = TestRepos::new(false, false)?;
+            let repo = TestRepos::new(false, false, false)?;
 
             let mut stdout_buf = vec![];
             EmitBuilder::builder()
@@ -329,7 +329,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
         fn git_dirty_ignore_untracked_modified_no_untracked() -> Result<()> {
             // On a repository with modified files and no untracked files,
             // dirty should be true.
-            let repo = TestRepos::new(true, false)?;
+            let repo = TestRepos::new(true, false, false)?;
 
             let mut stdout_buf = vec![];
             EmitBuilder::builder()
@@ -347,7 +347,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
         fn git_dirty_include_untracked_modified_no_untracked() -> Result<()> {
             // On a repository with modified files and no untracked files,
             // dirty should be true.
-            let repo = TestRepos::new(true, false)?;
+            let repo = TestRepos::new(true, false, false)?;
 
             let mut stdout_buf = vec![];
             EmitBuilder::builder()
@@ -365,7 +365,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
         fn git_dirty_ignore_untracked_no_modified_untracked() -> Result<()> {
             // On a repository with no modified files and untracked files,
             // dirty should be false when include_untracked is false.
-            let repo = TestRepos::new(false, true)?;
+            let repo = TestRepos::new(false, true, false)?;
 
             let mut stdout_buf = vec![];
             EmitBuilder::builder()
@@ -383,7 +383,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
         fn git_dirty_include_untracked_no_modified_untracked() -> Result<()> {
             // On a repository with no modified files and untracked files,
             // dirty should be true when include_untracked is true.
-            let repo = TestRepos::new(false, true)?;
+            let repo = TestRepos::new(false, true, false)?;
 
             let mut stdout_buf = vec![];
             EmitBuilder::builder()
@@ -401,7 +401,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
         fn git_dirty_ignore_untracked_modified_untracked() -> Result<()> {
             // On a repository with modified files and untracked files,
             // dirty should be true.
-            let repo = TestRepos::new(true, true)?;
+            let repo = TestRepos::new(true, true, false)?;
 
             let mut stdout_buf = vec![];
             EmitBuilder::builder()
@@ -419,7 +419,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
         fn git_dirty_include_untracked_modified_untracked() -> Result<()> {
             // On a repository with modified files and untracked files,
             // dirty should be true.
-            let repo = TestRepos::new(true, true)?;
+            let repo = TestRepos::new(true, true, false)?;
 
             let mut stdout_buf = vec![];
             EmitBuilder::builder()
