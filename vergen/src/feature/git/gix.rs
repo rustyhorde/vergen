@@ -18,7 +18,7 @@ use crate::{
 };
 use anyhow::anyhow;
 use anyhow::{Error, Result};
-use gix::{head::Kind, Commit, Head, Repository};
+use gix::{head::Kind, Commit, Head, Id, Repository};
 use std::{
     env,
     path::{Path, PathBuf},
@@ -474,14 +474,16 @@ impl EmitBuilder {
 
     fn get_commit<'a>(repo: &Repository, head: &mut Head<'a>) -> Result<Commit<'a>> {
         Ok(if repo.is_shallow() {
-            let id = head
-                .try_peel_to_id_in_place()?
-                .ok_or_else(|| anyhow!("Not an Id"))?;
+            let id = Self::get_id(head)?.ok_or_else(|| anyhow!("Not an Id"))?;
             let object = id.try_object()?.ok_or_else(|| anyhow!("Not an Object"))?;
             object.try_into_commit()?
         } else {
             head.peel_to_commit_in_place()?
         })
+    }
+
+    fn get_id<'a>(head: &mut Head<'a>) -> Result<Option<Id<'a>>> {
+        head.try_peel_to_id_in_place().map_err(|e| e.into())
     }
 
     fn add_git_timestamp_entries(
