@@ -17,11 +17,12 @@ use crate::{
 };
 use anyhow::{anyhow, Result};
 use std::env;
-use sysinfo::{get_current_pid, Cpu, Pid, Process, System, User, Users};
+use sysinfo::{get_current_pid, Cpu, Pid, Process, RefreshKind, System, User, Users};
 
 #[derive(Clone, Copy, Debug, Default)]
 #[allow(clippy::struct_excessive_bools)]
 pub(crate) struct Config {
+    pub(crate) si_refresh_kind: Option<RefreshKind>,
     pub(crate) si_name: bool,
     pub(crate) si_os_version: bool,
     pub(crate) si_user: bool,
@@ -154,7 +155,8 @@ EmitBuilder::builder().idempotent().all_sysinfo().emit()?;
 impl EmitBuilder {
     /// Enable all of the `VERGEN_SYSINFO_*` options
     pub fn all_sysinfo(&mut self) -> &mut Self {
-        self.sysinfo_name()
+        self.sysinfo_refresh_kind(None)
+            .sysinfo_name()
             .sysinfo_os_version()
             .sysinfo_user()
             .sysinfo_memory()
@@ -163,6 +165,40 @@ impl EmitBuilder {
             .sysinfo_cpu_name()
             .sysinfo_cpu_brand()
             .sysinfo_cpu_frequency()
+    }
+
+    /// Set the [`RefreshKind`](sysinfo::RefreshKind) to use during sysinfo initialization.
+    ///
+    /// This allows the user to control at a more fine level what `sysinfo`
+    /// will refresh on initialization.
+    ///
+    /// # Example
+    /// ```
+    /// # use anyhow::Result;
+    /// # #[cfg(feature = "si")]
+    /// # use sysinfo::{CpuRefreshKind, RefreshKind};
+    /// # use vergen::EmitBuilder;
+    /// #
+    /// # pub fn main() -> Result<()> {
+    #[cfg_attr(
+        feature = "si",
+        doc = r##"
+let refresh_kind = RefreshKind::new();
+let cpu_refresh_kind = CpuRefreshKind::everything()
+    .without_cpu_usage()
+    .without_frequency();
+let config = EmitBuilder::builder()
+    .sysinfo_refresh_kind(Some(refresh_kind.with_cpu(cpu_refresh_kind)))
+    .sysinfo_cpu_brand()
+    .emit()?;
+"##
+    )]
+    /// #    Ok(())
+    /// # }
+    /// ```
+    pub fn sysinfo_refresh_kind(&mut self, refresh_kind: Option<RefreshKind>) -> &mut Self {
+        self.sysinfo_config.si_refresh_kind = refresh_kind;
+        self
     }
 
     /// Enable the sysinfo name
@@ -226,7 +262,7 @@ impl EmitBuilder {
         warnings: &mut Vec<String>,
     ) {
         if self.sysinfo_config.any() {
-            let system = setup_system();
+            let system = setup_system(self.sysinfo_config.si_refresh_kind);
 
             self.add_sysinfo_name(&system, idempotent, map, warnings);
             self.add_sysinfo_os_verison(&system, idempotent, map, warnings);
@@ -500,10 +536,14 @@ fn add_sysinfo_map_entry(
     }
 }
 
-fn setup_system() -> System {
-    let mut system = System::new_all();
-    system.refresh_all();
-    system
+fn setup_system(refresh_kind: Option<RefreshKind>) -> System {
+    if let Some(refresh_kind) = refresh_kind {
+        let mut system = System::new();
+        system.refresh_specifics(refresh_kind);
+        system
+    } else {
+        System::new_all()
+    }
 }
 
 fn check_user(process: &Process, user: &User) -> bool {
@@ -539,6 +579,7 @@ mod test {
     use crate::{emitter::test::count_idempotent, key::VergenKey, EmitBuilder};
     use anyhow::Result;
     use std::{collections::BTreeMap, env};
+    use sysinfo::{CpuRefreshKind, RefreshKind};
 
     const IDEM_COUNT: usize = 0;
     const SYSINFO_COUNT: usize = 9;
@@ -561,6 +602,23 @@ mod test {
     fn sysinfo_all() -> Result<()> {
         let config = EmitBuilder::builder().all_sysinfo().test_emit()?;
         assert_eq!(SYSINFO_COUNT, config.cargo_rustc_env_map.len());
+        assert_eq!(IDEM_COUNT, count_idempotent(&config.cargo_rustc_env_map));
+        assert_eq!(IDEM_COUNT, config.warnings.len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn sysinfo_refresh_kind() -> Result<()> {
+        let refresh_kind = RefreshKind::new();
+        let cpu_refresh_kind = CpuRefreshKind::everything()
+            .without_cpu_usage()
+            .without_frequency();
+        let config = EmitBuilder::builder()
+            .sysinfo_refresh_kind(Some(refresh_kind.with_cpu(cpu_refresh_kind)))
+            .sysinfo_cpu_brand()
+            .test_emit()?;
+        assert_eq!(1, config.cargo_rustc_env_map.len());
         assert_eq!(IDEM_COUNT, count_idempotent(&config.cargo_rustc_env_map));
         assert_eq!(IDEM_COUNT, config.warnings.len());
         Ok(())
