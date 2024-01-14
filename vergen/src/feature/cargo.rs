@@ -15,7 +15,8 @@ use crate::{
     utils::fns::{add_default_map_entry, add_map_entry},
 };
 use anyhow::{anyhow, Error, Result};
-use cargo_metadata::{DepKindInfo, MetadataCommand, Package, PackageId};
+use cargo_metadata::{DepKindInfo, DependencyKind, MetadataCommand, Package, PackageId};
+use regex::Regex;
 use std::env;
 
 #[derive(Clone, Copy, Debug, Default)]
@@ -26,6 +27,8 @@ pub(crate) struct Config {
     pub(crate) cargo_opt_level: bool,
     pub(crate) cargo_target_triple: bool,
     pub(crate) cargo_dependencies: bool,
+    cargo_name_filter: Option<&'static str>,
+    cargo_dep_kind_filter: Option<DependencyKind>,
 }
 
 impl Config {
@@ -163,13 +166,39 @@ impl EmitBuilder {
         self
     }
 
-    /// Emit the DEPENDENCIES value derived from `Cargo.toml`
+    /// Emit the dependencies value derived from `Cargo.toml`
     ///
     /// ```text
     /// cargo:rustc-env=VERGEN_CARGO_DEPENDENCIES=<dependencies>
     /// ```
     pub fn cargo_dependencies(&mut self) -> &mut Self {
         self.cargo_config.cargo_dependencies = true;
+        self
+    }
+
+    /// Add a name [`Regex`](regex::Regex) filter for cargo dependencies
+    ///
+    /// ```text
+    /// cargo:rustc-env=VERGEN_CARGO_DEPENDENCIES=<deps_filtered_by_name>
+    /// ```
+    pub fn cargo_dependencies_name_filter(
+        &mut self,
+        name_filter: Option<&'static str>,
+    ) -> &mut Self {
+        self.cargo_config.cargo_name_filter = name_filter;
+        self
+    }
+
+    /// Add a [`DependencyKind`](cargo_metadata::DependencyKind) filter for cargo dependencies
+    ///
+    /// ```text
+    /// cargo:rustc-env=VERGEN_CARGO_DEPENDENCIES=<deps_filtered_by_kind>
+    /// ```
+    pub fn cargo_dependencies_dep_kind_filter(
+        &mut self,
+        dep_kind_filter: Option<DependencyKind>,
+    ) -> &mut Self {
+        self.cargo_config.cargo_dep_kind_filter = dep_kind_filter;
         self
     }
 
@@ -242,46 +271,83 @@ impl EmitBuilder {
                 if let Ok(value) = env::var(CARGO_DEPENDENCIES) {
                     add_map_entry(VergenKey::CargoDependencies, value, map);
                 } else {
-                    let value = Self::get_dependencies()?;
-                    add_map_entry(VergenKey::CargoDependencies, value, map);
+                    let value = Self::get_dependencies(
+                        self.cargo_config.cargo_name_filter,
+                        self.cargo_config.cargo_dep_kind_filter,
+                    )?;
+                    if !value.is_empty() {
+                        add_map_entry(VergenKey::CargoDependencies, value, map);
+                    }
                 }
             }
         }
         Ok(())
     }
 
-    fn get_dependencies() -> Result<String> {
+    fn get_dependencies(
+        name_filter: Option<&'static str>,
+        dep_kind_filter: Option<DependencyKind>,
+    ) -> Result<String> {
         let metadata = MetadataCommand::new().exec()?;
         let resolved_crates = metadata.resolve.ok_or_else(|| anyhow!("No resolve"))?;
-        let root_id = resolved_crates
-            .root
-            .ok_or_else(|| anyhow!("cargo metadata missing '.resolved.root'"))?;
+        let root_id = resolved_crates.root.ok_or_else(|| anyhow!("No root id"))?;
         let root = resolved_crates
             .nodes
             .into_iter()
             .find(|node| node.id == root_id)
-            .ok_or_else(|| anyhow!("cargo metadata missing root node in '.resolved.nodes'"))?;
+            .ok_or_else(|| anyhow!("No root node"))?;
         let package_ids: Vec<(PackageId, Vec<DepKindInfo>)> = root
             .deps
             .into_iter()
             .map(|node_dep| (node_dep.pkg, node_dep.dep_kinds))
             .collect();
 
-        let packages: Vec<&Package> = package_ids
+        let packages: Vec<(&Package, &Vec<DepKindInfo>)> = package_ids
             .iter()
-            .filter_map(|(package_id, _)| {
+            .filter_map(|(package_id, dep_kinds)| {
                 metadata
                     .packages
                     .iter()
                     .find(|&package| package.id == *package_id)
+                    .map(|package| (package, dep_kinds))
             })
             .collect();
 
         let results: Vec<String> = packages
             .iter()
+            .filter_map(|(package, dep_kind_info)| {
+                if let Some(name_regex) = name_filter {
+                    if let Ok(regex) = Regex::new(name_regex) {
+                        if regex.is_match(&package.name) {
+                            Some((package, dep_kind_info))
+                        } else {
+                            None
+                        }
+                    } else {
+                        Some((package, dep_kind_info))
+                    }
+                } else {
+                    Some((package, dep_kind_info))
+                }
+            })
+            .filter_map(|(package, dep_kind_info)| {
+                if let Some(dep_kind_filter) = dep_kind_filter {
+                    let kinds: Vec<DependencyKind> = dep_kind_info
+                        .iter()
+                        .map(|dep_kind_info| dep_kind_info.kind)
+                        .collect();
+                    if kinds.contains(&dep_kind_filter) {
+                        Some(package)
+                    } else {
+                        None
+                    }
+                } else {
+                    Some(package)
+                }
+            })
             .map(|package| format!("{} {}", package.name, package.version))
             .collect();
-        Ok(results.join(", "))
+        Ok(results.join(","))
     }
 }
 

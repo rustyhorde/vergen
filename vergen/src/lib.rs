@@ -484,3 +484,11 @@ mod utils;
 use {gix as _, lazy_static as _, regex as _, repo_util as _, serial_test as _, temp_env as _};
 
 pub use crate::emitter::EmitBuilder;
+#[cfg(feature = "si")]
+pub use sysinfo::CpuRefreshKind;
+#[cfg(feature = "si")]
+pub use sysinfo::MemoryRefreshKind;
+#[cfg(feature = "si")]
+pub use sysinfo::ProcessRefreshKind;
+#[cfg(feature = "si")]
+pub use sysinfo::RefreshKind;

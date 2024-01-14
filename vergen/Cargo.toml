@@ -21,6 +21,7 @@ denylist = [
     "gitcl",
     "gix",
     "gitoxide",
+    "regex",
     "rustc_version",
     "sysinfo",
     "time",
@@ -30,7 +31,7 @@ denylist = [
 [features]
 default = []
 build = ["time"]
-cargo = ["cargo_metadata"]
+cargo = ["cargo_metadata", "regex"]
 git = []
 gitcl = ["time"]
 git2 = ["time", "git2-rs"]
@@ -47,6 +48,7 @@ gix = { version = "0.57.1", optional = true, default-features = false, features 
     "revision",
     "interrupt",
 ] }
+regex = { version = "1.9.1", optional = true }
 rustc_version = { version = "0.4.0", optional = true }
 sysinfo = { version = "0.30.4", optional = true, default-features = false }
 time = { version = "0.3.23", features = [
