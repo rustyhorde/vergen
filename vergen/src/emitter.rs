@@ -282,19 +282,28 @@ impl Emitter {
     {
         // Emit the 'cargo:rustc-env' instructions
         for (k, v) in &self.cargo_rustc_env_map {
-            writeln!(stdout, "cargo:rustc-env={}={v}", k.name())?;
+            writeln!(
+                stdout,
+                "cargo:rustc-env={}={}",
+                k.name(),
+                Self::filter_newlines(v)
+            )?;
         }
 
         // Emit the `cargo:warning` instructions
         if !quiet {
             for warning in &self.warnings {
-                writeln!(stdout, "cargo:warning={warning}")?;
+                writeln!(stdout, "cargo:warning={}", Self::filter_newlines(warning))?;
             }
         }
 
         // Emit the 'cargo:rerun-if-changed' instructions for the git paths (if added)
         for path in &self.rerun_if_changed {
-            writeln!(stdout, "cargo:rerun-if-changed={path}")?;
+            writeln!(
+                stdout,
+                "cargo:rerun-if-changed={}",
+                Self::filter_newlines(path)
+            )?;
         }
 
         // Emit the 'cargo:rerun-if-changed' instructions
@@ -304,11 +313,26 @@ impl Emitter {
             } else {
                 "build.rs"
             };
-            writeln!(stdout, "cargo:rerun-if-changed={buildrs}")?;
+            writeln!(
+                stdout,
+                "cargo:rerun-if-changed={}",
+                Self::filter_newlines(buildrs)
+            )?;
             writeln!(stdout, "cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT")?;
             writeln!(stdout, "cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH")?;
         }
         Ok(())
+    }
+
+    #[cfg(any(
+        feature = "build",
+        feature = "cargo",
+        feature = "git",
+        feature = "rustc",
+        feature = "si"
+    ))]
+    fn filter_newlines(s: &str) -> String {
+        s.chars().filter(|c| *c != '\n').collect()
     }
 }
 
