@@ -708,7 +708,7 @@ mod test {
     #[test]
     #[serial_test::serial]
     fn head_not_found_is_default() -> Result<()> {
-        let repo = TestRepos::new(false, false)?;
+        let repo = TestRepos::new(false, false, false)?;
         let mut map = BTreeMap::new();
         let mut warnings = vec![];
         if let Ok(repo) = Repository::discover(env::current_dir()?) {
@@ -742,6 +742,20 @@ mod test {
             assert_eq!(10, count_idempotent(&config.cargo_rustc_env_map));
             assert_eq!(11, config.warnings.len());
         }
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn git_all_shallow_clone() -> Result<()> {
+        let repo = TestRepos::new(false, false, true)?;
+        let emitter = EmitBuilder::builder()
+            .all_git()
+            .test_emit_at(Some(repo.path()))?;
+        assert_eq!(10, emitter.cargo_rustc_env_map.len());
+        assert_eq!(0, count_idempotent(&emitter.cargo_rustc_env_map));
+        assert_eq!(0, emitter.warnings.len());
+
         Ok(())
     }
 
