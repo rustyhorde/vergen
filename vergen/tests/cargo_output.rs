@@ -15,12 +15,14 @@ mod test_build {
             r"cargo:rustc-env=VERGEN_CARGO_OPT_LEVEL=\d{1}";
         static ref CARGO_TT_RE_STR: &'static str =
             r"cargo:rustc-env=VERGEN_CARGO_TARGET_TRIPLE=[a-zA-Z0-9-_]+";
+        static ref CARGO_DEP_RE_STR: &'static str = r"cargo:rustc-env=VERGEN_CARGO_DEPENDENCIES=.*";
         static ref CARGO_REGEX: Regex = {
             let re_str = [
                 *CARGO_DEBUG_RE_STR,
                 *CARGO_FEA_RE_STR,
                 *CARGO_OPT_LEVEL_RE_STR,
                 *CARGO_TT_RE_STR,
+                *CARGO_DEP_RE_STR,
             ]
             .join("\n");
             Regex::new(&re_str).unwrap()

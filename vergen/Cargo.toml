@@ -14,6 +14,7 @@ version = "8.2.9"
 
 [package.metadata.cargo-all-features]
 denylist = [
+    "cargo_metadata",
     "git",
     "git2",
     "git2-rs",
@@ -29,7 +30,7 @@ denylist = [
 [features]
 default = []
 build = ["time"]
-cargo = []
+cargo = ["cargo_metadata"]
 git = []
 gitcl = ["time"]
 git2 = ["time", "git2-rs"]
@@ -40,6 +41,7 @@ si = ["sysinfo"]
 
 [dependencies]
 anyhow = "1.0.72"
+cargo_metadata = { version = "0.18.1", optional = true }
 git2-rs = { version = "0.18.0", package = "git2", optional = true, default-features = false }
 gix = { version = "0.57.1", optional = true, default-features = false, features = [
     "revision",
