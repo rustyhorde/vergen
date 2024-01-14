@@ -373,7 +373,9 @@ impl EmitBuilder {
         let git_path = repo.git_dir().to_path_buf();
 
         let commit = if repo.is_shallow() {
-            let id = head.try_peel_to_id_in_place()?.ok_or_else(|| anyhow!("Not an Id"))?;
+            let id = head
+                .try_peel_to_id_in_place()?
+                .ok_or_else(|| anyhow!("Not an Id"))?;
             let object = id.try_object()?.ok_or_else(|| anyhow!("Not an Object"))?;
             let commit = object.try_into_commit()?;
             commit
