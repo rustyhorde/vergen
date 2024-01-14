@@ -185,7 +185,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
     #[test]
     #[serial_test::serial]
     fn git_all_flags_test_repo() -> Result<()> {
-        let repo = TestRepos::new(true, false)?;
+        let repo = TestRepos::new(true, false, false)?;
         let mut stdout_buf = vec![];
         let failed = EmitBuilder::builder()
             .all_git()
@@ -201,7 +201,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
     #[test]
     #[serial_test::serial]
     fn git_all_flags_test_repo_local() -> Result<()> {
-        let repo = TestRepos::new(true, false)?;
+        let repo = TestRepos::new(true, false, false)?;
         let mut stdout_buf = vec![];
         let result = EmitBuilder::builder()
             .all_git()
@@ -229,7 +229,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
     #[test]
     #[serial_test::serial]
     fn git_all_output_test_repo() -> Result<()> {
-        let repo = TestRepos::new(true, true)?;
+        let repo = TestRepos::new(true, true, false)?;
         let mut stdout_buf = vec![];
         let failed = EmitBuilder::builder()
             .all_git()
@@ -258,7 +258,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
     #[test]
     #[serial_test::serial]
     fn git_emit_at_test_repo() -> Result<()> {
-        let repo = TestRepos::new(true, false)?;
+        let repo = TestRepos::new(true, false, false)?;
         assert!(EmitBuilder::builder()
             .all_git()
             .git_describe(true, true, None)

@@ -16,7 +16,6 @@ use crate::{
     key::VergenKey,
     utils::fns::{add_default_map_entry, add_map_entry},
 };
-#[cfg(test)]
 use anyhow::anyhow;
 use anyhow::{Error, Result};
 use gix::{head::Kind, Commit, Head};
@@ -372,8 +371,15 @@ impl EmitBuilder {
         let repo = gix::discover(curr_dir)?;
         let mut head = repo.head()?;
         let git_path = repo.git_dir().to_path_buf();
-        let commit = head.peel_to_commit_in_place()?;
-        eprintln!("Commit ID: {}", commit.id);
+
+        let commit = if repo.is_shallow() {
+            let id = head.try_peel_to_id_in_place()?.ok_or_else(|| anyhow!("Not an Id"))?;
+            let object = id.try_object()?.ok_or_else(|| anyhow!("Not an Object"))?;
+            let commit = object.try_into_commit()?;
+            commit
+        } else {
+            head.peel_to_commit_in_place()?
+        };
 
         if !idempotent && self.any() {
             self.add_rerun_if_changed(&head, &git_path, rerun_if_changed);
@@ -585,6 +591,7 @@ mod test {
     use crate::{emitter::test::count_idempotent, EmitBuilder};
     use anyhow::Result;
     use repo_util::TestRepos;
+    use serial_test::serial;
 
     #[test]
     #[serial_test::serial]
@@ -626,13 +633,27 @@ mod test {
     #[test]
     #[serial_test::serial]
     fn git_all_at_path() -> Result<()> {
-        let repo = TestRepos::new(false, false)?;
+        let repo = TestRepos::new(false, false, false)?;
         let emitter = EmitBuilder::builder()
             .all_git()
             .test_emit_at(Some(repo.path()))?;
         assert_eq!(10, emitter.cargo_rustc_env_map.len());
         assert_eq!(0, count_idempotent(&emitter.cargo_rustc_env_map));
         assert_eq!(0, emitter.warnings.len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn git_all_shallow_clone() -> Result<()> {
+        let repo = TestRepos::new(false, false, true)?;
+        let emitter = EmitBuilder::builder()
+            .all_git()
+            .test_emit_at(Some(repo.path()))?;
+        assert_eq!(10, emitter.cargo_rustc_env_map.len());
+        assert_eq!(0, count_idempotent(&emitter.cargo_rustc_env_map));
+        assert_eq!(0, emitter.warnings.len());
+
         Ok(())
     }
 

@@ -1,24 +1,30 @@
 use anyhow::Result;
 use git::{
+    clone::PrepareFetch,
     config::CommitAutoRollback,
-    create::Options,
+    create::{Kind, Options},
+    interrupt::IS_INTERRUPTED,
     objs::{
         tree::{Entry, EntryKind},
         Tree,
     },
     open,
+    path::os_str_into_bstr,
+    progress::Discard,
     refs::transaction::PreviousValue,
+    remote::fetch::Shallow,
+    url::parse,
     Id, ObjectId,
 };
 use gix as git;
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
-use std::fs::File;
 use std::{
     env,
     fs::{self, OpenOptions},
     io::{BufWriter, Write},
     path::PathBuf,
 };
+use std::{fs::File, num::NonZeroU32};
 
 const BARE_REPO_PREFIX: &str = "vergen_tmp";
 const BARE_REPO_SUFFIX: &str = ".git";
@@ -41,7 +47,7 @@ impl TestRepos {
     ///
     /// # Errors
     ///
-    pub fn new(modify_tracked: bool, include_untracked: bool) -> Result<Self> {
+    pub fn new(modify_tracked: bool, include_untracked: bool, shallow_clone: bool) -> Result<Self> {
         let bare_repo_path = Self::repo_path();
         let clone_path = Self::clone_path();
 
@@ -51,7 +57,7 @@ impl TestRepos {
         };
 
         test_repo.create_repository()?;
-        test_repo.clone_from_bare_repo()?;
+        test_repo.clone_from_bare_repo(shallow_clone)?;
 
         if modify_tracked {
             test_repo.modify_tracked()?;
@@ -131,7 +137,7 @@ impl TestRepos {
         Ok(())
     }
 
-    fn clone_from_bare_repo(&mut self) -> Result<()> {
+    fn clone_from_bare_repo(&mut self, shallow_clone: bool) -> Result<()> {
         let bare_repo_path = &self.bare_repo_path;
         let clone_path = &self.clone_path;
 
@@ -144,20 +150,23 @@ impl TestRepos {
         fs::create_dir_all(clone_path)?;
 
         // Clone into the directory
-        let url = git::url::parse(git::path::os_str_into_bstr(bare_repo_path.as_os_str())?)?;
+        let url = parse(os_str_into_bstr(bare_repo_path.as_os_str())?)?;
         let opts = open::Options::isolated()
             .config_overrides(["user.name=Vergen Test", "user.email=vergen@blah.com"]);
-        let mut prep = git::clone::PrepareFetch::new(
+        let mut prep = PrepareFetch::new(
             url,
             clone_path,
-            git::create::Kind::WithWorktree,
+            Kind::WithWorktree,
             Options::default(),
             opts,
         )?;
-        let (mut prepare_checkout, _) =
-            prep.fetch_then_checkout(git::progress::Discard, &git::interrupt::IS_INTERRUPTED)?;
-        let (_repo, _) = prepare_checkout
-            .main_worktree(git::progress::Discard, &git::interrupt::IS_INTERRUPTED)?;
+        if shallow_clone {
+            if let Some(one) = NonZeroU32::new(1) {
+                prep = prep.with_shallow(Shallow::DepthAtRemote(one));
+            }
+        }
+        let (mut prepare_checkout, _) = prep.fetch_then_checkout(Discard, &IS_INTERRUPTED)?;
+        let (_repo, _) = prepare_checkout.main_worktree(Discard, &IS_INTERRUPTED)?;
 
         Ok(())
     }
@@ -260,7 +269,7 @@ mod test {
     fn temp_dir_works() -> Result<()> {
         temp_env::with_var(RUNNER_TEMP_ENV, None::<String>, || {
             let repo = || -> Result<TestRepos> {
-                let repo = TestRepos::new(false, false)?;
+                let repo = TestRepos::new(false, false, false)?;
                 Ok(repo)
             }();
             assert!(repo.is_ok());
