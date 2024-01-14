@@ -747,6 +747,20 @@ mod test {
 
     #[test]
     #[serial_test::serial]
+    fn git_all_shallow_clone() -> Result<()> {
+        let repo = TestRepos::new(false, false, true)?;
+        let emitter = EmitBuilder::builder()
+            .all_git()
+            .test_emit_at(Some(repo.path()))?;
+        assert_eq!(10, emitter.cargo_rustc_env_map.len());
+        assert_eq!(0, count_idempotent(&emitter.cargo_rustc_env_map));
+        assert_eq!(0, emitter.warnings.len());
+
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::serial]
     fn git_all_idempotent_no_warn() -> Result<()> {
         let config = EmitBuilder::builder()
             .idempotent()
