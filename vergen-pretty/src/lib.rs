@@ -364,6 +364,10 @@ macro_rules! vergen_pretty_env {
             "VERGEN_CARGO_TARGET_TRIPLE",
             option_env!("VERGEN_CARGO_TARGET_TRIPLE"),
         );
+        let _old = map.insert(
+            "VERGEN_CARGO_DEPENDENCIES",
+            option_env!("VERGEN_CARGO_DEPENDENCIES"),
+        );
         let _old = map.insert("VERGEN_GIT_BRANCH", option_env!("VERGEN_GIT_BRANCH"));
         let _old = map.insert(
             "VERGEN_GIT_COMMIT_AUTHOR_EMAIL",
@@ -391,6 +395,7 @@ macro_rules! vergen_pretty_env {
         );
         let _old = map.insert("VERGEN_GIT_DESCRIBE", option_env!("VERGEN_GIT_DESCRIBE"));
         let _old = map.insert("VERGEN_GIT_SHA", option_env!("VERGEN_GIT_SHA"));
+        let _old = map.insert("VERGEN_GIT_DIRTY", option_env!("VERGEN_GIT_DIRTY"));
         let _old = map.insert("VERGEN_RUSTC_CHANNEL", option_env!("VERGEN_RUSTC_CHANNEL"));
         let _old = map.insert(
             "VERGEN_RUSTC_COMMIT_DATE",
