@@ -26,7 +26,9 @@ mod keys {
     #[cfg(feature = "build")]
     use crate::constants::{BUILD_DATE_NAME, BUILD_TIMESTAMP_NAME};
     #[cfg(feature = "cargo")]
-    use crate::constants::{CARGO_DEBUG, CARGO_FEATURES, CARGO_OPT_LEVEL, CARGO_TARGET_TRIPLE};
+    use crate::constants::{
+        CARGO_DEBUG, CARGO_DEPENDENCIES, CARGO_FEATURES, CARGO_OPT_LEVEL, CARGO_TARGET_TRIPLE,
+    };
     #[cfg(all(
         feature = "git",
         any(feature = "gitcl", feature = "git2", feature = "gix")
@@ -68,6 +70,9 @@ mod keys {
         /// The cargo target triple (VERGEN_CARGO_TARGET_TRIPLE)
         #[cfg(feature = "cargo")]
         CargoTargetTriple,
+        /// The cargo dependencies (VERGEN_CARGO_DEPENDENCIES)
+        #[cfg(feature = "cargo")]
+        CargoDependencies,
         /// The current working branch name (VERGEN_GIT_BRANCH)
         #[cfg(all(
             feature = "git",
@@ -191,6 +196,8 @@ mod keys {
                 VergenKey::CargoOptLevel => CARGO_OPT_LEVEL,
                 #[cfg(feature = "cargo")]
                 VergenKey::CargoTargetTriple => CARGO_TARGET_TRIPLE,
+                #[cfg(feature = "cargo")]
+                VergenKey::CargoDependencies => CARGO_DEPENDENCIES,
                 #[cfg(all(
                     feature = "git",
                     any(feature = "gitcl", feature = "git2", feature = "gix")

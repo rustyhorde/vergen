@@ -120,6 +120,8 @@ mod features {
     #[cfg(feature = "cargo")]
     pub(crate) const CARGO_DEBUG: &str = "VERGEN_CARGO_DEBUG";
     #[cfg(feature = "cargo")]
+    pub(crate) const CARGO_DEPENDENCIES: &str = "VERGEN_CARGO_DEPENDENCIES";
+    #[cfg(feature = "cargo")]
     pub(crate) const CARGO_FEATURES: &str = "VERGEN_CARGO_FEATURES";
     #[cfg(feature = "cargo")]
     pub(crate) const CARGO_OPT_LEVEL: &str = "VERGEN_CARGO_OPT_LEVEL";

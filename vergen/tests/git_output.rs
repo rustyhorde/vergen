@@ -237,7 +237,6 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             .emit_to_at(&mut stdout_buf, Some(repo.path()))?;
         assert!(!failed);
         let output = String::from_utf8_lossy(&stdout_buf);
-        eprintln!("{output}");
         assert!(GIT_REGEX_INST.is_match(&output));
         Ok(())
     }
