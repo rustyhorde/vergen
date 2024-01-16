@@ -4,8 +4,6 @@
 ))]
 mod test_git_git2 {
     use anyhow::Result;
-    #[cfg(feature = "git2")]
-    use git2_rs::Repository;
     use lazy_static::lazy_static;
     use regex::Regex;
     use std::env;
@@ -138,23 +136,30 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
 
     const DISABLED_OUTPUT: &str = r"";
 
-    #[cfg(feature = "git2")]
-    fn repo_exists() -> Result<()> {
-        let curr_dir = env::current_dir()?;
-        let _repo = Repository::discover(curr_dir)?;
-        Ok(())
-    }
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "gitcl")] {
+            fn repo_exists() -> Result<()> {
+                Ok(())
+            }
+        } else if #[cfg(feature = "git2")] {
+            use git2_rs::Repository;
 
-    #[cfg(feature = "gix")]
-    fn repo_exists() -> Result<()> {
-        let curr_dir = env::current_dir()?;
-        let _repo = gix::discover(curr_dir)?;
-        Ok(())
-    }
-
-    #[cfg(feature = "gitcl")]
-    fn repo_exists() -> Result<()> {
-        Ok(())
+            fn repo_exists() -> Result<()> {
+                let curr_dir = env::current_dir()?;
+                let _repo = Repository::discover(curr_dir)?;
+                Ok(())
+            }
+        } else if #[cfg(feature = "gix")] {
+            fn repo_exists() -> Result<()> {
+                let curr_dir = env::current_dir()?;
+                let _repo = gix::discover(curr_dir)?;
+                Ok(())
+            }
+        } else {
+            fn repo_exists() -> Result<()> {
+                Ok(())
+            }
+        }
     }
 
     #[test]

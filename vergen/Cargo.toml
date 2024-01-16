@@ -10,11 +10,12 @@ license = "MIT OR Apache-2.0"
 name = "vergen"
 readme = "README.md"
 repository = "https://github.com/rustyhorde/vergen"
-version = "8.2.10"
+version = "8.3.0"
 
 [package.metadata.cargo-all-features]
 denylist = [
     "cargo_metadata",
+    "cfg-if",
     "git",
     "git2",
     "git2-rs",
@@ -32,7 +33,7 @@ denylist = [
 default = []
 build = ["time"]
 cargo = ["cargo_metadata", "regex"]
-git = []
+git = ["cfg-if"]
 gitcl = ["time"]
 git2 = ["time", "git2-rs"]
 gitoxide = ["time", "gix"]
@@ -43,6 +44,7 @@ si = ["sysinfo"]
 [dependencies]
 anyhow = "1.0.72"
 cargo_metadata = { version = "0.18.1", optional = true }
+cfg-if = { version = "1.0.0", optional = true }
 git2-rs = { version = "0.18.0", package = "git2", optional = true, default-features = false }
 gix = { version = "0.57.1", optional = true, default-features = false, features = [
     "revision",

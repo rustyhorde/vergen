@@ -208,6 +208,7 @@ jobs:
           cargo test -p vergen -F build,cargo,git,gitcl,rustc,si
           cargo test -p vergen -F build,cargo,git,git2,rustc,si
           cargo test -p vergen -F build,cargo,git,gix,rustc,si
+          cargo test -p vergen -F build,cargo,git,gitcl,git2,gitoxide,rustc,si
           cargo test -p vergen-pretty -F __vergen_test
           cargo test -p vergen-pretty -F __vergen_test,color
           cargo test -p vergen-pretty -F __vergen_test,trace
@@ -274,6 +275,7 @@ jobs:
           cargo test -p vergen -F build,cargo,git,gitcl,rustc,si
           cargo test -p vergen -F build,cargo,git,git2,rustc,si
           cargo test -p vergen -F build,cargo,git,gix,rustc,si
+          cargo test -p vergen -F build,cargo,git,gitcl,git2,gitoxide,rustc,si
           cargo test -p vergen-pretty -F __vergen_test
           cargo test -p vergen-pretty -F __vergen_test,color
           cargo test -p vergen-pretty -F __vergen_test,trace
@@ -344,6 +346,7 @@ jobs:
           cargo test -p vergen -F build,cargo,git,gitcl,rustc,si
           cargo test -p vergen -F build,cargo,git,git2,rustc,si
           cargo test -p vergen -F build,cargo,git,gix,rustc,si
+          cargo test -p vergen -F build,cargo,git,gitcl,git2,gitoxide,rustc,si
           cargo test -p vergen-pretty -F __vergen_test
           cargo test -p vergen-pretty -F __vergen_test,color
           cargo test -p vergen-pretty -F __vergen_test,trace
