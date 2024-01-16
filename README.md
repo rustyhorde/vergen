@@ -71,7 +71,7 @@ vergen = { version = "8.2.10", features = ["git","gitcl"] }
 fancy-lib = "0.1.0"
 
 [build-dependencies]
-vergen = "8.2.10"`
+vergen = "8.2.10"
 ```
 #### Unified
 ```toml
