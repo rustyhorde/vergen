@@ -199,7 +199,7 @@
 //! fancy-lib = "0.1.0"
 //!
 //! [build-dependencies]
-//! vergen = "8.2.10"`
+//! vergen = "8.2.10"
 //! ```
 //! #### Unified
 //! ```toml
