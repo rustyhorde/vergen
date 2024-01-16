@@ -38,7 +38,7 @@ When a dependency is used by multiple packages, Cargo will [use the union](https
 #### fancy-lib `Cargo.toml`
 ```toml
 [build-dependencies]
-vergen = { version = "8.2.10", features = ["git","gitcl"] }`
+vergen = { version = "8.2.10", features = ["git","gitcl"] }
 ```
 
 #### your crate `Cargo.toml`
@@ -47,7 +47,7 @@ vergen = { version = "8.2.10", features = ["git","gitcl"] }`
 fancy-lib = "0.1.0"
 
 [build-dependencies]
-vergen = { version = "8.2.10", features = ["git","gitoxide"] }`
+vergen = { version = "8.2.10", features = ["git","gitoxide"] }
 ```
 
 Your crate will fail to compile because `cargo` unifies this to
@@ -62,7 +62,7 @@ a `git` backend has already been determined you will be able to use that without
 #### fancy-lib `Cargo.toml`
 ```toml
 [build-dependencies]
-vergen = { version = "8.2.10", features = ["git","gitcl"] }`
+vergen = { version = "8.2.10", features = ["git","gitcl"] }
 ```
 
 #### your crate `Cargo.toml`
