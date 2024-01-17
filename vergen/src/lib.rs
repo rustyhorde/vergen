@@ -185,7 +185,7 @@
 //! and prior to **8.3.0** `vergen` will not compile with both `gitcl` and `gitoxide` as features.
 //!
 //! As a workaround, you can use `cargo tree -f "{p} {f}" | grep vergen` to determine the feature list cargo has set for `vergen`.  If
-//! a `git` backend has already been determined you will be able to use that without declaring those features in your dependency list. This is not perfect 
+//! a `git` backend has already been determined you will be able to use that without declaring those features in your dependency list. This is not perfect
 //! as this leaves you at the mercy of your dependency and the git feature they selected, but it's a workaround until version 9 comes out.
 //!
 //! #### fancy-lib `Cargo.toml`
