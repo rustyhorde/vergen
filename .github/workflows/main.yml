@@ -214,9 +214,9 @@ jobs:
           cargo test -p vergen-pretty -F __vergen_test,trace,serde
           cargo test -p vergen-pretty -F __vergen_test,color,serde,trace
       - name: 🙊 Code Coverage (vergen) 🙊
-        run: cargo tarpaulin --config vergen/tarpaulin.toml --exclude-files vergen/src/lib.rs --exclude-files vergen-pretty/* --out xml --output-dir vergen --skip-clean --target-dir target/coverage
+        run: cargo tarpaulin --config vergen/tarpaulin.toml --exclude-files vergen/src/lib.rs --exclude-files vergen-pretty/* --exclude-files repo_util/* --exclude-files vergen-lib/* --exclude-files vergen-gix/* --out xml --output-dir vergen --skip-clean --target-dir target/coverage
       - name: 🙊 Code Coverage (vergen-pretty) 🙊
-        run: cargo tarpaulin --config vergen-pretty/tarpaulin.toml --exclude-files vergen-pretty/src/lib.rs --exclude-files vergen/* --out xml --output-dir vergen-pretty --skip-clean --target-dir target/coverage
+        run: cargo tarpaulin --config vergen-pretty/tarpaulin.toml --exclude-files vergen-pretty/src/lib.rs --exclude-files vergen/* --exclude-files repo_util/* --exclude-files vergen-lib/* --exclude-files vergen-gix/* --out xml --output-dir vergen-pretty --skip-clean --target-dir target/coverage
       - name: 🙊 Upload Code Coverage 🙊
         uses: codecov/codecov-action@v3
         with:

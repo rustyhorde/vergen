@@ -2,7 +2,9 @@
 features = "__vergen_test"
 
 [no_color]
-features = "__vergen_test header serde trace"
+# features = "__vergen_test header serde trace"
+features = "__vergen_test serde trace"
 
 [all]
-features = "__vergen_test color header serde trace"
+# features = "__vergen_test color header serde trace"
+features = "__vergen_test color serde trace"
