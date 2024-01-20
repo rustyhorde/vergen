@@ -231,9 +231,14 @@
 #![cfg_attr(all(doc, nightly), feature(doc_auto_cfg))]
 #![cfg_attr(all(docsrs, nightly), feature(doc_cfg))]
 
+#[cfg(all(test, not(feature = "repo")))]
+use serial_test as _;
+
+#[cfg(feature = "repo")]
 mod repo;
 mod utils;
 
+#[cfg(feature = "repo")]
 pub use repo::TestRepos;
 pub use utils::with_cargo_vars;
 pub use utils::with_cargo_vars_ext;

@@ -263,9 +263,10 @@ impl Drop for TestRepos {
 mod test {
     use super::{TestRepos, RUNNER_TEMP_ENV};
     use anyhow::Result;
+    use serial_test::serial;
 
     #[test]
-    #[serial_test::serial]
+    #[serial]
     fn temp_dir_works() -> Result<()> {
         temp_env::with_var(RUNNER_TEMP_ENV, None::<String>, || {
             let repo = || -> Result<TestRepos> {

@@ -140,6 +140,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             .add_instructions(&gix)?
             .emit_to(&mut stdout_buf)?;
         let output = String::from_utf8_lossy(&stdout_buf);
+        eprintln!("OUTPUT: {output}");
         assert!(!failed);
         assert!(ALL_IDEM_OUTPUT.is_match(&output));
         Ok(())

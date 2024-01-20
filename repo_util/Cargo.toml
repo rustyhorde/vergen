@@ -3,14 +3,25 @@ name = "repo_util"
 version = "0.1.0"
 edition = "2021"
 
+[package.metadata.cargo-all-features]
+denylist = [
+    "anyhow",
+    "gix",
+    "rand",
+]
+
+[features]
+default = []
+repo = ["anyhow", "gix", "rand"]
+
 [dependencies]
-anyhow = "1.0.79"
+anyhow = { version = "1.0.79", optional = true }
 gix = { version = "0.57.1", default-features = false, features = [
     "revision",
     "worktree-mutation",
     "blocking-network-client",
-] }
-rand = "0.8.5"
+], optional = true}
+rand = { version = "0.8.5", optional = true }
 temp-env = "0.3.6"
 
 [dev-dependencies]

@@ -328,26 +328,6 @@ impl Emitter {
         self.emit_instructions(stdout)
     }
 
-    #[cfg(not(any(
-        feature = "build",
-        feature = "cargo",
-        feature = "rustc",
-        feature = "si"
-    )))]
-    #[allow(clippy::unused_self, clippy::unnecessary_wraps)]
-    fn emit_instructions<T>(&self, _stdout: &mut T) -> Result<()>
-    where
-        T: Write,
-    {
-        Ok(())
-    }
-
-    #[cfg(any(
-        feature = "build",
-        feature = "cargo",
-        feature = "rustc",
-        feature = "si"
-    ))]
     fn emit_instructions<T>(&self, stdout: &mut T) -> Result<()>
     where
         T: Write,
@@ -387,12 +367,6 @@ impl Emitter {
         Ok(())
     }
 
-    #[cfg(any(
-        feature = "build",
-        feature = "cargo",
-        feature = "rustc",
-        feature = "si"
-    ))]
     fn filter_newlines(s: &str) -> String {
         s.chars().filter(|c| *c != '\n').collect()
     }

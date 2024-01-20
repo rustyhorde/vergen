@@ -24,4 +24,6 @@ cargo test -p vergen-pretty -F __vergen_test,serde,trace; and \
 # cargo test -p vergen-pretty -F __vergen_test,color,header,serde,trace; and \
 cargo doc -p vergen -F build,cargo,rustc,si; and \
 cargo doc -p vergen-gix -F build,cargo,rustc,si; and \
-cargo doc -p vergen-pretty -F color,header,trace
+cargo doc -p vergen-pretty -F color,header,trace; and \
+cargo doc -p vergen-lib -F build,cargo,git,rustc,si; and \
+cargo doc -p repo_util -F repo
