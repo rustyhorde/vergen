@@ -1,39 +1,23 @@
-use crate::emitter::{EmitBuilder, RustcEnvMap};
+// Copyright (c) 2022 vergen developers
+//
+// Licensed under the Apache License, Version 2.0
+// <LICENSE-APACHE or https://www.apache.org/licenses/LICENSE-2.0> or the MIT
+// license <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
+// option. All files in the project carrying such notice may not be copied,
+// modified, or distributed except according to those terms.
+
+use std::env;
+
 use anyhow::{Error, Result};
 use rustc_version::{version_meta, Channel, VersionMeta};
-use std::env;
 use vergen_lib::{
     add_default_map_entry, add_map_entry,
     constants::{
         RUSTC_CHANNEL_NAME, RUSTC_COMMIT_DATE, RUSTC_COMMIT_HASH, RUSTC_HOST_TRIPLE_NAME,
         RUSTC_LLVM_VERSION, RUSTC_SEMVER_NAME,
     },
-    VergenKey,
+    AddEntries, CargoRerunIfChanged, CargoRustcEnvMap, CargoWarning, DefaultConfig, VergenKey,
 };
-
-#[derive(Clone, Copy, Debug, Default)]
-#[allow(clippy::struct_excessive_bools)]
-pub(crate) struct Config {
-    pub(crate) rustc_channel: bool,
-    pub(crate) rustc_commit_date: bool,
-    pub(crate) rustc_commit_hash: bool,
-    pub(crate) rustc_host_triple: bool,
-    pub(crate) rustc_llvm_version: bool,
-    pub(crate) rustc_semver: bool,
-    #[cfg(test)]
-    rustc_str_to_test: Option<&'static str>,
-}
-
-impl Config {
-    pub(crate) fn any(self) -> bool {
-        self.rustc_channel
-            || self.rustc_commit_date
-            || self.rustc_commit_hash
-            || self.rustc_host_triple
-            || self.rustc_llvm_version
-            || self.rustc_semver
-    }
-}
 
 /// The `VERGEN_RUSTC_*` configuration features
 ///
@@ -55,10 +39,12 @@ impl Config {
 ///
 /// ```
 /// # use anyhow::Result;
-/// # use vergen::EmitBuilder;
+/// # use vergen::Emitter;
+/// # use vergen::RustcBuilder;
 /// #
 /// # fn main() -> Result<()> {
-/// EmitBuilder::builder().all_rustc().emit()?;
+/// let rustc = RustcBuilder::default().all_rustc().build();
+/// Emitter::default().add_instructions(&rustc)?.emit();
 /// #   Ok(())
 /// # }
 /// ```
@@ -67,13 +53,12 @@ impl Config {
 ///
 /// ```
 /// # use anyhow::Result;
-/// # use vergen::EmitBuilder;
+/// # use vergen::Emitter;
+/// # use vergen::RustcBuilder;
 /// #
 /// # fn main() -> Result<()> {
-/// EmitBuilder::builder()
-///     .rustc_channel()
-///     .rustc_semver()
-///     .emit()?;
+/// let rustc = RustcBuilder::default().channel().semver().build();
+/// Emitter::default().add_instructions(&rustc)?.emit();
 /// #   Ok(())
 /// # }
 /// ```
@@ -83,139 +68,162 @@ impl Config {
 /// ```
 /// # use anyhow::Result;
 /// # use std::env;
-/// # use vergen::EmitBuilder;
+/// # use vergen::Emitter;
+/// # use vergen::RustcBuilder;
 /// #
 /// # fn main() -> Result<()> {
-/// env::set_var("VERGEN_RUSTC_CHANNEL", "this is the channel I want output");
-/// EmitBuilder::builder().all_rustc().emit()?;
-/// # env::remove_var("VERGEN_BUILD_CHANNEL");
+/// temp_env::with_var("VERGEN_RUSTC_CHANNEL", Some("this is the channel I want output"), || {
+///     let result = || -> Result<()> {
+///         let rustc = RustcBuilder::default().channel().semver().build();
+///         Emitter::default().add_instructions(&rustc)?.emit();   
+///         Ok(())  
+///     }();
+///     assert!(result.is_ok());
+/// });
 /// #   Ok(())
 /// # }
 /// ```
 ///
-#[cfg_attr(docsrs, doc(cfg(feature = "rustc")))]
-impl EmitBuilder {
+#[derive(Clone, Copy, Debug, Default)]
+#[allow(clippy::struct_excessive_bools)]
+pub struct Builder {
+    channel: bool,
+    commit_date: bool,
+    commit_hash: bool,
+    host_triple: bool,
+    llvm_version: bool,
+    semver: bool,
+}
+
+impl Builder {
     /// Enable all of the `VERGEN_RUSTC_*` options
     pub fn all_rustc(&mut self) -> &mut Self {
-        self.rustc_channel()
-            .rustc_commit_date()
-            .rustc_commit_hash()
-            .rustc_host_triple()
-            .rustc_llvm_version()
-            .rustc_semver()
+        self.channel()
+            .commit_date()
+            .commit_hash()
+            .host_triple()
+            .llvm_version()
+            .semver()
     }
 
     /// Enable the rustc channel
-    pub fn rustc_channel(&mut self) -> &mut Self {
-        self.rustc_config.rustc_channel = true;
+    pub fn channel(&mut self) -> &mut Self {
+        self.channel = true;
         self
     }
 
     /// Enable the rustc commit date
-    pub fn rustc_commit_date(&mut self) -> &mut Self {
-        self.rustc_config.rustc_commit_date = true;
+    pub fn commit_date(&mut self) -> &mut Self {
+        self.commit_date = true;
         self
     }
 
     /// Enable the rustc SHA
-    pub fn rustc_commit_hash(&mut self) -> &mut Self {
-        self.rustc_config.rustc_commit_hash = true;
+    pub fn commit_hash(&mut self) -> &mut Self {
+        self.commit_hash = true;
         self
     }
 
     /// Enable rustc host triple
-    pub fn rustc_host_triple(&mut self) -> &mut Self {
-        self.rustc_config.rustc_host_triple = true;
+    pub fn host_triple(&mut self) -> &mut Self {
+        self.host_triple = true;
         self
     }
 
     /// Enable rustc LLVM version
-    pub fn rustc_llvm_version(&mut self) -> &mut Self {
-        self.rustc_config.rustc_llvm_version = true;
+    pub fn llvm_version(&mut self) -> &mut Self {
+        self.llvm_version = true;
         self
     }
 
     /// Enable the rustc semver
-    pub fn rustc_semver(&mut self) -> &mut Self {
-        self.rustc_config.rustc_semver = true;
+    pub fn semver(&mut self) -> &mut Self {
+        self.semver = true;
         self
     }
 
-    pub(crate) fn add_rustc_default(
-        &self,
-        e: Error,
-        fail_on_error: bool,
-        map: &mut RustcEnvMap,
-        warnings: &mut Vec<String>,
-    ) -> Result<()> {
-        if fail_on_error {
-            Err(e)
-        } else {
-            if self.rustc_config.rustc_channel {
-                add_default_map_entry(VergenKey::RustcChannel, map, warnings);
-            }
-            if self.rustc_config.rustc_commit_date {
-                add_default_map_entry(VergenKey::RustcCommitDate, map, warnings);
-            }
-            if self.rustc_config.rustc_commit_hash {
-                add_default_map_entry(VergenKey::RustcCommitHash, map, warnings);
-            }
-            if self.rustc_config.rustc_host_triple {
-                add_default_map_entry(VergenKey::RustcHostTriple, map, warnings);
-            }
-            if self.rustc_config.rustc_llvm_version {
-                add_default_map_entry(VergenKey::RustcLlvmVersion, map, warnings);
-            }
-            if self.rustc_config.rustc_semver {
-                add_default_map_entry(VergenKey::RustcSemver, map, warnings);
-            }
-
-            Ok(())
+    ///
+    #[must_use]
+    pub fn build(self) -> Rustc {
+        Rustc {
+            channel: self.channel,
+            commit_date: self.commit_date,
+            commit_hash: self.commit_hash,
+            host_triple: self.host_triple,
+            llvm_version: self.llvm_version,
+            semver: self.semver,
+            #[cfg(test)]
+            str_to_test: None,
         }
+    }
+}
+
+///
+#[derive(Clone, Copy, Debug, Default)]
+#[allow(clippy::struct_excessive_bools)]
+pub struct Rustc {
+    channel: bool,
+    commit_date: bool,
+    commit_hash: bool,
+    host_triple: bool,
+    llvm_version: bool,
+    semver: bool,
+    #[cfg(test)]
+    str_to_test: Option<&'static str>,
+}
+
+impl Rustc {
+    fn any(self) -> bool {
+        self.channel
+            || self.commit_date
+            || self.commit_hash
+            || self.host_triple
+            || self.llvm_version
+            || self.semver
     }
 
     #[cfg(not(test))]
-    pub(crate) fn add_rustc_map_entries(
-        &self,
-        map: &mut RustcEnvMap,
-        warnings: &mut Vec<String>,
+    fn add_rustc_map_entries(
+        self,
+        cargo_rustc_env: &mut CargoRustcEnvMap,
+        cargo_warning: &mut CargoWarning,
     ) -> Result<()> {
-        if self.rustc_config.any() {
-            self.add_rustc_to_map(version_meta(), map, warnings)?;
+        if self.any() {
+            self.add_rustc_to_map(version_meta(), cargo_rustc_env, cargo_warning)?;
         }
         Ok(())
     }
 
     #[cfg(test)]
-    pub(crate) fn add_rustc_map_entries(
-        &self,
-        map: &mut RustcEnvMap,
-        warnings: &mut Vec<String>,
+    fn add_rustc_map_entries(
+        self,
+        cargo_rustc_env: &mut CargoRustcEnvMap,
+        cargo_warning: &mut CargoWarning,
     ) -> Result<()> {
         use rustc_version::version_meta_for;
 
-        let vm = if let Some(rustc_str) = self.rustc_config.rustc_str_to_test {
+        let vm = if let Some(rustc_str) = self.str_to_test {
             version_meta_for(rustc_str)
         } else {
             version_meta()
         };
-        if self.rustc_config.any() {
-            self.add_rustc_to_map(vm, map, warnings)?;
+        if self.any() {
+            self.add_rustc_to_map(vm, cargo_rustc_env, cargo_warning)?;
         }
         Ok(())
     }
 
     fn add_rustc_to_map(
-        &self,
+        self,
         rustc_res: std::result::Result<VersionMeta, rustc_version::Error>,
-        map: &mut RustcEnvMap,
-        warnings: &mut Vec<String>,
+        cargo_rustc_env: &mut CargoRustcEnvMap,
+        cargo_warning: &mut CargoWarning,
     ) -> Result<()> {
         let rustc = rustc_res?;
 
-        if self.rustc_config.rustc_channel {
-            if let Ok(value) = env::var(RUSTC_CHANNEL_NAME) {
-                add_map_entry(VergenKey::RustcChannel, value, map);
+        if self.channel {
+            if let Ok(_value) = env::var(RUSTC_CHANNEL_NAME) {
+                add_default_map_entry(VergenKey::RustcChannel, cargo_rustc_env, cargo_warning);
             } else {
                 let channel = match rustc.channel {
                     Channel::Dev => "dev",
@@ -223,86 +231,168 @@ impl EmitBuilder {
                     Channel::Beta => "beta",
                     Channel::Stable => "stable",
                 };
-                add_map_entry(VergenKey::RustcChannel, channel, map);
+                add_map_entry(VergenKey::RustcChannel, channel, cargo_rustc_env);
             }
         }
 
-        if self.rustc_config.rustc_commit_date {
-            if let Ok(value) = env::var(RUSTC_COMMIT_DATE) {
-                add_map_entry(VergenKey::RustcCommitDate, value, map);
+        if self.commit_date {
+            if let Ok(_value) = env::var(RUSTC_COMMIT_DATE) {
+                add_default_map_entry(VergenKey::RustcCommitDate, cargo_rustc_env, cargo_warning);
             } else if let Some(commit_date) = rustc.commit_date {
-                add_map_entry(VergenKey::RustcCommitDate, commit_date, map);
+                add_map_entry(VergenKey::RustcCommitDate, commit_date, cargo_rustc_env);
             } else {
-                add_default_map_entry(VergenKey::RustcCommitDate, map, warnings);
+                add_default_map_entry(VergenKey::RustcCommitDate, cargo_rustc_env, cargo_warning);
             }
         }
 
-        if self.rustc_config.rustc_commit_hash {
-            if let Ok(value) = env::var(RUSTC_COMMIT_HASH) {
-                add_map_entry(VergenKey::RustcCommitHash, value, map);
+        if self.commit_hash {
+            if let Ok(_value) = env::var(RUSTC_COMMIT_HASH) {
+                add_default_map_entry(VergenKey::RustcCommitHash, cargo_rustc_env, cargo_warning);
             } else if let Some(commit_hash) = rustc.commit_hash {
-                add_map_entry(VergenKey::RustcCommitHash, commit_hash, map);
+                add_map_entry(VergenKey::RustcCommitHash, commit_hash, cargo_rustc_env);
             } else {
-                add_default_map_entry(VergenKey::RustcCommitHash, map, warnings);
+                add_default_map_entry(VergenKey::RustcCommitHash, cargo_rustc_env, cargo_warning);
             }
         }
 
-        if self.rustc_config.rustc_host_triple {
-            if let Ok(value) = env::var(RUSTC_HOST_TRIPLE_NAME) {
-                add_map_entry(VergenKey::RustcHostTriple, value, map);
+        if self.host_triple {
+            if let Ok(_value) = env::var(RUSTC_HOST_TRIPLE_NAME) {
+                add_default_map_entry(VergenKey::RustcHostTriple, cargo_rustc_env, cargo_warning);
             } else {
-                add_map_entry(VergenKey::RustcHostTriple, rustc.host, map);
+                add_map_entry(VergenKey::RustcHostTriple, rustc.host, cargo_rustc_env);
             }
         }
 
-        if self.rustc_config.rustc_llvm_version {
-            if let Ok(value) = env::var(RUSTC_LLVM_VERSION) {
-                add_map_entry(VergenKey::RustcLlvmVersion, value, map);
+        if self.llvm_version {
+            if let Ok(_value) = env::var(RUSTC_LLVM_VERSION) {
+                add_default_map_entry(VergenKey::RustcLlvmVersion, cargo_rustc_env, cargo_warning);
             } else if let Some(llvm_version) = rustc.llvm_version {
-                add_map_entry(VergenKey::RustcLlvmVersion, format!("{llvm_version}"), map);
+                add_map_entry(
+                    VergenKey::RustcLlvmVersion,
+                    format!("{llvm_version}"),
+                    cargo_rustc_env,
+                );
             } else {
-                add_default_map_entry(VergenKey::RustcLlvmVersion, map, warnings);
+                add_default_map_entry(VergenKey::RustcLlvmVersion, cargo_rustc_env, cargo_warning);
             }
         }
 
-        if self.rustc_config.rustc_semver {
-            if let Ok(value) = env::var(RUSTC_SEMVER_NAME) {
-                add_map_entry(VergenKey::RustcSemver, value, map);
+        if self.semver {
+            if let Ok(_value) = env::var(RUSTC_SEMVER_NAME) {
+                add_default_map_entry(VergenKey::RustcSemver, cargo_rustc_env, cargo_warning);
             } else {
-                add_map_entry(VergenKey::RustcSemver, format!("{}", rustc.semver), map);
+                add_map_entry(
+                    VergenKey::RustcSemver,
+                    format!("{}", rustc.semver),
+                    cargo_rustc_env,
+                );
             }
         }
 
         Ok(())
+    }
+
+    #[cfg(test)]
+    fn with_rustc_str(&mut self, rustc_str: &'static str) -> &mut Self {
+        self.str_to_test = Some(rustc_str);
+        self
+    }
+}
+
+impl AddEntries for Rustc {
+    fn add_map_entries(
+        &self,
+        _idempotent: bool,
+        cargo_rustc_env: &mut CargoRustcEnvMap,
+        _cargo_rerun_if_changed: &mut CargoRerunIfChanged,
+        cargo_warning: &mut CargoWarning,
+    ) -> Result<()> {
+        self.add_rustc_map_entries(cargo_rustc_env, cargo_warning)
+    }
+
+    fn add_default_entries(
+        &self,
+        config: &DefaultConfig,
+        cargo_rustc_env_map: &mut CargoRustcEnvMap,
+        _cargo_rerun_if_changed: &mut CargoRerunIfChanged,
+        cargo_warning: &mut CargoWarning,
+    ) -> Result<()> {
+        if *config.fail_on_error() {
+            let error = Error::msg(format!("{:?}", config.error()));
+            Err(error)
+        } else {
+            if self.channel {
+                add_default_map_entry(VergenKey::RustcChannel, cargo_rustc_env_map, cargo_warning);
+            }
+            if self.commit_date {
+                add_default_map_entry(
+                    VergenKey::RustcCommitDate,
+                    cargo_rustc_env_map,
+                    cargo_warning,
+                );
+            }
+            if self.commit_hash {
+                add_default_map_entry(
+                    VergenKey::RustcCommitHash,
+                    cargo_rustc_env_map,
+                    cargo_warning,
+                );
+            }
+            if self.host_triple {
+                add_default_map_entry(
+                    VergenKey::RustcHostTriple,
+                    cargo_rustc_env_map,
+                    cargo_warning,
+                );
+            }
+            if self.llvm_version {
+                add_default_map_entry(
+                    VergenKey::RustcLlvmVersion,
+                    cargo_rustc_env_map,
+                    cargo_warning,
+                );
+            }
+            if self.semver {
+                add_default_map_entry(VergenKey::RustcSemver, cargo_rustc_env_map, cargo_warning);
+            }
+
+            Ok(())
+        }
     }
 }
 
 #[cfg(test)]
 mod test {
-    use crate::{emitter::test::count_idempotent, EmitBuilder};
+    use super::Builder;
+    use crate::Emitter;
     use anyhow::Result;
-    use std::env;
+    use serial_test::serial;
+    use temp_env::with_var;
+    use vergen_lib::count_idempotent;
+    // use std::env;
 
     #[test]
-    #[serial_test::serial]
+    #[serial]
     fn rustc_all_idempotent() -> Result<()> {
-        let config = EmitBuilder::builder()
+        let rustc = Builder::default().all_rustc().build();
+        let config = Emitter::default()
             .idempotent()
-            .all_rustc()
-            .test_emit()?;
-        assert_eq!(6, config.cargo_rustc_env_map.len());
-        assert_eq!(0, count_idempotent(&config.cargo_rustc_env_map));
-        assert_eq!(0, config.warnings.len());
+            .add_instructions(&rustc)?
+            .test_emit();
+        assert_eq!(6, config.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(config.cargo_rustc_env_map()));
+        assert_eq!(0, config.warnings().len());
         Ok(())
     }
 
     #[test]
-    #[serial_test::serial]
+    #[serial]
     fn rustc_all() -> Result<()> {
-        let config = EmitBuilder::builder().all_rustc().test_emit()?;
-        assert_eq!(6, config.cargo_rustc_env_map.len());
-        assert_eq!(0, count_idempotent(&config.cargo_rustc_env_map));
-        assert_eq!(0, config.warnings.len());
+        let rustc = Builder::default().all_rustc().build();
+        let config = Emitter::default().add_instructions(&rustc)?.test_emit();
+        assert_eq!(6, config.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(config.cargo_rustc_env_map()));
+        assert_eq!(0, config.warnings().len());
         Ok(())
     }
 
@@ -312,19 +402,20 @@ commit-hash: 270c94e484e19764a2832ef918c95224eb3f17c7
 commit-date: 2022-12-28
 host: x86_64-unknown-linux-gnu
 release: 1.68.0-nightly
-";
+    ";
 
     #[test]
-    #[serial_test::serial]
+    #[serial]
     fn no_llvm_in_rustc() -> Result<()> {
-        let mut config = EmitBuilder::builder();
-        _ = config.fail_on_error();
-        _ = config.all_rustc();
-        config.rustc_config.rustc_str_to_test = Some(NO_LLVM);
-        let emitter = config.test_emit()?;
-        assert_eq!(6, emitter.cargo_rustc_env_map.len());
-        assert_eq!(1, count_idempotent(&emitter.cargo_rustc_env_map));
-        assert_eq!(1, emitter.warnings.len());
+        let mut rustc = Builder::default().all_rustc().build();
+        let _ = rustc.with_rustc_str(NO_LLVM);
+        let emitter = Emitter::default()
+            .fail_on_error()
+            .add_instructions(&rustc)?
+            .test_emit();
+        assert_eq!(6, emitter.cargo_rustc_env_map().len());
+        assert_eq!(1, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(1, emitter.warnings().len());
         Ok(())
     }
 
@@ -335,19 +426,20 @@ commit-date: 2022-12-28
 host: x86_64-unknown-linux-gnu
 release: 1.68.0-dev
 LLVM version: 15.0.6
-";
+    ";
 
     #[test]
-    #[serial_test::serial]
+    #[serial]
     fn rustc_dev_build() -> Result<()> {
-        let mut config = EmitBuilder::builder();
-        _ = config.fail_on_error();
-        _ = config.all_rustc();
-        config.rustc_config.rustc_str_to_test = Some(DEV_BUILD);
-        let emitter = config.test_emit()?;
-        assert_eq!(6, emitter.cargo_rustc_env_map.len());
-        assert_eq!(0, count_idempotent(&emitter.cargo_rustc_env_map));
-        assert_eq!(0, emitter.warnings.len());
+        let mut rustc = Builder::default().all_rustc().build();
+        let _ = rustc.with_rustc_str(DEV_BUILD);
+        let emitter = Emitter::default()
+            .fail_on_error()
+            .add_instructions(&rustc)?
+            .test_emit();
+        assert_eq!(6, emitter.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(0, emitter.warnings().len());
         Ok(())
     }
 
@@ -358,133 +450,181 @@ commit-date: unknown
 host: x86_64-unknown-linux-gnu
 release: 1.68.0-dev
 LLVM version: 15.0.6
-";
+    ";
 
     #[test]
-    #[serial_test::serial]
+    #[serial]
     fn rustc_unknown_bits() -> Result<()> {
-        let mut config = EmitBuilder::builder();
-        _ = config.fail_on_error();
-        _ = config.all_rustc();
-        config.rustc_config.rustc_str_to_test = Some(UNKNOWN_BITS);
-        let emitter = config.test_emit()?;
-        assert_eq!(6, emitter.cargo_rustc_env_map.len());
-        assert_eq!(2, count_idempotent(&emitter.cargo_rustc_env_map));
-        assert_eq!(2, emitter.warnings.len());
+        let mut rustc = Builder::default().all_rustc().build();
+        let _ = rustc.with_rustc_str(UNKNOWN_BITS);
+        let emitter = Emitter::default()
+            .fail_on_error()
+            .add_instructions(&rustc)?
+            .test_emit();
+        assert_eq!(6, emitter.cargo_rustc_env_map().len());
+        assert_eq!(2, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(2, emitter.warnings().len());
         Ok(())
     }
 
     #[test]
-    #[serial_test::serial]
-    fn rustc_fails_on_bad_input() -> Result<()> {
-        let mut config = EmitBuilder::builder();
-        _ = config.fail_on_error();
-        _ = config.all_rustc();
-        config.rustc_config.rustc_str_to_test = Some("a_bad_rustcvv_string");
-        assert!(config.test_emit().is_err());
-        Ok(())
+    #[serial]
+    fn rustc_fails_on_bad_input() {
+        let result = || -> Result<()> {
+            let mut rustc = Builder::default().all_rustc().build();
+            let _ = rustc.with_rustc_str("a_bad_rustcvv_string");
+            let _emitter = Emitter::default()
+                .fail_on_error()
+                .add_instructions(&rustc)?
+                .test_emit();
+            Ok(())
+        }();
+        assert!(result.is_err());
     }
 
     #[test]
-    #[serial_test::serial]
+    #[serial]
     fn rustc_defaults_on_bad_input() -> Result<()> {
-        let mut config = EmitBuilder::builder();
-        _ = config.all_rustc();
-        config.rustc_config.rustc_str_to_test = Some("a_bad_rustcvv_string");
-        let emitter = config.test_emit()?;
-        assert_eq!(6, emitter.cargo_rustc_env_map.len());
-        assert_eq!(6, count_idempotent(&emitter.cargo_rustc_env_map));
-        assert_eq!(6, emitter.warnings.len());
+        let mut rustc = Builder::default().all_rustc().build();
+        let _ = rustc.with_rustc_str("a_bad_rustcvv_string");
+        let emitter = Emitter::default().add_instructions(&rustc)?.test_emit();
+        assert_eq!(6, emitter.cargo_rustc_env_map().len());
+        assert_eq!(6, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(6, emitter.warnings().len());
         Ok(())
     }
 
     #[test]
-    #[serial_test::serial]
-    fn rustc_channel_override_works() -> Result<()> {
-        env::set_var("VERGEN_RUSTC_CHANNEL", "this is a bad date");
-        let mut stdout_buf = vec![];
-        assert!(EmitBuilder::builder()
-            .all_rustc()
-            .emit_to(&mut stdout_buf)
-            .is_ok());
-        let output = String::from_utf8_lossy(&stdout_buf);
-        assert!(output.contains("cargo:rustc-env=VERGEN_RUSTC_CHANNEL=this is a bad date"));
-        env::remove_var("VERGEN_RUSTC_CHANNEL");
-        Ok(())
+    #[serial]
+    fn rustc_channel_override_works() {
+        with_var("VERGEN_RUSTC_CHANNEL", Some("this is a bad date"), || {
+            let result = || -> Result<()> {
+                let mut stdout_buf = vec![];
+                let rustc = Builder::default().all_rustc().build();
+                assert!(Emitter::default()
+                    .add_instructions(&rustc)?
+                    .emit_to(&mut stdout_buf)
+                    .is_ok());
+                let output = String::from_utf8_lossy(&stdout_buf);
+                assert!(output.contains("cargo:rustc-env=VERGEN_RUSTC_CHANNEL=this is a bad date"));
+                Ok(())
+            }();
+            assert!(result.is_ok());
+        });
     }
 
     #[test]
-    #[serial_test::serial]
-    fn rustc_commit_date_override_works() -> Result<()> {
-        env::set_var("VERGEN_RUSTC_COMMIT_DATE", "this is a bad date");
-        let mut stdout_buf = vec![];
-        assert!(EmitBuilder::builder()
-            .all_rustc()
-            .emit_to(&mut stdout_buf)
-            .is_ok());
-        let output = String::from_utf8_lossy(&stdout_buf);
-        assert!(output.contains("cargo:rustc-env=VERGEN_RUSTC_COMMIT_DATE=this is a bad date"));
-        env::remove_var("VERGEN_RUSTC_COMMIT_DATE");
-        Ok(())
+    #[serial]
+    fn rustc_commit_date_override_works() {
+        with_var(
+            "VERGEN_RUSTC_COMMIT_DATE",
+            Some("this is a bad date"),
+            || {
+                let result = || -> Result<()> {
+                    let mut stdout_buf = vec![];
+                    let rustc = Builder::default().all_rustc().build();
+                    assert!(Emitter::default()
+                        .add_instructions(&rustc)?
+                        .emit_to(&mut stdout_buf)
+                        .is_ok());
+                    let output = String::from_utf8_lossy(&stdout_buf);
+                    assert!(output
+                        .contains("cargo:rustc-env=VERGEN_RUSTC_COMMIT_DATE=this is a bad date"));
+                    Ok(())
+                }();
+                assert!(result.is_ok());
+            },
+        );
     }
 
     #[test]
-    #[serial_test::serial]
-    fn rustc_commit_hash_override_works() -> Result<()> {
-        env::set_var("VERGEN_RUSTC_COMMIT_HASH", "this is a bad date");
-        let mut stdout_buf = vec![];
-        assert!(EmitBuilder::builder()
-            .all_rustc()
-            .emit_to(&mut stdout_buf)
-            .is_ok());
-        let output = String::from_utf8_lossy(&stdout_buf);
-        assert!(output.contains("cargo:rustc-env=VERGEN_RUSTC_COMMIT_HASH=this is a bad date"));
-        env::remove_var("VERGEN_RUSTC_COMMIT_HASH");
-        Ok(())
+    #[serial]
+    fn rustc_commit_hash_override_works() {
+        with_var(
+            "VERGEN_RUSTC_COMMIT_HASH",
+            Some("this is a bad date"),
+            || {
+                let result = || -> Result<()> {
+                    let mut stdout_buf = vec![];
+                    let rustc = Builder::default().all_rustc().build();
+                    assert!(Emitter::default()
+                        .add_instructions(&rustc)?
+                        .emit_to(&mut stdout_buf)
+                        .is_ok());
+                    let output = String::from_utf8_lossy(&stdout_buf);
+                    assert!(output
+                        .contains("cargo:rustc-env=VERGEN_RUSTC_COMMIT_HASH=this is a bad date"));
+                    Ok(())
+                }();
+                assert!(result.is_ok());
+            },
+        );
     }
 
     #[test]
-    #[serial_test::serial]
-    fn rustc_host_triple_override_works() -> Result<()> {
-        env::set_var("VERGEN_RUSTC_HOST_TRIPLE", "this is a bad date");
-        let mut stdout_buf = vec![];
-        assert!(EmitBuilder::builder()
-            .all_rustc()
-            .emit_to(&mut stdout_buf)
-            .is_ok());
-        let output = String::from_utf8_lossy(&stdout_buf);
-        assert!(output.contains("cargo:rustc-env=VERGEN_RUSTC_HOST_TRIPLE=this is a bad date"));
-        env::remove_var("VERGEN_RUSTC_HOST_TRIPLE");
-        Ok(())
+    #[serial]
+    fn rustc_host_triple_override_works() {
+        with_var(
+            "VERGEN_RUSTC_HOST_TRIPLE",
+            Some("this is a bad date"),
+            || {
+                let result = || -> Result<()> {
+                    let mut stdout_buf = vec![];
+                    let rustc = Builder::default().all_rustc().build();
+                    assert!(Emitter::default()
+                        .add_instructions(&rustc)?
+                        .emit_to(&mut stdout_buf)
+                        .is_ok());
+                    let output = String::from_utf8_lossy(&stdout_buf);
+                    assert!(output
+                        .contains("cargo:rustc-env=VERGEN_RUSTC_HOST_TRIPLE=this is a bad date"));
+                    Ok(())
+                }();
+                assert!(result.is_ok());
+            },
+        );
     }
 
     #[test]
-    #[serial_test::serial]
-    fn rustc_llvm_version_override_works() -> Result<()> {
-        env::set_var("VERGEN_RUSTC_LLVM_VERSION", "this is a bad date");
-        let mut stdout_buf = vec![];
-        assert!(EmitBuilder::builder()
-            .all_rustc()
-            .emit_to(&mut stdout_buf)
-            .is_ok());
-        let output = String::from_utf8_lossy(&stdout_buf);
-        assert!(output.contains("cargo:rustc-env=VERGEN_RUSTC_LLVM_VERSION=this is a bad date"));
-        env::remove_var("VERGEN_RUSTC_LLVM_VERSION");
-        Ok(())
+    #[serial]
+    fn rustc_llvm_version_override_works() {
+        with_var(
+            "VERGEN_RUSTC_LLVM_VERSION",
+            Some("this is a bad date"),
+            || {
+                let result = || -> Result<()> {
+                    let mut stdout_buf = vec![];
+                    let rustc = Builder::default().all_rustc().build();
+                    assert!(Emitter::default()
+                        .add_instructions(&rustc)?
+                        .emit_to(&mut stdout_buf)
+                        .is_ok());
+                    let output = String::from_utf8_lossy(&stdout_buf);
+                    assert!(output
+                        .contains("cargo:rustc-env=VERGEN_RUSTC_LLVM_VERSION=this is a bad date"));
+                    Ok(())
+                }();
+                assert!(result.is_ok());
+            },
+        );
     }
 
     #[test]
-    #[serial_test::serial]
-    fn rustc_semver_override_works() -> Result<()> {
-        env::set_var("VERGEN_RUSTC_SEMVER", "this is a bad date");
-        let mut stdout_buf = vec![];
-        assert!(EmitBuilder::builder()
-            .all_rustc()
-            .emit_to(&mut stdout_buf)
-            .is_ok());
-        let output = String::from_utf8_lossy(&stdout_buf);
-        assert!(output.contains("cargo:rustc-env=VERGEN_RUSTC_SEMVER=this is a bad date"));
-        env::remove_var("VERGEN_RUSTC_SEMVER");
-        Ok(())
+    #[serial]
+    fn rustc_semver_override_works() {
+        with_var("VERGEN_RUSTC_SEMVER", Some("this is a bad date"), || {
+            let result = || -> Result<()> {
+                let mut stdout_buf = vec![];
+                let rustc = Builder::default().all_rustc().build();
+                assert!(Emitter::default()
+                    .add_instructions(&rustc)?
+                    .emit_to(&mut stdout_buf)
+                    .is_ok());
+                let output = String::from_utf8_lossy(&stdout_buf);
+                assert!(output.contains("cargo:rustc-env=VERGEN_RUSTC_SEMVER=this is a bad date"));
+                Ok(())
+            }();
+            assert!(result.is_ok());
+        });
     }
 }

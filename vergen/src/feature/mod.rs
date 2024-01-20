@@ -10,7 +10,7 @@
 pub(crate) mod build;
 #[cfg(feature = "cargo")]
 pub(crate) mod cargo;
-// #[cfg(feature = "rustc")]
-// pub(crate) mod rustc;
+#[cfg(feature = "rustc")]
+pub(crate) mod rustc;
 // #[cfg(feature = "si")]
 // pub(crate) mod si;

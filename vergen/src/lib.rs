@@ -546,6 +546,8 @@ pub use cargo_metadata::DependencyKind;
 pub use feature::build::Builder as BuildBuilder;
 #[cfg(feature = "cargo")]
 pub use feature::cargo::Builder as CargoBuilder;
+#[cfg(feature = "rustc")]
+pub use feature::rustc::Builder as RustcBuilder;
 #[cfg(feature = "si")]
 pub use sysinfo::CpuRefreshKind;
 #[cfg(feature = "si")]
