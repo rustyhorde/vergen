@@ -1,3 +1,3 @@
 mod gix;
 
-pub use gix::GixBuilder;
+pub use crate::gix::GixBuilder;
