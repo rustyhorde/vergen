@@ -4,8 +4,8 @@ mod test_cargo {
     use cargo_metadata::DependencyKind;
     use lazy_static::lazy_static;
     use regex::Regex;
-    use repo_util::with_cargo_vars;
     use serial_test::serial;
+    use test_util::with_cargo_vars;
     use vergen::CargoBuilder;
     use vergen::Emitter;
 

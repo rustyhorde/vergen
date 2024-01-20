@@ -8,7 +8,7 @@ mod test_git_gix {
     use vergen::Emitter;
     use vergen_gix::GixBuilder;
 
-    use repo_util::TestRepos;
+    use test_util::TestRepos;
 
     lazy_static! {
         static ref GIT_BRANCH_RE_STR: &'static str = r"cargo:rustc-env=VERGEN_GIT_BRANCH=.*";
@@ -253,7 +253,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
     //     use anyhow::Result;
     //     use vergen::EmitBuilder;
 
-    //     use repo_util::TestRepos;
+    //     use test_util::TestRepos;
 
     //     const GIT_DIRTY_TRUE_OUTPUT: &str = r"cargo:rustc-env=VERGEN_GIT_DIRTY=true";
     //     const GIT_DIRTY_FALSE_OUTPUT: &str = r"cargo:rustc-env=VERGEN_GIT_DIRTY=false";

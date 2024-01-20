@@ -51,7 +51,7 @@ rustversion = "1.0.14"
 [dev-dependencies]
 lazy_static = "1.4.0"
 regex = "1.9.1"
-repo_util = { path = "../repo_util" }
+test_util = { path = "../test_util" }
 serial_test = "3.0.0"
 temp-env = "0.3.6"
 

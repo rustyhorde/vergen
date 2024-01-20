@@ -6,7 +6,7 @@
 // option. All files in the project carrying such notice may not be copied,
 // modified, or distributed except according to those terms.
 
-//! `repo_util` - `gix` repository test utilities
+//! `test_util` - Test utilities for the `vergen` libraries
 
 #![cfg_attr(docsrs, feature(doc_cfg))]
 // rustc lints

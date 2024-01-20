@@ -1,6 +1,6 @@
 #!/usr/bin/env fish
 cargo fmt --all -- --check; and \
-cargo clippy -p repo_util --all-targets -- -Dwarnings; and \
+cargo clippy -p test_util --all-targets -- -Dwarnings; and \
 cargo clippy -p vergen --all-targets --features build,cargo,rustc,si -- -Dwarnings; and \
 cargo clippy -p vergen-gix --all-targets --features build,cargo,rustc,si -- -Dwarnings; and \
 cargo clippy -p vergen-lib --all-targets --features build,cargo,git,rustc,si -- -Dwarnings; and \
@@ -26,4 +26,4 @@ cargo doc -p vergen -F build,cargo,rustc,si; and \
 cargo doc -p vergen-gix -F build,cargo,rustc,si; and \
 cargo doc -p vergen-pretty -F color,header,trace; and \
 cargo doc -p vergen-lib -F build,cargo,git,rustc,si; and \
-cargo doc -p repo_util -F repo
+cargo doc -p test_util -F repo

@@ -637,8 +637,8 @@ mod test {
 
     use super::GixBuilder;
     use anyhow::Result;
-    use repo_util::TestRepos;
     use serial_test::serial;
+    use test_util::TestRepos;
     use vergen::Emitter;
     use vergen_lib::count_idempotent;
 
