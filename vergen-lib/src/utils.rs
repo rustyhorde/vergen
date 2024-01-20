@@ -21,3 +21,9 @@ where
 {
     let _old = map.insert(key, value.into());
 }
+
+pub fn count_idempotent(map: &CargoRustcEnvMap) -> usize {
+    map.values()
+        .filter(|x| *x == VERGEN_IDEMPOTENT_DEFAULT)
+        .count()
+}

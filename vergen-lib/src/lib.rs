@@ -11,3 +11,4 @@ pub use entries::DefaultConfig;
 pub use keys::vergen_key::VergenKey;
 pub use utils::add_default_map_entry;
 pub use utils::add_map_entry;
+pub use utils::count_idempotent;

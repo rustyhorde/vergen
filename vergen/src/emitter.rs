@@ -7,7 +7,6 @@
 // modified, or distributed except according to those terms.
 
 use anyhow::Result;
-#[cfg(test)]
 use getset::Getters;
 use std::{
     env,
@@ -17,18 +16,20 @@ use vergen_lib::{AddEntries, CargoRustcEnvMap, DefaultConfig};
 
 /// The `Emitter` will emit cargo instructions (i.e. cargo:rustc-env=NAME=VALUE)
 /// base on the configuration you enable.
-#[derive(Clone, Debug)]
-#[cfg_attr(test, derive(Getters))]
+#[derive(Clone, Debug, Getters)]
 pub struct Emitter {
     idempotent: bool,
     fail_on_error: bool,
     quiet: bool,
     custom_buildrs: Option<&'static str>,
-    #[cfg_attr(test, getset(get = "pub(crate)"))]
+    #[getset(get = "pub")]
+    #[doc(hidden)]
     cargo_rustc_env_map: CargoRustcEnvMap,
-    #[cfg_attr(test, getset(get = "pub(crate)"))]
+    #[getset(get = "pub")]
+    #[doc(hidden)]
     rerun_if_changed: Vec<String>,
-    #[cfg_attr(test, getset(get = "pub(crate)"))]
+    #[getset(get = "pub")]
+    #[doc(hidden)]
     warnings: Vec<String>,
 }
 
@@ -543,8 +544,8 @@ EmitBuilder::builder()
         self.emit_output(stdout).map(|()| false)
     }
 
-    #[cfg(all(test, any(feature = "build", feature = "cargo")))]
-    pub(crate) fn test_emit(&self) -> Emitter {
+    #[doc(hidden)]
+    pub fn test_emit(&self) -> Emitter {
         self.clone()
     }
 }
@@ -554,15 +555,6 @@ pub(crate) mod test {
     use super::Emitter;
     use anyhow::Result;
     use serial_test::serial;
-
-    #[cfg(any(feature = "build", feature = "cargo"))]
-    pub(crate) fn count_idempotent(map: &vergen_lib::CargoRustcEnvMap) -> usize {
-        use vergen_lib::constants::VERGEN_IDEMPOTENT_DEFAULT;
-
-        map.values()
-            .filter(|x| *x == VERGEN_IDEMPOTENT_DEFAULT)
-            .count()
-    }
 
     #[test]
     #[serial]

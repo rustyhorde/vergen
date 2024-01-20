@@ -309,9 +309,10 @@ impl AddEntries for Build {
 #[cfg(test)]
 mod test {
     use super::Builder;
-    use crate::{emitter::test::count_idempotent, Emitter};
+    use crate::Emitter;
     use anyhow::Result;
     use serial_test::serial;
+    use vergen_lib::count_idempotent;
 
     #[test]
     #[serial]

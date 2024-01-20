@@ -183,7 +183,6 @@ impl GixBuilder {
     ///
     pub fn build(self) -> Gix {
         Gix {
-            idempotent: matches!(env::var("VERGEN_IDEMPOTENT"), Ok(_val)),
             repo_path: None,
             branch: self.branch,
             commit_author_name: self.commit_author_name,
@@ -206,7 +205,6 @@ impl GixBuilder {
 #[derive(Clone, Debug, Default)]
 #[allow(clippy::struct_excessive_bools)]
 pub struct Gix {
-    idempotent: bool,
     repo_path: Option<PathBuf>,
     // git rev-parse --abbrev-ref HEAD
     branch: bool,
@@ -255,12 +253,18 @@ impl Gix {
     #[cfg(not(test))]
     fn add_entries(
         &self,
+        idempotent: bool,
         cargo_rustc_env: &mut CargoRustcEnvMap,
         cargo_rerun_if_changed: &mut CargoRerunIfChanged,
         cargo_warning: &mut CargoWarning,
     ) -> Result<()> {
         if self.any() {
-            self.inner_add_git_map_entries(cargo_rustc_env, cargo_rerun_if_changed, cargo_warning)?;
+            self.inner_add_git_map_entries(
+                idempotent,
+                cargo_rustc_env,
+                cargo_rerun_if_changed,
+                cargo_warning,
+            )?;
         }
         Ok(())
     }
@@ -268,6 +272,7 @@ impl Gix {
     #[cfg(test)]
     fn add_entries(
         &self,
+        idempotent: bool,
         cargo_rustc_env: &mut CargoRustcEnvMap,
         cargo_rerun_if_changed: &mut CargoRerunIfChanged,
         cargo_warning: &mut CargoWarning,
@@ -276,13 +281,19 @@ impl Gix {
             if self.fail {
                 return Err(anyhow!("failed to create entries"));
             }
-            self.inner_add_git_map_entries(cargo_rustc_env, cargo_rerun_if_changed, cargo_warning)?;
+            self.inner_add_git_map_entries(
+                idempotent,
+                cargo_rustc_env,
+                cargo_rerun_if_changed,
+                cargo_warning,
+            )?;
         }
         Ok(())
     }
 
     fn inner_add_git_map_entries(
         &self,
+        idempotent: bool,
         cargo_rustc_env: &mut CargoRustcEnvMap,
         cargo_rerun_if_changed: &mut CargoRerunIfChanged,
         cargo_warning: &mut CargoWarning,
@@ -297,13 +308,13 @@ impl Gix {
         let git_path = repo.git_dir().to_path_buf();
         let commit = Self::get_commit(&repo, &mut head)?;
 
-        if !self.idempotent && self.any() {
+        if !idempotent && self.any() {
             Self::add_rerun_if_changed(&head, &git_path, cargo_rerun_if_changed);
         }
 
         if self.branch {
-            if let Ok(value) = env::var(GIT_BRANCH_NAME) {
-                add_map_entry(VergenKey::GitBranch, value, cargo_rustc_env);
+            if let Ok(_value) = env::var(GIT_BRANCH_NAME) {
+                add_default_map_entry(VergenKey::GitBranch, cargo_rustc_env, cargo_warning);
             } else {
                 let branch_name = head
                     .referent_name()
@@ -313,8 +324,12 @@ impl Gix {
         }
 
         if self.commit_author_email {
-            if let Ok(value) = env::var(GIT_COMMIT_AUTHOR_EMAIL) {
-                add_map_entry(VergenKey::GitCommitAuthorEmail, value, cargo_rustc_env);
+            if let Ok(_value) = env::var(GIT_COMMIT_AUTHOR_EMAIL) {
+                add_default_map_entry(
+                    VergenKey::GitCommitAuthorEmail,
+                    cargo_rustc_env,
+                    cargo_warning,
+                );
             } else {
                 let email = String::from_utf8_lossy(commit.author()?.email);
                 add_map_entry(
@@ -326,8 +341,12 @@ impl Gix {
         }
 
         if self.commit_author_name {
-            if let Ok(value) = env::var(GIT_COMMIT_AUTHOR_NAME) {
-                add_map_entry(VergenKey::GitCommitAuthorName, value, cargo_rustc_env);
+            if let Ok(_value) = env::var(GIT_COMMIT_AUTHOR_NAME) {
+                add_default_map_entry(
+                    VergenKey::GitCommitAuthorName,
+                    cargo_rustc_env,
+                    cargo_warning,
+                );
             } else {
                 let name = String::from_utf8_lossy(commit.author()?.name);
                 add_map_entry(
@@ -339,8 +358,8 @@ impl Gix {
         }
 
         if self.commit_count {
-            if let Ok(value) = env::var(GIT_COMMIT_COUNT) {
-                add_map_entry(VergenKey::GitCommitCount, value, cargo_rustc_env);
+            if let Ok(_value) = env::var(GIT_COMMIT_COUNT) {
+                add_default_map_entry(VergenKey::GitCommitCount, cargo_rustc_env, cargo_warning);
             } else {
                 add_map_entry(
                     VergenKey::GitCommitCount,
@@ -350,11 +369,11 @@ impl Gix {
             }
         }
 
-        self.add_git_timestamp_entries(&commit, cargo_rustc_env, cargo_warning)?;
+        self.add_git_timestamp_entries(idempotent, &commit, cargo_rustc_env, cargo_warning)?;
 
         if self.commit_message {
-            if let Ok(value) = env::var(GIT_COMMIT_MESSAGE) {
-                add_map_entry(VergenKey::GitCommitMessage, value, cargo_rustc_env);
+            if let Ok(_value) = env::var(GIT_COMMIT_MESSAGE) {
+                add_default_map_entry(VergenKey::GitCommitMessage, cargo_rustc_env, cargo_warning);
             } else {
                 let message = String::from_utf8_lossy(commit.message_raw()?);
                 add_map_entry(
@@ -366,8 +385,8 @@ impl Gix {
         }
 
         if self.describe {
-            if let Ok(value) = env::var(GIT_DESCRIBE_NAME) {
-                add_map_entry(VergenKey::GitDescribe, value, cargo_rustc_env);
+            if let Ok(_value) = env::var(GIT_DESCRIBE_NAME) {
+                add_default_map_entry(VergenKey::GitDescribe, cargo_rustc_env, cargo_warning);
             } else {
                 let describe = if let Some(mut fmt) = commit.describe().try_format()? {
                     if fmt.depth > 0 && self.describe_dirty {
@@ -382,8 +401,8 @@ impl Gix {
         }
 
         if self.sha {
-            if let Ok(value) = env::var(GIT_SHA_NAME) {
-                add_map_entry(VergenKey::GitSha, value, cargo_rustc_env);
+            if let Ok(_value) = env::var(GIT_SHA_NAME) {
+                add_default_map_entry(VergenKey::GitSha, cargo_rustc_env, cargo_warning);
             } else {
                 let id = if self.sha_short {
                     commit.short_id()?.to_string()
@@ -437,6 +456,7 @@ impl Gix {
 
     fn add_git_timestamp_entries(
         &self,
+        idempotent: bool,
         commit: &Commit<'_>,
         cargo_rustc_env: &mut CargoRustcEnvMap,
         cargo_warning: &mut CargoWarning,
@@ -459,28 +479,33 @@ impl Gix {
             Err(e) => return Err(e.into()),
         };
 
-        if let Ok(value) = env::var(GIT_COMMIT_DATE_NAME) {
-            add_map_entry(VergenKey::GitCommitDate, value, cargo_rustc_env);
+        if let Ok(_value) = env::var(GIT_COMMIT_DATE_NAME) {
+            add_default_map_entry(VergenKey::GitCommitDate, cargo_rustc_env, cargo_warning);
         } else {
-            self.add_git_date_entry(sde, &ts, cargo_rustc_env, cargo_warning)?;
+            self.add_git_date_entry(idempotent, sde, &ts, cargo_rustc_env, cargo_warning)?;
         }
-        if let Ok(value) = env::var(GIT_COMMIT_TIMESTAMP_NAME) {
-            add_map_entry(VergenKey::GitCommitTimestamp, value, cargo_rustc_env);
+        if let Ok(_value) = env::var(GIT_COMMIT_TIMESTAMP_NAME) {
+            add_default_map_entry(
+                VergenKey::GitCommitTimestamp,
+                cargo_rustc_env,
+                cargo_warning,
+            );
         } else {
-            self.add_git_timestamp_entry(sde, &ts, cargo_rustc_env, cargo_warning)?;
+            self.add_git_timestamp_entry(idempotent, sde, &ts, cargo_rustc_env, cargo_warning)?;
         }
         Ok(())
     }
 
     fn add_git_date_entry(
         &self,
+        idempotent: bool,
         source_date_epoch: bool,
         ts: &OffsetDateTime,
         cargo_rustc_env: &mut CargoRustcEnvMap,
         cargo_warning: &mut CargoWarning,
     ) -> Result<()> {
         if self.commit_date {
-            if self.idempotent && !source_date_epoch {
+            if idempotent && !source_date_epoch {
                 add_default_map_entry(VergenKey::GitCommitDate, cargo_rustc_env, cargo_warning);
             } else {
                 let format = format_description::parse("[year]-[month]-[day]")?;
@@ -496,13 +521,14 @@ impl Gix {
 
     fn add_git_timestamp_entry(
         &self,
+        idempotent: bool,
         source_date_epoch: bool,
         ts: &OffsetDateTime,
         cargo_rustc_env: &mut CargoRustcEnvMap,
         cargo_warning: &mut CargoWarning,
     ) -> Result<()> {
         if self.commit_timestamp {
-            if self.idempotent && !source_date_epoch {
+            if idempotent && !source_date_epoch {
                 add_default_map_entry(
                     VergenKey::GitCommitTimestamp,
                     cargo_rustc_env,
@@ -523,12 +549,17 @@ impl Gix {
 impl AddEntries for Gix {
     fn add_map_entries(
         &self,
-        _idempotent: bool,
+        idempotent: bool,
         cargo_rustc_env: &mut CargoRustcEnvMap,
         cargo_rerun_if_changed: &mut CargoRerunIfChanged,
         cargo_warning: &mut CargoWarning,
     ) -> Result<()> {
-        self.add_entries(cargo_rustc_env, cargo_rerun_if_changed, cargo_warning)
+        self.add_entries(
+            idempotent,
+            cargo_rustc_env,
+            cargo_rerun_if_changed,
+            cargo_warning,
+        )
     }
 
     fn add_default_entries(
@@ -597,5 +628,111 @@ impl AddEntries for Gix {
             }
             Ok(())
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use std::env::temp_dir;
+
+    use super::GixBuilder;
+    use anyhow::Result;
+    use repo_util::TestRepos;
+    use serial_test::serial;
+    use vergen::Emitter;
+    use vergen_lib::count_idempotent;
+
+    #[test]
+    #[serial]
+    fn git_all_idempotent() -> Result<()> {
+        let gix = GixBuilder::default().all_git().build();
+        let emitter = Emitter::default()
+            .idempotent()
+            .add_instructions(&gix)?
+            .test_emit();
+        assert_eq!(9, emitter.cargo_rustc_env_map().len());
+        assert_eq!(2, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(2, emitter.warnings().len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn git_all_idempotent_no_warn() -> Result<()> {
+        let gix = GixBuilder::default().all_git().build();
+        let emitter = Emitter::default()
+            .idempotent()
+            .quiet()
+            .add_instructions(&gix)?
+            .test_emit();
+        assert_eq!(9, emitter.cargo_rustc_env_map().len());
+        assert_eq!(2, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(2, emitter.warnings().len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn git_all() -> Result<()> {
+        let gix = GixBuilder::default().all_git().build();
+        let emitter = Emitter::default().add_instructions(&gix)?.test_emit();
+        assert_eq!(9, emitter.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(0, emitter.warnings().len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn git_all_at_path() -> Result<()> {
+        let repo = TestRepos::new(false, false, false)?;
+        let mut gix = GixBuilder::default().all_git().build();
+        let _ = gix.at_path(repo.path());
+        let emitter = Emitter::default().add_instructions(&gix)?.test_emit();
+        assert_eq!(9, emitter.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(0, emitter.warnings().len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn git_all_shallow_clone() -> Result<()> {
+        let repo = TestRepos::new(false, false, true)?;
+        let mut gix = GixBuilder::default().all_git().build();
+        let _ = gix.at_path(repo.path());
+        let emitter = Emitter::default().add_instructions(&gix)?.test_emit();
+        assert_eq!(9, emitter.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(0, emitter.warnings().len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn git_error_fails() -> Result<()> {
+        let mut gix = GixBuilder::default().all_git().build();
+        let _ = gix.at_path(std::env::temp_dir());
+        let result = || -> Result<()> {
+            let _emitter = Emitter::default()
+                .fail_on_error()
+                .add_instructions(&gix)?
+                .test_emit();
+            Ok(())
+        }();
+        assert!(result.is_err());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn git_error_defaults() -> Result<()> {
+        let mut gix = GixBuilder::default().all_git().build();
+        let _ = gix.at_path(temp_dir());
+        let emitter = Emitter::default().add_instructions(&gix)?.test_emit();
+        assert_eq!(9, emitter.cargo_rustc_env_map().len());
+        assert_eq!(9, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(10, emitter.warnings().len());
+        Ok(())
     }
 }

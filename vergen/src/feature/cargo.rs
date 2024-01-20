@@ -420,10 +420,11 @@ impl AddEntries for Cargo {
 #[cfg(test)]
 mod test {
     use super::Builder;
-    use crate::{emitter::test::count_idempotent, Emitter};
+    use crate::Emitter;
     use anyhow::Result;
     use repo_util::{with_cargo_vars, with_cargo_vars_ext};
     use serial_test::serial;
+    use vergen_lib::count_idempotent;
 
     #[test]
     #[serial]

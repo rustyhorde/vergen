@@ -217,10 +217,14 @@ jobs:
         run: cargo tarpaulin --config vergen/tarpaulin.toml --exclude-files vergen/src/lib.rs vergen-pretty/**/* vergen-gix/**/* vergen-lib/**/* repo_util/**/* --out xml --output-dir vergen --skip-clean --target-dir target/coverage
       - name: 🙊 Code Coverage (vergen-pretty) 🙊
         run: cargo tarpaulin --config vergen-pretty/tarpaulin.toml --exclude-files vergen-pretty/src/lib.rs --exclude-files vergen/**/* vergen-gix/**/* vergen-lib/**/* repo_util/**/* --out xml --output-dir vergen-pretty --skip-clean --target-dir target/coverage
+      - name: 🙊 Code Coverage (vergen-gix) 🙊
+        run: cargo tarpaulin --config vergen-gix/tarpaulin.toml --exclude-files vergen-gix/src/lib.rs --exclude-files vergen/**/* vergen-pretty/**/* vergen-lib/**/* repo_util/**/* --out xml --output-dir vergen-gix --skip-clean --target-dir target/coverage
+      - name: 🙊 Code Coverage (vergen-lib) 🙊
+        run: cargo tarpaulin --config vergen-lib/tarpaulin.toml --exclude-files vergen-lib/src/lib.rs --exclude-files vergen/**/* vergen-pretty/**/* vergen-gix/**/* repo_util/**/* --out xml --output-dir vergen-lib --skip-clean --target-dir target/coverage
       - name: 🙊 Upload Code Coverage 🙊
         uses: codecov/codecov-action@v3
         with:
-          files: ./vergen/cobertura.xml,./vergen-pretty/cobertura.xml
+          files: ./vergen/cobertura.xml,./vergen-pretty/cobertura.xml,./vergen-gix/cobertura.xml,./vergen-lib/cobertura.xml
   test-macos:
     name: 🧪 MacOS 🧪
     needs: lints-macos
