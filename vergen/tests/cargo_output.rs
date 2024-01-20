@@ -1,11 +1,13 @@
 #[cfg(feature = "cargo")]
-mod test_build {
+mod test_cargo {
     use anyhow::Result;
     use cargo_metadata::DependencyKind;
     use lazy_static::lazy_static;
     use regex::Regex;
-    use std::env;
-    use vergen::EmitBuilder;
+    use repo_util::with_cargo_vars;
+    use serial_test::serial;
+    use vergen::CargoBuilder;
+    use vergen::Emitter;
 
     lazy_static! {
         static ref CARGO_DEBUG_RE_STR: &'static str =
@@ -20,7 +22,7 @@ mod test_build {
         static ref CARGO_DEP_NAME_RE_STR: &'static str =
             r"(?m)^cargo:rustc-env=VERGEN_CARGO_DEPENDENCIES=anyhow 1\.0\.[0-9]{2,}$";
         static ref CARGO_DEP_DK_RE_STR: &'static str =
-            r"(?m)^cargo:rustc-env=VERGEN_CARGO_DEPENDENCIES=gix 0\.57\.[0-9]{1,}$";
+            r"(?m)^cargo:rustc-env=VERGEN_CARGO_DEPENDENCIES=regex 1\.[0-9]{1,}\.[0-9]{1,}$";
         static ref CARGO_DEP_RV_RE_STR: &'static str =
             r"(?m)^cargo:rustc-env=VERGEN_CARGO_DEPENDENCIES=rustversion 1\.0\.[0-9]{2,}$";
         static ref CARGO_REGEX: Regex = {
@@ -49,129 +51,128 @@ mod test_build {
         static ref CARGO_REGEX_RV: Regex = Regex::new(&CARGO_DEP_RV_RE_STR).unwrap();
     }
 
-    fn setup() {
-        env::set_var("CARGO_FEATURE_BUILD", "build");
-        env::set_var("CARGO_FEATURE_GIT", "git");
-        env::set_var("DEBUG", "true");
-        env::set_var("OPT_LEVEL", "1");
-        env::set_var("TARGET", "x86_64-unknown-linux-gnu");
-    }
-
-    fn teardown() {
-        env::remove_var("CARGO_FEATURE_BUILD");
-        env::remove_var("CARGO_FEATURE_GIT");
-        env::remove_var("DEBUG");
-        env::remove_var("OPT_LEVEL");
-        env::remove_var("TARGET");
-    }
-
-    const DISABLED_OUTPUT: &str = r"";
-
     #[test]
-    #[serial_test::serial]
-    fn cargo_all_output() -> Result<()> {
-        setup();
-        let mut stdout_buf = vec![];
-        EmitBuilder::builder()
-            .all_cargo()
-            .emit_to(&mut stdout_buf)?;
-        let output = String::from_utf8_lossy(&stdout_buf);
-        assert!(CARGO_REGEX.is_match(&output));
-        teardown();
-        Ok(())
+    #[serial]
+    fn cargo_all_output() {
+        with_cargo_vars(|| {
+            let result = || -> Result<()> {
+                let mut stdout_buf = vec![];
+                let cargo = CargoBuilder::default().all_cargo().build();
+                Emitter::default()
+                    .add_instructions(&cargo)?
+                    .emit_to(&mut stdout_buf)?;
+                let output = String::from_utf8_lossy(&stdout_buf);
+                assert!(CARGO_REGEX.is_match(&output));
+                Ok(())
+            }();
+            assert!(result.is_ok());
+        });
     }
 
     #[test]
     #[serial_test::serial]
-    fn cargo_disabled_output() -> Result<()> {
-        setup();
-        let mut stdout_buf = vec![];
-        EmitBuilder::builder()
-            .all_cargo()
-            .disable_cargo()
-            .emit_to(&mut stdout_buf)?;
-        let output = String::from_utf8_lossy(&stdout_buf);
-        assert_eq!(DISABLED_OUTPUT, output);
-        teardown();
-        Ok(())
+    fn cargo_all_idempotent_output() {
+        with_cargo_vars(|| {
+            let result = || -> Result<()> {
+                let mut stdout_buf = vec![];
+                let cargo = CargoBuilder::default().all_cargo().build();
+                Emitter::default()
+                    .idempotent()
+                    .add_instructions(&cargo)?
+                    .emit_to(&mut stdout_buf)?;
+                let output = String::from_utf8_lossy(&stdout_buf);
+                assert!(CARGO_REGEX.is_match(&output));
+                Ok(())
+            }();
+            assert!(result.is_ok());
+        });
     }
 
     #[test]
-    #[serial_test::serial]
-    fn cargo_all_idempotent_output() -> Result<()> {
-        setup();
-        let mut stdout_buf = vec![];
-        EmitBuilder::builder()
-            .idempotent()
-            .all_cargo()
-            .emit_to(&mut stdout_buf)?;
-        let output = String::from_utf8_lossy(&stdout_buf);
-        assert!(CARGO_REGEX.is_match(&output));
-        teardown();
-        Ok(())
+    #[serial]
+    fn cargo_all_name_filter_none_output() {
+        with_cargo_vars(|| {
+            let result = || -> Result<()> {
+                let mut stdout_buf = vec![];
+                let cargo = CargoBuilder::default()
+                    .all_cargo()
+                    .dependencies_name_filter(Some("blah"))
+                    .build();
+                Emitter::default()
+                    .add_instructions(&cargo)?
+                    .emit_to(&mut stdout_buf)?;
+                let output = String::from_utf8_lossy(&stdout_buf);
+                assert!(CARGO_REGEX_NO_DEP.is_match(&output));
+                Ok(())
+            }();
+            assert!(result.is_ok());
+        });
     }
 
     #[test]
-    #[serial_test::serial]
-    fn cargo_all_name_filter_none_output() -> Result<()> {
-        setup();
-        let mut stdout_buf = vec![];
-        EmitBuilder::builder()
-            .all_cargo()
-            .cargo_dependencies_name_filter(Some("blah"))
-            .emit_to(&mut stdout_buf)?;
-        let output = String::from_utf8_lossy(&stdout_buf);
-        assert!(CARGO_REGEX_NO_DEP.is_match(&output));
-        teardown();
-        Ok(())
+    #[serial]
+    fn cargo_all_name_filter_some_output() {
+        with_cargo_vars(|| {
+            let result = || -> Result<()> {
+                let mut stdout_buf = vec![];
+                let cargo = CargoBuilder::default()
+                    .all_cargo()
+                    .dependencies_name_filter(Some("anyhow"))
+                    .build();
+                Emitter::default()
+                    .add_instructions(&cargo)?
+                    .emit_to(&mut stdout_buf)?;
+                let output = String::from_utf8_lossy(&stdout_buf);
+                assert!(CARGO_REGEX.is_match(&output));
+                assert!(CARGO_REGEX_NAME.is_match(&output));
+                Ok(())
+            }();
+            assert!(result.is_ok());
+        });
     }
 
     #[test]
-    #[serial_test::serial]
-    fn cargo_all_name_filter_some_output() -> Result<()> {
-        setup();
-        let mut stdout_buf = vec![];
-        EmitBuilder::builder()
-            .all_cargo()
-            .cargo_dependencies_name_filter(Some("anyhow"))
-            .emit_to(&mut stdout_buf)?;
-        let output = String::from_utf8_lossy(&stdout_buf);
-        assert!(CARGO_REGEX.is_match(&output));
-        assert!(CARGO_REGEX_NAME.is_match(&output));
-        teardown();
-        Ok(())
+    #[serial]
+    fn cargo_all_dep_kind_filter_none_output() {
+        with_cargo_vars(|| {
+            let result = || -> Result<()> {
+                let mut stdout_buf = vec![];
+                let cargo = CargoBuilder::default()
+                    .all_cargo()
+                    .dependencies_dep_kind_filter(Some(DependencyKind::Build))
+                    .build();
+                Emitter::default()
+                    .add_instructions(&cargo)?
+                    .emit_to(&mut stdout_buf)?;
+                let output = String::from_utf8_lossy(&stdout_buf);
+                assert!(CARGO_REGEX_NO_DEP.is_match(&output));
+                assert!(CARGO_REGEX_RV.is_match(&output));
+                Ok(())
+            }();
+            assert!(result.is_ok());
+        });
     }
 
     #[test]
-    #[serial_test::serial]
-    fn cargo_all_dep_kind_filter_none_output() -> Result<()> {
-        setup();
-        let mut stdout_buf = vec![];
-        EmitBuilder::builder()
-            .all_cargo()
-            .cargo_dependencies_dep_kind_filter(Some(DependencyKind::Build))
-            .emit_to(&mut stdout_buf)?;
-        let output = String::from_utf8_lossy(&stdout_buf);
-        assert!(CARGO_REGEX_NO_DEP.is_match(&output));
-        assert!(CARGO_REGEX_RV.is_match(&output));
-        teardown();
-        Ok(())
-    }
-
-    #[test]
-    #[serial_test::serial]
-    fn cargo_all_dep_kind_filter_some_output() -> Result<()> {
-        setup();
-        let mut stdout_buf = vec![];
-        EmitBuilder::builder()
-            .all_cargo()
-            .cargo_dependencies_name_filter(Some("gix"))
-            .cargo_dependencies_dep_kind_filter(Some(DependencyKind::Development))
-            .emit_to(&mut stdout_buf)?;
-        let output = String::from_utf8_lossy(&stdout_buf);
-        assert!(CARGO_REGEX.is_match(&output));
-        assert!(CARGO_REGEX_DK.is_match(&output));
-        teardown();
-        Ok(())
+    #[serial]
+    fn cargo_all_dep_kind_filter_some_output() {
+        with_cargo_vars(|| {
+            let result = || -> Result<()> {
+                let mut stdout_buf = vec![];
+                let cargo = CargoBuilder::default()
+                    .all_cargo()
+                    .dependencies_name_filter(Some("regex"))
+                    .dependencies_dep_kind_filter(Some(DependencyKind::Development))
+                    .build();
+                Emitter::default()
+                    .add_instructions(&cargo)?
+                    .emit_to(&mut stdout_buf)?;
+                let output = String::from_utf8_lossy(&stdout_buf);
+                assert!(CARGO_REGEX.is_match(&output));
+                assert!(CARGO_REGEX_DK.is_match(&output));
+                Ok(())
+            }();
+            assert!(result.is_ok());
+        });
     }
 }

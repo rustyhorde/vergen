@@ -1,7 +1,7 @@
 use anyhow::Result;
 use std::env;
 #[cfg(feature = "__vergen_test")]
-use vergen::EmitBuilder;
+use {vergen::BuildBuilder, vergen::Emitter};
 
 fn main() -> Result<()> {
     nightly();
@@ -27,12 +27,12 @@ fn emit() -> Result<()> {
 #[cfg(feature = "__vergen_test")]
 fn emit() -> Result<()> {
     println!("cargo:warning=VERGEN TEST ENABLED!");
-    EmitBuilder::builder()
-        .all_build()
-        .all_cargo()
-        .all_git()
-        .all_rustc()
-        .all_sysinfo()
+    let build = BuildBuilder::default().all_build().build();
+    Emitter::default()
+        .add_instructions(&build)?
+        // .add_instructions(&cargo)?
+        // .add_instructions(&rustc)?
+        // .add_instructions(&si)?
         .emit()
 }
 

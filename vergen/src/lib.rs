@@ -16,8 +16,8 @@
 //! - Will emit [`cargo:rerun-if-changed=.git/<path_to_ref>`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed)
 //! if the git feature is enabled.  This is done to ensure any git instructions are regenerated when commits are made.
 //! - Can emit [`cargo:warning`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#cargo-warning) outputs if the
-//! [`fail_on_error`](EmitBuilder::fail_on_error) feature is not enabled and the requested variable is defaulted through error or
-//! the [`idempotent`](EmitBuilder::idempotent) flag.
+//! [`fail_on_error`](Emitter::fail_on_error) feature is not enabled and the requested variable is defaulted through error or
+//! the [`idempotent`](Emitter::idempotent) flag.
 //! - Will emit [`cargo:rerun-if-changed=build.rs`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed)
 //! to rerun instruction emission if the `build.rs` file changed.
 //! - Will emit [`cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed)
@@ -50,22 +50,27 @@
 //! ```
 //!
 //! 3. Create a `build.rs` file that uses `vergen` to emit cargo instructions.  Configuration
-//! starts with [`EmitBuilder`].  Eventually you will call [`emit`](EmitBuilder::emit) to output the
-//! cargo instructions. See the [`emit`](EmitBuilder::emit) documentation for more robust examples.
+//! starts with [`Emitter`].  Eventually you will call [`emit`](Emitter::emit) to output the
+//! cargo instructions. See the [`emit`](Emitter::emit) documentation for more robust examples.
 //!
 //! #### Generate all output
 //!
 //! ```
 //! use anyhow::Result;
 //! # use std::env;
-//! use vergen::EmitBuilder;
+//! use vergen::Emitter;
+#![cfg_attr(
+    feature = "build",
+    doc = r##"
+use vergen::BuildBuilder;
+"##
+)]
 //!
 //! pub fn main() -> Result<()> {
 #![cfg_attr(
     all(
         feature = "build",
         feature = "cargo",
-        all(feature = "git", feature = "gitcl"),
         feature = "rustc",
         feature = "si"
     ),
@@ -76,13 +81,10 @@
 # env::set_var("OPT_LEVEL", "1");
 # env::set_var("TARGET", "x86_64-unknown-linux-gnu");
     // NOTE: This will output everything, and requires all features enabled.
-    // NOTE: See the EmitBuilder documentation for configuration options.
-    EmitBuilder::builder()
-        .all_build()
-        .all_cargo()
-        .all_git()
-        .all_rustc()
-        .all_sysinfo()
+    // NOTE: See the Emitter documentation for configuration options.
+    let build = BuildBuilder::default().all_build().build();
+    Emitter::new()
+        .add_instructions(&build)?
         .emit()?;
 # env::remove_var("CARGO_FEATURE_BUILD");
 # env::remove_var("CARGO_FEATURE_GIT");
@@ -100,18 +102,24 @@
 //! ```
 //! use anyhow::Result;
 //! # use std::env;
-//! use vergen::EmitBuilder;
+//! use vergen::Emitter;
+#![cfg_attr(
+    feature = "build",
+    doc = r##"
+use vergen::BuildBuilder;
+"##
+)]
 //!
 //! pub fn main() -> Result<()> {
 #![cfg_attr(
-    all(feature = "build", all(feature = "git", feature = "gitcl"),),
+    feature = "build",
     doc = r##"
-    // NOTE: This will output only a build timestamp and long SHA from git.
-    // NOTE: This set requires the build and git features.
-    // NOTE: See the EmitBuilder documentation for configuration options.
-    EmitBuilder::builder()
-        .build_timestamp()
-        .git_sha(false)
+    // NOTE: This will output only a build timestamp.
+    // NOTE: This set requires the build feature.
+    // NOTE: See the BuildBuilder documentation for configuration options.
+    let build = BuildBuilder::default().build_timestamp().build();
+    Emitter::new()
+        .add_instructions(&build)?
         .emit()?;
 "##
 )]
@@ -246,7 +254,7 @@
 //! #### Support deterministic output
 //! Compilations run from the same source oftentimes need to generate identical binaries.  `vergen` now supports
 //! this determinism in a few ways.
-//! - An [`idempotent`](EmitBuilder::idempotent) configuration option has been added.  When this is enabled in a
+//! - An [`idempotent`](Emitter::idempotent) configuration option has been added.  When this is enabled in a
 //! build script, each build via cargo against the same source code should generate identical binaries. Instructions
 //! that output information that may change between builds (i.e. timestamps, sysinfo) will be defaulted.
 //! - Recognize common environment variables that support deterministic builds (i.e. [`SOURCE_DATE_EPOCH`](https://reproducible-builds.org/docs/source-date-epoch/))
@@ -521,33 +529,23 @@
 #![cfg_attr(all(doc, nightly), feature(doc_auto_cfg))]
 #![cfg_attr(all(docsrs, nightly), feature(doc_cfg))]
 
-mod constants;
 mod emitter;
 mod feature;
-mod key;
-mod utils;
 
-#[cfg(feature = "git")]
-cfg_if::cfg_if! {
-    if #[cfg(all(feature = "gitcl", feature = "git2", feature = "gitoxide"))] {
-        use gix as _;
-        use git2_rs as _;
-    } else if #[cfg(all(feature = "gitcl", feature = "gitoxide"))] {
-        use gix as _;
-    } else if #[cfg(all(feature = "gitcl", feature = "git2"))] {
-        use git2_rs as _;
-    } else if #[cfg(all(feature = "git2", feature = "gitoxide"))] {
-        use gix as _;
-    }
-}
+#[cfg(feature = "rustc")]
+use rustc_version as _;
 
 // This is here to appease the `unused_crate_dependencies` lint
 #[cfg(test)]
-use {gix as _, lazy_static as _, regex as _, repo_util as _, serial_test as _, temp_env as _};
+use {lazy_static as _, regex as _, repo_util as _, serial_test as _, temp_env as _};
 
-pub use crate::emitter::EmitBuilder;
+pub use crate::emitter::Emitter;
 #[cfg(feature = "cargo")]
 pub use cargo_metadata::DependencyKind;
+#[cfg(feature = "build")]
+pub use feature::build::Builder as BuildBuilder;
+#[cfg(feature = "cargo")]
+pub use feature::cargo::Builder as CargoBuilder;
 #[cfg(feature = "si")]
 pub use sysinfo::CpuRefreshKind;
 #[cfg(feature = "si")]

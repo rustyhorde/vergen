@@ -232,5 +232,8 @@
 #![cfg_attr(all(docsrs, nightly), feature(doc_cfg))]
 
 mod repo;
+mod utils;
 
 pub use repo::TestRepos;
+pub use utils::with_cargo_vars;
+pub use utils::with_cargo_vars_ext;

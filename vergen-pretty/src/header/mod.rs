@@ -251,6 +251,7 @@ mod test {
         assert!(header(&config, Some(&mut buf)).is_ok());
         assert!(!buf.is_empty());
         let header_str = String::from_utf8_lossy(&buf);
+        eprintln!("{header_str}");
         assert!(BUILD_TIMESTAMP.is_match(&header_str));
         assert!(BUILD_SEMVER.is_match(&header_str));
         assert!(GIT_BRANCH.is_match(&header_str));

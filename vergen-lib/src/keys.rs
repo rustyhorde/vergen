@@ -13,26 +13,14 @@
     feature = "rustc",
     feature = "si"
 ))]
-pub(crate) use self::keys::VergenKey;
-
-#[cfg(any(
-    feature = "build",
-    feature = "cargo",
-    feature = "git",
-    feature = "rustc",
-    feature = "si"
-))]
-mod keys {
+pub mod vergen_key {
     #[cfg(feature = "build")]
     use crate::constants::{BUILD_DATE_NAME, BUILD_TIMESTAMP_NAME};
     #[cfg(feature = "cargo")]
     use crate::constants::{
         CARGO_DEBUG, CARGO_DEPENDENCIES, CARGO_FEATURES, CARGO_OPT_LEVEL, CARGO_TARGET_TRIPLE,
     };
-    #[cfg(all(
-        feature = "git",
-        any(feature = "gitcl", feature = "git2", feature = "gix")
-    ))]
+    #[cfg(feature = "git")]
     use crate::constants::{
         GIT_BRANCH_NAME, GIT_COMMIT_AUTHOR_EMAIL, GIT_COMMIT_AUTHOR_NAME, GIT_COMMIT_COUNT,
         GIT_COMMIT_DATE_NAME, GIT_COMMIT_MESSAGE, GIT_COMMIT_TIMESTAMP_NAME, GIT_DESCRIBE_NAME,
@@ -51,7 +39,7 @@ mod keys {
 
     /// Build information keys.
     #[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
-    pub(crate) enum VergenKey {
+    pub enum VergenKey {
         /// The build date. (VERGEN_BUILD_DATE)
         #[cfg(feature = "build")]
         BuildDate,
@@ -74,64 +62,34 @@ mod keys {
         #[cfg(feature = "cargo")]
         CargoDependencies,
         /// The current working branch name (VERGEN_GIT_BRANCH)
-        #[cfg(all(
-            feature = "git",
-            any(feature = "gitcl", feature = "git2", feature = "gix")
-        ))]
+        #[cfg(feature = "git")]
         GitBranch,
         /// The commit author's email. (VERGEN_GIT_COMMIT_AUTHOR_EMAIL)
-        #[cfg(all(
-            feature = "git",
-            any(feature = "gitcl", feature = "git2", feature = "gix")
-        ))]
+        #[cfg(feature = "git")]
         GitCommitAuthorEmail,
         /// The commit author's name. (VERGEN_GIT_COMMIT_AUTHOR_NAME)
-        #[cfg(all(
-            feature = "git",
-            any(feature = "gitcl", feature = "git2", feature = "gix")
-        ))]
+        #[cfg(feature = "git")]
         GitCommitAuthorName,
         /// Number of commits in current branch. (VERGEN_GIT_COMMIT_COUNT)
-        #[cfg(all(
-            feature = "git",
-            any(feature = "gitcl", feature = "git2", feature = "gix")
-        ))]
+        #[cfg(feature = "git")]
         GitCommitCount,
         /// The commit date. (VERGEN_GIT_COMMIT_DATE)
-        #[cfg(all(
-            feature = "git",
-            any(feature = "gitcl", feature = "git2", feature = "gix")
-        ))]
+        #[cfg(feature = "git")]
         GitCommitDate,
         /// Commit message (VERGEN_GIT_COMMIT_MESSAGE)
-        #[cfg(all(
-            feature = "git",
-            any(feature = "gitcl", feature = "git2", feature = "gix")
-        ))]
+        #[cfg(feature = "git")]
         GitCommitMessage,
         /// The commit timestamp. (VERGEN_GIT_COMMIT_TIMESTAMP)
-        #[cfg(all(
-            feature = "git",
-            any(feature = "gitcl", feature = "git2", feature = "gix")
-        ))]
+        #[cfg(feature = "git")]
         GitCommitTimestamp,
         /// The semver version from the last git tag. (VERGEN_GIT_SEMVER)
-        #[cfg(all(
-            feature = "git",
-            any(feature = "gitcl", feature = "git2", feature = "gix")
-        ))]
+        #[cfg(feature = "git")]
         GitDescribe,
         /// The latest commit SHA. (VERGEN_GIT_SHA)
-        #[cfg(all(
-            feature = "git",
-            any(feature = "gitcl", feature = "git2", feature = "gix")
-        ))]
+        #[cfg(feature = "git")]
         GitSha,
         /// Whether the repository is dirty. (VERGEN_GIT_DIRTY)
-        #[cfg(all(
-            feature = "git",
-            any(feature = "gitcl", feature = "git2", feature = "gix")
-        ))]
+        #[cfg(feature = "git")]
         GitDirty,
         /// The release channel of the rust compiler. (VERGEN_RUSTC_CHANNEL)
         #[cfg(feature = "rustc")]
@@ -182,7 +140,7 @@ mod keys {
 
     impl VergenKey {
         /// Get the name for the given key.
-        pub(crate) fn name(self) -> &'static str {
+        pub fn name(self) -> &'static str {
             match self {
                 #[cfg(feature = "build")]
                 VergenKey::BuildDate => BUILD_DATE_NAME,
@@ -198,55 +156,25 @@ mod keys {
                 VergenKey::CargoTargetTriple => CARGO_TARGET_TRIPLE,
                 #[cfg(feature = "cargo")]
                 VergenKey::CargoDependencies => CARGO_DEPENDENCIES,
-                #[cfg(all(
-                    feature = "git",
-                    any(feature = "gitcl", feature = "git2", feature = "gix")
-                ))]
+                #[cfg(feature = "git")]
                 VergenKey::GitBranch => GIT_BRANCH_NAME,
-                #[cfg(all(
-                    feature = "git",
-                    any(feature = "gitcl", feature = "git2", feature = "gix")
-                ))]
+                #[cfg(feature = "git")]
                 VergenKey::GitCommitAuthorEmail => GIT_COMMIT_AUTHOR_EMAIL,
-                #[cfg(all(
-                    feature = "git",
-                    any(feature = "gitcl", feature = "git2", feature = "gix")
-                ))]
+                #[cfg(feature = "git")]
                 VergenKey::GitCommitAuthorName => GIT_COMMIT_AUTHOR_NAME,
-                #[cfg(all(
-                    feature = "git",
-                    any(feature = "gitcl", feature = "git2", feature = "gix")
-                ))]
+                #[cfg(feature = "git")]
                 VergenKey::GitCommitCount => GIT_COMMIT_COUNT,
-                #[cfg(all(
-                    feature = "git",
-                    any(feature = "gitcl", feature = "git2", feature = "gix")
-                ))]
+                #[cfg(feature = "git")]
                 VergenKey::GitCommitDate => GIT_COMMIT_DATE_NAME,
-                #[cfg(all(
-                    feature = "git",
-                    any(feature = "gitcl", feature = "git2", feature = "gix")
-                ))]
+                #[cfg(feature = "git")]
                 VergenKey::GitCommitMessage => GIT_COMMIT_MESSAGE,
-                #[cfg(all(
-                    feature = "git",
-                    any(feature = "gitcl", feature = "git2", feature = "gix")
-                ))]
+                #[cfg(feature = "git")]
                 VergenKey::GitCommitTimestamp => GIT_COMMIT_TIMESTAMP_NAME,
-                #[cfg(all(
-                    feature = "git",
-                    any(feature = "gitcl", feature = "git2", feature = "gix")
-                ))]
+                #[cfg(feature = "git")]
                 VergenKey::GitDescribe => GIT_DESCRIBE_NAME,
-                #[cfg(all(
-                    feature = "git",
-                    any(feature = "gitcl", feature = "git2", feature = "gix")
-                ))]
+                #[cfg(feature = "git")]
                 VergenKey::GitSha => GIT_SHA_NAME,
-                #[cfg(all(
-                    feature = "git",
-                    any(feature = "gitcl", feature = "git2", feature = "gix")
-                ))]
+                #[cfg(feature = "git")]
                 VergenKey::GitDirty => GIT_DIRTY_NAME,
                 #[cfg(feature = "rustc")]
                 VergenKey::RustcChannel => RUSTC_CHANNEL_NAME,
@@ -290,7 +218,14 @@ mod keys {
     feature = "rustc",
     feature = "si"
 )))]
-mod keys {
+pub mod vergen_key {
     #[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
-    pub(crate) enum VergenKey {}
+    pub enum VergenKey {}
+
+    impl VergenKey {
+        /// Get the name for the given key.
+        pub fn name(self) -> &'static str {
+            ""
+        }
+    }
 }

@@ -11,10 +11,10 @@ gix = { version = "0.57.1", default-features = false, features = [
     "blocking-network-client",
 ] }
 rand = "0.8.5"
+temp-env = "0.3.6"
 
 [dev-dependencies]
 serial_test = "3.0.0"
-temp-env = "0.3.6"
 
 [build-dependencies]
 rustversion = "1.0.14"

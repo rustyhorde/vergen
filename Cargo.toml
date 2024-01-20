@@ -1,4 +1,4 @@
 [workspace]
 resolver = "2"
 
-members = ["repo_util", "vergen", "vergen-pretty"]
+members = ["repo_util", "vergen", "vergen-gix", "vergen-lib", "vergen-pretty"]

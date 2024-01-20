@@ -39,11 +39,9 @@ tracing = { version = "0.1.37", features = [
 [build-dependencies]
 anyhow = "1.0.70"
 rustversion = "1.0.12"
-vergen = { version = "8.1.0", path = "../vergen", features = [
+vergen = { path = "../vergen", features = [
     "build",
     "cargo",
-    "git",
-    "gix",
     "rustc",
     "si",
 ], optional = true }

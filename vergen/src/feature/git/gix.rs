@@ -6,16 +6,7 @@
 // option. All files in the project carrying such notice may not be copied,
 // modified, or distributed except according to those terms.
 
-use crate::{
-    constants::{
-        GIT_BRANCH_NAME, GIT_COMMIT_AUTHOR_EMAIL, GIT_COMMIT_AUTHOR_NAME, GIT_COMMIT_COUNT,
-        GIT_COMMIT_DATE_NAME, GIT_COMMIT_MESSAGE, GIT_COMMIT_TIMESTAMP_NAME, GIT_DESCRIBE_NAME,
-        GIT_DIRTY_NAME, GIT_SHA_NAME,
-    },
-    emitter::{EmitBuilder, RustcEnvMap},
-    key::VergenKey,
-    utils::fns::{add_default_map_entry, add_map_entry},
-};
+use crate::emitter::{EmitBuilder, RustcEnvMap};
 use anyhow::anyhow;
 use anyhow::{Error, Result};
 use gix::{head::Kind, Commit, Head, Id, Repository};
@@ -27,6 +18,15 @@ use std::{
 use time::{
     format_description::{self, well_known::Iso8601},
     OffsetDateTime, UtcOffset,
+};
+use vergen_lib::{
+    add_default_map_entry, add_map_entry,
+    constants::{
+        GIT_BRANCH_NAME, GIT_COMMIT_AUTHOR_EMAIL, GIT_COMMIT_AUTHOR_NAME, GIT_COMMIT_COUNT,
+        GIT_COMMIT_DATE_NAME, GIT_COMMIT_MESSAGE, GIT_COMMIT_TIMESTAMP_NAME, GIT_DESCRIBE_NAME,
+        GIT_DIRTY_NAME, GIT_SHA_NAME,
+    },
+    VergenKey,
 };
 
 #[derive(Clone, Copy, Debug, Default)]

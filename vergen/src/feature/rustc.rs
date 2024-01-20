@@ -1,15 +1,15 @@
-use crate::{
+use crate::emitter::{EmitBuilder, RustcEnvMap};
+use anyhow::{Error, Result};
+use rustc_version::{version_meta, Channel, VersionMeta};
+use std::env;
+use vergen_lib::{
+    add_default_map_entry, add_map_entry,
     constants::{
         RUSTC_CHANNEL_NAME, RUSTC_COMMIT_DATE, RUSTC_COMMIT_HASH, RUSTC_HOST_TRIPLE_NAME,
         RUSTC_LLVM_VERSION, RUSTC_SEMVER_NAME,
     },
-    emitter::{EmitBuilder, RustcEnvMap},
-    key::VergenKey,
-    utils::fns::{add_default_map_entry, add_map_entry},
+    VergenKey,
 };
-use anyhow::{Error, Result};
-use rustc_version::{version_meta, Channel, VersionMeta};
-use std::env;
 
 #[derive(Clone, Copy, Debug, Default)]
 #[allow(clippy::struct_excessive_bools)]

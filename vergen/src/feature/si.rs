@@ -6,18 +6,18 @@
 // option. All files in the project carrying such notice may not be copied,
 // modified, or distributed except according to those terms.
 
-use crate::{
+use crate::emitter::{EmitBuilder, RustcEnvMap};
+use anyhow::{anyhow, Result};
+use std::env;
+use sysinfo::{get_current_pid, Cpu, Pid, Process, RefreshKind, System, User, Users};
+use vergen_lib::{
+    add_default_map_entry, add_map_entry,
     constants::{
         SYSINFO_CPU_BRAND, SYSINFO_CPU_CORE_COUNT, SYSINFO_CPU_FREQUENCY, SYSINFO_CPU_NAME,
         SYSINFO_CPU_VENDOR, SYSINFO_MEMORY, SYSINFO_NAME, SYSINFO_OS_VERSION, SYSINFO_USER,
     },
-    emitter::{EmitBuilder, RustcEnvMap},
-    key::VergenKey,
-    utils::fns::{add_default_map_entry, add_map_entry},
+    VergenKey,
 };
-use anyhow::{anyhow, Result};
-use std::env;
-use sysinfo::{get_current_pid, Cpu, Pid, Process, RefreshKind, System, User, Users};
 
 #[derive(Clone, Copy, Debug, Default)]
 #[allow(clippy::struct_excessive_bools)]
@@ -576,10 +576,11 @@ fn suffix(mut curr_memory: u64) -> String {
 #[cfg(test)]
 mod test {
     use super::{add_sysinfo_map_entry, suffix};
-    use crate::{emitter::test::count_idempotent, key::VergenKey, EmitBuilder};
+    use crate::{emitter::test::count_idempotent, EmitBuilder};
     use anyhow::Result;
     use std::{collections::BTreeMap, env};
     use sysinfo::{CpuRefreshKind, RefreshKind};
+    use vergen_lib::VergenKey;
 
     const IDEM_COUNT: usize = 0;
     const SYSINFO_COUNT: usize = 9;
