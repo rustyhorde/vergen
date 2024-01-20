@@ -3,3 +3,4 @@ Cargo.lock
 .ssh
 *.bk
 .DS_Store
+cobertura.xml
