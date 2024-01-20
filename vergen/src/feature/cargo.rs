@@ -463,6 +463,90 @@ mod test {
 
     #[test]
     #[serial]
+    fn debug() {
+        with_cargo_vars(|| {
+            let result = || -> Result<()> {
+                let cargo = Builder::default().debug().build();
+                let config = Emitter::default().add_instructions(&cargo)?.test_emit();
+                assert_eq!(1, config.cargo_rustc_env_map().len());
+                assert_eq!(0, count_idempotent(config.cargo_rustc_env_map()));
+                assert_eq!(0, config.warnings().len());
+                Ok(())
+            }();
+            assert!(result.is_ok());
+        });
+    }
+
+    #[test]
+    #[serial]
+    fn features() {
+        with_cargo_vars(|| {
+            let result = || -> Result<()> {
+                let cargo = Builder::default().features().build();
+                let config = Emitter::default().add_instructions(&cargo)?.test_emit();
+                assert_eq!(1, config.cargo_rustc_env_map().len());
+                assert_eq!(0, count_idempotent(config.cargo_rustc_env_map()));
+                assert_eq!(0, config.warnings().len());
+                Ok(())
+            }();
+            assert!(result.is_ok());
+        });
+    }
+
+    #[test]
+    #[serial]
+    fn opt_level() {
+        with_cargo_vars(|| {
+            let result = || -> Result<()> {
+                let cargo = Builder::default().opt_level().build();
+                let config = Emitter::default().add_instructions(&cargo)?.test_emit();
+                assert_eq!(1, config.cargo_rustc_env_map().len());
+                assert_eq!(0, count_idempotent(config.cargo_rustc_env_map()));
+                assert_eq!(0, config.warnings().len());
+                Ok(())
+            }();
+            assert!(result.is_ok());
+        });
+    }
+
+    #[test]
+    #[serial]
+    fn target_triple() {
+        with_cargo_vars(|| {
+            let result = || -> Result<()> {
+                let cargo = Builder::default().target_triple().build();
+                let config = Emitter::default().add_instructions(&cargo)?.test_emit();
+                assert_eq!(1, config.cargo_rustc_env_map().len());
+                assert_eq!(0, count_idempotent(config.cargo_rustc_env_map()));
+                assert_eq!(0, config.warnings().len());
+                Ok(())
+            }();
+            assert!(result.is_ok());
+        });
+    }
+
+    #[test]
+    #[serial]
+    fn dependencies() {
+        with_cargo_vars(|| {
+            let result = || -> Result<()> {
+                let name_filter = Some("anyhow");
+                let cargo = Builder::default()
+                    .dependencies()
+                    .dependencies_name_filter(name_filter)
+                    .build();
+                let config = Emitter::default().add_instructions(&cargo)?.test_emit();
+                assert_eq!(1, config.cargo_rustc_env_map().len());
+                assert_eq!(0, count_idempotent(config.cargo_rustc_env_map()));
+                assert_eq!(0, config.warnings().len());
+                Ok(())
+            }();
+            assert!(result.is_ok());
+        });
+    }
+
+    #[test]
+    #[serial]
     fn bad_env_fails() {
         let cargo = Builder::default().all_cargo().build();
         let res = || -> Result<()> {

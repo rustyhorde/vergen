@@ -341,6 +341,78 @@ mod test {
 
     #[test]
     #[serial]
+    fn build_date() -> Result<()> {
+        let build = Builder::default().build_date().build();
+        let emitter = Emitter::new().add_instructions(&build)?.test_emit();
+        assert_eq!(1, emitter.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(0, emitter.warnings().len());
+        Ok(())
+    }
+
+    #[cfg(any(unix, target_os = "macos"))]
+    #[test]
+    #[serial]
+    fn build_date_local() -> Result<()> {
+        // use local is unsound on nix
+        let build = Builder::default().build_date().use_local().build();
+        let emitter = Emitter::new().add_instructions(&build)?.test_emit();
+        assert_eq!(1, emitter.cargo_rustc_env_map().len());
+        assert_eq!(1, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(1, emitter.warnings().len());
+        Ok(())
+    }
+
+    #[cfg(windows)]
+    #[test]
+    #[serial]
+    fn build_date_local() -> Result<()> {
+        let build = Builder::default().build_date().use_local().build();
+        let emitter = Emitter::new().add_instructions(&build)?.test_emit();
+        assert_eq!(1, emitter.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(0, emitter.warnings().len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn build_timestamp() -> Result<()> {
+        let build = Builder::default().build_timestamp().build();
+        let emitter = Emitter::new().add_instructions(&build)?.test_emit();
+        assert_eq!(1, emitter.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(0, emitter.warnings().len());
+        Ok(())
+    }
+
+    #[cfg(any(unix, target_os = "macos"))]
+    #[test]
+    #[serial]
+    fn build_timestamp_local() -> Result<()> {
+        // use local is unsound on nix
+        let build = Builder::default().build_timestamp().use_local().build();
+        let emitter = Emitter::new().add_instructions(&build)?.test_emit();
+        assert_eq!(1, emitter.cargo_rustc_env_map().len());
+        assert_eq!(1, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(1, emitter.warnings().len());
+        Ok(())
+    }
+
+    #[cfg(windows)]
+    #[test]
+    #[serial]
+    fn build_timestamp_local() -> Result<()> {
+        let build = Builder::default().build_timestamp().use_local().build();
+        let emitter = Emitter::new().add_instructions(&build)?.test_emit();
+        assert_eq!(1, emitter.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(0, emitter.warnings().len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
     fn source_date_epoch_works() {
         temp_env::with_var("SOURCE_DATE_EPOCH", Some("1671809360"), || {
             let result = || -> Result<()> {

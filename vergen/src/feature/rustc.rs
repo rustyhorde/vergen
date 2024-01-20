@@ -396,6 +396,61 @@ mod test {
         Ok(())
     }
 
+    #[test]
+    #[serial]
+    fn rustc_commit_date() -> Result<()> {
+        let rustc = Builder::default().commit_date().build();
+        let config = Emitter::default().add_instructions(&rustc)?.test_emit();
+        assert_eq!(1, config.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(config.cargo_rustc_env_map()));
+        assert_eq!(0, config.warnings().len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn rustc_commit_hash() -> Result<()> {
+        let rustc = Builder::default().commit_hash().build();
+        let config = Emitter::default().add_instructions(&rustc)?.test_emit();
+        assert_eq!(1, config.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(config.cargo_rustc_env_map()));
+        assert_eq!(0, config.warnings().len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn rustc_host_triple() -> Result<()> {
+        let rustc = Builder::default().host_triple().build();
+        let config = Emitter::default().add_instructions(&rustc)?.test_emit();
+        assert_eq!(1, config.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(config.cargo_rustc_env_map()));
+        assert_eq!(0, config.warnings().len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn rustc_llvm_version() -> Result<()> {
+        let rustc = Builder::default().llvm_version().build();
+        let config = Emitter::default().add_instructions(&rustc)?.test_emit();
+        assert_eq!(1, config.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(config.cargo_rustc_env_map()));
+        assert_eq!(0, config.warnings().len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn rustc_semver() -> Result<()> {
+        let rustc = Builder::default().semver().build();
+        let config = Emitter::default().add_instructions(&rustc)?.test_emit();
+        assert_eq!(1, config.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(config.cargo_rustc_env_map()));
+        assert_eq!(0, config.warnings().len());
+        Ok(())
+    }
+
     const NO_LLVM: &str = r"rustc 1.68.0-nightly (270c94e48 2022-12-28)
 binary: rustc
 commit-hash: 270c94e484e19764a2832ef918c95224eb3f17c7
