@@ -545,6 +545,7 @@ EmitBuilder::builder()
     }
 
     #[doc(hidden)]
+    #[must_use]
     pub fn test_emit(&self) -> Emitter {
         self.clone()
     }
