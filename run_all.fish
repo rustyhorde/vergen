@@ -9,19 +9,19 @@ cargo build-all-features; and \
 cargo test-all-features; and \
 cargo test -p vergen-pretty -F __vergen_test; and \
 cargo test -p vergen-pretty -F __vergen_test,color; and \
-# cargo test -p vergen-pretty -F __vergen_test,header; and \
+cargo test -p vergen-pretty -F __vergen_test,header; and \
 cargo test -p vergen-pretty -F __vergen_test,trace; and \
 cargo test -p vergen-pretty -F __vergen_test,serde; and \
-# cargo test -p vergen-pretty -F __vergen_test,color,header; and \
+cargo test -p vergen-pretty -F __vergen_test,color,header; and \
 cargo test -p vergen-pretty -F __vergen_test,color,serde; and \
 cargo test -p vergen-pretty -F __vergen_test,color,trace; and \
-# cargo test -p vergen-pretty -F __vergen_test,header,serde; and \
-# cargo test -p vergen-pretty -F __vergen_test,header,trace; and \
+cargo test -p vergen-pretty -F __vergen_test,header,serde; and \
+cargo test -p vergen-pretty -F __vergen_test,header,trace; and \
 cargo test -p vergen-pretty -F __vergen_test,serde,trace; and \
-# cargo test -p vergen-pretty -F __vergen_test,color,header,serde; and \
-# cargo test -p vergen-pretty -F __vergen_test,color,header,trace; and \
-# cargo test -p vergen-pretty -F __vergen_test,header,serde,trace; and \
-# cargo test -p vergen-pretty -F __vergen_test,color,header,serde,trace; and \
+cargo test -p vergen-pretty -F __vergen_test,color,header,serde; and \
+cargo test -p vergen-pretty -F __vergen_test,color,header,trace; and \
+cargo test -p vergen-pretty -F __vergen_test,header,serde,trace; and \
+cargo test -p vergen-pretty -F __vergen_test,color,header,serde,trace; and \
 cargo doc -p vergen -F build,cargo,rustc,si; and \
 cargo doc -p vergen-gix -F build,cargo,rustc,si; and \
 cargo doc -p vergen-pretty -F color,header,trace; and \
