@@ -642,16 +642,7 @@ impl Git2 {
                 true,
                 OffsetDateTime::from_unix_timestamp(i64::from_str(&v)?)?,
             ),
-            Err(std::env::VarError::NotPresent) => {
-                let no_offset = OffsetDateTime::from_unix_timestamp(commit.time().seconds())?;
-                if self.use_local {
-                    let local = UtcOffset::local_offset_at(no_offset)?;
-                    let local_offset = no_offset.checked_to_offset(local).unwrap_or(no_offset);
-                    (false, local_offset)
-                } else {
-                    (false, no_offset)
-                }
-            }
+            Err(std::env::VarError::NotPresent) => self.compute_local_offset(commit)?,
             Err(e) => return Err(e.into()),
         };
 
@@ -670,6 +661,19 @@ impl Git2 {
             self.add_git_timestamp_entry(idempotent, sde, &ts, cargo_rustc_env, cargo_warning)?;
         }
         Ok(())
+    }
+
+    #[cfg(not(tarpaulin_include))]
+    // this in not included in coverage, because on *nix the local offset is always unsafe
+    fn compute_local_offset(&self, commit: &Commit<'_>) -> Result<(bool, OffsetDateTime)> {
+        let no_offset = OffsetDateTime::from_unix_timestamp(commit.time().seconds())?;
+        if self.use_local {
+            let local = UtcOffset::local_offset_at(no_offset)?;
+            let local_offset = no_offset.checked_to_offset(local).unwrap_or(no_offset);
+            Ok((false, local_offset))
+        } else {
+            Ok((false, no_offset))
+        }
     }
 
     fn add_git_date_entry(
@@ -907,7 +911,6 @@ mod test {
         assert_eq!(10, emitter.cargo_rustc_env_map().len());
         assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
         assert_eq!(0, emitter.warnings().len());
-
         Ok(())
     }
 

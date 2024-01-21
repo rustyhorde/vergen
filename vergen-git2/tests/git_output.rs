@@ -246,6 +246,25 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
 
     #[test]
     #[serial]
+    fn git_all_describe_all_test_repo() -> Result<()> {
+        let repo = TestRepos::new(true, true, false)?;
+        let mut stdout_buf = vec![];
+        let mut gix = Git2Builder::default()
+            .all_git()
+            .describe(true, true, Some("0.1.0"))
+            .build();
+        let _ = gix.at_path(repo.path());
+        let failed = Emitter::default()
+            .add_instructions(&gix)?
+            .emit_to(&mut stdout_buf)?;
+        assert!(!failed);
+        let output = String::from_utf8_lossy(&stdout_buf);
+        assert!(GIT_REGEX_INST.is_match(&output));
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
     fn git_emit_at_test_repo() -> Result<()> {
         let repo = TestRepos::new(true, false, false)?;
         let mut gix = Git2Builder::default()
