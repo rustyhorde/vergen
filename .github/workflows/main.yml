@@ -216,20 +216,18 @@ jobs:
           cargo test -p vergen-pretty -F __vergen_test,color,trace
           cargo test -p vergen-pretty -F __vergen_test,trace,serde
           cargo test -p vergen-pretty -F __vergen_test,color,serde,trace
-      - name: 🙊 Code Coverage (vergen-lib) 🙊
-        run: cargo tarpaulin --config vergen-lib/tarpaulin.toml --exclude-files vergen-lib/src/lib.rs --exclude-files vergen/**/* vergen-pretty/**/* vergen-gix/**/* vergen-git2/**/* test_util/**/* --out xml --output-dir vergen-lib --skip-clean --target-dir target/coverage
       - name: 🙊 Code Coverage (vergen) 🙊
-        run: cargo tarpaulin --config vergen/tarpaulin.toml --exclude-files vergen/src/lib.rs vergen-pretty/**/* vergen-gix/**/* vergen-git2/**/* vergen-lib/**/* test_util/**/* --out xml --output-dir vergen --skip-clean --target-dir target/coverage
+        run: cargo tarpaulin --config vergen/tarpaulin.toml -p vergen -e vergen-git2 vergen-gix vergen-pretty --exclude-files vergen/src/lib.rs vergen-git2/**/* vergen-gix/**/* vergen-pretty/**/* --workspace --out xml --output-dir vergen --skip-clean --target-dir target/coverage
       - name: 🙊 Code Coverage (vergen-gix) 🙊
-        run: cargo tarpaulin --config vergen-gix/tarpaulin.toml --exclude-files vergen-gix/src/lib.rs --exclude-files vergen/**/* vergen-pretty/**/* vergen-lib/**/* vergen-git2/**/* test_util/**/* --out xml --output-dir vergen-gix --skip-clean --target-dir target/coverage
+        run: cargo tarpaulin --config vergen-gix/tarpaulin.toml -p vergen-gix -e vergen vergen-git2 vergen-pretty --exclude-files vergen-gix/src/lib.rs vergen/**/* vergen-git2/**/* vergen-pretty/**/* --workspace --out xml --output-dir vergen-gix --skip-clean --target-dir target/coverage
       - name: 🙊 Code Coverage (vergen-git2) 🙊
-        run: cargo tarpaulin --config vergen-git2/tarpaulin.toml --exclude-files vergen-git2/src/lib.rs --exclude-files vergen/**/* vergen-pretty/**/* vergen-lib/**/* test_util/**/* --out xml --output-dir vergen-git2 --skip-clean --target-dir target/coverage
+        run: cargo tarpaulin --config vergen-git2/tarpaulin.toml -p vergen-git2 -e vergen vergen-gix vergen-pretty --exclude-files vergen-git2/src/lib.rs vergen/**/* vergen-gix/**/* vergen-pretty/**/* --workspace --out xml --output-dir vergen-git2 --skip-clean --target-dir target/coverage
       - name: 🙊 Code Coverage (vergen-pretty) 🙊
         run: cargo tarpaulin --config vergen-pretty/tarpaulin.toml --exclude-files vergen-pretty/src/lib.rs --exclude-files vergen/**/* vergen-gix/**/* vergen-git2/**/* vergen-lib/**/* test_util/**/* --out xml --output-dir vergen-pretty --skip-clean --target-dir target/coverage
       - name: 🙊 Upload Code Coverage 🙊
         uses: codecov/codecov-action@v3
         with:
-          files: ./vergen/cobertura.xml,./vergen-pretty/cobertura.xml,./vergen-gix/cobertura.xml,./vergen-git2/cobertura.xml,./vergen-lib/cobertura.xml
+          files: ./vergen/cobertura.xml,./vergen-git2/cobertura.xml,./vergen-gix/cobertura.xml,./vergen-pretty/cobertura.xml
   test-macos:
     name: 🧪 MacOS 🧪
     needs: lints-macos
