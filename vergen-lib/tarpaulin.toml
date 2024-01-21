@@ -1,5 +1,0 @@
-[all]
-features = "build cargo git rustc si"
-
-[default]
-features = ""
