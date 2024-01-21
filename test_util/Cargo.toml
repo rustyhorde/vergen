@@ -16,11 +16,12 @@ repo = ["anyhow", "gix", "rand"]
 
 [dependencies]
 anyhow = { version = "1.0.79", optional = true }
-gix = { version = "0.57.1", default-features = false, features = [
+gix = { version = "0.58.0", default-features = false, features = [
     "revision",
     "worktree-mutation",
     "blocking-network-client",
 ], optional = true}
+lazy_static = "1.4.0"
 rand = { version = "0.8.5", optional = true }
 temp-env = "0.3.6"
 

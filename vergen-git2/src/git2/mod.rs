@@ -979,4 +979,122 @@ mod test {
         assert_eq!(11, emitter.warnings().len());
         Ok(())
     }
+
+    #[test]
+    #[serial]
+    fn source_date_epoch_works() {
+        temp_env::with_var("SOURCE_DATE_EPOCH", Some("1671809360"), || {
+            let result = || -> Result<()> {
+                let mut stdout_buf = vec![];
+                let gix = Builder::default().commit_date().commit_timestamp().build();
+                _ = Emitter::new()
+                    .idempotent()
+                    .add_instructions(&gix)?
+                    .emit_to(&mut stdout_buf)?;
+                let output = String::from_utf8_lossy(&stdout_buf);
+                for (idx, line) in output.lines().enumerate() {
+                    if idx == 0 {
+                        assert_eq!("cargo:rustc-env=VERGEN_GIT_COMMIT_DATE=2022-12-23", line);
+                    } else if idx == 1 {
+                        assert_eq!(
+                            "cargo:rustc-env=VERGEN_GIT_COMMIT_TIMESTAMP=2022-12-23T15:29:20.000000000Z",
+                            line
+                        );
+                    }
+                }
+                Ok(())
+            }();
+            assert!(result.is_ok());
+        });
+    }
+
+    #[test]
+    #[serial]
+    #[cfg(unix)]
+    fn bad_source_date_epoch_fails() {
+        use std::ffi::OsStr;
+        use std::os::unix::prelude::OsStrExt;
+
+        let source = [0x66, 0x6f, 0x80, 0x6f];
+        let os_str = OsStr::from_bytes(&source[..]);
+        temp_env::with_var("SOURCE_DATE_EPOCH", Some(os_str), || {
+            let result = || -> Result<bool> {
+                let mut stdout_buf = vec![];
+                let gix = Builder::default().commit_date().build();
+                Emitter::new()
+                    .idempotent()
+                    .fail_on_error()
+                    .add_instructions(&gix)?
+                    .emit_to(&mut stdout_buf)
+            }();
+            assert!(result.is_err());
+        });
+    }
+
+    #[test]
+    #[serial]
+    #[cfg(unix)]
+    fn bad_source_date_epoch_defaults() {
+        use std::ffi::OsStr;
+        use std::os::unix::prelude::OsStrExt;
+
+        let source = [0x66, 0x6f, 0x80, 0x6f];
+        let os_str = OsStr::from_bytes(&source[..]);
+        temp_env::with_var("SOURCE_DATE_EPOCH", Some(os_str), || {
+            let result = || -> Result<bool> {
+                let mut stdout_buf = vec![];
+                let gix = Builder::default().commit_date().build();
+                Emitter::new()
+                    .idempotent()
+                    .add_instructions(&gix)?
+                    .emit_to(&mut stdout_buf)
+            }();
+            assert!(result.is_ok());
+        });
+    }
+
+    #[test]
+    #[serial]
+    #[cfg(windows)]
+    fn bad_source_date_epoch_fails() {
+        use std::ffi::OsString;
+        use std::os::windows::prelude::OsStringExt;
+
+        let source = [0x0066, 0x006f, 0xD800, 0x006f];
+        let os_string = OsString::from_wide(&source[..]);
+        let os_str = os_string.as_os_str();
+        temp_env::with_var("SOURCE_DATE_EPOCH", Some(os_str), || {
+            let result = || -> Result<bool> {
+                let mut stdout_buf = vec![];
+                let gix = Builder::default().cargo_date().build();
+                Emitter::new()
+                    .idempotent()
+                    .add_instructions(&gix)?
+                    .emit_to(&mut stdout_buf)
+            }();
+            assert!(result.is_err());
+        });
+    }
+
+    #[test]
+    #[serial]
+    #[cfg(windows)]
+    fn bad_source_date_epoch_defaults() {
+        use std::ffi::OsString;
+        use std::os::windows::prelude::OsStringExt;
+
+        let source = [0x0066, 0x006f, 0xD800, 0x006f];
+        let os_string = OsString::from_wide(&source[..]);
+        temp_env::with_var("SOURCE_DATE_EPOCH", Some(os_str), || {
+            let result = || -> Result<bool> {
+                let mut stdout_buf = vec![];
+                let gix = Builder::default().cargo_date().build();
+                Emitter::new()
+                    .idempotent()
+                    .add_instructions(&gix)?
+                    .emit_to(&mut stdout_buf)
+            }();
+            assert!(result.is_ok());
+        });
+    }
 }
