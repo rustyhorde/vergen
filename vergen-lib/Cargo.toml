@@ -22,3 +22,6 @@ si = []
 [dependencies]
 anyhow = "1.0.79"
 getset = "0.1.2"
+
+[build-dependencies]
+rustversion = "1.0.14"

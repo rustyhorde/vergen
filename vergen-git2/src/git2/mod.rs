@@ -1,4 +1,4 @@
-// Copyright (c) 2022 vergen developers
+// Copyright (c) 2022 pud developers
 //
 // Licensed under the Apache License, Version 2.0
 // <LICENSE-APACHE or https://www.apache.org/licenses/LICENSE-2.0> or the MIT
@@ -6,8 +6,13 @@
 // option. All files in the project carrying such notice may not be copied,
 // modified, or distributed except according to those terms.
 
-use anyhow::{anyhow, Error, Result};
-use gix::{discover, head::Kind, Commit, Head, Id, Repository};
+#[cfg(test)]
+use anyhow::anyhow;
+use anyhow::{Error, Result};
+use git2_rs::{
+    BranchType, Commit, DescribeFormatOptions, DescribeOptions, Reference, Repository,
+    StatusOptions,
+};
 use std::{
     env,
     path::{Path, PathBuf},
@@ -22,7 +27,7 @@ use vergen_lib::{
     constants::{
         GIT_BRANCH_NAME, GIT_COMMIT_AUTHOR_EMAIL, GIT_COMMIT_AUTHOR_NAME, GIT_COMMIT_COUNT,
         GIT_COMMIT_DATE_NAME, GIT_COMMIT_MESSAGE, GIT_COMMIT_TIMESTAMP_NAME, GIT_DESCRIBE_NAME,
-        GIT_SHA_NAME,
+        GIT_DIRTY_NAME, GIT_SHA_NAME,
     },
     AddEntries, CargoRerunIfChanged, CargoRustcEnvMap, CargoWarning, DefaultConfig, VergenKey,
 };
@@ -40,16 +45,17 @@ use vergen_lib::{
 /// | `VERGEN_GIT_COMMIT_TIMESTAMP` | 2021-02-24T20:55:21+00:00 |
 /// | `VERGEN_GIT_DESCRIBE` | 5.0.0-2-gf49246c |
 /// | `VERGEN_GIT_SHA` | f49246ce334567bff9f950bfd0f3078184a2738a |
+/// | `VERGEN_GIT_DIRTY` | true |
 ///
 /// # Example
 ///
 /// ```
 /// # use anyhow::Result;
-/// # use vergen_gix::{Emitter, GixBuilder};
+/// # use vergen_git2::{Emitter, Git2Builder};
 /// #
 /// # fn main() -> Result<()> {
-/// let gix = GixBuilder::default().all_git().build();
-/// Emitter::default().add_instructions(&gix)?.emit()?;
+/// let git2 = Git2Builder::default().all_git().build();
+/// Emitter::default().add_instructions(&git2)?.emit()?;
 /// #   Ok(())
 /// # }
 /// ```
@@ -58,16 +64,16 @@ use vergen_lib::{
 ///
 /// ```
 /// # use anyhow::Result;
-/// # use std::env;
-/// # use vergen_gix::{Emitter, GixBuilder};
+/// # use vergen_git2::{Emitter, Git2Builder};
 /// #
 /// # fn main() -> Result<()> {
 /// temp_env::with_var("VERGEN_GIT_BRANCH", Some("this is the branch I want output"), || {
 ///     let result = || -> Result<()> {
-///         let gix = GixBuilder::default().all_git().build();
-///         Emitter::default().add_instructions(&gix)?.emit()?;
+///         let git2 = Git2Builder::default().all_git().build();
+///         Emitter::default().add_instructions(&git2)?.emit()?;
 ///         Ok(())
 ///     }();
+///     assert!(result.is_ok());
 /// });
 /// #   Ok(())
 /// # }
@@ -92,10 +98,16 @@ pub struct Builder {
     commit_timestamp: bool,
     // git describe --always (optionally --tags, --dirty)
     describe: bool,
+    describe_tags: bool,
     describe_dirty: bool,
+    describe_match_pattern: Option<&'static str>,
     // git rev-parse HEAD (optionally with --short)
     sha: bool,
     sha_short: bool,
+    // if output from:
+    // git status --porcelain (optionally with "--untracked-files=no")
+    dirty: bool,
+    dirty_include_untracked: bool,
     use_local: bool,
 }
 
@@ -109,8 +121,9 @@ impl Builder {
             .commit_date()
             .commit_message()
             .commit_timestamp()
-            .describe(false)
+            .describe(false, false, None)
             .sha(false)
+            .dirty(false)
     }
 
     /// Emit the current git branch
@@ -199,9 +212,16 @@ impl Builder {
     /// Optionally, add the `dirty` or `tags` flag to describe.
     /// See [`git describe`](https://git-scm.com/docs/git-describe#_options) for more details
     ///
-    pub fn describe(&mut self, dirty: bool) -> &mut Self {
+    pub fn describe(
+        &mut self,
+        dirty: bool,
+        tags: bool,
+        match_pattern: Option<&'static str>,
+    ) -> &mut Self {
         self.describe = true;
+        self.describe_tags = tags;
         self.describe_dirty = dirty;
+        self.describe_match_pattern = match_pattern;
         self
     }
 
@@ -220,6 +240,19 @@ impl Builder {
         self
     }
 
+    /// Emit the dirty state of the git repository
+    /// ```text
+    /// cargo:rustc-env=VERGEN_GIT_DIRTY=(true|false)
+    /// ```
+    ///
+    /// Optionally, include/ignore untracked files in deciding whether the repository
+    /// is dirty.
+    pub fn dirty(&mut self, include_untracked_files: bool) -> &mut Self {
+        self.dirty = true;
+        self.dirty_include_untracked = include_untracked_files;
+        self
+    }
+
     /// Enable local offset date/timestamp output
     pub fn use_local(&mut self) -> &mut Self {
         self.use_local = true;
@@ -228,8 +261,8 @@ impl Builder {
 
     ///
     #[must_use]
-    pub fn build(self) -> Gix {
-        Gix {
+    pub fn build(self) -> Git2 {
+        Git2 {
             repo_path: None,
             branch: self.branch,
             commit_author_name: self.commit_author_name,
@@ -239,17 +272,24 @@ impl Builder {
             commit_date: self.commit_date,
             commit_timestamp: self.commit_timestamp,
             describe: self.describe,
+            describe_tags: self.describe_tags,
             describe_dirty: self.describe_dirty,
+            describe_match_pattern: self.describe_match_pattern,
             sha: self.sha,
             sha_short: self.sha_short,
+            dirty: self.dirty,
+            dirty_include_untracked: self.dirty_include_untracked,
             use_local: self.use_local,
+            #[cfg(test)]
+            fail: false,
         }
     }
 }
 
+///
 #[derive(Clone, Debug, Default)]
 #[allow(clippy::struct_excessive_bools)]
-pub struct Gix {
+pub struct Git2 {
     repo_path: Option<PathBuf>,
     // git rev-parse --abbrev-ref HEAD
     branch: bool,
@@ -267,14 +307,20 @@ pub struct Gix {
     commit_timestamp: bool,
     // git describe --always (optionally --tags, --dirty)
     describe: bool,
+    describe_tags: bool,
     describe_dirty: bool,
+    describe_match_pattern: Option<&'static str>,
     // git rev-parse HEAD (optionally with --short)
     sha: bool,
     sha_short: bool,
+    dirty: bool,
+    dirty_include_untracked: bool,
     use_local: bool,
+    #[cfg(test)]
+    fail: bool,
 }
 
-impl Gix {
+impl Git2 {
     fn any(&self) -> bool {
         self.branch
             || self.commit_author_email
@@ -285,6 +331,7 @@ impl Gix {
             || self.commit_timestamp
             || self.describe
             || self.sha
+            || self.dirty
     }
 
     ///
@@ -293,6 +340,13 @@ impl Gix {
         self
     }
 
+    #[cfg(test)]
+    pub(crate) fn fail(&mut self) -> &mut Self {
+        self.fail = true;
+        self
+    }
+
+    #[cfg(not(test))]
     fn add_entries(
         &self,
         idempotent: bool,
@@ -301,7 +355,29 @@ impl Gix {
         cargo_warning: &mut CargoWarning,
     ) -> Result<()> {
         if self.any() {
-            self.inner_add_git_map_entries(
+            self.inner_add_entries(
+                idempotent,
+                cargo_rustc_env,
+                cargo_rerun_if_changed,
+                cargo_warning,
+            )?;
+        }
+        Ok(())
+    }
+
+    #[cfg(test)]
+    fn add_entries(
+        &self,
+        idempotent: bool,
+        cargo_rustc_env: &mut CargoRustcEnvMap,
+        cargo_rerun_if_changed: &mut CargoRerunIfChanged,
+        cargo_warning: &mut CargoWarning,
+    ) -> Result<()> {
+        if self.any() {
+            if self.fail {
+                return Err(anyhow!("failed to create entries"));
+            }
+            self.inner_add_entries(
                 idempotent,
                 cargo_rustc_env,
                 cargo_rerun_if_changed,
@@ -312,7 +388,7 @@ impl Gix {
     }
 
     #[allow(clippy::too_many_lines)]
-    fn inner_add_git_map_entries(
+    fn inner_add_entries(
         &self,
         idempotent: bool,
         cargo_rustc_env: &mut CargoRustcEnvMap,
@@ -324,23 +400,20 @@ impl Gix {
         } else {
             env::current_dir()?
         };
-        let repo = discover(repo_dir)?;
-        let mut head = repo.head()?;
-        let git_path = repo.git_dir().to_path_buf();
-        let commit = Self::get_commit(&repo, &mut head)?;
+        let repo = Repository::discover(repo_dir)?;
+        let ref_head = repo.find_reference("HEAD")?;
+        let git_path = repo.path().to_path_buf();
+        let commit = ref_head.peel_to_commit()?;
 
         if !idempotent && self.any() {
-            Self::add_rerun_if_changed(&head, &git_path, cargo_rerun_if_changed);
+            Self::add_rerun_if_changed(&ref_head, &git_path, cargo_rerun_if_changed);
         }
 
         if self.branch {
             if let Ok(_value) = env::var(GIT_BRANCH_NAME) {
                 add_default_map_entry(VergenKey::GitBranch, cargo_rustc_env, cargo_warning);
             } else {
-                let branch_name = head
-                    .referent_name()
-                    .map_or_else(|| "HEAD".to_string(), |name| format!("{}", name.shorten()));
-                add_map_entry(VergenKey::GitBranch, branch_name, cargo_rustc_env);
+                Self::add_branch_name(false, &repo, cargo_rustc_env, cargo_warning)?;
             }
         }
 
@@ -352,11 +425,11 @@ impl Gix {
                     cargo_warning,
                 );
             } else {
-                let email = String::from_utf8_lossy(commit.author()?.email);
-                add_map_entry(
+                Self::add_opt_value(
+                    commit.author().email(),
                     VergenKey::GitCommitAuthorEmail,
-                    email.into_owned(),
                     cargo_rustc_env,
+                    cargo_warning,
                 );
             }
         }
@@ -369,11 +442,11 @@ impl Gix {
                     cargo_warning,
                 );
             } else {
-                let name = String::from_utf8_lossy(commit.author()?.name);
-                add_map_entry(
+                Self::add_opt_value(
+                    commit.author().name(),
                     VergenKey::GitCommitAuthorName,
-                    name.into_owned(),
                     cargo_rustc_env,
+                    cargo_warning,
                 );
             }
         }
@@ -382,24 +455,58 @@ impl Gix {
             if let Ok(_value) = env::var(GIT_COMMIT_COUNT) {
                 add_default_map_entry(VergenKey::GitCommitCount, cargo_rustc_env, cargo_warning);
             } else {
-                add_map_entry(
-                    VergenKey::GitCommitCount,
-                    commit.ancestors().all()?.count().to_string(),
-                    cargo_rustc_env,
-                );
+                Self::add_commit_count(false, &repo, cargo_rustc_env, cargo_warning);
             }
         }
 
-        self.add_git_timestamp_entries(idempotent, &commit, cargo_rustc_env, cargo_warning)?;
+        self.add_git_timestamp_entries(&commit, idempotent, cargo_rustc_env, cargo_warning)?;
 
         if self.commit_message {
             if let Ok(_value) = env::var(GIT_COMMIT_MESSAGE) {
                 add_default_map_entry(VergenKey::GitCommitMessage, cargo_rustc_env, cargo_warning);
             } else {
-                let message = String::from_utf8_lossy(commit.message_raw()?);
-                add_map_entry(
+                Self::add_opt_value(
+                    commit.message(),
                     VergenKey::GitCommitMessage,
-                    message.into_owned().trim(),
+                    cargo_rustc_env,
+                    cargo_warning,
+                );
+            }
+        }
+
+        if self.sha {
+            if let Ok(_value) = env::var(GIT_SHA_NAME) {
+                add_default_map_entry(VergenKey::GitSha, cargo_rustc_env, cargo_warning);
+            } else if self.sha_short {
+                let obj = repo.revparse_single("HEAD")?;
+                Self::add_opt_value(
+                    obj.short_id()?.as_str(),
+                    VergenKey::GitSha,
+                    cargo_rustc_env,
+                    cargo_warning,
+                );
+            } else {
+                add_map_entry(VergenKey::GitSha, commit.id().to_string(), cargo_rustc_env);
+            }
+        }
+
+        if self.dirty {
+            if let Ok(_value) = env::var(GIT_DIRTY_NAME) {
+                add_default_map_entry(VergenKey::GitDirty, cargo_rustc_env, cargo_warning);
+            } else {
+                let mut status_options = StatusOptions::new();
+
+                _ = status_options.include_untracked(self.dirty_include_untracked);
+                let statuses = repo.statuses(Some(&mut status_options))?;
+
+                let n_dirty = statuses
+                    .iter()
+                    .filter(|each_status| !each_status.status().is_ignored())
+                    .count();
+
+                add_map_entry(
+                    VergenKey::GitDirty,
+                    format!("{}", n_dirty > 0),
                     cargo_rustc_env,
                 );
             }
@@ -409,52 +516,37 @@ impl Gix {
             if let Ok(_value) = env::var(GIT_DESCRIBE_NAME) {
                 add_default_map_entry(VergenKey::GitDescribe, cargo_rustc_env, cargo_warning);
             } else {
-                let describe = if let Some(mut fmt) = commit.describe().try_format()? {
-                    if fmt.depth > 0 && self.describe_dirty {
-                        fmt.dirty_suffix = Some("dirty".to_string());
-                    }
-                    fmt.to_string()
-                } else {
-                    String::new()
-                };
-                add_map_entry(VergenKey::GitDescribe, describe, cargo_rustc_env);
-            }
-        }
+                let mut describe_opts = DescribeOptions::new();
+                let mut format_opts = DescribeFormatOptions::new();
 
-        if self.sha {
-            if let Ok(_value) = env::var(GIT_SHA_NAME) {
-                add_default_map_entry(VergenKey::GitSha, cargo_rustc_env, cargo_warning);
-            } else {
-                let id = if self.sha_short {
-                    commit.short_id()?.to_string()
-                } else {
-                    commit.id().to_string()
-                };
-                add_map_entry(VergenKey::GitSha, id, cargo_rustc_env);
+                _ = describe_opts.show_commit_oid_as_fallback(true);
+
+                if self.describe_dirty {
+                    _ = format_opts.dirty_suffix("-dirty");
+                }
+
+                if self.describe_tags {
+                    _ = describe_opts.describe_tags();
+                }
+
+                if let Some(pattern) = self.describe_match_pattern {
+                    _ = describe_opts.pattern(pattern);
+                }
+
+                let describe = repo
+                    .describe(&describe_opts)
+                    .map(|x| x.format(Some(&format_opts)).map_err(Error::from))??;
+                add_map_entry(VergenKey::GitDescribe, describe, cargo_rustc_env);
             }
         }
 
         Ok(())
     }
 
-    fn get_commit<'a>(repo: &Repository, head: &mut Head<'a>) -> Result<Commit<'a>> {
-        Ok(if repo.is_shallow() {
-            let id = Self::get_id(head)?.ok_or_else(|| anyhow!("Not an Id"))?;
-            let object = id.try_object()?.ok_or_else(|| anyhow!("Not an Object"))?;
-            object.try_into_commit()?
-        } else {
-            head.peel_to_commit_in_place()?
-        })
-    }
-
-    fn get_id<'a>(head: &mut Head<'a>) -> Result<Option<Id<'a>>> {
-        head.try_peel_to_id_in_place().map_err(Into::into)
-    }
-
     fn add_rerun_if_changed(
-        head: &Head<'_>,
+        ref_head: &Reference<'_>,
         git_path: &Path,
-        cargo_rerun_if_changed: &mut Vec<String>,
+        cargo_rerun_if_changed: &mut CargoRerunIfChanged,
     ) {
         // Setup the head path
         let mut head_path = git_path.to_path_buf();
@@ -465,20 +557,83 @@ impl Gix {
             cargo_rerun_if_changed.push(format!("{}", head_path.display()));
         }
 
-        if let Kind::Symbolic(reference) = &head.kind {
-            let mut ref_path = git_path.to_path_buf();
-            ref_path.push(reference.name.to_path());
-            // Check whether the path exists in the filesystem before emitting it
-            if ref_path.exists() {
-                cargo_rerun_if_changed.push(format!("{}", ref_path.display()));
+        if let Ok(resolved) = ref_head.resolve() {
+            if let Some(name) = resolved.name() {
+                let ref_path = git_path.to_path_buf();
+                let path = ref_path.join(name);
+                // Check whether the path exists in the filesystem before emitting it
+                if path.exists() {
+                    cargo_rerun_if_changed.push(format!("{}", ref_path.display()));
+                }
             }
         }
     }
 
+    fn add_branch_name(
+        add_default: bool,
+        repo: &Repository,
+        cargo_rustc_env: &mut CargoRustcEnvMap,
+        cargo_warning: &mut CargoWarning,
+    ) -> Result<()> {
+        if repo.head_detached()? {
+            if add_default {
+                add_default_map_entry(VergenKey::GitBranch, cargo_rustc_env, cargo_warning);
+            } else {
+                add_map_entry(VergenKey::GitBranch, "HEAD", cargo_rustc_env);
+            }
+        } else {
+            let locals = repo.branches(Some(BranchType::Local))?;
+            let mut found_head = false;
+            for (local, _bt) in locals.filter_map(std::result::Result::ok) {
+                if local.is_head() {
+                    if let Some(name) = local.name()? {
+                        add_map_entry(VergenKey::GitBranch, name, cargo_rustc_env);
+                        found_head = !add_default;
+                        break;
+                    }
+                }
+            }
+            if !found_head {
+                add_default_map_entry(VergenKey::GitBranch, cargo_rustc_env, cargo_warning);
+            }
+        }
+        Ok(())
+    }
+
+    #[allow(clippy::map_unwrap_or)]
+    fn add_opt_value(
+        value: Option<&str>,
+        key: VergenKey,
+        cargo_rustc_env: &mut CargoRustcEnvMap,
+        cargo_warning: &mut CargoWarning,
+    ) {
+        value
+            .map(|val| add_map_entry(key, val, cargo_rustc_env))
+            .unwrap_or_else(|| add_default_map_entry(key, cargo_rustc_env, cargo_warning));
+    }
+
+    fn add_commit_count(
+        add_default: bool,
+        repo: &Repository,
+        cargo_rustc_env: &mut CargoRustcEnvMap,
+        cargo_warning: &mut CargoWarning,
+    ) {
+        let key = VergenKey::GitCommitCount;
+        if !add_default {
+            if let Ok(mut revwalk) = repo.revwalk() {
+                if revwalk.push_head().is_ok() {
+                    add_map_entry(key, revwalk.count().to_string(), cargo_rustc_env);
+                    return;
+                }
+            }
+        }
+        add_default_map_entry(key, cargo_rustc_env, cargo_warning);
+    }
+
     fn add_git_timestamp_entries(
         &self,
-        idempotent: bool,
         commit: &Commit<'_>,
+        idempotent: bool,
         cargo_rustc_env: &mut CargoRustcEnvMap,
         cargo_warning: &mut CargoWarning,
     ) -> Result<()> {
@@ -487,7 +642,16 @@ impl Gix {
                 true,
                 OffsetDateTime::from_unix_timestamp(i64::from_str(&v)?)?,
             ),
-            Err(std::env::VarError::NotPresent) => self.compute_local_offset(commit)?,
+            Err(std::env::VarError::NotPresent) => {
+                let no_offset = OffsetDateTime::from_unix_timestamp(commit.time().seconds())?;
+                if self.use_local {
+                    let local = UtcOffset::local_offset_at(no_offset)?;
+                    let local_offset = no_offset.checked_to_offset(local).unwrap_or(no_offset);
+                    (false, local_offset)
+                } else {
+                    (false, no_offset)
+                }
+            }
             Err(e) => return Err(e.into()),
         };
 
@@ -506,19 +670,6 @@ impl Gix {
             self.add_git_timestamp_entry(idempotent, sde, &ts, cargo_rustc_env, cargo_warning)?;
         }
         Ok(())
-    }
-
-    #[cfg(not(tarpaulin_include))]
-    // this in not included in coverage, because on *nix the local offset is always unsafe
-    fn compute_local_offset(&self, commit: &Commit<'_>) -> Result<(bool, OffsetDateTime)> {
-        let no_offset = OffsetDateTime::from_unix_timestamp(commit.time()?.seconds)?;
-        if self.use_local {
-            let local = UtcOffset::local_offset_at(no_offset)?;
-            let local_offset = no_offset.checked_to_offset(local).unwrap_or(no_offset);
-            Ok((false, local_offset))
-        } else {
-            Ok((false, no_offset))
-        }
     }
 
     fn add_git_date_entry(
@@ -571,7 +722,7 @@ impl Gix {
     }
 }
 
-impl AddEntries for Gix {
+impl AddEntries for Git2 {
     fn add_map_entries(
         &self,
         idempotent: bool,
@@ -598,7 +749,7 @@ impl AddEntries for Gix {
             let error = Error::msg(format!("{}", config.error()));
             Err(error)
         } else {
-            // Clear any previous cargo_warning.  This should be it.
+            // Clear any previous warnings.  This should be it.
             cargo_warning.clear();
             cargo_rerun_if_changed.clear();
 
@@ -651,6 +802,9 @@ impl AddEntries for Gix {
             if self.sha {
                 add_default_map_entry(VergenKey::GitSha, cargo_rustc_env_map, cargo_warning);
             }
+            if self.dirty {
+                add_default_map_entry(VergenKey::GitDirty, cargo_rustc_env_map, cargo_warning);
+            }
             Ok(())
         }
     }
@@ -658,179 +812,88 @@ impl AddEntries for Gix {
 
 #[cfg(test)]
 mod test {
-    use std::env::temp_dir;
-
-    use super::Builder;
+    use super::{Builder, Git2};
     use anyhow::Result;
+    use git2_rs::Repository;
     use serial_test::serial;
+    use std::{collections::BTreeMap, env::current_dir};
     use test_util::TestRepos;
     use vergen::Emitter;
-    use vergen_lib::count_idempotent;
+    use vergen_lib::{count_idempotent, VergenKey};
+
+    fn repo_exists() -> Result<bool> {
+        let curr_dir = current_dir()?;
+        let _repo = Repository::discover(curr_dir)?;
+        Ok(true)
+    }
+
+    #[test]
+    #[serial]
+    fn empty_email_is_default() -> Result<()> {
+        let mut cargo_rustc_env = BTreeMap::new();
+        let mut cargo_warning = vec![];
+        Git2::add_opt_value(
+            None,
+            VergenKey::GitCommitAuthorEmail,
+            &mut cargo_rustc_env,
+            &mut cargo_warning,
+        );
+        assert_eq!(1, cargo_rustc_env.len());
+        assert_eq!(1, cargo_warning.len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn bad_revwalk_is_default() -> Result<()> {
+        let mut cargo_rustc_env = BTreeMap::new();
+        let mut cargo_warning = vec![];
+        if let Ok(repo) = Repository::discover(current_dir()?) {
+            Git2::add_commit_count(true, &repo, &mut cargo_rustc_env, &mut cargo_warning);
+            assert_eq!(1, cargo_rustc_env.len());
+            assert_eq!(1, cargo_warning.len());
+        }
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn head_not_found_is_default() -> Result<()> {
+        let repo = TestRepos::new(false, false, false)?;
+        let mut map = BTreeMap::new();
+        let mut warnings = vec![];
+        if let Ok(repo) = Repository::discover(current_dir()?) {
+            Git2::add_branch_name(true, &repo, &mut map, &mut warnings)?;
+            assert_eq!(1, map.len());
+            assert_eq!(1, warnings.len());
+        }
+        let mut map = BTreeMap::new();
+        let mut warnings = vec![];
+        if let Ok(repo) = Repository::discover(repo.path()) {
+            Git2::add_branch_name(true, &repo, &mut map, &mut warnings)?;
+            assert_eq!(1, map.len());
+            assert_eq!(1, warnings.len());
+        }
+        Ok(())
+    }
 
     #[test]
     #[serial]
     fn git_all_idempotent() -> Result<()> {
-        let gix = Builder::default().all_git().build();
+        let git2 = Builder::default().all_git().build();
         let emitter = Emitter::default()
             .idempotent()
-            .add_instructions(&gix)?
+            .add_instructions(&git2)?
             .test_emit();
-        assert_eq!(9, emitter.cargo_rustc_env_map().len());
-        assert_eq!(2, count_idempotent(emitter.cargo_rustc_env_map()));
-        assert_eq!(2, emitter.warnings().len());
-        Ok(())
-    }
+        assert_eq!(10, emitter.cargo_rustc_env_map().len());
 
-    #[test]
-    #[serial]
-    fn git_all_idempotent_no_warn() -> Result<()> {
-        let gix = Builder::default().all_git().build();
-        let emitter = Emitter::default()
-            .idempotent()
-            .quiet()
-            .add_instructions(&gix)?
-            .test_emit();
-        assert_eq!(9, emitter.cargo_rustc_env_map().len());
-        assert_eq!(2, count_idempotent(emitter.cargo_rustc_env_map()));
-        assert_eq!(2, emitter.warnings().len());
-        Ok(())
-    }
-
-    #[test]
-    #[serial]
-    fn git_all() -> Result<()> {
-        let gix = Builder::default().all_git().build();
-        let emitter = Emitter::default().add_instructions(&gix)?.test_emit();
-        assert_eq!(9, emitter.cargo_rustc_env_map().len());
-        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
-        assert_eq!(0, emitter.warnings().len());
-        Ok(())
-    }
-
-    #[test]
-    #[serial]
-    fn git_branch() -> Result<()> {
-        let gix = Builder::default().branch().build();
-        let emitter = Emitter::default().add_instructions(&gix)?.test_emit();
-        assert_eq!(1, emitter.cargo_rustc_env_map().len());
-        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
-        assert_eq!(0, emitter.warnings().len());
-        Ok(())
-    }
-
-    #[test]
-    #[serial]
-    fn git_commit_author_name() -> Result<()> {
-        let gix = Builder::default().commit_author_name().build();
-        let emitter = Emitter::default().add_instructions(&gix)?.test_emit();
-        assert_eq!(1, emitter.cargo_rustc_env_map().len());
-        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
-        assert_eq!(0, emitter.warnings().len());
-        Ok(())
-    }
-
-    #[test]
-    #[serial]
-    fn git_commit_author_email() -> Result<()> {
-        let gix = Builder::default().commit_author_email().build();
-        let emitter = Emitter::default().add_instructions(&gix)?.test_emit();
-        assert_eq!(1, emitter.cargo_rustc_env_map().len());
-        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
-        assert_eq!(0, emitter.warnings().len());
-        Ok(())
-    }
-
-    #[test]
-    #[serial]
-    fn git_commit_count() -> Result<()> {
-        let gix = Builder::default().commit_count().build();
-        let emitter = Emitter::default().add_instructions(&gix)?.test_emit();
-        assert_eq!(1, emitter.cargo_rustc_env_map().len());
-        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
-        assert_eq!(0, emitter.warnings().len());
-        Ok(())
-    }
-
-    #[test]
-    #[serial]
-    fn git_commit_message() -> Result<()> {
-        let gix = Builder::default().commit_message().build();
-        let emitter = Emitter::default().add_instructions(&gix)?.test_emit();
-        assert_eq!(1, emitter.cargo_rustc_env_map().len());
-        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
-        assert_eq!(0, emitter.warnings().len());
-        Ok(())
-    }
-
-    #[test]
-    #[serial]
-    fn git_commit_date() -> Result<()> {
-        let gix = Builder::default().commit_date().build();
-        let emitter = Emitter::default().add_instructions(&gix)?.test_emit();
-        assert_eq!(1, emitter.cargo_rustc_env_map().len());
-        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
-        assert_eq!(0, emitter.warnings().len());
-        Ok(())
-    }
-
-    #[cfg(any(unix, target_os = "macos"))]
-    #[test]
-    #[serial]
-    fn git_commit_date_local() {
-        let result = || -> Result<()> {
-            let gix = Builder::default().commit_date().use_local().build();
-            let _emitter = Emitter::default()
-                .fail_on_error()
-                .add_instructions(&gix)?
-                .test_emit();
-            Ok(())
-        }();
-        assert!(result.is_err());
-    }
-
-    #[test]
-    #[serial]
-    fn git_commit_timestamp() -> Result<()> {
-        let gix = Builder::default().commit_timestamp().build();
-        let emitter = Emitter::default().add_instructions(&gix)?.test_emit();
-        assert_eq!(1, emitter.cargo_rustc_env_map().len());
-        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
-        assert_eq!(0, emitter.warnings().len());
-        Ok(())
-    }
-
-    #[test]
-    #[serial]
-    fn git_describe() -> Result<()> {
-        let gix = Builder::default().describe(true).build();
-        let emitter = Emitter::default().add_instructions(&gix)?.test_emit();
-        assert_eq!(1, emitter.cargo_rustc_env_map().len());
-        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
-        assert_eq!(0, emitter.warnings().len());
-        Ok(())
-    }
-
-    #[test]
-    #[serial]
-    fn git_sha() -> Result<()> {
-        let gix = Builder::default().sha(false).build();
-        let emitter = Emitter::default().add_instructions(&gix)?.test_emit();
-        assert_eq!(1, emitter.cargo_rustc_env_map().len());
-        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
-        assert_eq!(0, emitter.warnings().len());
-        Ok(())
-    }
-
-    #[test]
-    #[serial]
-    fn git_all_at_path() -> Result<()> {
-        let repo = TestRepos::new(false, false, false)?;
-        let mut gix = Builder::default().all_git().build();
-        let _ = gix.at_path(repo.path());
-        let emitter = Emitter::default().add_instructions(&gix)?.test_emit();
-        assert_eq!(9, emitter.cargo_rustc_env_map().len());
-        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
-        assert_eq!(0, emitter.warnings().len());
+        if repo_exists().is_ok() {
+            assert_eq!(2, count_idempotent(emitter.cargo_rustc_env_map()));
+            assert_eq!(2, emitter.warnings().len());
+        } else {
+            assert_eq!(10, count_idempotent(emitter.cargo_rustc_env_map()));
+            assert_eq!(11, emitter.warnings().len());
+        }
         Ok(())
     }
 
@@ -838,158 +901,79 @@ mod test {
     #[serial]
     fn git_all_shallow_clone() -> Result<()> {
         let repo = TestRepos::new(false, false, true)?;
-        let mut gix = Builder::default().all_git().build();
-        let _ = gix.at_path(repo.path());
-        let emitter = Emitter::default().add_instructions(&gix)?.test_emit();
-        assert_eq!(9, emitter.cargo_rustc_env_map().len());
+        let mut git2 = Builder::default().all_git().build();
+        let _ = git2.at_path(repo.path());
+        let emitter = Emitter::default().add_instructions(&git2)?.test_emit();
+        assert_eq!(10, emitter.cargo_rustc_env_map().len());
         assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
         assert_eq!(0, emitter.warnings().len());
+
         Ok(())
     }
 
     #[test]
     #[serial]
-    fn git_error_fails() -> Result<()> {
-        let mut gix = Builder::default().all_git().build();
-        let _ = gix.at_path(temp_dir());
+    fn git_all_idempotent_no_warn() -> Result<()> {
+        let git2 = Builder::default().all_git().build();
+        let emitter = Emitter::default()
+            .idempotent()
+            .quiet()
+            .add_instructions(&git2)?
+            .test_emit();
+
+        assert_eq!(10, emitter.cargo_rustc_env_map().len());
+
+        if repo_exists().is_ok() {
+            assert_eq!(2, count_idempotent(emitter.cargo_rustc_env_map()));
+            assert_eq!(2, emitter.warnings().len());
+        } else {
+            assert_eq!(9, count_idempotent(emitter.cargo_rustc_env_map()));
+            assert_eq!(10, emitter.warnings().len());
+        }
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn git_all() -> Result<()> {
+        let git2 = Builder::default().all_git().build();
+        let emitter = Emitter::default().add_instructions(&git2)?.test_emit();
+        assert_eq!(10, emitter.cargo_rustc_env_map().len());
+
+        if repo_exists().is_ok() {
+            assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
+            assert_eq!(0, emitter.warnings().len());
+        } else {
+            assert_eq!(9, count_idempotent(emitter.cargo_rustc_env_map()));
+            assert_eq!(10, emitter.warnings().len());
+        }
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn git_error_fails() {
+        let mut git2 = Builder::default().all_git().build();
+        let _ = git2.fail();
         let result = || -> Result<()> {
             let _emitter = Emitter::default()
                 .fail_on_error()
-                .add_instructions(&gix)?
+                .add_instructions(&git2)?
                 .test_emit();
             Ok(())
         }();
         assert!(result.is_err());
-        Ok(())
     }
 
     #[test]
     #[serial]
     fn git_error_defaults() -> Result<()> {
-        let mut gix = Builder::default().all_git().build();
-        let _ = gix.at_path(temp_dir());
-        let emitter = Emitter::default().add_instructions(&gix)?.test_emit();
-        assert_eq!(9, emitter.cargo_rustc_env_map().len());
-        assert_eq!(9, count_idempotent(emitter.cargo_rustc_env_map()));
-        assert_eq!(10, emitter.warnings().len());
+        let mut git2 = Builder::default().all_git().build();
+        let _ = git2.fail();
+        let emitter = Emitter::default().add_instructions(&git2)?.test_emit();
+        assert_eq!(10, emitter.cargo_rustc_env_map().len());
+        assert_eq!(10, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(11, emitter.warnings().len());
         Ok(())
-    }
-
-    #[test]
-    #[serial]
-    fn source_date_epoch_works() {
-        temp_env::with_var("SOURCE_DATE_EPOCH", Some("1671809360"), || {
-            let result = || -> Result<()> {
-                let mut stdout_buf = vec![];
-                let gix = Builder::default().commit_date().commit_timestamp().build();
-                _ = Emitter::new()
-                    .idempotent()
-                    .add_instructions(&gix)?
-                    .emit_to(&mut stdout_buf)?;
-                let output = String::from_utf8_lossy(&stdout_buf);
-                for (idx, line) in output.lines().enumerate() {
-                    if idx == 0 {
-                        assert_eq!("cargo:rustc-env=VERGEN_GIT_COMMIT_DATE=2022-12-23", line);
-                    } else if idx == 1 {
-                        assert_eq!(
-                            "cargo:rustc-env=VERGEN_GIT_COMMIT_TIMESTAMP=2022-12-23T15:29:20.000000000Z",
-                            line
-                        );
-                    }
-                }
-                Ok(())
-            }();
-            assert!(result.is_ok());
-        });
-    }
-
-    #[test]
-    #[serial]
-    #[cfg(unix)]
-    fn bad_source_date_epoch_fails() {
-        use std::ffi::OsStr;
-        use std::os::unix::prelude::OsStrExt;
-
-        let source = [0x66, 0x6f, 0x80, 0x6f];
-        let os_str = OsStr::from_bytes(&source[..]);
-        temp_env::with_var("SOURCE_DATE_EPOCH", Some(os_str), || {
-            let result = || -> Result<bool> {
-                let mut stdout_buf = vec![];
-                let gix = Builder::default().commit_date().build();
-                Emitter::new()
-                    .idempotent()
-                    .fail_on_error()
-                    .add_instructions(&gix)?
-                    .emit_to(&mut stdout_buf)
-            }();
-            assert!(result.is_err());
-        });
-    }
-
-    #[test]
-    #[serial]
-    #[cfg(unix)]
-    fn bad_source_date_epoch_defaults() {
-        use std::ffi::OsStr;
-        use std::os::unix::prelude::OsStrExt;
-
-        let source = [0x66, 0x6f, 0x80, 0x6f];
-        let os_str = OsStr::from_bytes(&source[..]);
-        temp_env::with_var("SOURCE_DATE_EPOCH", Some(os_str), || {
-            let result = || -> Result<bool> {
-                let mut stdout_buf = vec![];
-                let gix = Builder::default().commit_date().build();
-                Emitter::new()
-                    .idempotent()
-                    .add_instructions(&gix)?
-                    .emit_to(&mut stdout_buf)
-            }();
-            assert!(result.is_ok());
-        });
-    }
-
-    #[test]
-    #[serial]
-    #[cfg(windows)]
-    fn bad_source_date_epoch_fails() {
-        use std::ffi::OsString;
-        use std::os::windows::prelude::OsStringExt;
-
-        let source = [0x0066, 0x006f, 0xD800, 0x006f];
-        let os_string = OsString::from_wide(&source[..]);
-        let os_str = os_string.as_os_str();
-        temp_env::with_var("SOURCE_DATE_EPOCH", Some(os_str), || {
-            let result = || -> Result<bool> {
-                let mut stdout_buf = vec![];
-                let gix = Builder::default().cargo_date().build();
-                Emitter::new()
-                    .idempotent()
-                    .add_instructions(&gix)?
-                    .emit_to(&mut stdout_buf)
-            }();
-            assert!(result.is_err());
-        });
-    }
-
-    #[test]
-    #[serial]
-    #[cfg(windows)]
-    fn bad_source_date_epoch_defaults() {
-        use std::ffi::OsString;
-        use std::os::windows::prelude::OsStringExt;
-
-        let source = [0x0066, 0x006f, 0xD800, 0x006f];
-        let os_string = OsString::from_wide(&source[..]);
-        temp_env::with_var("SOURCE_DATE_EPOCH", Some(os_str), || {
-            let result = || -> Result<bool> {
-                let mut stdout_buf = vec![];
-                let gix = Builder::default().cargo_date().build();
-                Emitter::new()
-                    .idempotent()
-                    .add_instructions(&gix)?
-                    .emit_to(&mut stdout_buf)
-            }();
-            assert!(result.is_ok());
-        });
     }
 }

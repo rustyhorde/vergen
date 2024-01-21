@@ -6,6 +6,7 @@
 // option. All files in the project carrying such notice may not be copied,
 // modified, or distributed except according to those terms.
 
+///
 #[cfg(any(
     feature = "build",
     feature = "cargo",
@@ -13,7 +14,7 @@
     feature = "rustc",
     feature = "si"
 ))]
-pub mod vergen_key {
+pub(crate) mod vergen_key {
     #[cfg(feature = "build")]
     use crate::constants::{BUILD_DATE_NAME, BUILD_TIMESTAMP_NAME};
     #[cfg(feature = "cargo")]
@@ -140,6 +141,7 @@ pub mod vergen_key {
 
     impl VergenKey {
         /// Get the name for the given key.
+        #[must_use]
         pub fn name(self) -> &'static str {
             match self {
                 #[cfg(feature = "build")]
@@ -211,6 +213,7 @@ pub mod vergen_key {
     }
 }
 
+///
 #[cfg(not(any(
     feature = "build",
     feature = "cargo",
@@ -218,7 +221,8 @@ pub mod vergen_key {
     feature = "rustc",
     feature = "si"
 )))]
-pub mod vergen_key {
+pub(crate) mod vergen_key {
+    ///
     #[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
     pub enum VergenKey {}
 

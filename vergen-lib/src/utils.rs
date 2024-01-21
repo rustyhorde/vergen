@@ -1,6 +1,7 @@
 use crate::{constants::VERGEN_IDEMPOTENT_DEFAULT, CargoRustcEnvMap, CargoWarning, VergenKey};
 use std::env;
 
+///
 pub fn add_default_map_entry(
     key: VergenKey,
     map: &mut CargoRustcEnvMap,
@@ -15,6 +16,7 @@ pub fn add_default_map_entry(
     }
 }
 
+///
 pub fn add_map_entry<T>(key: VergenKey, value: T, map: &mut CargoRustcEnvMap)
 where
     T: Into<String>,
@@ -22,6 +24,8 @@ where
     let _old = map.insert(key, value.into());
 }
 
+///
+#[must_use]
 pub fn count_idempotent(map: &CargoRustcEnvMap) -> usize {
     map.values()
         .filter(|x| *x == VERGEN_IDEMPOTENT_DEFAULT)

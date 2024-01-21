@@ -23,6 +23,7 @@ pub struct DefaultConfig {
 
 impl DefaultConfig {
     ///
+    #[must_use]
     pub fn new(fail_on_error: bool, error: Error) -> Self {
         Self {
             fail_on_error,
@@ -32,7 +33,10 @@ impl DefaultConfig {
 }
 
 ///
-pub trait AddEntries {
+pub trait Add {
+    ///
+    ///
+    /// # Errors
     ///
     fn add_map_entries(
         &self,
@@ -41,6 +45,10 @@ pub trait AddEntries {
         cargo_rerun_if_changed: &mut CargoRerunIfChanged,
         cargo_warning: &mut CargoWarning,
     ) -> Result<()>;
+
+    ///
+    ///
+    /// # Errors
     ///
     fn add_default_entries(
         &self,

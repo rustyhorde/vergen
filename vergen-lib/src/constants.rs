@@ -8,6 +8,7 @@
 
 //! Internal Constants
 
+///
 pub const VERGEN_IDEMPOTENT_DEFAULT: &str = "VERGEN_IDEMPOTENT_OUTPUT";
 
 #[cfg(any(
@@ -19,6 +20,7 @@ pub const VERGEN_IDEMPOTENT_DEFAULT: &str = "VERGEN_IDEMPOTENT_OUTPUT";
 ))]
 pub use self::features::*;
 
+///
 #[cfg(any(
     feature = "build",
     feature = "cargo",
@@ -27,81 +29,109 @@ pub use self::features::*;
     feature = "si"
 ))]
 pub mod features {
-    // Build Constants
+    /// Build Constants
     #[cfg(feature = "build")]
     pub const BUILD_TIMESTAMP_NAME: &str = "VERGEN_BUILD_TIMESTAMP";
+    ///
     #[cfg(feature = "build")]
     pub const BUILD_DATE_NAME: &str = "VERGEN_BUILD_DATE";
 
-    // git Constants
+    /// git Constants
     #[cfg(feature = "git")]
     pub const GIT_BRANCH_NAME: &str = "VERGEN_GIT_BRANCH";
+    ///
     #[cfg(feature = "git")]
     pub const GIT_COMMIT_AUTHOR_EMAIL: &str = "VERGEN_GIT_COMMIT_AUTHOR_EMAIL";
+    ///
     #[cfg(feature = "git")]
     pub const GIT_COMMIT_AUTHOR_NAME: &str = "VERGEN_GIT_COMMIT_AUTHOR_NAME";
+    ///
     #[cfg(feature = "git")]
     pub const GIT_COMMIT_COUNT: &str = "VERGEN_GIT_COMMIT_COUNT";
+    ///
     #[cfg(feature = "git")]
     pub const GIT_COMMIT_MESSAGE: &str = "VERGEN_GIT_COMMIT_MESSAGE";
+    ///
     #[cfg(feature = "git")]
     pub const GIT_COMMIT_DATE_NAME: &str = "VERGEN_GIT_COMMIT_DATE";
+    ///
     #[cfg(feature = "git")]
     pub const GIT_COMMIT_TIMESTAMP_NAME: &str = "VERGEN_GIT_COMMIT_TIMESTAMP";
+    ///
     #[cfg(feature = "git")]
     pub const GIT_DESCRIBE_NAME: &str = "VERGEN_GIT_DESCRIBE";
+    ///
     #[cfg(feature = "git")]
     pub const GIT_SHA_NAME: &str = "VERGEN_GIT_SHA";
+    ///
     #[cfg(feature = "git")]
     pub const GIT_DIRTY_NAME: &str = "VERGEN_GIT_DIRTY";
 
-    // rustc Constants
+    /// rustc Constants
     #[cfg(feature = "rustc")]
     pub const RUSTC_CHANNEL_NAME: &str = "VERGEN_RUSTC_CHANNEL";
+    ///
     #[cfg(feature = "rustc")]
     pub const RUSTC_HOST_TRIPLE_NAME: &str = "VERGEN_RUSTC_HOST_TRIPLE";
+    ///
     #[cfg(feature = "rustc")]
     pub const RUSTC_SEMVER_NAME: &str = "VERGEN_RUSTC_SEMVER";
+    ///
     #[cfg(feature = "rustc")]
     pub const RUSTC_COMMIT_HASH: &str = "VERGEN_RUSTC_COMMIT_HASH";
+    ///
     #[cfg(feature = "rustc")]
     pub const RUSTC_COMMIT_DATE: &str = "VERGEN_RUSTC_COMMIT_DATE";
+    ///
     #[cfg(feature = "rustc")]
     pub const RUSTC_LLVM_VERSION: &str = "VERGEN_RUSTC_LLVM_VERSION";
 
-    // cargo Constants
+    /// cargo Constants
     #[cfg(feature = "cargo")]
     pub const CARGO_DEBUG: &str = "VERGEN_CARGO_DEBUG";
+    ///
     #[cfg(feature = "cargo")]
     pub const CARGO_DEPENDENCIES: &str = "VERGEN_CARGO_DEPENDENCIES";
+    ///
     #[cfg(feature = "cargo")]
     pub const CARGO_FEATURES: &str = "VERGEN_CARGO_FEATURES";
+    ///
     #[cfg(feature = "cargo")]
     pub const CARGO_OPT_LEVEL: &str = "VERGEN_CARGO_OPT_LEVEL";
+    ///
     #[cfg(feature = "cargo")]
     pub const CARGO_TARGET_TRIPLE: &str = "VERGEN_CARGO_TARGET_TRIPLE";
 
-    // sysinfo Constants
+    /// sysinfo Constants
     #[cfg(feature = "si")]
     pub const SYSINFO_NAME: &str = "VERGEN_SYSINFO_NAME";
+    ///
     #[cfg(feature = "si")]
     pub const SYSINFO_OS_VERSION: &str = "VERGEN_SYSINFO_OS_VERSION";
+    ///
     #[cfg(feature = "si")]
     pub const SYSINFO_USER: &str = "VERGEN_SYSINFO_USER";
+    ///
     #[cfg(feature = "si")]
     pub const SYSINFO_MEMORY: &str = "VERGEN_SYSINFO_TOTAL_MEMORY";
+    ///
     #[cfg(feature = "si")]
     pub const SYSINFO_CPU_VENDOR: &str = "VERGEN_SYSINFO_CPU_VENDOR";
+    ///
     #[cfg(feature = "si")]
     pub const SYSINFO_CPU_CORE_COUNT: &str = "VERGEN_SYSINFO_CPU_CORE_COUNT";
+    ///
     #[cfg(feature = "si")]
     pub const SYSINFO_CPU_NAME: &str = "VERGEN_SYSINFO_CPU_NAME";
+    ///
     #[cfg(feature = "si")]
     pub const SYSINFO_CPU_BRAND: &str = "VERGEN_SYSINFO_CPU_BRAND";
+    ///
     #[cfg(feature = "si")]
     pub const SYSINFO_CPU_FREQUENCY: &str = "VERGEN_SYSINFO_CPU_FREQUENCY";
 }
 
+///
 #[cfg(not(any(
     feature = "build",
     feature = "cargo",

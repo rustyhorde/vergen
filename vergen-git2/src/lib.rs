@@ -6,7 +6,7 @@
 // option. All files in the project carrying such notice may not be copied,
 // modified, or distributed except according to those terms.
 
-//! # vergen-gix - Emit cargo instructions from a build script
+//! # vergen-git2 - Emit cargo instructions from a build script
 //!
 
 // rustc lints
@@ -231,12 +231,17 @@
 #![cfg_attr(all(doc, nightly), feature(doc_auto_cfg))]
 #![cfg_attr(all(docsrs, nightly), feature(doc_cfg))]
 
+use anyhow as _;
+use git2_rs as _;
+use time as _;
+use vergen_lib as _;
+
+mod git2;
+
 #[cfg(test)]
-use {lazy_static as _, regex as _};
+use {lazy_static as _, regex as _, temp_env as _};
 
-mod gix;
-
-pub use crate::gix::Builder as GixBuilder;
+pub use crate::git2::Builder as Git2Builder;
 #[cfg(feature = "build")]
 pub use vergen::BuildBuilder;
 #[cfg(feature = "cargo")]

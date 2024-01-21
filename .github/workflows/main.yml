@@ -71,9 +71,10 @@ jobs:
         run: |
           cargo update
           cargo clippy -p test_util --all-targets -- -Dwarnings
+          cargo clippy -p vergen-lib --all-targets --features build,cargo,git,rustc,si -- -Dwarnings
           cargo clippy -p vergen --all-targets --features build,cargo,rustc,si -- -Dwarnings
           cargo clippy -p vergen-gix --all-targets --features build,cargo,rustc,si -- -Dwarnings
-          cargo clippy -p vergen-lib --all-targets --features build,cargo,git,rustc,si -- -Dwarnings
+          cargo clippy -p vergen-git2 --all-targets --features build,cargo,rustc,si -- -Dwarnings
           cargo clippy -p vergen-pretty --all-targets --features color,header,trace -- -Dwarnings
   lints-macos:
     name: 🕳️ Lints MacOS 🕳️
@@ -112,9 +113,10 @@ jobs:
         run: |
           cargo update
           cargo clippy -p test_util --all-targets -- -Dwarnings
+          cargo clippy -p vergen-lib --all-targets --features build,cargo,git,rustc,si -- -Dwarnings
           cargo clippy -p vergen --all-targets --features build,cargo,rustc,si -- -Dwarnings
           cargo clippy -p vergen-gix --all-targets --features build,cargo,rustc,si -- -Dwarnings
-          cargo clippy -p vergen-lib --all-targets --features build,cargo,git,rustc,si -- -Dwarnings
+          cargo clippy -p vergen-git2 --all-targets --features build,cargo,rustc,si -- -Dwarnings
           cargo clippy -p vergen-pretty --all-targets --features color,header,trace -- -Dwarnings
   lints-windows:
     name: 🕳️ Lints Windows 🕳️
@@ -153,9 +155,10 @@ jobs:
         run: |
           cargo update
           cargo clippy -p test_util --all-targets -- -Dwarnings
+          cargo clippy -p vergen-lib --all-targets --features build,cargo,git,rustc,si -- -Dwarnings
           cargo clippy -p vergen --all-targets --features build,cargo,rustc,si -- -Dwarnings
           cargo clippy -p vergen-gix --all-targets --features build,cargo,rustc,si -- -Dwarnings
-          cargo clippy -p vergen-lib --all-targets --features build,cargo,git,rustc,si -- -Dwarnings
+          cargo clippy -p vergen-git2 --all-targets --features build,cargo,rustc,si -- -Dwarnings
           cargo clippy -p vergen-pretty --all-targets --features color,header,trace -- -Dwarnings
   test-linux:
     name: 🧪 Linux 🧪
