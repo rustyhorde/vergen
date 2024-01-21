@@ -620,6 +620,7 @@ impl AddEntries for Sysinfo {
         Ok(())
     }
 
+    #[cfg(not(tarpaulin_include))]
     fn add_default_entries(
         &self,
         _config: &DefaultConfig,
@@ -670,6 +671,105 @@ mod test {
         let si = Builder::default().all_sysinfo().build();
         let config = Emitter::default().add_instructions(&si)?.test_emit();
         assert_eq!(SYSINFO_COUNT, config.cargo_rustc_env_map().len());
+        assert_eq!(IDEM_COUNT, count_idempotent(config.cargo_rustc_env_map()));
+        assert_eq!(IDEM_COUNT, config.warnings().len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn sysinfo_name() -> Result<()> {
+        let si = Builder::default().name().build();
+        let config = Emitter::default().add_instructions(&si)?.test_emit();
+        assert_eq!(1, config.cargo_rustc_env_map().len());
+        assert_eq!(IDEM_COUNT, count_idempotent(config.cargo_rustc_env_map()));
+        assert_eq!(IDEM_COUNT, config.warnings().len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn sysinfo_os_version() -> Result<()> {
+        let si = Builder::default().os_version().build();
+        let config = Emitter::default().add_instructions(&si)?.test_emit();
+        assert_eq!(1, config.cargo_rustc_env_map().len());
+        assert_eq!(IDEM_COUNT, count_idempotent(config.cargo_rustc_env_map()));
+        assert_eq!(IDEM_COUNT, config.warnings().len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn sysinfo_user() -> Result<()> {
+        let si = Builder::default().user().build();
+        let config = Emitter::default().add_instructions(&si)?.test_emit();
+        assert_eq!(1, config.cargo_rustc_env_map().len());
+        assert_eq!(IDEM_COUNT, count_idempotent(config.cargo_rustc_env_map()));
+        assert_eq!(IDEM_COUNT, config.warnings().len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn sysinfo_memory() -> Result<()> {
+        let si = Builder::default().memory().build();
+        let config = Emitter::default().add_instructions(&si)?.test_emit();
+        assert_eq!(1, config.cargo_rustc_env_map().len());
+        assert_eq!(IDEM_COUNT, count_idempotent(config.cargo_rustc_env_map()));
+        assert_eq!(IDEM_COUNT, config.warnings().len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn sysinfo_cpu_vendor() -> Result<()> {
+        let si = Builder::default().cpu_vendor().build();
+        let config = Emitter::default().add_instructions(&si)?.test_emit();
+        assert_eq!(1, config.cargo_rustc_env_map().len());
+        assert_eq!(IDEM_COUNT, count_idempotent(config.cargo_rustc_env_map()));
+        assert_eq!(IDEM_COUNT, config.warnings().len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn sysinfo_cpu_core_count() -> Result<()> {
+        let si = Builder::default().cpu_core_count().build();
+        let config = Emitter::default().add_instructions(&si)?.test_emit();
+        assert_eq!(1, config.cargo_rustc_env_map().len());
+        assert_eq!(IDEM_COUNT, count_idempotent(config.cargo_rustc_env_map()));
+        assert_eq!(IDEM_COUNT, config.warnings().len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn sysinfo_cpu_name() -> Result<()> {
+        let si = Builder::default().cpu_name().build();
+        let config = Emitter::default().add_instructions(&si)?.test_emit();
+        assert_eq!(1, config.cargo_rustc_env_map().len());
+        assert_eq!(IDEM_COUNT, count_idempotent(config.cargo_rustc_env_map()));
+        assert_eq!(IDEM_COUNT, config.warnings().len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn sysinfo_cpu_brand() -> Result<()> {
+        let si = Builder::default().cpu_brand().build();
+        let config = Emitter::default().add_instructions(&si)?.test_emit();
+        assert_eq!(1, config.cargo_rustc_env_map().len());
+        assert_eq!(IDEM_COUNT, count_idempotent(config.cargo_rustc_env_map()));
+        assert_eq!(IDEM_COUNT, config.warnings().len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn sysinfo_cpu_frequency() -> Result<()> {
+        let si = Builder::default().cpu_frequency().build();
+        let config = Emitter::default().add_instructions(&si)?.test_emit();
+        assert_eq!(1, config.cargo_rustc_env_map().len());
         assert_eq!(IDEM_COUNT, count_idempotent(config.cargo_rustc_env_map()));
         assert_eq!(IDEM_COUNT, config.warnings().len());
         Ok(())

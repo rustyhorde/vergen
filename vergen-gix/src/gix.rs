@@ -27,6 +27,52 @@ use vergen_lib::{
     AddEntries, CargoRerunIfChanged, CargoRustcEnvMap, CargoWarning, DefaultConfig, VergenKey,
 };
 
+/// The `VERGEN_GIT_*` configuration features
+///
+/// | Variable | Sample |
+/// | -------  | ------ |
+/// | `VERGEN_GIT_BRANCH` | feature/fun |
+/// | `VERGEN_GIT_COMMIT_AUTHOR_EMAIL` | janedoe@email.com |
+/// | `VERGEN_GIT_COMMIT_AUTHOR_NAME` | Jane Doe |
+/// | `VERGEN_GIT_COMMIT_COUNT` | 330 |
+/// | `VERGEN_GIT_COMMIT_DATE` | 2021-02-24 |
+/// | `VERGEN_GIT_COMMIT_MESSAGE` | feat: add commit messages |
+/// | `VERGEN_GIT_COMMIT_TIMESTAMP` | 2021-02-24T20:55:21+00:00 |
+/// | `VERGEN_GIT_DESCRIBE` | 5.0.0-2-gf49246c |
+/// | `VERGEN_GIT_SHA` | f49246ce334567bff9f950bfd0f3078184a2738a |
+///
+/// # Example
+///
+/// ```
+/// # use anyhow::Result;
+/// # use vergen_gix::{Emitter, GixBuilder};
+/// #
+/// # fn main() -> Result<()> {
+/// let gix = GixBuilder::default().all_git().build();
+/// Emitter::default().add_instructions(&gix)?.emit()?;
+/// #   Ok(())
+/// # }
+/// ```
+///
+/// Override output with your own value
+///
+/// ```
+/// # use anyhow::Result;
+/// # use std::env;
+/// # use vergen_gix::{Emitter, GixBuilder};
+/// #
+/// # fn main() -> Result<()> {
+/// temp_env::with_var("VERGEN_GIT_BRANCH", Some("this is the branch I want output"), || {
+///     let result = || -> Result<()> {
+///         let gix = GixBuilder::default().all_git().build();
+///         Emitter::default().add_instructions(&gix)?.emit()?;
+///         Ok(())
+///     }();
+/// });
+/// #   Ok(())
+/// # }
+/// ```
+///
 #[derive(Clone, Copy, Debug, Default)]
 #[allow(clippy::struct_excessive_bools)]
 pub struct GixBuilder {
@@ -196,8 +242,6 @@ impl GixBuilder {
             sha: self.sha,
             sha_short: self.sha_short,
             use_local: self.use_local,
-            #[cfg(test)]
-            fail: false,
         }
     }
 }
@@ -227,8 +271,6 @@ pub struct Gix {
     sha: bool,
     sha_short: bool,
     use_local: bool,
-    #[cfg(test)]
-    fail: bool,
 }
 
 impl Gix {
@@ -250,7 +292,6 @@ impl Gix {
         self
     }
 
-    #[cfg(not(test))]
     fn add_entries(
         &self,
         idempotent: bool,
@@ -259,28 +300,6 @@ impl Gix {
         cargo_warning: &mut CargoWarning,
     ) -> Result<()> {
         if self.any() {
-            self.inner_add_git_map_entries(
-                idempotent,
-                cargo_rustc_env,
-                cargo_rerun_if_changed,
-                cargo_warning,
-            )?;
-        }
-        Ok(())
-    }
-
-    #[cfg(test)]
-    fn add_entries(
-        &self,
-        idempotent: bool,
-        cargo_rustc_env: &mut CargoRustcEnvMap,
-        cargo_rerun_if_changed: &mut CargoRerunIfChanged,
-        cargo_warning: &mut CargoWarning,
-    ) -> Result<()> {
-        if self.any() {
-            if self.fail {
-                return Err(anyhow!("failed to create entries"));
-            }
             self.inner_add_git_map_entries(
                 idempotent,
                 cargo_rustc_env,
@@ -684,6 +703,120 @@ mod test {
 
     #[test]
     #[serial]
+    fn git_branch() -> Result<()> {
+        let gix = GixBuilder::default().branch().build();
+        let emitter = Emitter::default().add_instructions(&gix)?.test_emit();
+        assert_eq!(1, emitter.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(0, emitter.warnings().len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn git_commit_author_name() -> Result<()> {
+        let gix = GixBuilder::default().commit_author_name().build();
+        let emitter = Emitter::default().add_instructions(&gix)?.test_emit();
+        assert_eq!(1, emitter.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(0, emitter.warnings().len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn git_commit_author_email() -> Result<()> {
+        let gix = GixBuilder::default().commit_author_email().build();
+        let emitter = Emitter::default().add_instructions(&gix)?.test_emit();
+        assert_eq!(1, emitter.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(0, emitter.warnings().len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn git_commit_count() -> Result<()> {
+        let gix = GixBuilder::default().commit_count().build();
+        let emitter = Emitter::default().add_instructions(&gix)?.test_emit();
+        assert_eq!(1, emitter.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(0, emitter.warnings().len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn git_commit_message() -> Result<()> {
+        let gix = GixBuilder::default().commit_message().build();
+        let emitter = Emitter::default().add_instructions(&gix)?.test_emit();
+        assert_eq!(1, emitter.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(0, emitter.warnings().len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn git_commit_date() -> Result<()> {
+        let gix = GixBuilder::default().commit_date().build();
+        let emitter = Emitter::default().add_instructions(&gix)?.test_emit();
+        assert_eq!(1, emitter.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(0, emitter.warnings().len());
+        Ok(())
+    }
+
+    #[cfg(any(unix, target_os = "macos"))]
+    #[test]
+    #[serial]
+    fn git_commit_date_local() {
+        let result = || -> Result<()> {
+            let gix = GixBuilder::default().commit_date().use_local().build();
+            let _emitter = Emitter::default()
+                .fail_on_error()
+                .add_instructions(&gix)?
+                .test_emit();
+            Ok(())
+        }();
+        assert!(result.is_err());
+    }
+
+    #[test]
+    #[serial]
+    fn git_commit_timestamp() -> Result<()> {
+        let gix = GixBuilder::default().commit_timestamp().build();
+        let emitter = Emitter::default().add_instructions(&gix)?.test_emit();
+        assert_eq!(1, emitter.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(0, emitter.warnings().len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn git_describe() -> Result<()> {
+        let gix = GixBuilder::default().describe(true).build();
+        let emitter = Emitter::default().add_instructions(&gix)?.test_emit();
+        assert_eq!(1, emitter.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(0, emitter.warnings().len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn git_sha() -> Result<()> {
+        let gix = GixBuilder::default().sha(false).build();
+        let emitter = Emitter::default().add_instructions(&gix)?.test_emit();
+        assert_eq!(1, emitter.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(0, emitter.warnings().len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
     fn git_all_at_path() -> Result<()> {
         let repo = TestRepos::new(false, false, false)?;
         let mut gix = GixBuilder::default().all_git().build();
@@ -734,5 +867,126 @@ mod test {
         assert_eq!(9, count_idempotent(emitter.cargo_rustc_env_map()));
         assert_eq!(10, emitter.warnings().len());
         Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn source_date_epoch_works() {
+        temp_env::with_var("SOURCE_DATE_EPOCH", Some("1671809360"), || {
+            let result = || -> Result<()> {
+                let mut stdout_buf = vec![];
+                let gix = GixBuilder::default()
+                    .commit_date()
+                    .commit_timestamp()
+                    .build();
+                _ = Emitter::new()
+                    .idempotent()
+                    .add_instructions(&gix)?
+                    .emit_to(&mut stdout_buf)?;
+                let output = String::from_utf8_lossy(&stdout_buf);
+                for (idx, line) in output.lines().enumerate() {
+                    if idx == 0 {
+                        assert_eq!("cargo:rustc-env=VERGEN_GIT_COMMIT_DATE=2022-12-23", line);
+                    } else if idx == 1 {
+                        assert_eq!(
+                            "cargo:rustc-env=VERGEN_GIT_COMMIT_TIMESTAMP=2022-12-23T15:29:20.000000000Z",
+                            line
+                        );
+                    }
+                }
+                Ok(())
+            }();
+            assert!(result.is_ok());
+        });
+    }
+
+    #[test]
+    #[serial]
+    #[cfg(unix)]
+    fn bad_source_date_epoch_fails() {
+        use std::ffi::OsStr;
+        use std::os::unix::prelude::OsStrExt;
+
+        let source = [0x66, 0x6f, 0x80, 0x6f];
+        let os_str = OsStr::from_bytes(&source[..]);
+        temp_env::with_var("SOURCE_DATE_EPOCH", Some(os_str), || {
+            let result = || -> Result<bool> {
+                let mut stdout_buf = vec![];
+                let gix = GixBuilder::default().commit_date().build();
+                Emitter::new()
+                    .idempotent()
+                    .fail_on_error()
+                    .add_instructions(&gix)?
+                    .emit_to(&mut stdout_buf)
+            }();
+            assert!(result.is_err());
+        });
+    }
+
+    #[test]
+    #[serial]
+    #[cfg(unix)]
+    fn bad_source_date_epoch_defaults() {
+        use std::ffi::OsStr;
+        use std::os::unix::prelude::OsStrExt;
+
+        let source = [0x66, 0x6f, 0x80, 0x6f];
+        let os_str = OsStr::from_bytes(&source[..]);
+        temp_env::with_var("SOURCE_DATE_EPOCH", Some(os_str), || {
+            let result = || -> Result<bool> {
+                let mut stdout_buf = vec![];
+                let gix = GixBuilder::default().commit_date().build();
+                Emitter::new()
+                    .idempotent()
+                    .add_instructions(&gix)?
+                    .emit_to(&mut stdout_buf)
+            }();
+            assert!(result.is_ok());
+        });
+    }
+
+    #[test]
+    #[serial]
+    #[cfg(windows)]
+    fn bad_source_date_epoch_fails() {
+        use std::ffi::OsString;
+        use std::os::windows::prelude::OsStringExt;
+
+        let source = [0x0066, 0x006f, 0xD800, 0x006f];
+        let os_string = OsString::from_wide(&source[..]);
+        let os_str = os_string.as_os_str();
+        temp_env::with_var("SOURCE_DATE_EPOCH", Some(os_str), || {
+            let result = || -> Result<bool> {
+                let mut stdout_buf = vec![];
+                let gix = GixBuilder::default().cargo_date().build();
+                Emitter::new()
+                    .idempotent()
+                    .add_instructions(&gix)?
+                    .emit_to(&mut stdout_buf)
+            }();
+            assert!(result.is_err());
+        });
+    }
+
+    #[test]
+    #[serial]
+    #[cfg(windows)]
+    fn bad_source_date_epoch_defaults() {
+        use std::ffi::OsString;
+        use std::os::windows::prelude::OsStringExt;
+
+        let source = [0x0066, 0x006f, 0xD800, 0x006f];
+        let os_string = OsString::from_wide(&source[..]);
+        temp_env::with_var("SOURCE_DATE_EPOCH", Some(os_str), || {
+            let result = || -> Result<bool> {
+                let mut stdout_buf = vec![];
+                let gix = GixBuilder::default().cargo_date().build();
+                Emitter::new()
+                    .idempotent()
+                    .add_instructions(&gix)?
+                    .emit_to(&mut stdout_buf)
+            }();
+            assert!(result.is_ok());
+        });
     }
 }
