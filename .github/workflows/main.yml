@@ -216,6 +216,8 @@ jobs:
           cargo test -p vergen-pretty -F __vergen_test,color,trace
           cargo test -p vergen-pretty -F __vergen_test,trace,serde
           cargo test -p vergen-pretty -F __vergen_test,color,serde,trace
+      - name: 🙊 Code Coverage (vergen-lib) 🙊
+        run: cargo tarpaulin --config vergen-lib/tarpaulin.toml -p vergen-lib -e vergen vergen-git2 vergen-gix vergen-pretty --exclude-files vergen-lib/src/lib.rs vergen/**/* vergen-git2/**/* vergen-gix/**/* vergen-pretty/**/* --workspace --out xml --output-dir vergen-lib --skip-clean --target-dir target/coverage
       - name: 🙊 Code Coverage (vergen) 🙊
         run: cargo tarpaulin --config vergen/tarpaulin.toml -p vergen -e vergen-git2 vergen-gix vergen-pretty --exclude-files vergen/src/lib.rs vergen-git2/**/* vergen-gix/**/* vergen-pretty/**/* --workspace --out xml --output-dir vergen --skip-clean --target-dir target/coverage
       - name: 🙊 Code Coverage (vergen-gix) 🙊

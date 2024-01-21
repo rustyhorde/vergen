@@ -224,12 +224,39 @@ pub(crate) mod vergen_key {
 pub(crate) mod vergen_key {
     ///
     #[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
-    pub enum VergenKey {}
+    pub enum VergenKey {
+        ///
+        Empty,
+    }
 
     impl VergenKey {
         /// Get the name for the given key.
         pub fn name(self) -> &'static str {
             ""
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    #[cfg(not(any(
+        feature = "build",
+        feature = "cargo",
+        feature = "git",
+        feature = "rustc",
+        feature = "si"
+    )))]
+    use super::vergen_key::VergenKey;
+
+    #[cfg(not(any(
+        feature = "build",
+        feature = "cargo",
+        feature = "git",
+        feature = "rustc",
+        feature = "si"
+    )))]
+    #[test]
+    fn empty_name() {
+        assert_eq!(VergenKey::Empty.name(), "");
     }
 }
