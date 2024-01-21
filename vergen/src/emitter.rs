@@ -492,6 +492,7 @@ EmitBuilder::builder()
     /// #   Ok(())
     /// # }
     /// ```
+    #[cfg(not(tarpaulin_include))]
     pub fn emit_and_set(&self) -> Result<()> {
         self.emit_output(&mut io::stdout()).map(|()| {
             for (k, v) in &self.cargo_rustc_env_map {

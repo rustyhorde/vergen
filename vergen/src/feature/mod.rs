@@ -12,5 +12,5 @@ pub(crate) mod build;
 pub(crate) mod cargo;
 #[cfg(feature = "rustc")]
 pub(crate) mod rustc;
-// #[cfg(feature = "si")]
-// pub(crate) mod si;
+#[cfg(feature = "si")]
+pub(crate) mod si;

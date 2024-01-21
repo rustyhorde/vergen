@@ -549,6 +549,8 @@ pub use feature::cargo::Builder as CargoBuilder;
 #[cfg(feature = "rustc")]
 pub use feature::rustc::Builder as RustcBuilder;
 #[cfg(feature = "si")]
+pub use feature::si::Builder as SysinfoBuilder;
+#[cfg(feature = "si")]
 pub use sysinfo::CpuRefreshKind;
 #[cfg(feature = "si")]
 pub use sysinfo::MemoryRefreshKind;
