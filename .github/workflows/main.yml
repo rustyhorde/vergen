@@ -232,7 +232,7 @@ jobs:
       - name: 🙊 Code Coverage (vergen-pretty) 🙊
         run: cargo tarpaulin --config vergen-pretty/tarpaulin.toml -p vergen-pretty -e vergen vergen-git2 vergen-gitcl vergen-gix --exclude-files vergen-pretty/src/lib.rs vergen-git2/**/* vergen-gitcl/**/* --workspace --out xml --output-dir vergen-pretty --skip-clean --target-dir target/coverage
       - name: 🙊 Upload Code Coverage 🙊
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4-beta
         with:
           token: ${ secrets.CODECOV_TOKEN }
           files: ./vergen-lib/cobertura.xml,./vergen/cobertura.xml,./vergen-git2/cobertura.xml,./vergen-gitcl/cobertura.xml,./vergen-gix/cobertura.xml,./vergen-pretty/cobertura.xml
