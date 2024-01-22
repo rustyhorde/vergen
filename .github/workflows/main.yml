@@ -234,7 +234,7 @@ jobs:
       - name: 🙊 Upload Code Coverage 🙊
         uses: codecov/codecov-action@v3
         with:
-          files: ./vergen-lib/cobertura.xml,./vergen/cobertura.xml,./vergen-git2/cobertura.xml,./vergen-gix/cobertura.xml,./vergen-pretty/cobertura.xml
+          files: ./vergen-lib/cobertura.xml,./vergen/cobertura.xml,./vergen-git2/cobertura.xml,./vergen-gitcl/cobertura.xml,./vergen-gix/cobertura.xml,./vergen-pretty/cobertura.xml
   test-macos:
     name: 🧪 MacOS 🧪
     needs: lints-macos
