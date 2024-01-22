@@ -104,7 +104,7 @@ use vergen_lib::{
 /// # }
 /// ```
 ///
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 #[allow(clippy::struct_excessive_bools)]
 pub struct Builder {
     debug: bool,
@@ -219,7 +219,7 @@ impl Builder {
 }
 
 ///
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 #[allow(clippy::struct_excessive_bools)]
 pub struct Cargo {
     debug: bool,
@@ -274,18 +274,19 @@ impl Cargo {
             })
             .collect();
 
+        let regex_opt = if let Some(name_regex) = name_filter {
+            Regex::new(name_regex).ok()
+        } else {
+            None
+        };
         let results: Vec<String> = packages
             .iter()
             .filter_map(|(package, dep_kind_info)| {
-                if let Some(name_regex) = name_filter {
-                    if let Ok(regex) = Regex::new(name_regex) {
-                        if regex.is_match(&package.name) {
-                            Some((package, dep_kind_info))
-                        } else {
-                            None
-                        }
-                    } else {
+                if let Some(regex) = &regex_opt {
+                    if regex.is_match(&package.name) {
                         Some((package, dep_kind_info))
+                    } else {
+                        None
                     }
                 } else {
                     Some((package, dep_kind_info))
@@ -423,8 +424,58 @@ mod test {
     use crate::Emitter;
     use anyhow::Result;
     use serial_test::serial;
+    use std::io::Write;
     use test_util::{with_cargo_vars, with_cargo_vars_ext};
     use vergen_lib::count_idempotent;
+
+    #[test]
+    #[serial]
+    fn builder_clone_works() {
+        let mut builder = Builder::default();
+        let _ = builder.all_cargo();
+        let another = builder.clone();
+        assert_eq!(another, builder);
+    }
+
+    #[test]
+    #[serial]
+    fn cargo_clone_works() {
+        let cargo = Builder::default().all_cargo().build();
+        let another = cargo.clone();
+        assert_eq!(another, cargo);
+    }
+
+    #[test]
+    #[serial]
+    fn builder_debug_works() -> Result<()> {
+        let mut builder = Builder::default();
+        let _ = builder.all_cargo();
+        let mut buf = vec![];
+        write!(buf, "{builder:?}")?;
+        assert!(!buf.is_empty());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn cargo_debug_works() -> Result<()> {
+        let cargo = Builder::default().all_cargo().build();
+        let mut buf = vec![];
+        write!(buf, "{cargo:?}")?;
+        assert!(!buf.is_empty());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn cargo_default() -> Result<()> {
+        let cargo = Builder::default().build();
+        let emitter = Emitter::default().add_instructions(&cargo)?.test_emit();
+        assert_eq!(0, emitter.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(0, emitter.warnings().len());
+        Ok(())
+    }
 
     #[test]
     #[serial]
@@ -547,16 +598,32 @@ mod test {
 
     #[test]
     #[serial]
+    fn dependencies_bad_name_filter() {
+        with_cargo_vars(|| {
+            let result = || -> Result<()> {
+                let name_filter = Some("(");
+                let cargo = Builder::default()
+                    .dependencies()
+                    .dependencies_name_filter(name_filter)
+                    .build();
+                let config = Emitter::default().add_instructions(&cargo)?.test_emit();
+                assert_eq!(1, config.cargo_rustc_env_map().len());
+                assert_eq!(0, count_idempotent(config.cargo_rustc_env_map()));
+                assert_eq!(0, config.warnings().len());
+                Ok(())
+            }();
+            assert!(result.is_ok());
+        });
+    }
+
+    #[test]
+    #[serial]
     fn bad_env_fails() {
         let cargo = Builder::default().all_cargo().build();
-        let res = || -> Result<()> {
-            let _unused = Emitter::default()
-                .fail_on_error()
-                .add_instructions(&cargo)?
-                .test_emit();
-            Ok(())
-        }();
-        assert!(res.is_err());
+        assert!(Emitter::default()
+            .fail_on_error()
+            .add_instructions(&cargo)
+            .is_err());
     }
 
     #[test]

@@ -4,3 +4,4 @@ Cargo.lock
 *.bk
 .DS_Store
 cobertura.xml
+lcov.info

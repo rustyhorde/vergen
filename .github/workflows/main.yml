@@ -278,11 +278,11 @@ jobs:
       - name: 🙊 Code Coverage (vergen-pretty) 🙊
         run: cargo llvm-cov -p vergen-pretty -F __vergen_test,color,header,serde,trace --no-report
       - name: 🙊 Code Coverage Report 🙊
-        run: cargo llvm-cov report --cobertura --output-path cobertura.xml
+        run: cargo llvm-cov report -lcov --output-path lcov.info
       - name: 🙊 Upload Code Coverage 🙊
         uses: codecov/codecov-action@v3
         with:
-          files: ./cobertura.xml
+          files: ./lcov.info
   test-macos:
     name: 🧪 MacOS 🧪
     needs: lints-macos

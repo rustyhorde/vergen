@@ -251,10 +251,22 @@ mod test {
         assert!(header(&config, Some(&mut buf)).is_ok());
         assert!(!buf.is_empty());
         let header_str = String::from_utf8_lossy(&buf);
-        eprintln!("{header_str}");
         assert!(BUILD_TIMESTAMP.is_match(&header_str));
         assert!(BUILD_SEMVER.is_match(&header_str));
         assert!(GIT_BRANCH.is_match(&header_str));
+        Ok(())
+    }
+
+    #[test]
+    #[cfg(feature = "__vergen_test")]
+    fn header_no_writer() -> Result<()> {
+        use super::ConfigBuilder;
+        use crate::vergen_pretty_env;
+
+        let buf: Vec<u8> = vec![];
+        let config = ConfigBuilder::default().env(vergen_pretty_env!()).build()?;
+        assert!(header(&config, None::<&mut Vec<u8>>).is_ok());
+        assert!(buf.is_empty());
         Ok(())
     }
 

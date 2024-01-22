@@ -138,7 +138,7 @@ use vergen_lib::{
 /// cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
 /// ```
 ///
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 #[allow(clippy::struct_excessive_bools)]
 pub struct Builder {
     build_date: bool,
@@ -181,7 +181,7 @@ impl Builder {
     }
 }
 ///
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct Build {
     build_date: bool,
     build_timestamp: bool,
@@ -312,7 +312,57 @@ mod test {
     use crate::Emitter;
     use anyhow::Result;
     use serial_test::serial;
+    use std::io::Write;
     use vergen_lib::count_idempotent;
+
+    #[test]
+    #[serial]
+    fn builder_clone() {
+        let mut builder = Builder::default();
+        let _ = builder.all_build();
+        let another = builder.clone();
+        assert_eq!(another, builder);
+    }
+
+    #[test]
+    #[serial]
+    fn build_clone() {
+        let build = Builder::default().all_build().build();
+        let another = build.clone();
+        assert_eq!(another, build);
+    }
+
+    #[test]
+    #[serial]
+    fn builder_debug() -> Result<()> {
+        let mut builder = Builder::default();
+        let _ = builder.all_build();
+        let mut buf = vec![];
+        write!(buf, "{builder:?}")?;
+        assert!(!buf.is_empty());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn build_debug() -> Result<()> {
+        let build = Builder::default().all_build().build();
+        let mut buf = vec![];
+        write!(buf, "{build:?}")?;
+        assert!(!buf.is_empty());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn build_default() -> Result<()> {
+        let build = Builder::default().build();
+        let emitter = Emitter::default().add_instructions(&build)?.test_emit();
+        assert_eq!(0, emitter.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(0, emitter.warnings().len());
+        Ok(())
+    }
 
     #[test]
     #[serial]
