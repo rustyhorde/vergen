@@ -236,8 +236,8 @@ mod git2;
 #[cfg(test)]
 use {lazy_static as _, regex as _, temp_env as _};
 
-pub use crate::git2::Git2;
 pub use crate::git2::Builder as Git2Builder;
+pub use crate::git2::Git2;
 #[cfg(feature = "build")]
 pub use vergen::BuildBuilder;
 #[cfg(feature = "cargo")]

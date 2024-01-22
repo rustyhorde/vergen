@@ -237,8 +237,8 @@ use {lazy_static as _, regex as _, temp_env as _};
 
 mod gitcl;
 
-pub use gitcl::Gitcl;
 pub use gitcl::Builder as GitclBuilder;
+pub use gitcl::Gitcl;
 #[cfg(feature = "build")]
 pub use vergen::BuildBuilder;
 #[cfg(feature = "cargo")]
