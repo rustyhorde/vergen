@@ -981,6 +981,7 @@ mod test {
 
         let source = [0x0066, 0x006f, 0xD800, 0x006f];
         let os_string = OsString::from_wide(&source[..]);
+        let os_str = os_string.as_os_str();
         temp_env::with_var("SOURCE_DATE_EPOCH", Some(os_str), || {
             let result = || -> Result<bool> {
                 let mut stdout_buf = vec![];

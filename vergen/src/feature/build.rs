@@ -317,6 +317,7 @@ mod test {
 
     #[test]
     #[serial]
+    #[allow(clippy::clone_on_copy)]
     fn builder_clone() {
         let mut builder = Builder::default();
         let _ = builder.all_build();
@@ -326,6 +327,7 @@ mod test {
 
     #[test]
     #[serial]
+    #[allow(clippy::clone_on_copy)]
     fn build_clone() {
         let build = Builder::default().all_build().build();
         let another = build.clone();
@@ -566,6 +568,7 @@ mod test {
 
         let source = [0x0066, 0x006f, 0xD800, 0x006f];
         let os_string = OsString::from_wide(&source[..]);
+        let os_str = os_string.as_os_str();
         temp_env::with_var("SOURCE_DATE_EPOCH", Some(os_str), || {
             let result = || -> Result<bool> {
                 let mut stdout_buf = vec![];
