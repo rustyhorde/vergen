@@ -219,6 +219,50 @@ jobs:
           cargo test -p vergen-pretty -F __vergen_test,color,trace
           cargo test -p vergen-pretty -F __vergen_test,trace,serde
           cargo test -p vergen-pretty -F __vergen_test,color,serde,trace
+  coverage:
+    name: 🧱 Code Coverage 🧱
+    needs: test-linux
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            rust: "1.70.0"
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-latest
+            rust: stable
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-latest
+            rust: beta
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-latest
+            rust: nightly
+            target: x86_64-unknown-linux-gnu
+    steps:
+      - name: ✅ Checkout ✅
+        uses: actions/checkout@v3
+      - name: 💵 Cache 💵
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/coverage
+          key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock', '**/main.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock', '**/main.yml') }}
+      - name: 🧰 Toolchain 🧰
+        run: |
+          rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
+          rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile minimal
+          rustup default ${{ matrix.rust }}
+      - name: 💾 Install (cargo-binstall) 💾
+        uses: cargo-bins/cargo-binstall@main
+      - name: 💾 Install (tarpaulin, all-features) 💾
+        continue-on-error: true
+        run: cargo binstall --no-confirm --no-symlinks cargo-tarpaulin
       - name: 🙊 Code Coverage (vergen-lib) 🙊
         run: cargo tarpaulin --config vergen-lib/tarpaulin.toml -p vergen-lib -e vergen vergen-git2 vergen-gitcl vergen-gix vergen-pretty --exclude-files vergen-lib/src/lib.rs vergen/**/* vergen-git2/**/* vergen-gitcl/**/* vergen-gix/**/* vergen-pretty/**/* --workspace --out xml --output-dir vergen-lib --skip-clean --target-dir target/coverage
       - name: 🙊 Code Coverage (vergen) 🙊
@@ -234,7 +278,6 @@ jobs:
       - name: 🙊 Upload Code Coverage 🙊
         uses: codecov/codecov-action@v3
         with:
-          token: ${ secrets.CODECOV_TOKEN }
           files: ./vergen-lib/cobertura.xml,./vergen/cobertura.xml,./vergen-git2/cobertura.xml,./vergen-gitcl/cobertura.xml,./vergen-gix/cobertura.xml,./vergen-pretty/cobertura.xml
   test-macos:
     name: 🧪 MacOS 🧪
