@@ -6,7 +6,7 @@
 // option. All files in the project carrying such notice may not be copied,
 // modified, or distributed except according to those terms.
 
-//! # vergen-git2 - Emit cargo instructions from a build script
+//! # vergen-gitcl - Emit cargo instructions from a build script
 //!
 
 // rustc lints
@@ -231,12 +231,12 @@
 #![cfg_attr(all(doc, nightly), feature(doc_auto_cfg))]
 #![cfg_attr(all(docsrs, nightly), feature(doc_cfg))]
 
-mod git2;
-
 #[cfg(test)]
 use {lazy_static as _, regex as _, temp_env as _};
 
-pub use crate::git2::Builder as Git2Builder;
+mod gitcl;
+
+pub use gitcl::Builder as GitclBuilder;
 #[cfg(feature = "build")]
 pub use vergen::BuildBuilder;
 #[cfg(feature = "cargo")]
