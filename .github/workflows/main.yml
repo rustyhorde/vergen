@@ -260,25 +260,29 @@ jobs:
           rustup default ${{ matrix.rust }}
       - name: 💾 Install (cargo-binstall) 💾
         uses: cargo-bins/cargo-binstall@main
-      - name: 💾 Install (tarpaulin, all-features) 💾
+      - name: 💾 Install (llvm-cov) 💾
         continue-on-error: true
-        run: cargo binstall --no-confirm --no-symlinks cargo-tarpaulin
+        run: cargo binstall --no-confirm --no-symlinks cargo-llvm-cov
+      - name: 🙊 Clean Workspace 🙊
+        run: cargo llvm-cov clean --workspace
       - name: 🙊 Code Coverage (vergen-lib) 🙊
-        run: cargo tarpaulin --config vergen-lib/tarpaulin.toml -p vergen-lib -e vergen vergen-git2 vergen-gitcl vergen-gix vergen-pretty --exclude-files vergen-lib/src/lib.rs vergen/**/* vergen-git2/**/* vergen-gitcl/**/* vergen-gix/**/* vergen-pretty/**/* --workspace --out xml --output-dir vergen-lib --skip-clean --target-dir target/coverage
+        run: cargo llvm-cov -p vergen-lib -F unstable,build,cargo,git,rustc,si --no-report
       - name: 🙊 Code Coverage (vergen) 🙊
-        run: cargo tarpaulin --config vergen/tarpaulin.toml -p vergen -e vergen-git2 vergen-gitcl vergen-gix vergen-pretty --exclude-files vergen/src/lib.rs vergen-git2/**/* vergen-gitcl/**/* vergen-gix/**/* vergen-pretty/**/* --workspace --out xml --output-dir vergen --skip-clean --target-dir target/coverage
+        run: cargo llvm-cov -p vergen -F unstable,build,cargo,rustc,si --no-report
       - name: 🙊 Code Coverage (vergen-gix) 🙊
-        run: cargo tarpaulin --config vergen-gix/tarpaulin.toml -p vergen-gix -e vergen vergen-git2 vergen-gitcl vergen-pretty --exclude-files vergen-gix/src/lib.rs vergen-git2/**/* vergen-gitcl/**/* vergen-pretty/**/* --workspace --out xml --output-dir vergen-gix --skip-clean --target-dir target/coverage
+        run: cargo llvm-cov -p vergen-gix -F unstable,build,cargo,rustc,si --no-report
       - name: 🙊 Code Coverage (vergen-git2) 🙊
-        run: cargo tarpaulin --config vergen-git2/tarpaulin.toml -p vergen-git2 -e vergen vergen-gitcl vergen-gix vergen-pretty --exclude-files vergen-git2/src/lib.rs vergen-gitcl/**/* vergen-gix/**/* vergen-pretty/**/* --workspace --out xml --output-dir vergen-git2 --skip-clean --target-dir target/coverage
+        run: cargo llvm-cov -p vergen-git2 -F unstable,build,cargo,rustc,si --no-report
       - name: 🙊 Code Coverage (vergen-gitcl) 🙊
-        run: cargo tarpaulin --config vergen-gitcl/tarpaulin.toml -p vergen-gitcl -e vergen vergen-git2 vergen-gix vergen-pretty --exclude-files vergen-gitcl/src/lib.rs vergen-git2/**/* vergen-gix/**/* vergen-pretty/**/* --workspace --out xml --output-dir vergen-gitcl --skip-clean --target-dir target/coverage
+        run: cargo llvm-cov -p vergen-gitcl -F unstable,build,cargo,rustc,si --no-report
       - name: 🙊 Code Coverage (vergen-pretty) 🙊
-        run: cargo tarpaulin --config vergen-pretty/tarpaulin.toml -p vergen-pretty -e vergen vergen-git2 vergen-gitcl vergen-gix --exclude-files vergen-pretty/src/lib.rs vergen-git2/**/* vergen-gitcl/**/* --workspace --out xml --output-dir vergen-pretty --skip-clean --target-dir target/coverage
+        run: cargo llvm-cov -p vergen-pretty -F __vergen_test,color,header,serde,trace --no-report
+      - name: 🙊 Code Coverage Report 🙊
+        run: cargo llvm-cov report --cobertura --output-path cobertura.xml
       - name: 🙊 Upload Code Coverage 🙊
         uses: codecov/codecov-action@v3
         with:
-          files: ./vergen-lib/cobertura.xml,./vergen/cobertura.xml,./vergen-git2/cobertura.xml,./vergen-gitcl/cobertura.xml,./vergen-gix/cobertura.xml,./vergen-pretty/cobertura.xml
+          files: ./cobertura.xml
   test-macos:
     name: 🧪 MacOS 🧪
     needs: lints-macos

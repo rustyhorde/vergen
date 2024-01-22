@@ -24,6 +24,13 @@ cargo test -p vergen-pretty -F __vergen_test,color,header,serde; and \
 cargo test -p vergen-pretty -F __vergen_test,color,header,trace; and \
 cargo test -p vergen-pretty -F __vergen_test,header,serde,trace; and \
 cargo test -p vergen-pretty -F __vergen_test,color,header,serde,trace; and \
+cargo llvm-cov clean --workspace; and \
+cargo llvm-cov -p vergen -F unstable,build,cargo,rustc,si --no-report; and \
+cargo llvm-cov -p vergen-git2 -F unstable,build,cargo,rustc,si --no-report; and \
+cargo llvm-cov -p vergen-gitcl -F unstable,build,cargo,rustc,si --no-report; and \
+cargo llvm-cov -p vergen-gix -F unstable,build,cargo,rustc,si --no-report; and \
+cargo llvm-cov -p vergen-pretty -F __vergen_test,color,header,serde,trace --no-report; and \
+cargo llvm-cov report --cobertura --output-path cobertura.xml; and \
 cargo doc -p vergen -F build,cargo,rustc,si; and \
 cargo doc -p vergen-gix -F build,cargo,rustc,si; and \
 cargo doc -p vergen-git2 -F build,cargo,rustc,si; and \

@@ -192,135 +192,6 @@ impl Emitter {
         Ok(self)
     }
 
-    // #[cfg(feature = "cargo")]
-    // fn add_cargo_entries(&mut self, builder: &EmitBuilder) -> Result<()> {
-    //     let fail_on_error = builder.fail_on_error;
-    //     let mut empty = BTreeMap::new();
-    //     let cargo_rustc_env_map = if builder.disable_cargo {
-    //         &mut empty
-    //     } else {
-    //         &mut self.cargo_rustc_env_map
-    //     };
-    //     builder
-    //         .add_cargo_map_entries(cargo_rustc_env_map)
-    //         .or_else(|e| {
-    //             builder.add_cargo_default(e, fail_on_error, cargo_rustc_env_map, &mut self.warnings)
-    //         })
-    // }
-
-    // #[cfg(not(feature = "cargo"))]
-    // #[allow(
-    //     clippy::unnecessary_wraps,
-    //     clippy::trivially_copy_pass_by_ref,
-    //     clippy::unused_self
-    // )]
-    // fn add_cargo_entries(&mut self, _builder: &EmitBuilder) -> Result<()> {
-    //     Ok(())
-    // }
-
-    // #[cfg(all(
-    //     feature = "git",
-    //     any(feature = "git2", feature = "gitcl", feature = "gix")
-    // ))]
-    // fn add_git_entries(&mut self, builder: &EmitBuilder, repo_path: Option<PathBuf>) -> Result<()> {
-    //     let idem = builder.idempotent;
-    //     let fail_on_error = builder.fail_on_error;
-    //     let mut empty_cargo_rustc_env_map = BTreeMap::new();
-    //     let mut empty_rerun_if_changed = vec![];
-    //     let mut empty_warnings = vec![];
-    //     let (cargo_rustc_env_map, rerun_if_changed, warnings) = if builder.disable_git {
-    //         (
-    //             &mut empty_cargo_rustc_env_map,
-    //             &mut empty_rerun_if_changed,
-    //             &mut empty_warnings,
-    //         )
-    //     } else {
-    //         (
-    //             &mut self.cargo_rustc_env_map,
-    //             &mut self.rerun_if_changed,
-    //             &mut self.warnings,
-    //         )
-    //     };
-    //     builder
-    //         .add_git_map_entries(
-    //             repo_path,
-    //             idem,
-    //             cargo_rustc_env_map,
-    //             warnings,
-    //             rerun_if_changed,
-    //         )
-    //         .or_else(|e| {
-    //             self.failed = true;
-    //             builder.add_git_default(
-    //                 e,
-    //                 fail_on_error,
-    //                 cargo_rustc_env_map,
-    //                 warnings,
-    //                 rerun_if_changed,
-    //             )
-    //         })
-    // }
-
-    // #[cfg(not(all(
-    //     feature = "git",
-    //     any(feature = "git2", feature = "gitcl", feature = "gix")
-    // )))]
-    // #[allow(
-    //     clippy::unnecessary_wraps,
-    //     clippy::trivially_copy_pass_by_ref,
-    //     clippy::unused_self,
-    //     clippy::needless_pass_by_value
-    // )]
-    // fn add_git_entries(&mut self, _builder: &EmitBuilder, _path: Option<PathBuf>) -> Result<()> {
-    //     Ok(())
-    // }
-
-    // #[cfg(feature = "rustc")]
-    // fn add_rustc_entries(&mut self, builder: &EmitBuilder) -> Result<()> {
-    //     let fail_on_error = builder.fail_on_error;
-    //     let mut empty = BTreeMap::new();
-    //     let cargo_rustc_env_map = if builder.disable_rustc {
-    //         &mut empty
-    //     } else {
-    //         &mut self.cargo_rustc_env_map
-    //     };
-    //     builder
-    //         .add_rustc_map_entries(cargo_rustc_env_map, &mut self.warnings)
-    //         .or_else(|e| {
-    //             builder.add_rustc_default(e, fail_on_error, cargo_rustc_env_map, &mut self.warnings)
-    //         })
-    // }
-
-    // #[cfg(not(feature = "rustc"))]
-    // #[allow(
-    //     clippy::unnecessary_wraps,
-    //     clippy::trivially_copy_pass_by_ref,
-    //     clippy::unused_self
-    // )]
-    // fn add_rustc_entries(&mut self, _builder: &EmitBuilder) -> Result<()> {
-    //     Ok(())
-    // }
-
-    // #[cfg(feature = "si")]
-    // fn add_si_entries(&mut self, builder: &EmitBuilder) {
-    //     let idem = builder.idempotent;
-    //     let mut empty = BTreeMap::new();
-    //     let cargo_rustc_env_map = if builder.disable_sysinfo {
-    //         &mut empty
-    //     } else {
-    //         &mut self.cargo_rustc_env_map
-    //     };
-    //     builder.add_sysinfo_map_entries(idem, cargo_rustc_env_map, &mut self.warnings);
-    // }
-
-    // #[cfg(not(feature = "si"))]
-    // #[allow(
-    //     clippy::unnecessary_wraps,
-    //     clippy::trivially_copy_pass_by_ref,
-    //     clippy::unused_self
-    // )]
-    // fn add_si_entries(&mut self, _builder: &EmitBuilder) {}
-
     fn emit_output<T>(&self, stdout: &mut T) -> Result<()>
     where
         T: Write,
@@ -388,36 +259,41 @@ impl Emitter {
     /// # use anyhow::Result;
     /// # use std::env;
     /// # use vergen::Emitter;
+    #[cfg_attr(feature = "build", doc = r##"use vergen::BuildBuilder;"##)]
+    #[cfg_attr(feature = "cargo", doc = r##"use vergen::CargoBuilder;"##)]
+    #[cfg_attr(feature = "rustc", doc = r##"use vergen::RustcBuilder;"##)]
+    #[cfg_attr(feature = "si", doc = r##"use vergen::SysinfoBuilder;"##)]
+    /// # use test_util::with_cargo_vars;
     /// #
     /// # fn main() -> Result<()> {
+    /// with_cargo_vars(|| {
+    ///     let result = || -> Result<()> {
     #[cfg_attr(
-        all(
-            feature = "build",
-            feature = "cargo",
-            all(feature = "git", feature = "gitcl"),
-            feature = "rustc",
-            feature = "si"
-        ),
-        doc = r##"
-# env::set_var("CARGO_FEATURE_BUILD", "build");
-# env::set_var("CARGO_FEATURE_GIT", "git");
-# env::set_var("DEBUG", "true");
-# env::set_var("OPT_LEVEL", "1");
-# env::set_var("TARGET", "x86_64-unknown-linux-gnu");
-EmitBuilder::builder()
-  .all_build()
-  .all_cargo()
-  .all_git()
-  .all_rustc()
-  .all_sysinfo()
-  .emit()?;
-# env::remove_var("CARGO_FEATURE_BUILD");
-# env::remove_var("CARGO_FEATURE_GIT");
-# env::remove_var("DEBUG");
-# env::remove_var("OPT_LEVEL");
-# env::remove_var("TARGET");
-"##
+        feature = "build",
+        doc = r##"let build = BuildBuilder::default().all_build().build();"##
     )]
+    #[cfg_attr(
+        feature = "cargo",
+        doc = r##"let cargo = CargoBuilder::default().all_cargo().build();"##
+    )]
+    #[cfg_attr(
+        feature = "rustc",
+        doc = r##"let rustc = RustcBuilder::default().all_rustc().build();"##
+    )]
+    #[cfg_attr(
+        feature = "si",
+        doc = r##"let si = SysinfoBuilder::default().all_sysinfo().build();"##
+    )]
+    ///         let emitter = Emitter::default()
+    #[cfg_attr(feature = "build", doc = r##".add_instructions(&build)?"##)]
+    #[cfg_attr(feature = "cargo", doc = r##".add_instructions(&cargo)?"##)]
+    #[cfg_attr(feature = "rustc", doc = r##".add_instructions(&rustc)?"##)]
+    #[cfg_attr(feature = "si", doc = r##".add_instructions(&si)?"##)]
+    ///             .emit()?;
+    ///         Ok(())
+    ///     }();
+    ///     assert!(result.is_ok());
+    /// });
     /// #   Ok(())
     /// # }
     /// ```
@@ -493,6 +369,7 @@ EmitBuilder::builder()
     /// # }
     /// ```
     #[cfg(not(tarpaulin_include))]
+    #[cfg_attr(coverage_nightly, coverage(off))]
     pub fn emit_and_set(&self) -> Result<()> {
         self.emit_output(&mut io::stdout()).map(|()| {
             for (k, v) in &self.cargo_rustc_env_map {

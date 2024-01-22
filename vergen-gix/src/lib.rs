@@ -236,6 +236,7 @@ use {lazy_static as _, regex as _};
 
 mod gix;
 
+pub use crate::gix::Gix;
 pub use crate::gix::Builder as GixBuilder;
 #[cfg(feature = "build")]
 pub use vergen::BuildBuilder;

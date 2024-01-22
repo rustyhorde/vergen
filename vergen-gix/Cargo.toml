@@ -22,7 +22,7 @@ default = []
 build = ["vergen/build"]
 cargo = ["vergen/cargo"]
 rustc = ["vergen/rustc"]
-unstable = []
+unstable = ["vergen/unstable"]
 si = ["vergen/si"]
 
 [dependencies]

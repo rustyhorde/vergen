@@ -868,16 +868,7 @@ impl Gitcl {
                     true,
                     OffsetDateTime::from_unix_timestamp(i64::from_str(&v)?)?,
                 ),
-                Err(std::env::VarError::NotPresent) => {
-                    let no_offset = OffsetDateTime::parse(&stdout, &Rfc3339)?;
-                    if self.use_local {
-                        let local = UtcOffset::local_offset_at(no_offset)?;
-                        let local_offset = no_offset.checked_to_offset(local).unwrap_or(no_offset);
-                        (false, local_offset)
-                    } else {
-                        (false, no_offset)
-                    }
-                }
+                Err(std::env::VarError::NotPresent) => self.compute_local_offset(&stdout)?,
                 Err(e) => return Err(e.into()),
             };
 
@@ -926,6 +917,20 @@ impl Gitcl {
         }
 
         Ok(())
+    }
+
+    #[cfg(not(tarpaulin_include))]
+    #[cfg_attr(coverage_nightly, coverage(off))]
+    // this in not included in coverage, because on *nix the local offset is always unsafe
+    fn compute_local_offset(&self, stdout: &str) -> Result<(bool, OffsetDateTime)> {
+        let no_offset = OffsetDateTime::parse(stdout, &Rfc3339)?;
+        if self.use_local {
+            let local = UtcOffset::local_offset_at(no_offset)?;
+            let local_offset = no_offset.checked_to_offset(local).unwrap_or(no_offset);
+            Ok((false, local_offset))
+        } else {
+            Ok((false, no_offset))
+        }
     }
 }
 

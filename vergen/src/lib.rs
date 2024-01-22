@@ -528,6 +528,7 @@ use vergen::BuildBuilder;
 )]
 #![cfg_attr(all(doc, nightly), feature(doc_auto_cfg))]
 #![cfg_attr(all(docsrs, nightly), feature(doc_cfg))]
+#![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
 mod emitter;
 mod feature;
@@ -543,11 +544,19 @@ pub use crate::emitter::Emitter;
 #[cfg(feature = "cargo")]
 pub use cargo_metadata::DependencyKind;
 #[cfg(feature = "build")]
+pub use feature::build::Build;
+#[cfg(feature = "build")]
 pub use feature::build::Builder as BuildBuilder;
+#[cfg(feature = "cargo")]
+pub use feature::cargo::Cargo;
 #[cfg(feature = "cargo")]
 pub use feature::cargo::Builder as CargoBuilder;
 #[cfg(feature = "rustc")]
+pub use feature::rustc::Rustc;
+#[cfg(feature = "rustc")]
 pub use feature::rustc::Builder as RustcBuilder;
+#[cfg(feature = "si")]
+pub use feature::si::Sysinfo;
 #[cfg(feature = "si")]
 pub use feature::si::Builder as SysinfoBuilder;
 #[cfg(feature = "si")]
