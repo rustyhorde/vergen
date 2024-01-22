@@ -962,7 +962,7 @@ mod test {
         temp_env::with_var("SOURCE_DATE_EPOCH", Some(os_str), || {
             let result = || -> Result<bool> {
                 let mut stdout_buf = vec![];
-                let gix = Builder::default().cargo_date().build();
+                let gix = Builder::default().commit_date().build();
                 Emitter::new()
                     .idempotent()
                     .add_instructions(&gix)?
@@ -985,7 +985,7 @@ mod test {
         temp_env::with_var("SOURCE_DATE_EPOCH", Some(os_str), || {
             let result = || -> Result<bool> {
                 let mut stdout_buf = vec![];
-                let gix = Builder::default().cargo_date().build();
+                let gix = Builder::default().commit_date().build();
                 Emitter::new()
                     .idempotent()
                     .add_instructions(&gix)?
