@@ -271,7 +271,8 @@ mod test {
     use anyhow::Result;
     use std::{
         cmp::Ordering,
-        hash::{DefaultHasher, Hash, Hasher},
+        collections::hash_map::DefaultHasher,
+        hash::{Hash, Hasher},
         io::Write,
     };
 
@@ -312,6 +313,6 @@ mod test {
     fn vergen_key_hash_works() {
         let mut hasher = DefaultHasher::new();
         VergenKey::BuildDate.hash(&mut hasher);
-        assert_eq!(13646096770106105413, hasher.finish());
+        assert_eq!(13_646_096_770_106_105_413, hasher.finish());
     }
 }
