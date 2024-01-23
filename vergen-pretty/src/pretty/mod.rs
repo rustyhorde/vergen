@@ -119,7 +119,7 @@ PrettyBuilder::default()
 "##
 )]
 ///
-#[derive(Clone, Builder, Debug)]
+#[derive(Builder, Clone, Debug, PartialEq)]
 pub struct Pretty {
     /// Set the optional [`Prefix`] configuration
     #[builder(setter(strip_option), default)]
@@ -239,21 +239,37 @@ impl Pretty {
 #[cfg(test)]
 mod tests {
     use super::PrettyBuilder;
-    use crate::{utils::test_utils::is_empty, vergen_pretty_env};
+    use crate::vergen_pretty_env;
     use anyhow::Result;
+    use std::io::Write;
+
+    #[test]
+    #[allow(clippy::clone_on_copy, clippy::redundant_clone)]
+    fn pretty_clone_works() -> Result<()> {
+        let map = vergen_pretty_env!();
+        let pretty = PrettyBuilder::default().env(map).build()?;
+        let another = pretty.clone();
+        assert_eq!(pretty, another);
+        Ok(())
+    }
+
+    #[test]
+    fn pretty_debug_works() -> Result<()> {
+        let map = vergen_pretty_env!();
+        let pretty = PrettyBuilder::default().env(map).build()?;
+        let mut buf = vec![];
+        write!(buf, "{pretty:?}")?;
+        assert!(!buf.is_empty());
+        Ok(())
+    }
 
     #[test]
     fn default_display_works() -> Result<()> {
         let mut stdout = vec![];
         let map = vergen_pretty_env!();
-        let empty = is_empty(&map);
         let fmt = PrettyBuilder::default().env(map).build()?;
         fmt.display(&mut stdout)?;
-        if empty {
-            assert!(stdout.is_empty());
-        } else {
-            assert!(!stdout.is_empty());
-        }
+        assert!(!stdout.is_empty());
         Ok(())
     }
 
@@ -261,14 +277,9 @@ mod tests {
     fn no_category_works() -> Result<()> {
         let mut stdout = vec![];
         let map = vergen_pretty_env!();
-        let empty = is_empty(&map);
         let fmt = PrettyBuilder::default().env(map).category(false).build()?;
         fmt.display(&mut stdout)?;
-        if empty {
-            assert!(stdout.is_empty());
-        } else {
-            assert!(!stdout.is_empty());
-        }
+        assert!(!stdout.is_empty());
         Ok(())
     }
 }

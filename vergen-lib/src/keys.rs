@@ -237,26 +237,81 @@ pub(crate) mod vergen_key {
     }
 }
 
-#[cfg(test)]
-mod test {
-    #[cfg(not(any(
+#[cfg(all(
+    test,
+    not(any(
         feature = "build",
         feature = "cargo",
         feature = "git",
         feature = "rustc",
         feature = "si"
-    )))]
+    ))
+))]
+mod test {
     use super::vergen_key::VergenKey;
 
-    #[cfg(not(any(
-        feature = "build",
-        feature = "cargo",
-        feature = "git",
-        feature = "rustc",
-        feature = "si"
-    )))]
     #[test]
     fn empty_name() {
         assert_eq!(VergenKey::Empty.name(), "");
+    }
+}
+
+#[cfg(all(
+    test,
+    any(
+        feature = "build",
+        feature = "cargo",
+        feature = "git",
+        feature = "rustc",
+        feature = "si"
+    )
+))]
+mod test {
+    use super::vergen_key::VergenKey;
+    use anyhow::Result;
+    use std::{
+        cmp::Ordering,
+        hash::{DefaultHasher, Hash, Hasher},
+        io::Write,
+    };
+
+    #[test]
+    #[allow(clippy::clone_on_copy, clippy::redundant_clone)]
+    fn vergen_key_clone_works() {
+        let key = VergenKey::BuildDate;
+        let another = key.clone();
+        assert_eq!(another, key);
+    }
+
+    #[test]
+    fn vergen_key_debug_works() -> Result<()> {
+        let key = VergenKey::BuildDate;
+        let mut buf = vec![];
+        write!(buf, "{key:?}")?;
+        assert!(!buf.is_empty());
+        Ok(())
+    }
+
+    #[test]
+    fn vergen_key_ord_works() {
+        assert_eq!(
+            VergenKey::CargoDebug.cmp(&VergenKey::BuildDate),
+            Ordering::Greater
+        );
+    }
+
+    #[test]
+    fn vergen_key_partial_ord_works() {
+        assert_eq!(
+            VergenKey::CargoDebug.partial_cmp(&VergenKey::BuildDate),
+            Some(Ordering::Greater)
+        );
+    }
+
+    #[test]
+    fn vergen_key_hash_works() {
+        let mut hasher = DefaultHasher::new();
+        VergenKey::BuildDate.hash(&mut hasher);
+        assert_eq!(13646096770106105413, hasher.finish());
     }
 }

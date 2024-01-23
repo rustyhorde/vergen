@@ -58,3 +58,19 @@ pub trait Add {
         cargo_warning: &mut CargoWarning,
     ) -> Result<()>;
 }
+
+#[cfg(test)]
+mod test {
+    use super::DefaultConfig;
+    use anyhow::{anyhow, Result};
+    use std::io::Write;
+
+    #[test]
+    fn default_config_debug() -> Result<()> {
+        let config = DefaultConfig::new(true, anyhow!("blah"));
+        let mut buf = vec![];
+        write!(buf, "{config:?}")?;
+        assert!(!buf.is_empty());
+        Ok(())
+    }
+}

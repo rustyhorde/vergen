@@ -477,7 +477,7 @@ impl Builder {
 }
 
 ///
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 #[allow(clippy::struct_excessive_bools)]
 pub struct Gitcl {
     repo_path: Option<PathBuf>,

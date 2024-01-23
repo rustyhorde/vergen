@@ -1,5 +1,6 @@
 #!/usr/bin/env fish
 cargo llvm-cov clean --workspace; and \
+cargo llvm-cov -p vergen-lib -F unstable,build,cargo,git,rustc,si --no-report; and \
 cargo llvm-cov -p vergen -F unstable,build,cargo,rustc,si --no-report; and \
 cargo llvm-cov -p vergen-git2 -F unstable,build,cargo,rustc,si --no-report; and \
 cargo llvm-cov -p vergen-gitcl -F unstable,build,cargo,rustc,si --no-report; and \

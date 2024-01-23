@@ -17,7 +17,7 @@ use std::io::Write;
 use tracing::Level;
 
 /// Configure prefix output for [`PrettyBuilder`](crate::PrettyBuilder)
-#[derive(Builder, Clone, Debug)]
+#[derive(Builder, Clone, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
 pub struct Prefix {
     /// The prefix lines to output
@@ -67,6 +67,29 @@ mod test {
         utils::test_utils::TEST_PREFIX_SUFFIX, vergen_pretty_env, PrefixBuilder, PrettyBuilder,
     };
     use anyhow::Result;
+    use std::io::Write;
+
+    #[test]
+    #[allow(clippy::clone_on_copy, clippy::redundant_clone)]
+    fn prefix_clone_works() -> Result<()> {
+        let prefix = PrefixBuilder::default()
+            .lines(TEST_PREFIX_SUFFIX.lines().map(str::to_string).collect())
+            .build()?;
+        let another = prefix.clone();
+        assert_eq!(prefix, another);
+        Ok(())
+    }
+
+    #[test]
+    fn prefix_debug_works() -> Result<()> {
+        let prefix = PrefixBuilder::default()
+            .lines(TEST_PREFIX_SUFFIX.lines().map(str::to_string).collect())
+            .build()?;
+        let mut buf = vec![];
+        write!(buf, "{prefix:?}")?;
+        assert!(!buf.is_empty());
+        Ok(())
+    }
 
     #[test]
     fn display_prefix_works() -> Result<()> {
