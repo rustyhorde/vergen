@@ -6,10 +6,9 @@
 // option. All files in the project carrying such notice may not be copied,
 // modified, or distributed except according to those terms.
 
-use std::env;
-
 use anyhow::{Error, Result};
 use rustc_version::{version_meta, Channel, VersionMeta};
+use std::env;
 use vergen_lib::{
     add_default_map_entry, add_map_entry,
     constants::{

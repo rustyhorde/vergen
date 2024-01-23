@@ -16,7 +16,7 @@ use vergen_lib::{AddEntries, CargoRustcEnvMap, DefaultConfig};
 
 /// The `Emitter` will emit cargo instructions (i.e. cargo:rustc-env=NAME=VALUE)
 /// base on the configuration you enable.
-#[derive(Clone, Debug, Getters)]
+#[derive(Clone, Debug, Getters, PartialEq)]
 pub struct Emitter {
     idempotent: bool,
     fail_on_error: bool,
@@ -369,12 +369,9 @@ impl Emitter {
     /// # }
     /// ```
     ///
-    pub fn emit_and_set(&self) -> Result<()> {
-        self.inner_emit_and_set()
-    }
-
+    #[cfg(feature = "emit_and_set")]
     #[cfg_attr(coverage_nightly, coverage(off))]
-    fn inner_emit_and_set(&self) -> Result<()> {
+    pub fn emit_and_set(&self) -> Result<()> {
         self.emit_output(&mut io::stdout()).map(|()| {
             for (k, v) in &self.cargo_rustc_env_map {
                 if env::var(k.name()).is_err() {
@@ -412,6 +409,26 @@ pub(crate) mod test {
     use super::Emitter;
     use anyhow::Result;
     use serial_test::serial;
+    use std::io::Write;
+
+    #[test]
+    #[serial]
+    #[allow(clippy::clone_on_copy, clippy::redundant_clone)]
+    fn emitter_clone_works() {
+        let emitter = Emitter::default();
+        let another = emitter.clone();
+        assert_eq!(another, emitter);
+    }
+
+    #[test]
+    #[serial]
+    fn emitter_debug_works() -> Result<()> {
+        let emitter = Emitter::default();
+        let mut buf = vec![];
+        write!(buf, "{emitter:?}")?;
+        assert!(!buf.is_empty());
+        Ok(())
+    }
 
     #[test]
     #[serial]

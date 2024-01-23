@@ -21,6 +21,7 @@ denylist = [
     "time",
     "unstable",
     "vergen-lib",
+    "emit_and_set",
 ]
 
 [features]
@@ -28,8 +29,9 @@ default = []
 build = ["time", "vergen-lib/build"]
 cargo = ["cargo_metadata", "regex", "vergen-lib/cargo"]
 rustc = ["rustc_version", "vergen-lib/rustc"]
-unstable = []
 si = ["sysinfo", "vergen-lib/si"]
+unstable = []
+emit_and_set = []
 
 [dependencies]
 anyhow = "1.0.72"

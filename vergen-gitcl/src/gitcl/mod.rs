@@ -230,7 +230,7 @@ const DIRTY: &str = dirty!();
 /// cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
 /// ```
 ///
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 #[allow(clippy::struct_excessive_bools)]
 pub struct Builder {
     // git rev-parse --abbrev-ref HEAD
@@ -477,7 +477,7 @@ impl Builder {
 }
 
 ///
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 #[allow(clippy::struct_excessive_bools)]
 pub struct Gitcl {
     repo_path: Option<PathBuf>,
@@ -1037,10 +1037,61 @@ mod test {
     use super::{Builder, Gitcl};
     use anyhow::Result;
     use serial_test::serial;
-    use std::{collections::BTreeMap, env::temp_dir};
+    use std::{collections::BTreeMap, env::temp_dir, io::Write};
     use test_util::TestRepos;
     use vergen::Emitter;
     use vergen_lib::{count_idempotent, VergenKey};
+
+    #[test]
+    #[serial]
+    #[allow(clippy::clone_on_copy, clippy::redundant_clone)]
+    fn builder_clone_works() {
+        let mut builder = Builder::default();
+        let _ = builder.all_git();
+        let another = builder.clone();
+        assert_eq!(another, builder);
+    }
+
+    #[test]
+    #[serial]
+    #[allow(clippy::clone_on_copy, clippy::redundant_clone)]
+    fn gitcl_clone_works() {
+        let gitcl = Builder::default().all_git().build();
+        let another = gitcl.clone();
+        assert_eq!(another, gitcl);
+    }
+
+    #[test]
+    #[serial]
+    fn builder_debug_works() -> Result<()> {
+        let mut builder = Builder::default();
+        let _ = builder.all_git();
+        let mut buf = vec![];
+        write!(buf, "{builder:?}")?;
+        assert!(!buf.is_empty());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn gitcl_debug_works() -> Result<()> {
+        let gitcl = Builder::default().all_git().build();
+        let mut buf = vec![];
+        write!(buf, "{gitcl:?}")?;
+        assert!(!buf.is_empty());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn gix_default() -> Result<()> {
+        let gix = Builder::default().build();
+        let emitter = Emitter::default().add_instructions(&gix)?.test_emit();
+        assert_eq!(0, emitter.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(0, emitter.warnings().len());
+        Ok(())
+    }
 
     #[test]
     #[serial]
@@ -1173,14 +1224,10 @@ mod test {
     fn fails_on_bad_git_command() {
         let mut gitcl = Builder::default().all_git().build();
         let _ = gitcl.git_cmd(Some("this_is_not_a_git_cmd"));
-        let result = || -> Result<()> {
-            let _emitter = Emitter::default()
-                .fail_on_error()
-                .add_instructions(&gitcl)?
-                .test_emit();
-            Ok(())
-        }();
-        assert!(result.is_err());
+        assert!(Emitter::default()
+            .fail_on_error()
+            .add_instructions(&gitcl)
+            .is_err());
     }
 
     #[test]
@@ -1213,5 +1260,124 @@ mod test {
         assert_eq!(2, map.len());
         assert_eq!(2, warnings.len());
         Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn source_date_epoch_works() {
+        temp_env::with_var("SOURCE_DATE_EPOCH", Some("1671809360"), || {
+            let result = || -> Result<()> {
+                let mut stdout_buf = vec![];
+                let gitcl = Builder::default().commit_date().commit_timestamp().build();
+                _ = Emitter::new()
+                    .idempotent()
+                    .add_instructions(&gitcl)?
+                    .emit_to(&mut stdout_buf)?;
+                let output = String::from_utf8_lossy(&stdout_buf);
+                for (idx, line) in output.lines().enumerate() {
+                    if idx == 0 {
+                        assert_eq!("cargo:rustc-env=VERGEN_GIT_COMMIT_DATE=2022-12-23", line);
+                    } else if idx == 1 {
+                        assert_eq!(
+                            "cargo:rustc-env=VERGEN_GIT_COMMIT_TIMESTAMP=2022-12-23T15:29:20.000000000Z",
+                            line
+                        );
+                    }
+                }
+                Ok(())
+            }();
+            assert!(result.is_ok());
+        });
+    }
+
+    #[test]
+    #[serial]
+    #[cfg(unix)]
+    fn bad_source_date_epoch_fails() {
+        use std::ffi::OsStr;
+        use std::os::unix::prelude::OsStrExt;
+
+        let source = [0x66, 0x6f, 0x80, 0x6f];
+        let os_str = OsStr::from_bytes(&source[..]);
+        temp_env::with_var("SOURCE_DATE_EPOCH", Some(os_str), || {
+            let result = || -> Result<bool> {
+                let mut stdout_buf = vec![];
+                let gix = Builder::default().commit_date().build();
+                Emitter::new()
+                    .idempotent()
+                    .fail_on_error()
+                    .add_instructions(&gix)?
+                    .emit_to(&mut stdout_buf)
+            }();
+            assert!(result.is_err());
+        });
+    }
+
+    #[test]
+    #[serial]
+    #[cfg(unix)]
+    fn bad_source_date_epoch_defaults() {
+        use std::ffi::OsStr;
+        use std::os::unix::prelude::OsStrExt;
+
+        let source = [0x66, 0x6f, 0x80, 0x6f];
+        let os_str = OsStr::from_bytes(&source[..]);
+        temp_env::with_var("SOURCE_DATE_EPOCH", Some(os_str), || {
+            let result = || -> Result<bool> {
+                let mut stdout_buf = vec![];
+                let gix = Builder::default().commit_date().build();
+                Emitter::new()
+                    .idempotent()
+                    .add_instructions(&gix)?
+                    .emit_to(&mut stdout_buf)
+            }();
+            assert!(result.is_ok());
+        });
+    }
+
+    #[test]
+    #[serial]
+    #[cfg(windows)]
+    fn bad_source_date_epoch_fails() {
+        use std::ffi::OsString;
+        use std::os::windows::prelude::OsStringExt;
+
+        let source = [0x0066, 0x006f, 0xD800, 0x006f];
+        let os_string = OsString::from_wide(&source[..]);
+        let os_str = os_string.as_os_str();
+        temp_env::with_var("SOURCE_DATE_EPOCH", Some(os_str), || {
+            let result = || -> Result<bool> {
+                let mut stdout_buf = vec![];
+                let gix = Builder::default().commit_date().build();
+                Emitter::new()
+                    .idempotent()
+                    .add_instructions(&gix)?
+                    .emit_to(&mut stdout_buf)
+            }();
+            assert!(result.is_err());
+        });
+    }
+
+    #[test]
+    #[serial]
+    #[cfg(windows)]
+    fn bad_source_date_epoch_defaults() {
+        use std::ffi::OsString;
+        use std::os::windows::prelude::OsStringExt;
+
+        let source = [0x0066, 0x006f, 0xD800, 0x006f];
+        let os_string = OsString::from_wide(&source[..]);
+        let os_str = os_string.as_os_str();
+        temp_env::with_var("SOURCE_DATE_EPOCH", Some(os_str), || {
+            let result = || -> Result<bool> {
+                let mut stdout_buf = vec![];
+                let gix = Builder::default().commit_date().build();
+                Emitter::new()
+                    .idempotent()
+                    .add_instructions(&gix)?
+                    .emit_to(&mut stdout_buf)
+            }();
+            assert!(result.is_ok());
+        });
     }
 }
