@@ -317,7 +317,7 @@ mod test {
 
     #[test]
     #[serial]
-    #[allow(clippy::clone_on_copy)]
+    #[allow(clippy::clone_on_copy, clippy::redundant_clone)]
     fn builder_clone() {
         let mut builder = Builder::default();
         let _ = builder.all_build();
@@ -327,7 +327,7 @@ mod test {
 
     #[test]
     #[serial]
-    #[allow(clippy::clone_on_copy)]
+    #[allow(clippy::clone_on_copy, clippy::redundant_clone)]
     fn build_clone() {
         let build = Builder::default().all_build().build();
         let another = build.clone();

@@ -650,7 +650,7 @@ mod test {
 
     #[test]
     #[serial]
-    #[allow(clippy::clone_on_copy)]
+    #[allow(clippy::clone_on_copy, clippy::redundant_clone)]
     fn builder_clone_works() {
         let mut builder = Builder::default();
         let _ = builder.all_sysinfo();
@@ -660,7 +660,7 @@ mod test {
 
     #[test]
     #[serial]
-    #[allow(clippy::clone_on_copy)]
+    #[allow(clippy::clone_on_copy, clippy::redundant_clone)]
     fn si_clone_works() {
         let si = Builder::default().all_sysinfo().build();
         let another = si.clone();

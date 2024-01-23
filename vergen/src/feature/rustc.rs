@@ -371,7 +371,7 @@ mod test {
 
     #[test]
     #[serial]
-    #[allow(clippy::clone_on_copy)]
+    #[allow(clippy::clone_on_copy, clippy::redundant_clone)]
     fn builder_clone_works() {
         let mut builder = Builder::default();
         let _ = builder.all_rustc();
@@ -381,7 +381,7 @@ mod test {
 
     #[test]
     #[serial]
-    #[allow(clippy::clone_on_copy)]
+    #[allow(clippy::clone_on_copy, clippy::redundant_clone)]
     fn rustc_clone_works() {
         let rustc = Builder::default().all_rustc().build();
         let another = rustc.clone();

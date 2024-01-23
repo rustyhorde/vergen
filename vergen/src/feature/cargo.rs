@@ -430,7 +430,7 @@ mod test {
 
     #[test]
     #[serial]
-    #[allow(clippy::clone_on_copy)]
+    #[allow(clippy::clone_on_copy, clippy::redundant_clone)]
     fn builder_clone_works() {
         let mut builder = Builder::default();
         let _ = builder.all_cargo();
@@ -440,7 +440,7 @@ mod test {
 
     #[test]
     #[serial]
-    #[allow(clippy::clone_on_copy)]
+    #[allow(clippy::clone_on_copy, clippy::redundant_clone)]
     fn cargo_clone_works() {
         let cargo = Builder::default().all_cargo().build();
         let another = cargo.clone();

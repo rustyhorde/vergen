@@ -824,7 +824,7 @@ mod test {
 
     #[test]
     #[serial]
-    #[allow(clippy::clone_on_copy)]
+    #[allow(clippy::clone_on_copy, clippy::redundant_clone)]
     fn builder_clone_works() {
         let mut builder = Builder::default();
         let _ = builder.all_git();
@@ -834,7 +834,7 @@ mod test {
 
     #[test]
     #[serial]
-    #[allow(clippy::clone_on_copy)]
+    #[allow(clippy::clone_on_copy, clippy::redundant_clone)]
     fn git2_clone_works() {
         let git2 = Builder::default().all_git().build();
         let another = git2.clone();
