@@ -122,7 +122,6 @@ mod test {
     fn display_prefix_with_style_works() -> Result<()> {
         let mut stdout = vec![];
         let map = vergen_pretty_env!();
-        let empty = is_empty(&map);
         let red_bold = Style::new().bold().red();
         let prefix = PrefixBuilder::default()
             .lines(TEST_PREFIX_SUFFIX.lines().map(str::to_string).collect())
@@ -130,11 +129,7 @@ mod test {
             .build()?;
         let fmt = PrettyBuilder::default().env(map).prefix(prefix).build()?;
         fmt.display(&mut stdout)?;
-        if empty {
-            assert!(stdout.is_empty());
-        } else {
-            assert!(!stdout.is_empty());
-        }
+        assert!(!stdout.is_empty());
         Ok(())
     }
 
@@ -142,7 +137,6 @@ mod test {
     fn display_suffix_with_style_works() -> Result<()> {
         let mut stdout = vec![];
         let map = vergen_pretty_env!();
-        let empty = is_empty(&map);
         let red_bold = Style::new().bold().red();
         let suffix = SuffixBuilder::default()
             .lines(TEST_PREFIX_SUFFIX.lines().map(str::to_string).collect())
@@ -150,11 +144,7 @@ mod test {
             .build()?;
         let fmt = PrettyBuilder::default().env(map).suffix(suffix).build()?;
         fmt.display(&mut stdout)?;
-        if empty {
-            assert!(stdout.is_empty());
-        } else {
-            assert!(!stdout.is_empty());
-        }
+        assert!(!stdout.is_empty());
         Ok(())
     }
 }
