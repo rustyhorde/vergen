@@ -533,9 +533,6 @@ use vergen::BuildBuilder;
 mod emitter;
 mod feature;
 
-#[cfg(feature = "rustc")]
-use rustc_version as _;
-
 // This is here to appease the `unused_crate_dependencies` lint
 #[cfg(test)]
 use {lazy_static as _, regex as _, serial_test as _, temp_env as _, test_util as _};
