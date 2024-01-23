@@ -256,16 +256,7 @@ mod test {
     }
 }
 
-#[cfg(all(
-    test,
-    any(
-        feature = "build",
-        feature = "cargo",
-        feature = "git",
-        feature = "rustc",
-        feature = "si"
-    )
-))]
+#[cfg(all(test, all(feature = "build", feature = "cargo")))]
 mod test {
     use super::vergen_key::VergenKey;
     use anyhow::Result;
