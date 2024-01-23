@@ -249,10 +249,54 @@ pub(crate) mod vergen_key {
 ))]
 mod test {
     use super::vergen_key::VergenKey;
+    use anyhow::Result;
+    use std::{
+        cmp::Ordering,
+        collections::hash_map::DefaultHasher,
+        hash::{Hash, Hasher},
+        io::Write,
+    };
 
     #[test]
     fn empty_name() {
-        assert_eq!(VergenKey::Empty.name(), "");
+        assert!(VergenKey::Empty.name().is_empty());
+    }
+
+    #[test]
+    #[allow(clippy::clone_on_copy, clippy::redundant_clone)]
+    fn vergen_key_clone_works() {
+        let key = VergenKey::Empty;
+        let another = key.clone();
+        assert_eq!(another, key);
+    }
+
+    #[test]
+    fn vergen_key_debug_works() -> Result<()> {
+        let key = VergenKey::Empty;
+        let mut buf = vec![];
+        write!(buf, "{key:?}")?;
+        assert!(!buf.is_empty());
+        Ok(())
+    }
+
+    #[test]
+    fn vergen_key_ord_works() {
+        assert_eq!(VergenKey::Empty.cmp(&VergenKey::Empty), Ordering::Equal);
+    }
+
+    #[test]
+    fn vergen_key_partial_ord_works() {
+        assert_eq!(
+            VergenKey::Empty.partial_cmp(&VergenKey::Empty),
+            Some(Ordering::Equal)
+        );
+    }
+
+    #[test]
+    fn vergen_key_hash_works() {
+        let mut hasher = DefaultHasher::new();
+        VergenKey::Empty.hash(&mut hasher);
+        assert_eq!(15_130_871_412_783_076_140, hasher.finish());
     }
 }
 

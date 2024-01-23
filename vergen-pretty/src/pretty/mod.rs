@@ -239,7 +239,7 @@ impl Pretty {
 #[cfg(test)]
 mod tests {
     use super::PrettyBuilder;
-    use crate::vergen_pretty_env;
+    use crate::{utils::test_utils::is_empty, vergen_pretty_env};
     use anyhow::Result;
     use std::io::Write;
 
@@ -267,9 +267,14 @@ mod tests {
     fn default_display_works() -> Result<()> {
         let mut stdout = vec![];
         let map = vergen_pretty_env!();
+        let empty = is_empty(&map);
         let fmt = PrettyBuilder::default().env(map).build()?;
         fmt.display(&mut stdout)?;
-        assert!(!stdout.is_empty());
+        if empty {
+            assert!(stdout.is_empty());
+        } else {
+            assert!(!stdout.is_empty());
+        }
         Ok(())
     }
 
@@ -277,9 +282,14 @@ mod tests {
     fn no_category_works() -> Result<()> {
         let mut stdout = vec![];
         let map = vergen_pretty_env!();
+        let empty = is_empty(&map);
         let fmt = PrettyBuilder::default().env(map).category(false).build()?;
         fmt.display(&mut stdout)?;
-        assert!(!stdout.is_empty());
+        if empty {
+            assert!(stdout.is_empty());
+        } else {
+            assert!(!stdout.is_empty());
+        }
         Ok(())
     }
 }

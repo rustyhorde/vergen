@@ -65,6 +65,7 @@ fn caps_proper(val: String) -> String {
 #[cfg(test)]
 pub(crate) mod test_utils {
     use super::{has_value, split_key, split_kv};
+    use std::collections::BTreeMap;
 
     pub(crate) const TEST_PREFIX_SUFFIX: &str = r"██████╗ ██████╗ ███████╗████████╗████████╗██╗   ██╗
 ██╔══██╗██╔══██╗██╔════╝╚══██╔══╝╚══██╔══╝╚██╗ ██╔╝
@@ -75,6 +76,10 @@ pub(crate) mod test_utils {
 
 4a61736f6e204f7a696173
 ";
+
+    pub(crate) fn is_empty(map: &BTreeMap<&'static str, Option<&'static str>>) -> bool {
+        map.iter().filter_map(has_value).count() == 0
+    }
 
     #[test]
     fn has_value_none_is_none() {
