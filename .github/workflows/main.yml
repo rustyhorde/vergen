@@ -265,17 +265,29 @@ jobs:
         run: cargo binstall --no-confirm --no-symlinks cargo-llvm-cov
       - name: 🙊 Clean Workspace 🙊
         run: cargo llvm-cov clean --workspace
-      - name: 🙊 Code Coverage (vergen-lib) 🙊
+      - name: 🙊 Code Coverage (vergen-lib - default) 🙊
+        run: cargo llvm-cov -p vergen-lib -F unstable --no-report
+      - name: 🙊 Code Coverage (vergen-lib - all) 🙊
         run: cargo llvm-cov -p vergen-lib -F unstable,build,cargo,git,rustc,si --no-report
-      - name: 🙊 Code Coverage (vergen) 🙊
+      - name: 🙊 Code Coverage (vergen - default) 🙊
+        run: cargo llvm-cov -p vergen -F unstable --no-report
+      - name: 🙊 Code Coverage (vergen - all) 🙊
         run: cargo llvm-cov -p vergen -F unstable,build,cargo,rustc,si --no-report
-      - name: 🙊 Code Coverage (vergen-gix) 🙊
+      - name: 🙊 Code Coverage (vergen-gix - default) 🙊
+        run: cargo llvm-cov -p vergen-gix -F unstable --no-report
+      - name: 🙊 Code Coverage (vergen-gix - all) 🙊
         run: cargo llvm-cov -p vergen-gix -F unstable,build,cargo,rustc,si --no-report
-      - name: 🙊 Code Coverage (vergen-git2) 🙊
+      - name: 🙊 Code Coverage (vergen-git2 - default) 🙊
+        run: cargo llvm-cov -p vergen-git2 -F unstable --no-report
+      - name: 🙊 Code Coverage (vergen-git2 - all) 🙊
         run: cargo llvm-cov -p vergen-git2 -F unstable,build,cargo,rustc,si --no-report
-      - name: 🙊 Code Coverage (vergen-gitcl) 🙊
+      - name: 🙊 Code Coverage (vergen-gitcl - default) 🙊
+        run: cargo llvm-cov -p vergen-gitcl -F unstable --no-report
+      - name: 🙊 Code Coverage (vergen-gitcl - all) 🙊
         run: cargo llvm-cov -p vergen-gitcl -F unstable,build,cargo,rustc,si --no-report
-      - name: 🙊 Code Coverage (vergen-pretty) 🙊
+      - name: 🙊 Code Coverage (vergen-pretty - default) 🙊
+        run: cargo llvm-cov -p vergen-pretty -F __vergen_test --no-report
+      - name: 🙊 Code Coverage (vergen-pretty - all) 🙊
         run: cargo llvm-cov -p vergen-pretty -F __vergen_test,color,header,serde,trace --no-report
       - name: 🙊 Code Coverage Report 🙊
         run: cargo llvm-cov report --lcov --output-path lcov.info
