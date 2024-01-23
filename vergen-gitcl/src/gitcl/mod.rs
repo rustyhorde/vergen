@@ -919,7 +919,6 @@ impl Gitcl {
         Ok(())
     }
 
-    #[cfg(not(tarpaulin_include))]
     #[cfg_attr(coverage_nightly, coverage(off))]
     // this in not included in coverage, because on *nix the local offset is always unsafe
     fn compute_local_offset(&self, stdout: &str) -> Result<(bool, OffsetDateTime)> {

@@ -368,7 +368,6 @@ impl Emitter {
     /// #   Ok(())
     /// # }
     /// ```
-    #[cfg(not(tarpaulin_include))]
     #[cfg_attr(coverage_nightly, coverage(off))]
     pub fn emit_and_set(&self) -> Result<()> {
         self.emit_output(&mut io::stdout()).map(|()| {

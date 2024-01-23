@@ -620,7 +620,7 @@ impl AddEntries for Sysinfo {
         Ok(())
     }
 
-    #[cfg(not(tarpaulin_include))]
+    #[cfg_attr(coverage_nightly, coverage(off))]
     fn add_default_entries(
         &self,
         _config: &DefaultConfig,

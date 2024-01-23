@@ -663,7 +663,7 @@ impl Git2 {
         Ok(())
     }
 
-    #[cfg(not(tarpaulin_include))]
+    #[cfg_attr(coverage_nightly, coverage(off))]
     // this in not included in coverage, because on *nix the local offset is always unsafe
     fn compute_local_offset(&self, commit: &Commit<'_>) -> Result<(bool, OffsetDateTime)> {
         let no_offset = OffsetDateTime::from_unix_timestamp(commit.time().seconds())?;

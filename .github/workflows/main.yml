@@ -204,9 +204,9 @@ jobs:
           rustup default ${{ matrix.rust }}
       - name: 💾 Install (cargo-binstall) 💾
         uses: cargo-bins/cargo-binstall@main
-      - name: 💾 Install (tarpaulin, all-features) 💾
+      - name: 💾 Install (all-features) 💾
         continue-on-error: true
-        run: cargo binstall --no-confirm --no-symlinks cargo-tarpaulin cargo-all-features
+        run: cargo binstall --no-confirm --no-symlinks cargo-all-features
       - name: 🧪 Test 🧪
         run: |
           cargo update
@@ -278,7 +278,7 @@ jobs:
       - name: 🙊 Code Coverage (vergen-pretty) 🙊
         run: cargo llvm-cov -p vergen-pretty -F __vergen_test,color,header,serde,trace --no-report
       - name: 🙊 Code Coverage Report 🙊
-        run: cargo llvm-cov report -lcov --output-path lcov.info
+        run: cargo llvm-cov report --lcov --output-path lcov.info
       - name: 🙊 Upload Code Coverage 🙊
         uses: codecov/codecov-action@v3
         with:
