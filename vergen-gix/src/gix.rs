@@ -73,7 +73,7 @@ use vergen_lib::{
 /// # }
 /// ```
 ///
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 #[allow(clippy::struct_excessive_bools)]
 pub struct Builder {
     // git rev-parse --abbrev-ref HEAD
@@ -248,7 +248,7 @@ impl Builder {
 }
 
 ///
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 #[allow(clippy::struct_excessive_bools)]
 pub struct Gix {
     repo_path: Option<PathBuf>,
@@ -664,9 +664,61 @@ mod test {
     use super::Builder;
     use anyhow::Result;
     use serial_test::serial;
+    use std::io::Write;
     use test_util::TestRepos;
     use vergen::Emitter;
     use vergen_lib::count_idempotent;
+
+    #[test]
+    #[serial]
+    #[allow(clippy::clone_on_copy)]
+    fn builder_clone_works() {
+        let mut builder = Builder::default();
+        let _ = builder.all_git();
+        let another = builder.clone();
+        assert_eq!(another, builder);
+    }
+
+    #[test]
+    #[serial]
+    #[allow(clippy::clone_on_copy)]
+    fn gix_clone_works() {
+        let gix = Builder::default().all_git().build();
+        let another = gix.clone();
+        assert_eq!(another, gix);
+    }
+
+    #[test]
+    #[serial]
+    fn builder_debug_works() -> Result<()> {
+        let mut builder = Builder::default();
+        let _ = builder.all_git();
+        let mut buf = vec![];
+        write!(buf, "{builder:?}")?;
+        assert!(!buf.is_empty());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn gix_debug_works() -> Result<()> {
+        let git = Builder::default().all_git().build();
+        let mut buf = vec![];
+        write!(buf, "{git:?}")?;
+        assert!(!buf.is_empty());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn gix_default() -> Result<()> {
+        let gix = Builder::default().build();
+        let emitter = Emitter::default().add_instructions(&gix)?.test_emit();
+        assert_eq!(0, emitter.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(0, emitter.warnings().len());
+        Ok(())
+    }
 
     #[test]
     #[serial]
@@ -778,15 +830,11 @@ mod test {
     #[test]
     #[serial]
     fn git_commit_date_local() {
-        let result = || -> Result<()> {
-            let gix = Builder::default().commit_date().use_local().build();
-            let _emitter = Emitter::default()
-                .fail_on_error()
-                .add_instructions(&gix)?
-                .test_emit();
-            Ok(())
-        }();
-        assert!(result.is_err());
+        let gix = Builder::default().commit_date().use_local().build();
+        assert!(Emitter::default()
+            .fail_on_error()
+            .add_instructions(&gix)
+            .is_err());
     }
 
     #[test]
@@ -850,18 +898,13 @@ mod test {
 
     #[test]
     #[serial]
-    fn git_error_fails() -> Result<()> {
+    fn git_error_fails() {
         let mut gix = Builder::default().all_git().build();
         let _ = gix.at_path(temp_dir());
-        let result = || -> Result<()> {
-            let _emitter = Emitter::default()
-                .fail_on_error()
-                .add_instructions(&gix)?
-                .test_emit();
-            Ok(())
-        }();
-        assert!(result.is_err());
-        Ok(())
+        assert!(Emitter::default()
+            .fail_on_error()
+            .add_instructions(&gix)
+            .is_err());
     }
 
     #[test]

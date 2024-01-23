@@ -368,8 +368,13 @@ impl Emitter {
     /// #   Ok(())
     /// # }
     /// ```
-    #[cfg_attr(coverage_nightly, coverage(off))]
+    ///
     pub fn emit_and_set(&self) -> Result<()> {
+        self.inner_emit_and_set()
+    }
+
+    #[cfg_attr(coverage_nightly, coverage(off))]
+    fn inner_emit_and_set(&self) -> Result<()> {
         self.emit_output(&mut io::stdout()).map(|()| {
             for (k, v) in &self.cargo_rustc_env_map {
                 if env::var(k.name()).is_err() {
@@ -422,105 +427,4 @@ pub(crate) mod test {
     fn default_emit_is_ok() {
         assert!(Emitter::new().emit().is_ok());
     }
-
-    // #[cfg(all(
-    //     feature = "build",
-    //     feature = "rustc",
-    //     feature = "cargo",
-    //     feature = "si"
-    // ))]
-    // #[test]
-    // #[serial_test::serial]
-    // fn everything_enabled() -> Result<()> {
-    //     use crate::utils::testutils::{setup, teardown};
-
-    //     setup();
-    //     let mut stdout_buf = vec![];
-    //     _ = EmitBuilder::builder()
-    //         .idempotent()
-    //         .fail_on_error()
-    //         .all_build()
-    //         .all_cargo()
-    //         .all_rustc()
-    //         .all_sysinfo()
-    //         .emit_to(&mut stdout_buf)?;
-    //     teardown();
-    //     Ok(())
-    // }
-
-    // #[cfg(all(
-    //     feature = "build",
-    //     feature = "rustc",
-    //     feature = "cargo",
-    //     feature = "si"
-    // ))]
-    // #[test]
-    // #[serial_test::serial]
-    // fn all_output_non_git() -> Result<()> {
-    //     use crate::utils::testutils::{setup, teardown};
-
-    //     setup();
-    //     let mut stdout_buf = vec![];
-    //     _ = EmitBuilder::builder()
-    //         .all_build()
-    //         .all_cargo()
-    //         .all_rustc()
-    //         .all_sysinfo()
-    //         .emit_to(&mut stdout_buf)?;
-    //     assert!(!stdout_buf.is_empty());
-    //     teardown();
-    //     Ok(())
-    // }
-
-    // #[cfg(all(
-    //     feature = "build",
-    //     feature = "rustc",
-    //     all(
-    //         feature = "git",
-    //         any(feature = "gitcl", feature = "git2", feature = "gix")
-    //     ),
-    //     feature = "cargo",
-    //     feature = "si"
-    // ))]
-    // #[test]
-    // #[serial_test::serial]
-    // fn all_output() -> Result<()> {
-    //     use crate::utils::testutils::{setup, teardown};
-
-    //     setup();
-    //     let mut stdout_buf = vec![];
-    //     _ = EmitBuilder::builder()
-    //         .all_build()
-    //         .all_cargo()
-    //         .all_git()
-    //         .all_rustc()
-    //         .all_sysinfo()
-    //         .emit_to(&mut stdout_buf)?;
-    //     assert!(!stdout_buf.is_empty());
-    //     teardown();
-    //     Ok(())
-    // }
-
-    // #[cfg(all(
-    //     feature = "build",
-    //     feature = "rustc",
-    //     all(
-    //         feature = "git",
-    //         any(feature = "gitcl", feature = "git2", feature = "gix")
-    //     ),
-    //     feature = "cargo",
-    //     feature = "si"
-    // ))]
-    // #[test]
-    // #[serial_test::serial]
-    // fn all_features_no_output() -> Result<()> {
-    //     use crate::utils::testutils::{setup, teardown};
-
-    //     setup();
-    //     let mut stdout_buf = vec![];
-    //     _ = EmitBuilder::builder().emit_to(&mut stdout_buf)?;
-    //     assert!(stdout_buf.is_empty());
-    //     teardown();
-    //     Ok(())
-    // }
 }

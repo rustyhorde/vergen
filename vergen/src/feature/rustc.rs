@@ -84,7 +84,7 @@ use vergen_lib::{
 /// # }
 /// ```
 ///
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 #[allow(clippy::struct_excessive_bools)]
 pub struct Builder {
     channel: bool,
@@ -159,7 +159,7 @@ impl Builder {
 }
 
 ///
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 #[allow(clippy::struct_excessive_bools)]
 pub struct Rustc {
     channel: bool,
@@ -188,10 +188,7 @@ impl Rustc {
         cargo_rustc_env: &mut CargoRustcEnvMap,
         cargo_warning: &mut CargoWarning,
     ) -> Result<()> {
-        if self.any() {
-            self.add_rustc_to_map(version_meta(), cargo_rustc_env, cargo_warning)?;
-        }
-        Ok(())
+        self.add_rustc_to_map(version_meta(), cargo_rustc_env, cargo_warning)
     }
 
     #[cfg(test)]
@@ -207,10 +204,7 @@ impl Rustc {
         } else {
             version_meta()
         };
-        if self.any() {
-            self.add_rustc_to_map(vm, cargo_rustc_env, cargo_warning)?;
-        }
-        Ok(())
+        self.add_rustc_to_map(vm, cargo_rustc_env, cargo_warning)
     }
 
     fn add_rustc_to_map(
@@ -307,7 +301,11 @@ impl AddEntries for Rustc {
         _cargo_rerun_if_changed: &mut CargoRerunIfChanged,
         cargo_warning: &mut CargoWarning,
     ) -> Result<()> {
-        self.add_rustc_map_entries(cargo_rustc_env, cargo_warning)
+        if self.any() {
+            self.add_rustc_map_entries(cargo_rustc_env, cargo_warning)
+        } else {
+            Ok(())
+        }
     }
 
     fn add_default_entries(
@@ -367,9 +365,60 @@ mod test {
     use crate::Emitter;
     use anyhow::Result;
     use serial_test::serial;
+    use std::io::Write;
     use temp_env::with_var;
     use vergen_lib::count_idempotent;
-    // use std::env;
+
+    #[test]
+    #[serial]
+    #[allow(clippy::clone_on_copy)]
+    fn builder_clone_works() {
+        let mut builder = Builder::default();
+        let _ = builder.all_rustc();
+        let another = builder.clone();
+        assert_eq!(another, builder);
+    }
+
+    #[test]
+    #[serial]
+    #[allow(clippy::clone_on_copy)]
+    fn rustc_clone_works() {
+        let rustc = Builder::default().all_rustc().build();
+        let another = rustc.clone();
+        assert_eq!(another, rustc);
+    }
+
+    #[test]
+    #[serial]
+    fn builder_debug_works() -> Result<()> {
+        let mut builder = Builder::default();
+        let _ = builder.all_rustc();
+        let mut buf = vec![];
+        write!(buf, "{builder:?}")?;
+        assert!(!buf.is_empty());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn rustc_debug_works() -> Result<()> {
+        let rustc = Builder::default().all_rustc().build();
+        let mut buf = vec![];
+        write!(buf, "{rustc:?}")?;
+        assert!(!buf.is_empty());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn rustc_default() -> Result<()> {
+        let rustc = Builder::default().build();
+        let emitter = Emitter::default().add_instructions(&rustc)?.test_emit();
+        assert_eq!(0, emitter.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(0, emitter.warnings().len());
+        Ok(())
+    }
 
     #[test]
     #[serial]
@@ -525,16 +574,12 @@ LLVM version: 15.0.6
     #[test]
     #[serial]
     fn rustc_fails_on_bad_input() {
-        let result = || -> Result<()> {
-            let mut rustc = Builder::default().all_rustc().build();
-            let _ = rustc.with_rustc_str("a_bad_rustcvv_string");
-            let _emitter = Emitter::default()
-                .fail_on_error()
-                .add_instructions(&rustc)?
-                .test_emit();
-            Ok(())
-        }();
-        assert!(result.is_err());
+        let mut rustc = Builder::default().all_rustc().build();
+        let _ = rustc.with_rustc_str("a_bad_rustcvv_string");
+        assert!(Emitter::default()
+            .fail_on_error()
+            .add_instructions(&rustc)
+            .is_err());
     }
 
     #[test]

@@ -79,7 +79,7 @@ use vergen_lib::{
 /// # }
 /// ```
 ///
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 #[allow(clippy::struct_excessive_bools)]
 pub struct Builder {
     // git rev-parse --abbrev-ref HEAD
@@ -287,7 +287,7 @@ impl Builder {
 }
 
 ///
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 #[allow(clippy::struct_excessive_bools)]
 pub struct Git2 {
     repo_path: Option<PathBuf>,
@@ -354,15 +354,12 @@ impl Git2 {
         cargo_rerun_if_changed: &mut CargoRerunIfChanged,
         cargo_warning: &mut CargoWarning,
     ) -> Result<()> {
-        if self.any() {
-            self.inner_add_entries(
-                idempotent,
-                cargo_rustc_env,
-                cargo_rerun_if_changed,
-                cargo_warning,
-            )?;
-        }
-        Ok(())
+        self.inner_add_entries(
+            idempotent,
+            cargo_rustc_env,
+            cargo_rerun_if_changed,
+            cargo_warning,
+        )
     }
 
     #[cfg(test)]
@@ -373,18 +370,15 @@ impl Git2 {
         cargo_rerun_if_changed: &mut CargoRerunIfChanged,
         cargo_warning: &mut CargoWarning,
     ) -> Result<()> {
-        if self.any() {
-            if self.fail {
-                return Err(anyhow!("failed to create entries"));
-            }
-            self.inner_add_entries(
-                idempotent,
-                cargo_rustc_env,
-                cargo_rerun_if_changed,
-                cargo_warning,
-            )?;
+        if self.fail {
+            return Err(anyhow!("failed to create entries"));
         }
-        Ok(())
+        self.inner_add_entries(
+            idempotent,
+            cargo_rustc_env,
+            cargo_rerun_if_changed,
+            cargo_warning,
+        )
     }
 
     #[allow(clippy::too_many_lines)]
@@ -734,12 +728,15 @@ impl AddEntries for Git2 {
         cargo_rerun_if_changed: &mut CargoRerunIfChanged,
         cargo_warning: &mut CargoWarning,
     ) -> Result<()> {
-        self.add_entries(
-            idempotent,
-            cargo_rustc_env,
-            cargo_rerun_if_changed,
-            cargo_warning,
-        )
+        if self.any() {
+            self.add_entries(
+                idempotent,
+                cargo_rustc_env,
+                cargo_rerun_if_changed,
+                cargo_warning,
+            )?;
+        }
+        Ok(())
     }
 
     fn add_default_entries(
@@ -820,15 +817,60 @@ mod test {
     use anyhow::Result;
     use git2_rs::Repository;
     use serial_test::serial;
-    use std::{collections::BTreeMap, env::current_dir};
+    use std::{collections::BTreeMap, env::current_dir, io::Write};
     use test_util::TestRepos;
     use vergen::Emitter;
     use vergen_lib::{count_idempotent, VergenKey};
 
-    fn repo_exists() -> Result<bool> {
-        let curr_dir = current_dir()?;
-        let _repo = Repository::discover(curr_dir)?;
-        Ok(true)
+    #[test]
+    #[serial]
+    #[allow(clippy::clone_on_copy)]
+    fn builder_clone_works() {
+        let mut builder = Builder::default();
+        let _ = builder.all_git();
+        let another = builder.clone();
+        assert_eq!(another, builder);
+    }
+
+    #[test]
+    #[serial]
+    #[allow(clippy::clone_on_copy)]
+    fn git2_clone_works() {
+        let git2 = Builder::default().all_git().build();
+        let another = git2.clone();
+        assert_eq!(another, git2);
+    }
+
+    #[test]
+    #[serial]
+    fn builder_debug_works() -> Result<()> {
+        let mut builder = Builder::default();
+        let _ = builder.all_git();
+        let mut buf = vec![];
+        write!(buf, "{builder:?}")?;
+        assert!(!buf.is_empty());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn git2_debug_works() -> Result<()> {
+        let git2 = Builder::default().all_git().build();
+        let mut buf = vec![];
+        write!(buf, "{git2:?}")?;
+        assert!(!buf.is_empty());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn git2_default() -> Result<()> {
+        let git2 = Builder::default().build();
+        let emitter = Emitter::default().add_instructions(&git2)?.test_emit();
+        assert_eq!(0, emitter.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(0, emitter.warnings().len());
+        Ok(())
     }
 
     #[test]
@@ -852,32 +894,29 @@ mod test {
     fn bad_revwalk_is_default() -> Result<()> {
         let mut cargo_rustc_env = BTreeMap::new();
         let mut cargo_warning = vec![];
-        if let Ok(repo) = Repository::discover(current_dir()?) {
-            Git2::add_commit_count(true, &repo, &mut cargo_rustc_env, &mut cargo_warning);
-            assert_eq!(1, cargo_rustc_env.len());
-            assert_eq!(1, cargo_warning.len());
-        }
+        let repo = Repository::discover(current_dir()?)?;
+        Git2::add_commit_count(true, &repo, &mut cargo_rustc_env, &mut cargo_warning);
+        assert_eq!(1, cargo_rustc_env.len());
+        assert_eq!(1, cargo_warning.len());
         Ok(())
     }
 
     #[test]
     #[serial]
     fn head_not_found_is_default() -> Result<()> {
-        let repo = TestRepos::new(false, false, false)?;
+        let test_repo = TestRepos::new(false, false, false)?;
         let mut map = BTreeMap::new();
         let mut warnings = vec![];
-        if let Ok(repo) = Repository::discover(current_dir()?) {
-            Git2::add_branch_name(true, &repo, &mut map, &mut warnings)?;
-            assert_eq!(1, map.len());
-            assert_eq!(1, warnings.len());
-        }
+        let repo = Repository::discover(current_dir()?)?;
+        Git2::add_branch_name(true, &repo, &mut map, &mut warnings)?;
+        assert_eq!(1, map.len());
+        assert_eq!(1, warnings.len());
         let mut map = BTreeMap::new();
         let mut warnings = vec![];
-        if let Ok(repo) = Repository::discover(repo.path()) {
-            Git2::add_branch_name(true, &repo, &mut map, &mut warnings)?;
-            assert_eq!(1, map.len());
-            assert_eq!(1, warnings.len());
-        }
+        let repo = Repository::discover(test_repo.path())?;
+        Git2::add_branch_name(true, &repo, &mut map, &mut warnings)?;
+        assert_eq!(1, map.len());
+        assert_eq!(1, warnings.len());
         Ok(())
     }
 
@@ -890,14 +929,8 @@ mod test {
             .add_instructions(&git2)?
             .test_emit();
         assert_eq!(10, emitter.cargo_rustc_env_map().len());
-
-        if repo_exists().is_ok() {
-            assert_eq!(2, count_idempotent(emitter.cargo_rustc_env_map()));
-            assert_eq!(2, emitter.warnings().len());
-        } else {
-            assert_eq!(10, count_idempotent(emitter.cargo_rustc_env_map()));
-            assert_eq!(11, emitter.warnings().len());
-        }
+        assert_eq!(2, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(2, emitter.warnings().len());
         Ok(())
     }
 
@@ -925,14 +958,8 @@ mod test {
             .test_emit();
 
         assert_eq!(10, emitter.cargo_rustc_env_map().len());
-
-        if repo_exists().is_ok() {
-            assert_eq!(2, count_idempotent(emitter.cargo_rustc_env_map()));
-            assert_eq!(2, emitter.warnings().len());
-        } else {
-            assert_eq!(9, count_idempotent(emitter.cargo_rustc_env_map()));
-            assert_eq!(10, emitter.warnings().len());
-        }
+        assert_eq!(2, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(2, emitter.warnings().len());
         Ok(())
     }
 
@@ -942,14 +969,8 @@ mod test {
         let git2 = Builder::default().all_git().build();
         let emitter = Emitter::default().add_instructions(&git2)?.test_emit();
         assert_eq!(10, emitter.cargo_rustc_env_map().len());
-
-        if repo_exists().is_ok() {
-            assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
-            assert_eq!(0, emitter.warnings().len());
-        } else {
-            assert_eq!(9, count_idempotent(emitter.cargo_rustc_env_map()));
-            assert_eq!(10, emitter.warnings().len());
-        }
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(0, emitter.warnings().len());
         Ok(())
     }
 
@@ -958,14 +979,10 @@ mod test {
     fn git_error_fails() {
         let mut git2 = Builder::default().all_git().build();
         let _ = git2.fail();
-        let result = || -> Result<()> {
-            let _emitter = Emitter::default()
-                .fail_on_error()
-                .add_instructions(&git2)?
-                .test_emit();
-            Ok(())
-        }();
-        assert!(result.is_err());
+        assert!(Emitter::default()
+            .fail_on_error()
+            .add_instructions(&git2)
+            .is_err());
     }
 
     #[test]

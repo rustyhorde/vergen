@@ -126,7 +126,7 @@ use vergen_lib::{
 /// cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
 /// ```
 ///
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 #[allow(clippy::struct_excessive_bools)]
 pub struct Builder {
     refresh_kind: Option<RefreshKind>,
@@ -263,7 +263,7 @@ impl Builder {
 }
 
 ///
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 #[allow(clippy::struct_excessive_bools)]
 pub struct Sysinfo {
     refresh_kind: Option<RefreshKind>,
@@ -640,13 +640,64 @@ mod test {
     use crate::Emitter;
     use anyhow::Result;
     use serial_test::serial;
-    use std::collections::BTreeMap;
+    use std::{collections::BTreeMap, io::Write};
     use sysinfo::{CpuRefreshKind, RefreshKind};
     use temp_env::with_var;
     use vergen_lib::{count_idempotent, VergenKey};
 
     const IDEM_COUNT: usize = 0;
     const SYSINFO_COUNT: usize = 9;
+
+    #[test]
+    #[serial]
+    #[allow(clippy::clone_on_copy)]
+    fn builder_clone_works() {
+        let mut builder = Builder::default();
+        let _ = builder.all_sysinfo();
+        let another = builder.clone();
+        assert_eq!(another, builder);
+    }
+
+    #[test]
+    #[serial]
+    #[allow(clippy::clone_on_copy)]
+    fn si_clone_works() {
+        let si = Builder::default().all_sysinfo().build();
+        let another = si.clone();
+        assert_eq!(another, si);
+    }
+
+    #[test]
+    #[serial]
+    fn builder_debug_works() -> Result<()> {
+        let mut builder = Builder::default();
+        let _ = builder.all_sysinfo();
+        let mut buf = vec![];
+        write!(buf, "{builder:?}")?;
+        assert!(!buf.is_empty());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn si_debug_works() -> Result<()> {
+        let si = Builder::default().all_sysinfo().build();
+        let mut buf = vec![];
+        write!(buf, "{si:?}")?;
+        assert!(!buf.is_empty());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn si_default() -> Result<()> {
+        let si = Builder::default().build();
+        let emitter = Emitter::default().add_instructions(&si)?.test_emit();
+        assert_eq!(0, emitter.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(0, emitter.warnings().len());
+        Ok(())
+    }
 
     #[test]
     #[serial]
