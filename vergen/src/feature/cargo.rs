@@ -218,7 +218,7 @@ impl Builder {
 }
 
 ///
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 #[allow(clippy::struct_excessive_bools)]
 pub struct Cargo {
     debug: bool,

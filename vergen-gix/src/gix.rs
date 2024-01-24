@@ -957,16 +957,12 @@ mod test {
         let source = [0x66, 0x6f, 0x80, 0x6f];
         let os_str = OsStr::from_bytes(&source[..]);
         temp_env::with_var("SOURCE_DATE_EPOCH", Some(os_str), || {
-            let result = || -> Result<bool> {
-                let mut stdout_buf = vec![];
-                let gix = Builder::default().commit_date().build();
-                Emitter::new()
-                    .idempotent()
-                    .fail_on_error()
-                    .add_instructions(&gix)?
-                    .emit_to(&mut stdout_buf)
-            }();
-            assert!(result.is_err());
+            let gix = Builder::default().commit_date().build();
+            assert!(Emitter::new()
+                .idempotent()
+                .fail_on_error()
+                .add_instructions(&gix)
+                .is_err());
         });
     }
 
@@ -1003,15 +999,8 @@ mod test {
         let os_string = OsString::from_wide(&source[..]);
         let os_str = os_string.as_os_str();
         temp_env::with_var("SOURCE_DATE_EPOCH", Some(os_str), || {
-            let result = || -> Result<bool> {
-                let mut stdout_buf = vec![];
-                let gix = Builder::default().commit_date().build();
-                Emitter::new()
-                    .idempotent()
-                    .add_instructions(&gix)?
-                    .emit_to(&mut stdout_buf)
-            }();
-            assert!(result.is_err());
+            let gix = Builder::default().commit_date().build();
+            assert!(Emitter::new().idempotent().add_instructions(&gix).is_err());
         });
     }
 

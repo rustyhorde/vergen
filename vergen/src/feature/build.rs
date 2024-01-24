@@ -181,7 +181,7 @@ impl Builder {
     }
 }
 ///
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Build {
     build_date: bool,
     build_timestamp: bool,

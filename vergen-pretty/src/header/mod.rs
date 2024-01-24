@@ -35,7 +35,7 @@ fn from_u8(val: u8) -> Style {
 pub type Env = BTreeMap<&'static str, Option<&'static str>>;
 
 /// Header Configuration
-#[derive(Builder, Clone, Debug, Default)]
+#[derive(Builder, Clone, Debug, Default, PartialEq)]
 pub struct Config {
     #[cfg(feature = "color")]
     #[builder(default)]
@@ -198,12 +198,13 @@ mod test {
     use super::from_u8;
     #[cfg(feature = "__vergen_test")]
     use super::header;
-    #[cfg(feature = "__vergen_test")]
+    use super::Config;
     use anyhow::Result;
     #[cfg(feature = "color")]
     use console::Style;
     use lazy_static::lazy_static;
     use regex::Regex;
+    use std::io::Write;
 
     #[cfg(feature = "__vergen_test")]
     const HEADER_PREFIX: &str = r"██████╗ ██╗   ██╗██████╗ ██╗    ██╗
@@ -225,6 +226,23 @@ mod test {
         static ref BUILD_TIMESTAMP: Regex = Regex::new(r"Timestamp \(  build\)").unwrap();
         static ref BUILD_SEMVER: Regex = Regex::new(r"Semver \(  rustc\)").unwrap();
         static ref GIT_BRANCH: Regex = Regex::new(r"Branch \(    git\)").unwrap();
+    }
+
+    #[test]
+    #[allow(clippy::clone_on_copy, clippy::redundant_clone)]
+    fn header_clone_works() {
+        let config = Config::default();
+        let another = config.clone();
+        assert_eq!(another, config);
+    }
+
+    #[test]
+    fn builder_debug_works() -> Result<()> {
+        let config = Config::default();
+        let mut buf = vec![];
+        write!(buf, "{config:?}")?;
+        assert!(!buf.is_empty());
+        Ok(())
     }
 
     #[test]
