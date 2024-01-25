@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: ✅ Checkout ✅
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: ⭕ Rustfmt Check ⭕
         run: cargo fmt --all -- --check
   lints-linux:
@@ -48,9 +48,9 @@ jobs:
             rust: nightly
     steps:
       - name: ✅ Checkout ✅
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: 💵 Cache 💵
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/bin/
@@ -94,9 +94,9 @@ jobs:
             rust: nightly
     steps:
       - name: ✅ Checkout ✅
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: 💵 Cache 💵
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/bin/
@@ -137,9 +137,9 @@ jobs:
             rust: nightly
     steps:
       - name: ✅ Checkout ✅
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: 💵 Cache 💵
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/bin/
@@ -184,9 +184,9 @@ jobs:
             target: x86_64-unknown-linux-gnu
     steps:
       - name: ✅ Checkout ✅
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: 💵 Cache 💵
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/bin/
@@ -240,9 +240,9 @@ jobs:
             target: x86_64-unknown-linux-gnu
     steps:
       - name: ✅ Checkout ✅
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: 💵 Cache 💵
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/bin/
@@ -316,9 +316,9 @@ jobs:
             target: x86_64-apple-darwin
     steps:
       - name: ✅ Checkout ✅
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: 💵 Cache 💵
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/bin/
@@ -383,9 +383,9 @@ jobs:
             target: x86_64-pc-windows-gnu
     steps:
       - name: ✅ Checkout ✅
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: 💵 Cache 💵
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/bin/
