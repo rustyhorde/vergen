@@ -237,6 +237,7 @@ mod keys;
 mod utils;
 
 pub use entries::test_gen::CustomInsGen;
+pub use entries::test_gen::CustomInsGenBuilder;
 pub use entries::Add as AddEntries;
 pub use entries::CargoRerunIfChanged;
 pub use entries::CargoRustcEnvMap;

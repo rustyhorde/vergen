@@ -117,10 +117,13 @@ pub trait InsGen<K: Into<String> + Ord, V: Into<String>> {
 pub(crate) mod test_gen {
     use crate::{CargoRerunIfChanged, CargoWarning, InsGen};
     use anyhow::{anyhow, Result};
+    use derive_builder::Builder;
     use std::collections::BTreeMap;
 
-    #[derive(Clone, Copy, Debug, Default)]
-    pub struct CustomInsGen {}
+    #[derive(Builder, Clone, Copy, Debug, Default)]
+    pub struct CustomInsGen {
+        fail: bool,
+    }
 
     impl InsGen<&str, &str> for CustomInsGen {
         fn add_calculated_entries(
@@ -130,12 +133,16 @@ pub(crate) mod test_gen {
             _cargo_rerun_if_changed: &mut CargoRerunIfChanged,
             _cargo_warning: &mut CargoWarning,
         ) -> Result<()> {
-            if idempotent {
-                let _ = cargo_rustc_env_map.insert("test", "IDEMPOTENT");
+            if self.fail {
+                Err(anyhow!("We have failed"))
             } else {
-                let _ = cargo_rustc_env_map.insert("test", "value");
+                if idempotent {
+                    let _ = cargo_rustc_env_map.insert("test", "VERGEN_IDEMPOTENT_OUTPUT");
+                } else {
+                    let _ = cargo_rustc_env_map.insert("test", "value");
+                }
+                Ok(())
             }
-            Ok(())
         }
 
         fn add_default_entries(
@@ -149,7 +156,7 @@ pub(crate) mod test_gen {
                 let error = anyhow!(format!("{}", config.error()));
                 Err(error)
             } else {
-                let _ = cargo_rustc_env_map.insert("test", "IDEMPOTENT");
+                let _ = cargo_rustc_env_map.insert("test", "VERGEN_IDEMPOTENT_OUTPUT");
                 Ok(())
             }
         }

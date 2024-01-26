@@ -13,9 +13,7 @@ repository = "https://github.com/rustyhorde/vergen"
 version = "0.1.0"
 
 [package.metadata.cargo-all-features]
-denylist = [
-    "unstable",
-]
+denylist = ["unstable"]
 
 [features]
 default = []
@@ -28,6 +26,7 @@ si = []
 
 [dependencies]
 anyhow = "1.0.79"
+derive_builder = "0.13.0"
 getset = "0.1.2"
 
 [build-dependencies]
