@@ -869,7 +869,7 @@ mod test {
         let emitter = Emitter::default().add_instructions(&git2)?.test_emit();
         assert_eq!(0, emitter.cargo_rustc_env_map().len());
         assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
-        assert_eq!(0, emitter.warnings().len());
+        assert_eq!(0, emitter.cargo_warning().len());
         Ok(())
     }
 
@@ -906,17 +906,17 @@ mod test {
     fn head_not_found_is_default() -> Result<()> {
         let test_repo = TestRepos::new(false, false, false)?;
         let mut map = BTreeMap::new();
-        let mut warnings = vec![];
+        let mut cargo_warning = vec![];
         let repo = Repository::discover(current_dir()?)?;
-        Git2::add_branch_name(true, &repo, &mut map, &mut warnings)?;
+        Git2::add_branch_name(true, &repo, &mut map, &mut cargo_warning)?;
         assert_eq!(1, map.len());
-        assert_eq!(1, warnings.len());
+        assert_eq!(1, cargo_warning.len());
         let mut map = BTreeMap::new();
-        let mut warnings = vec![];
+        let mut cargo_warning = vec![];
         let repo = Repository::discover(test_repo.path())?;
-        Git2::add_branch_name(true, &repo, &mut map, &mut warnings)?;
+        Git2::add_branch_name(true, &repo, &mut map, &mut cargo_warning)?;
         assert_eq!(1, map.len());
-        assert_eq!(1, warnings.len());
+        assert_eq!(1, cargo_warning.len());
         Ok(())
     }
 
@@ -930,7 +930,7 @@ mod test {
             .test_emit();
         assert_eq!(10, emitter.cargo_rustc_env_map().len());
         assert_eq!(2, count_idempotent(emitter.cargo_rustc_env_map()));
-        assert_eq!(2, emitter.warnings().len());
+        assert_eq!(2, emitter.cargo_warning().len());
         Ok(())
     }
 
@@ -943,7 +943,7 @@ mod test {
         let emitter = Emitter::default().add_instructions(&git2)?.test_emit();
         assert_eq!(10, emitter.cargo_rustc_env_map().len());
         assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
-        assert_eq!(0, emitter.warnings().len());
+        assert_eq!(0, emitter.cargo_warning().len());
         Ok(())
     }
 
@@ -959,7 +959,7 @@ mod test {
 
         assert_eq!(10, emitter.cargo_rustc_env_map().len());
         assert_eq!(2, count_idempotent(emitter.cargo_rustc_env_map()));
-        assert_eq!(2, emitter.warnings().len());
+        assert_eq!(2, emitter.cargo_warning().len());
         Ok(())
     }
 
@@ -970,7 +970,7 @@ mod test {
         let emitter = Emitter::default().add_instructions(&git2)?.test_emit();
         assert_eq!(10, emitter.cargo_rustc_env_map().len());
         assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
-        assert_eq!(0, emitter.warnings().len());
+        assert_eq!(0, emitter.cargo_warning().len());
         Ok(())
     }
 
@@ -993,7 +993,7 @@ mod test {
         let emitter = Emitter::default().add_instructions(&git2)?.test_emit();
         assert_eq!(10, emitter.cargo_rustc_env_map().len());
         assert_eq!(10, count_idempotent(emitter.cargo_rustc_env_map()));
-        assert_eq!(11, emitter.warnings().len());
+        assert_eq!(11, emitter.cargo_warning().len());
         Ok(())
     }
 

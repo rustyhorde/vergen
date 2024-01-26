@@ -6,6 +6,7 @@ mod test_build {
     use serial_test::serial;
     use vergen::BuildBuilder;
     use vergen::Emitter;
+    use vergen_lib::CustomInsGen;
 
     lazy_static! {
         static ref DATE_RE_STR: &'static str =
@@ -65,6 +66,22 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
             .add_instructions(&build)?
             .emit_to(&mut stdout_buf)?;
         let output = String::from_utf8_lossy(&stdout_buf);
+        assert!(BUILD_REGEX_INST.is_match(&output));
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn build_all_with_custom_output() -> Result<()> {
+        let mut stdout_buf = vec![];
+        let build = BuildBuilder::default().all_build().build();
+        let cust_gen = CustomInsGen::default();
+        Emitter::new()
+            .add_instructions(&build)?
+            .add_custom_instructions(&cust_gen)?
+            .emit_to(&mut stdout_buf)?;
+        let output = String::from_utf8_lossy(&stdout_buf);
+        eprintln!("OUT: {output}");
         assert!(BUILD_REGEX_INST.is_match(&output));
         Ok(())
     }

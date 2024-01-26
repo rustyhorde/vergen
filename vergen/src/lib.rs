@@ -11,10 +11,6 @@
 //!
 //! - Will emit [`cargo:rustc-env=VAR=VALUE`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#cargorustc-envvarvalue)
 //! for each feature you have enabled.  These can be referenced with the [env!](std::env!) macro in your code.
-//! - Will emit [`cargo:rerun-if-changed=.git/HEAD`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed)
-//! if the git feature is enabled.  This is done to ensure any git instructions are regenerated when commits are made.
-//! - Will emit [`cargo:rerun-if-changed=.git/<path_to_ref>`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed)
-//! if the git feature is enabled.  This is done to ensure any git instructions are regenerated when commits are made.
 //! - Can emit [`cargo:warning`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#cargo-warning) outputs if the
 //! [`fail_on_error`](Emitter::fail_on_error) feature is not enabled and the requested variable is defaulted through error or
 //! the [`idempotent`](Emitter::idempotent) flag.
@@ -43,9 +39,9 @@
 //!
 //! [build-dependencies]
 //! # All features enabled
-//! vergen = { version = "8.0.0", features = ["build", "cargo", "git", "gitcl", "rustc", "si"] }
+//! vergen = { version = "9.0.0-beta.0", features = ["build", "cargo", "rustc", "si"] }
 //! # or
-//! vergen = { version = "8.0.0", features = ["build", "git", "gitcl"] }
+//! vergen = { version = "9.0.0-beta.0", features = ["build"] }
 //! # if you wish to disable certain features
 //! ```
 //!
@@ -56,42 +52,47 @@
 //! #### Generate all output
 //!
 //! ```
-//! use anyhow::Result;
-//! # use std::env;
-//! use vergen::Emitter;
-#![cfg_attr(
-    feature = "build",
-    doc = r##"
-use vergen::BuildBuilder;
-"##
-)]
+//! # use anyhow::Result;
+//! # use vergen::Emitter;
+#![cfg_attr(feature = "build", doc = r##"# use vergen::BuildBuilder;"##)]
+#![cfg_attr(feature = "cargo", doc = r##"# use vergen::CargoBuilder;"##)]
+#![cfg_attr(feature = "rustc", doc = r##"# use vergen::RustcBuilder;"##)]
+#![cfg_attr(feature = "si", doc = r##"# use vergen::SysinfoBuilder;"##)]
+#![cfg_attr(feature = "cargo", doc = r##"# use test_util::with_cargo_vars;"##)]
 //!
 //! pub fn main() -> Result<()> {
+#![cfg_attr(feature = "cargo", doc = r##"# let result = with_cargo_vars(|| {"##)]
+//!     // NOTE: This will output everything, and requires all features enabled.
+//!     // NOTE: See the specific builder documentation for configuration options.
 #![cfg_attr(
-    all(
-        feature = "build",
-        feature = "cargo",
-        feature = "rustc",
-        feature = "si"
-    ),
+    feature = "build",
+    doc = r##"    let build = BuildBuilder::default().all_build().build();"##
+)]
+#![cfg_attr(
+    feature = "cargo",
+    doc = r##"    let cargo = CargoBuilder::default().all_cargo().build();"##
+)]
+#![cfg_attr(
+    feature = "rustc",
+    doc = r##"    let rustc = RustcBuilder::default().all_rustc().build();"##
+)]
+#![cfg_attr(
+    feature = "si",
+    doc = r##"    let si = SysinfoBuilder::default().all_sysinfo().build();"##
+)]
+//!
+//!     Emitter::default()
+#![cfg_attr(feature = "build", doc = r##"        .add_instructions(&build)?"##)]
+#![cfg_attr(feature = "cargo", doc = r##"        .add_instructions(&cargo)?"##)]
+#![cfg_attr(feature = "rustc", doc = r##"        .add_instructions(&rustc)?"##)]
+#![cfg_attr(feature = "si", doc = r##"        .add_instructions(&si)?"##)]
+//!         .emit()?;
+#![cfg_attr(
+    feature = "cargo",
     doc = r##"
-# env::set_var("CARGO_FEATURE_BUILD", "build");
-# env::set_var("CARGO_FEATURE_GIT", "git");
-# env::set_var("DEBUG", "true");
-# env::set_var("OPT_LEVEL", "1");
-# env::set_var("TARGET", "x86_64-unknown-linux-gnu");
-    // NOTE: This will output everything, and requires all features enabled.
-    // NOTE: See the Emitter documentation for configuration options.
-    let build = BuildBuilder::default().all_build().build();
-    Emitter::new()
-        .add_instructions(&build)?
-        .emit()?;
-# env::remove_var("CARGO_FEATURE_BUILD");
-# env::remove_var("CARGO_FEATURE_GIT");
-# env::remove_var("DEBUG");
-# env::remove_var("OPT_LEVEL");
-# env::remove_var("TARGET");
-"##
+#   Ok(())
+# });
+# assert!(result.is_ok());"##
 )]
 //!     Ok(())
 //! }
@@ -100,28 +101,48 @@ use vergen::BuildBuilder;
 //! #### Generate specific output
 //!
 //! ```
-//! use anyhow::Result;
-//! # use std::env;
-//! use vergen::Emitter;
-#![cfg_attr(
-    feature = "build",
-    doc = r##"
-use vergen::BuildBuilder;
-"##
-)]
+//! # use anyhow::Result;
+//! # use vergen::Emitter;
+#![cfg_attr(feature = "build", doc = r##"# use vergen::BuildBuilder;"##)]
+#![cfg_attr(feature = "cargo", doc = r##"# use vergen::CargoBuilder;"##)]
+#![cfg_attr(feature = "rustc", doc = r##"# use vergen::RustcBuilder;"##)]
+#![cfg_attr(feature = "si", doc = r##"# use vergen::SysinfoBuilder;"##)]
+#![cfg_attr(feature = "cargo", doc = r##"# use test_util::with_cargo_vars;"##)]
 //!
 //! pub fn main() -> Result<()> {
+#![cfg_attr(feature = "cargo", doc = r##"# let result = with_cargo_vars(|| {"##)]
 #![cfg_attr(
     feature = "build",
-    doc = r##"
-    // NOTE: This will output only a build timestamp.
+    doc = r##"    // NOTE: This will output only a build timestamp.
     // NOTE: This set requires the build feature.
-    // NOTE: See the BuildBuilder documentation for configuration options.
-    let build = BuildBuilder::default().build_timestamp().build();
-    Emitter::new()
-        .add_instructions(&build)?
-        .emit()?;
-"##
+    // NOTE: See the BuildBuilder documentation for configuration options. 
+    let build = BuildBuilder::default().build_timestamp().build();"##
+)]
+#![cfg_attr(
+    feature = "cargo",
+    doc = r##"    let cargo = CargoBuilder::default().opt_level().build();"##
+)]
+#![cfg_attr(
+    feature = "rustc",
+    doc = r##"    let rustc = RustcBuilder::default().semver().build();"##
+)]
+#![cfg_attr(
+    feature = "si",
+    doc = r##"    let si = SysinfoBuilder::default().cpu_core_count().build();"##
+)]
+//!
+//!     Emitter::default()
+#![cfg_attr(feature = "build", doc = r##"        .add_instructions(&build)?"##)]
+#![cfg_attr(feature = "cargo", doc = r##"        .add_instructions(&cargo)?"##)]
+#![cfg_attr(feature = "rustc", doc = r##"        .add_instructions(&rustc)?"##)]
+#![cfg_attr(feature = "si", doc = r##"        .add_instructions(&si)?"##)]
+//!         .emit()?;
+#![cfg_attr(
+    feature = "cargo",
+    doc = r##"
+#   Ok(())
+# });
+    assert!(result.is_ok());"##
 )]
 //!     Ok(())
 //! }
@@ -135,87 +156,15 @@ use vergen::BuildBuilder;
 //! ```
 //!
 //! ## Features
-//! `vergen` has five main feature toggles allowing you to customize your output. No features are enabled by default.  
+//! `vergen` has four main feature toggles allowing you to customize your output. No features are enabled by default.  
 //! You **must** specifically enable the features you wish to use.
 //!
 //! | Feature | Enables |
 //! | ------- | ------- |
 //! |  build  | `VERGEN_BUILD_*` instructions |
 //! |  cargo  | `VERGEN_CARGO_*` instructions |
-//! |   git   | `VERGEN_GIT_*` instructions and the `cargo:rerun-if-changed` instructions  |
 //! |  rustc  | `VERGEN_RUSTC_*` instructions |
 //! |   si    | `VERGEN_SYSINFO_*` instructions |
-//!
-//! #### Configuring the `git` feature
-//! If you wish to use the git feature, you must also enable one of the git implementations.
-//! The `gitcl` features is lightweight, but depends on `git` being on the path.  The other
-//! implementations allow for git instructions to be emitted without a reliance on
-//! the git binary.  The [`git2`](https://github.com/rust-lang/git2-rs) library are bindings over
-//! the `libgit2` library, while [`gitoxide`](https://github.com/Byron/gitoxide) is entirely implemented in Rust.
-//!
-//! **NOTE** - These 3 features are mutually exclusive.  Only one can be chosen.  If you select
-//! multiple, `vergen` intentionally will not compile.
-//!
-//! | Features | Enables |
-//! | -------- | ------- |
-//! | gitcl    | `VERGEN_GIT_` instructions emitted via the `git` binary at the command line |
-//! | git2     | `VERGEN_GIT_` instructions emitted via git `git2` library |
-//! | gitoxide | `VERGEN_GIT_` instructions emitted via the `gitoxide` library |
-//!
-//! A common configuration would be as follows:
-//! ```toml
-//! [build-dependencies]
-//! vergen = { version = "8.0.0", features = [ "build", "git", "gitcl" ]}
-//! # ...
-//! ```
-//! ### `Cargo` feature unification for `vergen` versions prior to 8.3.0
-//! When a dependency is used by multiple packages, Cargo will [use the union](https://doc.rust-lang.org/cargo/reference/features.html#feature-unification) of all features enabled on that dependency when building it.  Prior to version **8.3.0**, `vergen` had a set of mutually exclusive features `gitcl`, `git2`, and `gitoxide` to enable to specific git backend you wished to use.  If your crate has a dependency on another crate that uses `vergen`, your crate may fail to compile if you select a different `git` backend then the crate you depend on.  For example, your crate depends on `fancy-lib`.   
-//!
-//! #### fancy-lib `Cargo.toml`
-//! ```toml
-//! [build-dependencies]
-//! vergen = { version = "8.2.10", features = ["git","gitcl"] }
-//! ```
-//!
-//! #### your crate `Cargo.toml`
-//! ```toml
-//! [dependencies]
-//! fancy-lib = "0.1.0"
-//!
-//! [build-dependencies]
-//! vergen = { version = "8.2.10", features = ["git","gitoxide"] }
-//! ```
-//!
-//! Your crate will fail to compile because `cargo` unifies this to
-//! ```toml
-//! vergen = { version = "8.2.10", features = ["git","gitcl","gitoxide"] }
-//! ```
-//! and prior to **8.3.0** `vergen` will not compile with both `gitcl` and `gitoxide` as features.
-//!
-//! As a workaround, you can use `cargo tree -f "{p} {f}" | grep vergen` to determine the feature list cargo has set for `vergen`.  If
-//! a `git` backend has already been determined you will be able to use that without declaring those features in your dependency list. This is not perfect
-//! as this leaves you at the mercy of your dependency and the git feature they selected, but it's a workaround until version 9 comes out.
-//!
-//! #### fancy-lib `Cargo.toml`
-//! ```toml
-//! [build-dependencies]
-//! vergen = { version = "8.2.10", features = ["git","gitcl"] }
-//! ```
-//!
-//! #### your crate `Cargo.toml`
-//! ```toml
-//! [dependencies]
-//! fancy-lib = "0.1.0"
-//!
-//! [build-dependencies]
-//! vergen = "8.2.10"
-//! ```
-//! #### Unified
-//! ```toml
-//! vergen = { version = "8.2.10", features = ["git","gitcl"] }
-//! ```
-//! ### `Cargo` feature unification for `vergen` versions 8.3.0 and beyond
-//! `vergen` will accept `gitcl`,`git2`, and `gitoxide` as features.  If more than one of them is included, `vergen` will select `gitcl` before `git2` and `git2` before `gitoxide`.
 //!
 //! ## Environment Variables
 //! `vergen` currently recognizes the following environment variables
@@ -226,7 +175,6 @@ use vergen::BuildBuilder;
 //! | `SOURCE_DATE_EPOCH` | If this environment variable is set `vergen` will use the value (unix time since epoch) as the basis for a time based instructions.  This can help emit deterministic instructions. |
 //! | `VERGEN_BUILD_*` | If this environment variable is set `vergen` will use the value you specify for the output rather than generating it. |
 //! | `VERGEN_CARGO_*` | If this environment variable is set `vergen` will use the value you specify for the output rather than generating it. |
-//! | `VERGEN_GIT_*` | If this environment variable is set `vergen` will use the value you specify for the output rather than generating it. |
 //! | `VERGEN_RUSTC_*` | If this environment variable is set `vergen` will use the value you specify for the output rather than generating it. |
 //! | `VERGEN_SYSINFO_*` | If this environment variable is set `vergen` will use the value you specify for the output rather than generating it. |
 //!
@@ -245,8 +193,6 @@ use vergen::BuildBuilder;
 //! maintainers to force sane defaults when packaging rust binaries for distribution.
 //!
 //! #### Minimize the compile time impact
-//! - `git2` and `gitoxide` are large features.  These are opt-in now.  I've also added back support for
-//! generating git instructions via the `git` binary.
 //! - I've removed some extraneous libraries.   Any libraries added in the future will be checked against
 //! the current standard compile times to ensure the impact is not too great.
 //! - `vergen` should compile and test from a source tarball.
@@ -271,10 +217,6 @@ use vergen::BuildBuilder;
 //! app 0.1.0
 //!
 //! Build Timestamp:     2021-02-23T20:14:46.558472672+00:00
-//! Describe:            0.1.0-9-g46f83e1
-//! Commit SHA:          46f83e112520533338245862d366f6a02cef07d4
-//! Commit Date:         2021-02-23T08:08:02-05:00
-//! Commit Branch:       master
 //! rustc Version:       1.52.0-nightly
 //! rustc Channel:       nightly
 //! rustc Host Triple:   x86_64-unknown-linux-gnu
@@ -289,10 +231,6 @@ use vergen::BuildBuilder;
 //! ~/p/r/app λ curl https://some.app.com/info | jq
 //! {
 //!   "build_timestamp": "2021-02-19T21:32:22.932833758+00:00",
-//!   "git_describe": "0.0.0-7-gc96c096",
-//!   "git_sha": "c96c0961c3b7b749eab92f6f588b67915889c4cd",
-//!   "git_commit_date": "2021-02-19T16:29:06-05:00",
-//!   "git_branch": "master",
 //!   "rustc_semver": "1.52.0-nightly",
 //!   "rustc_channel": "nightly",
 //!   "rustc_host_triple": "x86_64-unknown-linux-gnu",
@@ -541,20 +479,24 @@ pub use crate::emitter::Emitter;
 #[cfg(feature = "cargo")]
 pub use cargo_metadata::DependencyKind;
 #[cfg(feature = "build")]
+#[doc(hidden)]
 pub use feature::build::Build;
 #[cfg(feature = "build")]
 pub use feature::build::Builder as BuildBuilder;
 #[cfg(feature = "cargo")]
 pub use feature::cargo::Builder as CargoBuilder;
 #[cfg(feature = "cargo")]
+#[doc(hidden)]
 pub use feature::cargo::Cargo;
 #[cfg(feature = "rustc")]
 pub use feature::rustc::Builder as RustcBuilder;
 #[cfg(feature = "rustc")]
+#[doc(hidden)]
 pub use feature::rustc::Rustc;
 #[cfg(feature = "si")]
 pub use feature::si::Builder as SysinfoBuilder;
 #[cfg(feature = "si")]
+#[doc(hidden)]
 pub use feature::si::Sysinfo;
 #[cfg(feature = "si")]
 pub use sysinfo::CpuRefreshKind;

@@ -415,7 +415,7 @@ mod test {
         let emitter = Emitter::default().add_instructions(&rustc)?.test_emit();
         assert_eq!(0, emitter.cargo_rustc_env_map().len());
         assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
-        assert_eq!(0, emitter.warnings().len());
+        assert_eq!(0, emitter.cargo_warning().len());
         Ok(())
     }
 
@@ -429,7 +429,7 @@ mod test {
             .test_emit();
         assert_eq!(6, config.cargo_rustc_env_map().len());
         assert_eq!(0, count_idempotent(config.cargo_rustc_env_map()));
-        assert_eq!(0, config.warnings().len());
+        assert_eq!(0, config.cargo_warning().len());
         Ok(())
     }
 
@@ -440,7 +440,7 @@ mod test {
         let config = Emitter::default().add_instructions(&rustc)?.test_emit();
         assert_eq!(6, config.cargo_rustc_env_map().len());
         assert_eq!(0, count_idempotent(config.cargo_rustc_env_map()));
-        assert_eq!(0, config.warnings().len());
+        assert_eq!(0, config.cargo_warning().len());
         Ok(())
     }
 
@@ -451,7 +451,7 @@ mod test {
         let config = Emitter::default().add_instructions(&rustc)?.test_emit();
         assert_eq!(1, config.cargo_rustc_env_map().len());
         assert_eq!(0, count_idempotent(config.cargo_rustc_env_map()));
-        assert_eq!(0, config.warnings().len());
+        assert_eq!(0, config.cargo_warning().len());
         Ok(())
     }
 
@@ -462,7 +462,7 @@ mod test {
         let config = Emitter::default().add_instructions(&rustc)?.test_emit();
         assert_eq!(1, config.cargo_rustc_env_map().len());
         assert_eq!(0, count_idempotent(config.cargo_rustc_env_map()));
-        assert_eq!(0, config.warnings().len());
+        assert_eq!(0, config.cargo_warning().len());
         Ok(())
     }
 
@@ -473,7 +473,7 @@ mod test {
         let config = Emitter::default().add_instructions(&rustc)?.test_emit();
         assert_eq!(1, config.cargo_rustc_env_map().len());
         assert_eq!(0, count_idempotent(config.cargo_rustc_env_map()));
-        assert_eq!(0, config.warnings().len());
+        assert_eq!(0, config.cargo_warning().len());
         Ok(())
     }
 
@@ -484,7 +484,7 @@ mod test {
         let config = Emitter::default().add_instructions(&rustc)?.test_emit();
         assert_eq!(1, config.cargo_rustc_env_map().len());
         assert_eq!(0, count_idempotent(config.cargo_rustc_env_map()));
-        assert_eq!(0, config.warnings().len());
+        assert_eq!(0, config.cargo_warning().len());
         Ok(())
     }
 
@@ -495,7 +495,7 @@ mod test {
         let config = Emitter::default().add_instructions(&rustc)?.test_emit();
         assert_eq!(1, config.cargo_rustc_env_map().len());
         assert_eq!(0, count_idempotent(config.cargo_rustc_env_map()));
-        assert_eq!(0, config.warnings().len());
+        assert_eq!(0, config.cargo_warning().len());
         Ok(())
     }
 
@@ -518,7 +518,7 @@ release: 1.68.0-nightly
             .test_emit();
         assert_eq!(6, emitter.cargo_rustc_env_map().len());
         assert_eq!(1, count_idempotent(emitter.cargo_rustc_env_map()));
-        assert_eq!(1, emitter.warnings().len());
+        assert_eq!(1, emitter.cargo_warning().len());
         Ok(())
     }
 
@@ -542,7 +542,7 @@ LLVM version: 15.0.6
             .test_emit();
         assert_eq!(6, emitter.cargo_rustc_env_map().len());
         assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
-        assert_eq!(0, emitter.warnings().len());
+        assert_eq!(0, emitter.cargo_warning().len());
         Ok(())
     }
 
@@ -566,7 +566,7 @@ LLVM version: 15.0.6
             .test_emit();
         assert_eq!(6, emitter.cargo_rustc_env_map().len());
         assert_eq!(2, count_idempotent(emitter.cargo_rustc_env_map()));
-        assert_eq!(2, emitter.warnings().len());
+        assert_eq!(2, emitter.cargo_warning().len());
         Ok(())
     }
 
@@ -589,7 +589,7 @@ LLVM version: 15.0.6
         let emitter = Emitter::default().add_instructions(&rustc)?.test_emit();
         assert_eq!(6, emitter.cargo_rustc_env_map().len());
         assert_eq!(6, count_idempotent(emitter.cargo_rustc_env_map()));
-        assert_eq!(6, emitter.warnings().len());
+        assert_eq!(6, emitter.cargo_warning().len());
         Ok(())
     }
 

@@ -6,7 +6,7 @@
 // option. All files in the project carrying such notice may not be copied,
 // modified, or distributed except according to those terms.
 
-//! # vergen-lib - Emit cargo instructions from a build script
+//! # vergen-lib - Common structs, enums and constants used to support [`vergen`](https://docs.rs/vergen)
 //!
 
 // rustc lints
@@ -236,11 +236,13 @@ mod entries;
 mod keys;
 mod utils;
 
+pub use entries::test_gen::CustomInsGen;
 pub use entries::Add as AddEntries;
 pub use entries::CargoRerunIfChanged;
 pub use entries::CargoRustcEnvMap;
 pub use entries::CargoWarning;
 pub use entries::DefaultConfig;
+pub use entries::InsGen;
 pub use keys::vergen_key::VergenKey;
 pub use utils::add_default_map_entry;
 pub use utils::add_map_entry;

@@ -474,147 +474,131 @@ mod test {
         let emitter = Emitter::default().add_instructions(&cargo)?.test_emit();
         assert_eq!(0, emitter.cargo_rustc_env_map().len());
         assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
-        assert_eq!(0, emitter.warnings().len());
+        assert_eq!(0, emitter.cargo_warning().len());
         Ok(())
     }
 
     #[test]
     #[serial]
     fn all_idempotent() {
-        with_cargo_vars(|| {
-            let result = || -> Result<()> {
-                let cargo = Builder::default().all_cargo().build();
-                let config = Emitter::default()
-                    .idempotent()
-                    .add_instructions(&cargo)?
-                    .test_emit();
-                assert_eq!(5, config.cargo_rustc_env_map().len());
-                assert_eq!(0, count_idempotent(config.cargo_rustc_env_map()));
-                assert_eq!(0, config.warnings().len());
-                Ok(())
-            }();
-            assert!(result.is_ok());
+        let result = with_cargo_vars(|| {
+            let cargo = Builder::default().all_cargo().build();
+            let config = Emitter::default()
+                .idempotent()
+                .add_instructions(&cargo)?
+                .test_emit();
+            assert_eq!(5, config.cargo_rustc_env_map().len());
+            assert_eq!(0, count_idempotent(config.cargo_rustc_env_map()));
+            assert_eq!(0, config.cargo_warning().len());
+            Ok(())
         });
+        assert!(result.is_ok());
     }
 
     #[test]
     #[serial]
     fn all() {
-        with_cargo_vars(|| {
-            let result = || -> Result<()> {
-                let cargo = Builder::default().all_cargo().build();
-                let config = Emitter::default().add_instructions(&cargo)?.test_emit();
-                assert_eq!(5, config.cargo_rustc_env_map().len());
-                assert_eq!(0, count_idempotent(config.cargo_rustc_env_map()));
-                assert_eq!(0, config.warnings().len());
-                Ok(())
-            }();
-            assert!(result.is_ok());
+        let result = with_cargo_vars(|| {
+            let cargo = Builder::default().all_cargo().build();
+            let config = Emitter::default().add_instructions(&cargo)?.test_emit();
+            assert_eq!(5, config.cargo_rustc_env_map().len());
+            assert_eq!(0, count_idempotent(config.cargo_rustc_env_map()));
+            assert_eq!(0, config.cargo_warning().len());
+            Ok(())
         });
+        assert!(result.is_ok());
     }
 
     #[test]
     #[serial]
     fn debug() {
-        with_cargo_vars(|| {
-            let result = || -> Result<()> {
-                let cargo = Builder::default().debug().build();
-                let config = Emitter::default().add_instructions(&cargo)?.test_emit();
-                assert_eq!(1, config.cargo_rustc_env_map().len());
-                assert_eq!(0, count_idempotent(config.cargo_rustc_env_map()));
-                assert_eq!(0, config.warnings().len());
-                Ok(())
-            }();
-            assert!(result.is_ok());
+        let result = with_cargo_vars(|| {
+            let cargo = Builder::default().debug().build();
+            let config = Emitter::default().add_instructions(&cargo)?.test_emit();
+            assert_eq!(1, config.cargo_rustc_env_map().len());
+            assert_eq!(0, count_idempotent(config.cargo_rustc_env_map()));
+            assert_eq!(0, config.cargo_warning().len());
+            Ok(())
         });
+        assert!(result.is_ok());
     }
 
     #[test]
     #[serial]
     fn features() {
-        with_cargo_vars(|| {
-            let result = || -> Result<()> {
-                let cargo = Builder::default().features().build();
-                let config = Emitter::default().add_instructions(&cargo)?.test_emit();
-                assert_eq!(1, config.cargo_rustc_env_map().len());
-                assert_eq!(0, count_idempotent(config.cargo_rustc_env_map()));
-                assert_eq!(0, config.warnings().len());
-                Ok(())
-            }();
-            assert!(result.is_ok());
+        let result = with_cargo_vars(|| {
+            let cargo = Builder::default().features().build();
+            let config = Emitter::default().add_instructions(&cargo)?.test_emit();
+            assert_eq!(1, config.cargo_rustc_env_map().len());
+            assert_eq!(0, count_idempotent(config.cargo_rustc_env_map()));
+            assert_eq!(0, config.cargo_warning().len());
+            Ok(())
         });
+        assert!(result.is_ok());
     }
 
     #[test]
     #[serial]
     fn opt_level() {
-        with_cargo_vars(|| {
-            let result = || -> Result<()> {
-                let cargo = Builder::default().opt_level().build();
-                let config = Emitter::default().add_instructions(&cargo)?.test_emit();
-                assert_eq!(1, config.cargo_rustc_env_map().len());
-                assert_eq!(0, count_idempotent(config.cargo_rustc_env_map()));
-                assert_eq!(0, config.warnings().len());
-                Ok(())
-            }();
-            assert!(result.is_ok());
+        let result = with_cargo_vars(|| {
+            let cargo = Builder::default().opt_level().build();
+            let config = Emitter::default().add_instructions(&cargo)?.test_emit();
+            assert_eq!(1, config.cargo_rustc_env_map().len());
+            assert_eq!(0, count_idempotent(config.cargo_rustc_env_map()));
+            assert_eq!(0, config.cargo_warning().len());
+            Ok(())
         });
+        assert!(result.is_ok());
     }
 
     #[test]
     #[serial]
     fn target_triple() {
-        with_cargo_vars(|| {
-            let result = || -> Result<()> {
-                let cargo = Builder::default().target_triple().build();
-                let config = Emitter::default().add_instructions(&cargo)?.test_emit();
-                assert_eq!(1, config.cargo_rustc_env_map().len());
-                assert_eq!(0, count_idempotent(config.cargo_rustc_env_map()));
-                assert_eq!(0, config.warnings().len());
-                Ok(())
-            }();
-            assert!(result.is_ok());
+        let result = with_cargo_vars(|| {
+            let cargo = Builder::default().target_triple().build();
+            let config = Emitter::default().add_instructions(&cargo)?.test_emit();
+            assert_eq!(1, config.cargo_rustc_env_map().len());
+            assert_eq!(0, count_idempotent(config.cargo_rustc_env_map()));
+            assert_eq!(0, config.cargo_warning().len());
+            Ok(())
         });
+        assert!(result.is_ok());
     }
 
     #[test]
     #[serial]
     fn dependencies() {
-        with_cargo_vars(|| {
-            let result = || -> Result<()> {
-                let name_filter = Some("anyhow");
-                let cargo = Builder::default()
-                    .dependencies()
-                    .dependencies_name_filter(name_filter)
-                    .build();
-                let config = Emitter::default().add_instructions(&cargo)?.test_emit();
-                assert_eq!(1, config.cargo_rustc_env_map().len());
-                assert_eq!(0, count_idempotent(config.cargo_rustc_env_map()));
-                assert_eq!(0, config.warnings().len());
-                Ok(())
-            }();
-            assert!(result.is_ok());
+        let result = with_cargo_vars(|| {
+            let name_filter = Some("anyhow");
+            let cargo = Builder::default()
+                .dependencies()
+                .dependencies_name_filter(name_filter)
+                .build();
+            let config = Emitter::default().add_instructions(&cargo)?.test_emit();
+            assert_eq!(1, config.cargo_rustc_env_map().len());
+            assert_eq!(0, count_idempotent(config.cargo_rustc_env_map()));
+            assert_eq!(0, config.cargo_warning().len());
+            Ok(())
         });
+        assert!(result.is_ok());
     }
 
     #[test]
     #[serial]
     fn dependencies_bad_name_filter() {
-        with_cargo_vars(|| {
-            let result = || -> Result<()> {
-                let name_filter = Some("(");
-                let cargo = Builder::default()
-                    .dependencies()
-                    .dependencies_name_filter(name_filter)
-                    .build();
-                let config = Emitter::default().add_instructions(&cargo)?.test_emit();
-                assert_eq!(1, config.cargo_rustc_env_map().len());
-                assert_eq!(0, count_idempotent(config.cargo_rustc_env_map()));
-                assert_eq!(0, config.warnings().len());
-                Ok(())
-            }();
-            assert!(result.is_ok());
+        let result = with_cargo_vars(|| {
+            let name_filter = Some("(");
+            let cargo = Builder::default()
+                .dependencies()
+                .dependencies_name_filter(name_filter)
+                .build();
+            let config = Emitter::default().add_instructions(&cargo)?.test_emit();
+            assert_eq!(1, config.cargo_rustc_env_map().len());
+            assert_eq!(0, count_idempotent(config.cargo_rustc_env_map()));
+            assert_eq!(0, config.cargo_warning().len());
+            Ok(())
         });
+        assert!(result.is_ok());
     }
 
     #[test]
@@ -634,124 +618,112 @@ mod test {
         let config = Emitter::default().add_instructions(&cargo)?.test_emit();
         assert_eq!(5, config.cargo_rustc_env_map().len());
         assert_eq!(5, count_idempotent(config.cargo_rustc_env_map()));
-        assert_eq!(5, config.warnings().len());
+        assert_eq!(5, config.cargo_warning().len());
         Ok(())
     }
 
     #[test]
     #[serial]
     fn cargo_debug_override_works() {
-        with_cargo_vars_ext(
+        let result = with_cargo_vars_ext(
             &[("VERGEN_CARGO_DEBUG", Some("this is a bad date"))],
             || {
-                let result = || -> Result<()> {
-                    let mut stdout_buf = vec![];
-                    let cargo = Builder::default().all_cargo().build();
-                    assert!(Emitter::default()
-                        .add_instructions(&cargo)?
-                        .emit_to(&mut stdout_buf)
-                        .is_ok());
-                    let output = String::from_utf8_lossy(&stdout_buf);
-                    assert!(
-                        output.contains("cargo:rustc-env=VERGEN_CARGO_DEBUG=this is a bad date")
-                    );
-                    Ok(())
-                }();
-                assert!(result.is_ok());
+                let mut stdout_buf = vec![];
+                let cargo = Builder::default().all_cargo().build();
+                assert!(Emitter::default()
+                    .add_instructions(&cargo)?
+                    .emit_to(&mut stdout_buf)
+                    .is_ok());
+                let output = String::from_utf8_lossy(&stdout_buf);
+                assert!(output.contains("cargo:rustc-env=VERGEN_CARGO_DEBUG=this is a bad date"));
+                Ok(())
             },
         );
+        assert!(result.is_ok());
     }
 
     #[test]
     #[serial]
     fn cargo_features_override_works() {
-        with_cargo_vars_ext(
+        let result = with_cargo_vars_ext(
             &[("VERGEN_CARGO_FEATURES", Some("this is a bad date"))],
             || {
-                let result = || -> Result<()> {
-                    let mut stdout_buf = vec![];
-                    let cargo = Builder::default().all_cargo().build();
-                    assert!(Emitter::default()
-                        .add_instructions(&cargo)?
-                        .emit_to(&mut stdout_buf)
-                        .is_ok());
-                    let output = String::from_utf8_lossy(&stdout_buf);
-                    assert!(
-                        output.contains("cargo:rustc-env=VERGEN_CARGO_FEATURES=this is a bad date")
-                    );
-                    Ok(())
-                }();
-                assert!(result.is_ok());
+                let mut stdout_buf = vec![];
+                let cargo = Builder::default().all_cargo().build();
+                assert!(Emitter::default()
+                    .add_instructions(&cargo)?
+                    .emit_to(&mut stdout_buf)
+                    .is_ok());
+                let output = String::from_utf8_lossy(&stdout_buf);
+                assert!(output.contains("cargo:rustc-env=VERGEN_CARGO_FEATURES=this is a bad date"));
+                Ok(())
             },
         );
+        assert!(result.is_ok());
     }
 
     #[test]
     #[serial]
     fn cargo_opt_level_override_works() {
-        with_cargo_vars_ext(
+        let result = with_cargo_vars_ext(
             &[("VERGEN_CARGO_OPT_LEVEL", Some("this is a bad date"))],
             || {
-                let result = || -> Result<()> {
-                    let mut stdout_buf = vec![];
-                    let cargo = Builder::default().all_cargo().build();
-                    assert!(Emitter::default()
-                        .add_instructions(&cargo)?
-                        .emit_to(&mut stdout_buf)
-                        .is_ok());
-                    let output = String::from_utf8_lossy(&stdout_buf);
-                    assert!(output
-                        .contains("cargo:rustc-env=VERGEN_CARGO_OPT_LEVEL=this is a bad date"));
-                    Ok(())
-                }();
-                assert!(result.is_ok());
+                let mut stdout_buf = vec![];
+                let cargo = Builder::default().all_cargo().build();
+                assert!(Emitter::default()
+                    .add_instructions(&cargo)?
+                    .emit_to(&mut stdout_buf)
+                    .is_ok());
+                let output = String::from_utf8_lossy(&stdout_buf);
+                assert!(
+                    output.contains("cargo:rustc-env=VERGEN_CARGO_OPT_LEVEL=this is a bad date")
+                );
+                Ok(())
             },
         );
+        assert!(result.is_ok());
     }
 
     #[test]
     #[serial]
     fn cargo_target_triple_override_works() {
-        with_cargo_vars_ext(
+        let result = with_cargo_vars_ext(
             &[("VERGEN_CARGO_TARGET_TRIPLE", Some("this is a bad date"))],
             || {
-                let result = || -> Result<()> {
-                    let mut stdout_buf = vec![];
-                    let cargo = Builder::default().all_cargo().build();
-                    assert!(Emitter::default()
-                        .add_instructions(&cargo)?
-                        .emit_to(&mut stdout_buf)
-                        .is_ok());
-                    let output = String::from_utf8_lossy(&stdout_buf);
-                    assert!(output
-                        .contains("cargo:rustc-env=VERGEN_CARGO_TARGET_TRIPLE=this is a bad date"));
-                    Ok(())
-                }();
-                assert!(result.is_ok());
+                let mut stdout_buf = vec![];
+                let cargo = Builder::default().all_cargo().build();
+                assert!(Emitter::default()
+                    .add_instructions(&cargo)?
+                    .emit_to(&mut stdout_buf)
+                    .is_ok());
+                let output = String::from_utf8_lossy(&stdout_buf);
+                assert!(output
+                    .contains("cargo:rustc-env=VERGEN_CARGO_TARGET_TRIPLE=this is a bad date"));
+                Ok(())
             },
         );
+        assert!(result.is_ok());
     }
 
     #[test]
     #[serial]
     fn cargo_dependencies_override_works() {
-        with_cargo_vars_ext(
+        let result = with_cargo_vars_ext(
             &[("VERGEN_CARGO_DEPENDENCIES", Some("this is a bad date"))],
             || {
-                let result = || -> Result<()> {
-                    let mut stdout_buf = vec![];
-                    let cargo = Builder::default().all_cargo().build();
-                    assert!(Emitter::default()
-                        .add_instructions(&cargo)?
-                        .emit_to(&mut stdout_buf)
-                        .is_ok());
-                    let output = String::from_utf8_lossy(&stdout_buf);
-                    assert!(output
-                        .contains("cargo:rustc-env=VERGEN_CARGO_DEPENDENCIES=this is a bad date"));
-                    Ok(())
-                }();
-                assert!(result.is_ok());
+                let mut stdout_buf = vec![];
+                let cargo = Builder::default().all_cargo().build();
+                assert!(Emitter::default()
+                    .add_instructions(&cargo)?
+                    .emit_to(&mut stdout_buf)
+                    .is_ok());
+                let output = String::from_utf8_lossy(&stdout_buf);
+                assert!(
+                    output.contains("cargo:rustc-env=VERGEN_CARGO_DEPENDENCIES=this is a bad date")
+                );
+                Ok(())
             },
         );
+        assert!(result.is_ok());
     }
 }

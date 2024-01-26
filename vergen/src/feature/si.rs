@@ -694,7 +694,7 @@ mod test {
         let emitter = Emitter::default().add_instructions(&si)?.test_emit();
         assert_eq!(0, emitter.cargo_rustc_env_map().len());
         assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
-        assert_eq!(0, emitter.warnings().len());
+        assert_eq!(0, emitter.cargo_warning().len());
         Ok(())
     }
 
@@ -711,7 +711,7 @@ mod test {
             SYSINFO_COUNT,
             count_idempotent(config.cargo_rustc_env_map())
         );
-        assert_eq!(SYSINFO_COUNT, config.warnings().len());
+        assert_eq!(SYSINFO_COUNT, config.cargo_warning().len());
         Ok(())
     }
 
@@ -722,7 +722,7 @@ mod test {
         let config = Emitter::default().add_instructions(&si)?.test_emit();
         assert_eq!(SYSINFO_COUNT, config.cargo_rustc_env_map().len());
         assert_eq!(IDEM_COUNT, count_idempotent(config.cargo_rustc_env_map()));
-        assert_eq!(IDEM_COUNT, config.warnings().len());
+        assert_eq!(IDEM_COUNT, config.cargo_warning().len());
         Ok(())
     }
 
@@ -733,7 +733,7 @@ mod test {
         let config = Emitter::default().add_instructions(&si)?.test_emit();
         assert_eq!(1, config.cargo_rustc_env_map().len());
         assert_eq!(IDEM_COUNT, count_idempotent(config.cargo_rustc_env_map()));
-        assert_eq!(IDEM_COUNT, config.warnings().len());
+        assert_eq!(IDEM_COUNT, config.cargo_warning().len());
         Ok(())
     }
 
@@ -744,7 +744,7 @@ mod test {
         let config = Emitter::default().add_instructions(&si)?.test_emit();
         assert_eq!(1, config.cargo_rustc_env_map().len());
         assert_eq!(IDEM_COUNT, count_idempotent(config.cargo_rustc_env_map()));
-        assert_eq!(IDEM_COUNT, config.warnings().len());
+        assert_eq!(IDEM_COUNT, config.cargo_warning().len());
         Ok(())
     }
 
@@ -755,7 +755,7 @@ mod test {
         let config = Emitter::default().add_instructions(&si)?.test_emit();
         assert_eq!(1, config.cargo_rustc_env_map().len());
         assert_eq!(IDEM_COUNT, count_idempotent(config.cargo_rustc_env_map()));
-        assert_eq!(IDEM_COUNT, config.warnings().len());
+        assert_eq!(IDEM_COUNT, config.cargo_warning().len());
         Ok(())
     }
 
@@ -766,7 +766,7 @@ mod test {
         let config = Emitter::default().add_instructions(&si)?.test_emit();
         assert_eq!(1, config.cargo_rustc_env_map().len());
         assert_eq!(IDEM_COUNT, count_idempotent(config.cargo_rustc_env_map()));
-        assert_eq!(IDEM_COUNT, config.warnings().len());
+        assert_eq!(IDEM_COUNT, config.cargo_warning().len());
         Ok(())
     }
 
@@ -777,7 +777,7 @@ mod test {
         let config = Emitter::default().add_instructions(&si)?.test_emit();
         assert_eq!(1, config.cargo_rustc_env_map().len());
         assert_eq!(IDEM_COUNT, count_idempotent(config.cargo_rustc_env_map()));
-        assert_eq!(IDEM_COUNT, config.warnings().len());
+        assert_eq!(IDEM_COUNT, config.cargo_warning().len());
         Ok(())
     }
 
@@ -788,7 +788,7 @@ mod test {
         let config = Emitter::default().add_instructions(&si)?.test_emit();
         assert_eq!(1, config.cargo_rustc_env_map().len());
         assert_eq!(IDEM_COUNT, count_idempotent(config.cargo_rustc_env_map()));
-        assert_eq!(IDEM_COUNT, config.warnings().len());
+        assert_eq!(IDEM_COUNT, config.cargo_warning().len());
         Ok(())
     }
 
@@ -799,7 +799,7 @@ mod test {
         let config = Emitter::default().add_instructions(&si)?.test_emit();
         assert_eq!(1, config.cargo_rustc_env_map().len());
         assert_eq!(IDEM_COUNT, count_idempotent(config.cargo_rustc_env_map()));
-        assert_eq!(IDEM_COUNT, config.warnings().len());
+        assert_eq!(IDEM_COUNT, config.cargo_warning().len());
         Ok(())
     }
 
@@ -810,7 +810,7 @@ mod test {
         let config = Emitter::default().add_instructions(&si)?.test_emit();
         assert_eq!(1, config.cargo_rustc_env_map().len());
         assert_eq!(IDEM_COUNT, count_idempotent(config.cargo_rustc_env_map()));
-        assert_eq!(IDEM_COUNT, config.warnings().len());
+        assert_eq!(IDEM_COUNT, config.cargo_warning().len());
         Ok(())
     }
 
@@ -821,7 +821,7 @@ mod test {
         let config = Emitter::default().add_instructions(&si)?.test_emit();
         assert_eq!(1, config.cargo_rustc_env_map().len());
         assert_eq!(IDEM_COUNT, count_idempotent(config.cargo_rustc_env_map()));
-        assert_eq!(IDEM_COUNT, config.warnings().len());
+        assert_eq!(IDEM_COUNT, config.cargo_warning().len());
         Ok(())
     }
 
@@ -839,7 +839,7 @@ mod test {
         let config = Emitter::default().add_instructions(&si)?.test_emit();
         assert_eq!(1, config.cargo_rustc_env_map().len());
         assert_eq!(IDEM_COUNT, count_idempotent(config.cargo_rustc_env_map()));
-        assert_eq!(IDEM_COUNT, config.warnings().len());
+        assert_eq!(IDEM_COUNT, config.cargo_warning().len());
         Ok(())
     }
 
@@ -847,13 +847,13 @@ mod test {
     #[serial]
     fn adding_none_defaults() -> Result<()> {
         let mut map = BTreeMap::new();
-        let mut warnings = vec![];
+        let mut cargo_warning = vec![];
         Sysinfo::add_sysinfo_map_entry(
             VergenKey::SysinfoCpuBrand,
             false,
             None,
             &mut map,
-            &mut warnings,
+            &mut cargo_warning,
         );
         Ok(())
     }
@@ -887,7 +887,7 @@ mod test {
         let emitter = Emitter::default().add_instructions(&si)?.test_emit();
         assert_eq!(SYSINFO_COUNT, emitter.cargo_rustc_env_map().len());
         assert_eq!(1, count_idempotent(emitter.cargo_rustc_env_map()));
-        assert_eq!(1, emitter.warnings().len());
+        assert_eq!(1, emitter.cargo_warning().len());
         Ok(())
     }
 

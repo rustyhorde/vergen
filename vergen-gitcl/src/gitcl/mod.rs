@@ -1089,7 +1089,7 @@ mod test {
         let emitter = Emitter::default().add_instructions(&gix)?.test_emit();
         assert_eq!(0, emitter.cargo_rustc_env_map().len());
         assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
-        assert_eq!(0, emitter.warnings().len());
+        assert_eq!(0, emitter.cargo_warning().len());
         Ok(())
     }
 
@@ -1148,7 +1148,7 @@ mod test {
             .test_emit();
         assert_eq!(10, emitter.cargo_rustc_env_map().len());
         assert_eq!(2, count_idempotent(emitter.cargo_rustc_env_map()));
-        assert_eq!(2, emitter.warnings().len());
+        assert_eq!(2, emitter.cargo_warning().len());
         Ok(())
     }
 
@@ -1163,7 +1163,7 @@ mod test {
             .test_emit();
         assert_eq!(10, emitter.cargo_rustc_env_map().len());
         assert_eq!(2, count_idempotent(emitter.cargo_rustc_env_map()));
-        assert_eq!(2, emitter.warnings().len());
+        assert_eq!(2, emitter.cargo_warning().len());
         Ok(())
     }
 
@@ -1176,7 +1176,7 @@ mod test {
         let emitter = Emitter::default().add_instructions(&gitcl)?.test_emit();
         assert_eq!(10, emitter.cargo_rustc_env_map().len());
         assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
-        assert_eq!(0, emitter.warnings().len());
+        assert_eq!(0, emitter.cargo_warning().len());
         Ok(())
     }
 
@@ -1187,7 +1187,7 @@ mod test {
         let emitter = Emitter::default().add_instructions(&gitcl)?.test_emit();
         assert_eq!(10, emitter.cargo_rustc_env_map().len());
         assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
-        assert_eq!(0, emitter.warnings().len());
+        assert_eq!(0, emitter.cargo_warning().len());
         Ok(())
     }
 
@@ -1200,7 +1200,7 @@ mod test {
         let emitter = Emitter::default().add_instructions(&gitcl)?.test_emit();
         assert_eq!(10, emitter.cargo_rustc_env_map().len());
         assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
-        assert_eq!(0, emitter.warnings().len());
+        assert_eq!(0, emitter.cargo_warning().len());
         Ok(())
     }
 
@@ -1215,7 +1215,7 @@ mod test {
         let emitter = Emitter::default().add_instructions(&gitcl)?.test_emit();
         assert_eq!(10, emitter.cargo_rustc_env_map().len());
         assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
-        assert_eq!(0, emitter.warnings().len());
+        assert_eq!(0, emitter.cargo_warning().len());
         Ok(())
     }
 
@@ -1238,7 +1238,7 @@ mod test {
         let emitter = Emitter::default().add_instructions(&gitcl)?.test_emit();
         assert_eq!(10, emitter.cargo_rustc_env_map().len());
         assert_eq!(10, count_idempotent(emitter.cargo_rustc_env_map()));
-        assert_eq!(11, emitter.warnings().len());
+        assert_eq!(11, emitter.cargo_warning().len());
         Ok(())
     }
 

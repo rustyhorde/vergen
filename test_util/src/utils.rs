@@ -1,3 +1,4 @@
+use anyhow::Result;
 use lazy_static::lazy_static;
 use temp_env::with_vars;
 
@@ -11,20 +12,75 @@ lazy_static! {
     ];
 }
 
+/// Wrap a closure with cargo environment variables to use within a test
 ///
-pub fn with_cargo_vars<F>(closure: F)
+/// * `CARGO_FEATURE_BUILD=build`
+/// * `CARGO_FEATURE_GIT=git`
+/// * `DEBUG=true`
+/// * `OPT_LEVEL=1`
+/// * `TARGET=x86_64-unknown-linux-gnu`
+///
+/// Uses [`temp_env::with_vars`] internally to provide a safe environment to do this with tests.
+///
+/// # Example
+/// ```
+/// # use anyhow::Result;
+/// # use std::env::var;
+/// # use test_util::with_cargo_vars;
+/// #
+/// let result = with_cargo_vars(|| {
+///     assert_eq!(var("OPT_LEVEL")?, "1");
+///     Ok(())
+/// });
+/// assert!(result.is_ok());
+/// ```
+///
+/// # Errors
+///
+/// Errors may be generate by the closure
+///
+pub fn with_cargo_vars<F, R>(closure: F) -> Result<R>
 where
-    F: FnOnce(),
+    F: FnOnce() -> Result<R>,
 {
-    with_cargo_vars_ext(&[], closure);
+    with_cargo_vars_ext(&[], closure)
 }
 
+/// Wrap a closure with cargo environment variables to use within a test
+/// plus any other environment variables you may need.
 ///
-pub fn with_cargo_vars_ext<F>(kvs: &[(&str, Option<&str>)], closure: F)
+/// * `CARGO_FEATURE_BUILD=build`
+/// * `CARGO_FEATURE_GIT=git`
+/// * `DEBUG=true`
+/// * `OPT_LEVEL=1`
+/// * `TARGET=x86_64-unknown-linux-gnu`
+/// * `MY_FUNKY_ENV=this`
+///
+/// Uses [`temp_env::with_vars`] internally to provide a safe environment to do this with tests.
+///
+/// # Example
+/// ```
+/// # use anyhow::Result;
+/// # use std::env::var;
+/// # use test_util::with_cargo_vars_ext;
+/// #
+/// let result = with_cargo_vars_ext(&[("MY_VAR", Some("12"))], || {
+///     assert_eq!(var("MY_VAR")?, "12");
+///     assert_eq!(var("OPT_LEVEL")?, "1");
+///     Ok(())
+/// });
+/// assert!(result.is_ok());
+/// ```
+///
+/// # Errors
+///
+/// Errors may be generate by the closure
+///
+pub fn with_cargo_vars_ext<F, R>(kvs: &[(&str, Option<&str>)], closure: F) -> Result<R>
 where
-    F: FnOnce(),
+    F: FnOnce() -> Result<R>,
 {
     let mut in_kvs: Vec<(&str, Option<&str>)> = kvs.as_ref().to_vec();
     in_kvs.extend_from_slice(&DEFAULT_KVS);
-    with_vars(in_kvs, closure);
+    with_vars(in_kvs, closure)
 }

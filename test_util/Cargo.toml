@@ -1,7 +1,16 @@
 [package]
-name = "test_util"
-version = "0.1.0"
+authors = ["Jason Ozias <jason.g.ozias@gmail.com>"]
+categories = ["development-tools", "development-tools::build-utils"]
+description = "Generate 'cargo:rustc-env' instructions via 'build.rs' for use in your code via the 'env!' macro"
+documentation = "https://docs.rs/vergen"
 edition = "2021"
+homepage = "https://github.com/rustyhorde/vergen"
+keywords = ["cargo", "instructions", "build", "tool"]
+license = "MIT OR Apache-2.0"
+name = "test_util"
+readme = "README.md"
+repository = "https://github.com/rustyhorde/vergen"
+version = "0.1.0"
 
 [package.metadata.cargo-all-features]
 denylist = [
@@ -12,10 +21,10 @@ denylist = [
 
 [features]
 default = []
-repo = ["anyhow", "gix", "rand"]
+repo = ["gix", "rand"]
 
 [dependencies]
-anyhow = { version = "1.0.79", optional = true }
+anyhow = { version = "1.0.79" }
 gix = { version = "0.58.0", default-features = false, features = [
     "revision",
     "worktree-mutation",

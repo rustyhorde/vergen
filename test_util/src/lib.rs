@@ -7,7 +7,66 @@
 // modified, or distributed except according to those terms.
 
 //! `test_util` - Test utilities for the `vergen` libraries
+//!
+//! ## `vergen` -  cargo feature testing utilities
+//!
+//! There are a couple of functions that are wrappers around the [`temp_env::with_vars`]
+//! function that serves to replicate some cargo environment variables.  These are
+//! mainly useful for testing the cargo feature in `vergen`.
+//!
+//! # Example
+//! ```
+//! # use anyhow::Result;
+//! # use std::env::var;
+//! # use test_util::with_cargo_vars;
+//! #
+//! let result = with_cargo_vars(|| {
+//!     assert_eq!(var("OPT_LEVEL")?, "1");
+//!     Ok(())
+//! });
+//! assert!(result.is_ok());
+//! ```
+//!
+//! ```
+//! # use anyhow::Result;
+//! # use std::env::var;
+//! # use test_util::with_cargo_vars_ext;
+//! #
+//! let result = with_cargo_vars_ext(&[("MY_VAR", Some("12"))], || {
+//!     assert_eq!(var("MY_VAR")?, "12");
+//!     assert_eq!(var("OPT_LEVEL")?, "1");
+//!     Ok(())
+//! });
+//! assert!(result.is_ok());
+//! ```
+//!
+#![cfg_attr(
+    feature = "repo",
+    doc = r##"## `vergen` - Test git repositories (`repo` feature)
 
+If you enable the `repo` feature of `test_util` you can also use
+the [`TestRepos`] struct to creat temporary git repositories useful for `vergen-gi*` testing
+
+# Example
+ ```
+ # use anyhow::Result;
+ # use std::path::PathBuf;
+ # use test_util::TestRepos;
+ # pub fn main() -> Result<()> {
+ let mut path = PathBuf::default();
+ {
+     let repo = TestRepos::new(false, false, false)?;
+     path = repo.path();
+     assert!(gix::discover(&path).is_ok());
+     assert!(path.exists());
+ }
+ // When dropped, the repositories will be removed.
+ assert!(!path.exists());
+ #     Ok(())
+ # }
+ ```
+"##
+)]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 // rustc lints
 #![cfg_attr(
@@ -232,7 +291,7 @@
 #![cfg_attr(all(docsrs, nightly), feature(doc_cfg))]
 
 #[cfg(all(test, not(feature = "repo")))]
-use serial_test as _;
+use {anyhow as _, serial_test as _};
 
 #[cfg(feature = "repo")]
 mod repo;

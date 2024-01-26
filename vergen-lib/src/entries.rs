@@ -4,25 +4,25 @@ use anyhow::{Error, Result};
 use getset::Getters;
 use std::collections::BTreeMap;
 
-///
+/// The map used to emit `cargo:rustc-env=NAME=VALUE` cargo instructions
 pub type CargoRustcEnvMap = BTreeMap<VergenKey, String>;
-///
+/// The vector of strings used to emit `cargo:rerun-if-changed=VALUE` cargo instructions
 pub type CargoRerunIfChanged = Vec<String>;
-///
+/// The vector of strings used to emit `cargo:warning=VALUE` cargo instructions
 pub type CargoWarning = Vec<String>;
 
-///
+/// The default configuration to use when an issue has occured generating instructions
 #[derive(Debug, Getters)]
 #[getset(get = "pub")]
 pub struct DefaultConfig {
-    ///
+    /// Should we fail if an error occurs or output idempotent values on error?
     fail_on_error: bool,
-    ///
+    /// The error that caused us to try default instruction output.
     error: Error,
 }
 
 impl DefaultConfig {
-    ///
+    /// Create a new [`DefaultConfig`] struct with the given values.
     #[must_use]
     pub fn new(fail_on_error: bool, error: Error) -> Self {
         Self {
@@ -32,11 +32,19 @@ impl DefaultConfig {
     }
 }
 
-///
+/// This trait should be implemented to allow the `vergen` emitter
+/// to properly emit instructions for your feature.
 pub trait Add {
+    /// Try to add instructions entries to the various given arguments.
     ///
+    /// * Write to the `cargo_rustc_env` map to emit 'cargo:rustc-env=NAME=VALUE' instructions.
+    /// * Write to the `cargo_rerun_if_changed` vector to emit 'cargo:rerun-if-changed=VALUE' instructions.
+    /// * Write to the `cargo_warning` vector to emit 'cargo:warning=VALUE' instructions.
     ///
     /// # Errors
+    ///
+    /// If an error occurs, the `vergen` emitter will use `add_default_entries` to generate output.
+    /// This assumes generating instructions may fail in some manner so a [`anyhow::Result`] is returned.
     ///
     fn add_map_entries(
         &self,
@@ -46,9 +54,15 @@ pub trait Add {
         cargo_warning: &mut CargoWarning,
     ) -> Result<()>;
 
+    /// Based on the given configuration, emit either default idempotent output or generate a failue.
     ///
+    /// * Write to the `cargo_rustc_env` map to emit 'cargo:rustc-env=NAME=VALUE' instructions.
+    /// * Write to the `cargo_rerun_if_changed` vector to emit 'cargo:rerun-if-changed=VALUE' instructions.
+    /// * Write to the `cargo_warning` vector to emit 'cargo:warning=VALUE' instructions.
     ///
     /// # Errors
+    ///
+    /// This assumes generating instructions may fail in some manner so a [`anyhow::Result`] is returned.
     ///
     fn add_default_entries(
         &self,
@@ -57,6 +71,89 @@ pub trait Add {
         cargo_rerun_if_changed: &mut CargoRerunIfChanged,
         cargo_warning: &mut CargoWarning,
     ) -> Result<()>;
+}
+
+/// This trait should be implemented to allow the `vergen` emitter to properly emit your custom instructions.
+pub trait InsGen<K: Into<String> + Ord, V: Into<String>> {
+    /// Try to add instructions entries to the various given arguments.
+    ///
+    /// * Write to the `cargo_rustc_env` map to emit 'cargo:rustc-env=NAME=VALUE' instructions.
+    /// * Write to the `cargo_rerun_if_changed` vector to emit 'cargo:rerun-if-changed=VALUE' instructions.
+    /// * Write to the `cargo_warning` vector to emit 'cargo:warning=VALUE' instructions.
+    ///
+    /// # Errors
+    ///
+    /// If an error occurs, the `vergen` emitter will use `add_default_entries` to generate output.
+    /// This assumes generating instructions may fail in some manner so a [`anyhow::Result`] is returned.
+    ///
+    fn add_calculated_entries(
+        &self,
+        idempotent: bool,
+        cargo_rustc_env_map: &mut BTreeMap<K, V>,
+        cargo_rerun_if_changed: &mut CargoRerunIfChanged,
+        cargo_warning: &mut CargoWarning,
+    ) -> Result<()>;
+
+    /// Based on the given configuration, emit either default idempotent output or generate a failue.
+    ///
+    /// * Write to the `cargo_rustc_env` map to emit 'cargo:rustc-env=NAME=VALUE' instructions.
+    /// * Write to the `cargo_rerun_if_changed` vector to emit 'cargo:rerun-if-changed=VALUE' instructions.
+    /// * Write to the `cargo_warning` vector to emit 'cargo:warning=VALUE' instructions.
+    ///
+    /// # Errors
+    ///
+    /// This assumes generating instructions may fail in some manner so a [`anyhow::Result`] is returned.
+    ///
+    fn add_default_entries(
+        &self,
+        config: &DefaultConfig,
+        cargo_rustc_env_map: &mut BTreeMap<K, V>,
+        cargo_rerun_if_changed: &mut CargoRerunIfChanged,
+        cargo_warning: &mut CargoWarning,
+    ) -> Result<()>;
+}
+
+#[doc(hidden)]
+pub(crate) mod test_gen {
+    use crate::{CargoRerunIfChanged, CargoWarning, InsGen};
+    use anyhow::{anyhow, Result};
+    use std::collections::BTreeMap;
+
+    #[derive(Clone, Copy, Debug, Default)]
+    pub struct CustomInsGen {}
+
+    impl InsGen<&str, &str> for CustomInsGen {
+        fn add_calculated_entries(
+            &self,
+            idempotent: bool,
+            cargo_rustc_env_map: &mut BTreeMap<&str, &str>,
+            _cargo_rerun_if_changed: &mut CargoRerunIfChanged,
+            _cargo_warning: &mut CargoWarning,
+        ) -> Result<()> {
+            if idempotent {
+                let _ = cargo_rustc_env_map.insert("test", "IDEMPOTENT");
+            } else {
+                let _ = cargo_rustc_env_map.insert("test", "value");
+            }
+            Ok(())
+        }
+
+        fn add_default_entries(
+            &self,
+            config: &crate::DefaultConfig,
+            cargo_rustc_env_map: &mut BTreeMap<&str, &str>,
+            _cargo_rerun_if_changed: &mut CargoRerunIfChanged,
+            _cargo_warning: &mut CargoWarning,
+        ) -> Result<()> {
+            if *config.fail_on_error() {
+                let error = anyhow!(format!("{}", config.error()));
+                Err(error)
+            } else {
+                let _ = cargo_rustc_env_map.insert("test", "IDEMPOTENT");
+                Ok(())
+            }
+        }
+    }
 }
 
 #[cfg(test)]

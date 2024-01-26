@@ -8,7 +8,7 @@
 
 //! Internal Constants
 
-///
+/// The default idempotent output string
 pub const VERGEN_IDEMPOTENT_DEFAULT: &str = "VERGEN_IDEMPOTENT_OUTPUT";
 
 #[cfg(any(
@@ -20,7 +20,7 @@ pub const VERGEN_IDEMPOTENT_DEFAULT: &str = "VERGEN_IDEMPOTENT_OUTPUT";
 ))]
 pub use self::features::*;
 
-///
+/// The names used by [`crate::VergenKey`] for each enabled output
 #[cfg(any(
     feature = "build",
     feature = "cargo",
@@ -29,109 +29,110 @@ pub use self::features::*;
     feature = "si"
 ))]
 pub mod features {
-    /// Build Constants
+    /// The timestamp of the current build
     #[cfg(feature = "build")]
     pub const BUILD_TIMESTAMP_NAME: &str = "VERGEN_BUILD_TIMESTAMP";
-    ///
+    /// The date of the current build
     #[cfg(feature = "build")]
     pub const BUILD_DATE_NAME: &str = "VERGEN_BUILD_DATE";
 
-    /// git Constants
+    /// The current branch name
     #[cfg(feature = "git")]
     pub const GIT_BRANCH_NAME: &str = "VERGEN_GIT_BRANCH";
-    ///
+    /// The most recent commit author email address
     #[cfg(feature = "git")]
     pub const GIT_COMMIT_AUTHOR_EMAIL: &str = "VERGEN_GIT_COMMIT_AUTHOR_EMAIL";
-    ///
+    /// The most recent commit author name
     #[cfg(feature = "git")]
     pub const GIT_COMMIT_AUTHOR_NAME: &str = "VERGEN_GIT_COMMIT_AUTHOR_NAME";
-    ///
+    /// The commit count
     #[cfg(feature = "git")]
     pub const GIT_COMMIT_COUNT: &str = "VERGEN_GIT_COMMIT_COUNT";
-    ///
+    /// The most recent commit message
     #[cfg(feature = "git")]
     pub const GIT_COMMIT_MESSAGE: &str = "VERGEN_GIT_COMMIT_MESSAGE";
-    ///
+    /// The most recent commit date
     #[cfg(feature = "git")]
     pub const GIT_COMMIT_DATE_NAME: &str = "VERGEN_GIT_COMMIT_DATE";
-    ///
+    /// The most recent commit timestamp
     #[cfg(feature = "git")]
     pub const GIT_COMMIT_TIMESTAMP_NAME: &str = "VERGEN_GIT_COMMIT_TIMESTAMP";
-    ///
+    /// The output of git describe
     #[cfg(feature = "git")]
     pub const GIT_DESCRIBE_NAME: &str = "VERGEN_GIT_DESCRIBE";
-    ///
+    /// The most recent commit SHA
     #[cfg(feature = "git")]
     pub const GIT_SHA_NAME: &str = "VERGEN_GIT_SHA";
-    ///
+    /// The current dirty status
     #[cfg(feature = "git")]
     pub const GIT_DIRTY_NAME: &str = "VERGEN_GIT_DIRTY";
 
-    /// rustc Constants
+    /// The channel of rustc used for the build (stable, beta, nightly)
     #[cfg(feature = "rustc")]
     pub const RUSTC_CHANNEL_NAME: &str = "VERGEN_RUSTC_CHANNEL";
-    ///
+    /// The host triple of rustc used for the build
     #[cfg(feature = "rustc")]
     pub const RUSTC_HOST_TRIPLE_NAME: &str = "VERGEN_RUSTC_HOST_TRIPLE";
-    ///
+    /// The version of rustc used for the build
     #[cfg(feature = "rustc")]
     pub const RUSTC_SEMVER_NAME: &str = "VERGEN_RUSTC_SEMVER";
-    ///
+    /// The commit hash of rustc used for the build
     #[cfg(feature = "rustc")]
     pub const RUSTC_COMMIT_HASH: &str = "VERGEN_RUSTC_COMMIT_HASH";
-    ///
+    /// The commit date of rustc used for the build
     #[cfg(feature = "rustc")]
     pub const RUSTC_COMMIT_DATE: &str = "VERGEN_RUSTC_COMMIT_DATE";
-    ///
+    /// The LLVM version underlying rustc used for the build (if applicable)
     #[cfg(feature = "rustc")]
     pub const RUSTC_LLVM_VERSION: &str = "VERGEN_RUSTC_LLVM_VERSION";
 
-    /// cargo Constants
+    /// The value of the `DEBUG` environment variable at build time
     #[cfg(feature = "cargo")]
     pub const CARGO_DEBUG: &str = "VERGEN_CARGO_DEBUG";
-    ///
+    /// The current dependency list (potentiall filtered)
     #[cfg(feature = "cargo")]
     pub const CARGO_DEPENDENCIES: &str = "VERGEN_CARGO_DEPENDENCIES";
-    ///
+    /// The value of the `CARGO_FEATURES` environment variable at build time
     #[cfg(feature = "cargo")]
     pub const CARGO_FEATURES: &str = "VERGEN_CARGO_FEATURES";
-    ///
+    /// The value of the `OPT_LEVEL` environment variable at build time
     #[cfg(feature = "cargo")]
     pub const CARGO_OPT_LEVEL: &str = "VERGEN_CARGO_OPT_LEVEL";
-    ///
+    /// The value of the `TARGET_TRIPLE` environment variable at build time
     #[cfg(feature = "cargo")]
     pub const CARGO_TARGET_TRIPLE: &str = "VERGEN_CARGO_TARGET_TRIPLE";
 
-    /// sysinfo Constants
+    /// The system name
     #[cfg(feature = "si")]
     pub const SYSINFO_NAME: &str = "VERGEN_SYSINFO_NAME";
-    ///
+    /// The OS version
     #[cfg(feature = "si")]
     pub const SYSINFO_OS_VERSION: &str = "VERGEN_SYSINFO_OS_VERSION";
-    ///
+    /// The user that ran the build
     #[cfg(feature = "si")]
     pub const SYSINFO_USER: &str = "VERGEN_SYSINFO_USER";
-    ///
+    /// The total memory on the system used to run the build
     #[cfg(feature = "si")]
     pub const SYSINFO_MEMORY: &str = "VERGEN_SYSINFO_TOTAL_MEMORY";
-    ///
+    /// The CPU vender on the system used to run the build
     #[cfg(feature = "si")]
     pub const SYSINFO_CPU_VENDOR: &str = "VERGEN_SYSINFO_CPU_VENDOR";
-    ///
+    /// The CPU core count on the system use to run the build
     #[cfg(feature = "si")]
     pub const SYSINFO_CPU_CORE_COUNT: &str = "VERGEN_SYSINFO_CPU_CORE_COUNT";
-    ///
+    /// The CPU name on the system use to run the build
     #[cfg(feature = "si")]
     pub const SYSINFO_CPU_NAME: &str = "VERGEN_SYSINFO_CPU_NAME";
-    ///
+    /// The CPU brand on the system use to run the build
     #[cfg(feature = "si")]
     pub const SYSINFO_CPU_BRAND: &str = "VERGEN_SYSINFO_CPU_BRAND";
-    ///
+    /// The CPU frequency on the system use to run the build
     #[cfg(feature = "si")]
     pub const SYSINFO_CPU_FREQUENCY: &str = "VERGEN_SYSINFO_CPU_FREQUENCY";
 }
 
-///
+/// An empty list of names to use with [`crate::VergenKey`] when
+/// no features are enabled.
 #[cfg(not(any(
     feature = "build",
     feature = "cargo",

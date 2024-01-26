@@ -33,6 +33,25 @@ const RUNNER_TEMP_ENV: &str = "RUNNER_TEMP";
 
 /// Utility to create a temporary bare repository and a repository cloned from the
 /// bare repository.
+///
+/// # Example
+/// ```
+/// # use anyhow::Result;
+/// # use std::path::PathBuf;
+/// # use test_util::TestRepos;
+/// # pub fn main() -> Result<()> {
+/// let mut path = PathBuf::default();
+/// {
+///     let repo = TestRepos::new(false, false, false)?;
+///     path = repo.path();
+///     assert!(gix::discover(&path).is_ok());
+///     assert!(path.exists());
+/// }
+/// // When dropped, the repositories will be removed.
+/// assert!(!path.exists());
+/// #     Ok(())
+/// # }
+/// ```
 #[derive(Clone, Debug)]
 pub struct TestRepos {
     bare_repo_path: PathBuf,
@@ -44,9 +63,29 @@ impl TestRepos {
     ///
     /// Optionally, modify a tracked file
     /// Optionally, include an untracked file
+    /// Optionally, create a shallow clone
+    ///
+    /// # Example
+    /// ```
+    /// # use anyhow::Result;
+    /// # use std::path::PathBuf;
+    /// # use test_util::TestRepos;
+    /// # pub fn main() -> Result<()> {
+    /// let mut path = PathBuf::default();
+    /// {
+    ///     let repo = TestRepos::new(false, false, false)?;
+    ///     path = repo.path();
+    ///     assert!(gix::discover(&path).is_ok());
+    ///     assert!(path.exists());
+    /// }
+    /// // When dropped, the repositories will be removed.
+    /// assert!(!path.exists());
+    /// #     Ok(())
+    /// # }
+    /// ```
     ///
     /// # Errors
-    ///
+    /// Many errors can occur mostly from the `gix` library
     pub fn new(modify_tracked: bool, include_untracked: bool, shallow_clone: bool) -> Result<Self> {
         let bare_repo_path = Self::repo_path();
         let clone_path = Self::clone_path();
@@ -208,6 +247,18 @@ impl TestRepos {
     }
 
     /// Get the path of the cloned repository
+    ///
+    /// # Example
+    /// ```
+    /// # use anyhow::Result;
+    /// # use test_util::TestRepos;
+    /// #
+    /// # pub fn main() -> Result<()> {
+    /// let repo = TestRepos::new(false, false, false)?;
+    /// assert!(repo.path().exists());
+    /// #     Ok(())
+    /// # }
+    /// ```
     #[must_use]
     pub fn path(&self) -> PathBuf {
         self.clone_path.clone()

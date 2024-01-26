@@ -6,7 +6,7 @@
 // option. All files in the project carrying such notice may not be copied,
 // modified, or distributed except according to those terms.
 
-///
+/// The [`VergenKey`] enum to use based on the configured features.
 #[cfg(any(
     feature = "build",
     feature = "cargo",
@@ -38,7 +38,7 @@ pub(crate) mod vergen_key {
         SYSINFO_CPU_VENDOR, SYSINFO_MEMORY, SYSINFO_NAME, SYSINFO_OS_VERSION, SYSINFO_USER,
     };
 
-    /// Build information keys.
+    /// The keys used in the [`crate::CargoRustcEnvMap`]
     #[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
     pub enum VergenKey {
         /// The build date. (VERGEN_BUILD_DATE)
@@ -213,7 +213,7 @@ pub(crate) mod vergen_key {
     }
 }
 
-///
+/// The [`VergenKey`] enum to use when no features are configured.
 #[cfg(not(any(
     feature = "build",
     feature = "cargo",
@@ -222,17 +222,19 @@ pub(crate) mod vergen_key {
     feature = "si"
 )))]
 pub(crate) mod vergen_key {
-    ///
+    /// The [`VergenKey`] enum to use when no features are configured.
     #[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
     pub enum VergenKey {
-        ///
+        /// An empty vergen key
         Empty,
     }
 
     impl VergenKey {
         /// Get the name for the given key.
         pub fn name(self) -> &'static str {
-            ""
+            match self {
+                VergenKey::Empty => "",
+            }
         }
     }
 }

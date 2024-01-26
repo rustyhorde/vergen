@@ -9,10 +9,11 @@
 use anyhow::Result;
 use getset::Getters;
 use std::{
+    collections::BTreeMap,
     env,
     io::{self, Write},
 };
-use vergen_lib::{AddEntries, CargoRustcEnvMap, DefaultConfig};
+use vergen_lib::{AddEntries, CargoRustcEnvMap, DefaultConfig, InsGen};
 
 /// The `Emitter` will emit cargo instructions (i.e. cargo:rustc-env=NAME=VALUE)
 /// base on the configuration you enable.
@@ -27,10 +28,13 @@ pub struct Emitter {
     cargo_rustc_env_map: CargoRustcEnvMap,
     #[getset(get = "pub")]
     #[doc(hidden)]
-    rerun_if_changed: Vec<String>,
+    cargo_rustc_env_map_custom: BTreeMap<String, String>,
     #[getset(get = "pub")]
     #[doc(hidden)]
-    warnings: Vec<String>,
+    cargo_rerun_if_changed: Vec<String>,
+    #[getset(get = "pub")]
+    #[doc(hidden)]
+    cargo_warning: Vec<String>,
 }
 
 impl Default for Emitter {
@@ -49,8 +53,9 @@ impl Emitter {
             quiet: false,
             custom_buildrs: None,
             cargo_rustc_env_map: CargoRustcEnvMap::default(),
-            rerun_if_changed: Vec::default(),
-            warnings: Vec::default(),
+            cargo_rustc_env_map_custom: BTreeMap::default(),
+            cargo_rerun_if_changed: Vec::default(),
+            cargo_warning: Vec::default(),
         }
     }
 
@@ -177,19 +182,58 @@ impl Emitter {
         gen.add_map_entries(
             self.idempotent,
             &mut self.cargo_rustc_env_map,
-            &mut self.rerun_if_changed,
-            &mut self.warnings,
+            &mut self.cargo_rerun_if_changed,
+            &mut self.cargo_warning,
         )
         .or_else(|e| {
             let default_config = DefaultConfig::new(self.fail_on_error, e);
             gen.add_default_entries(
                 &default_config,
                 &mut self.cargo_rustc_env_map,
-                &mut self.rerun_if_changed,
-                &mut self.warnings,
+                &mut self.cargo_rerun_if_changed,
+                &mut self.cargo_warning,
             )
         })?;
         Ok(self)
+    }
+
+    /// Add a set of custom instructions to the emitter output
+    ///
+    /// # Errors
+    ///
+    /// Errors may be generated if `fail_on_error` has been configured.
+    ///
+    pub fn add_custom_instructions<K, V>(&mut self, gen: &impl InsGen<K, V>) -> Result<&mut Self>
+    where
+        K: Into<String> + Ord,
+        V: Into<String>,
+    {
+        let mut map = BTreeMap::default();
+        gen.add_calculated_entries(
+            self.idempotent,
+            &mut map,
+            &mut self.cargo_rerun_if_changed,
+            &mut self.cargo_warning,
+        )
+        .or_else(|e| {
+            let default_config = DefaultConfig::new(self.fail_on_error, e);
+            gen.add_default_entries(
+                &default_config,
+                &mut map,
+                &mut self.cargo_rerun_if_changed,
+                &mut self.cargo_warning,
+            )
+        })?;
+        self.cargo_rustc_env_map_custom.extend(Self::map_into(map));
+        Ok(self)
+    }
+
+    fn map_into<K, V>(map: BTreeMap<K, V>) -> impl Iterator<Item = (String, String)>
+    where
+        K: Into<String> + Ord,
+        V: Into<String>,
+    {
+        map.into_iter().map(|(k, v)| (k.into(), v.into()))
     }
 
     fn emit_output<T>(&self, stdout: &mut T) -> Result<()>
@@ -205,33 +249,39 @@ impl Emitter {
     {
         // Emit the 'cargo:rustc-env' instructions
         for (k, v) in &self.cargo_rustc_env_map {
-            let output = Self::filter_newlines(v);
-            writeln!(stdout, "cargo:rustc-env={}={output}", k.name())?;
+            let sanitized_value = Self::filter_newlines(v);
+            writeln!(stdout, "cargo:rustc-env={}={sanitized_value}", k.name())?;
+        }
+
+        // Emit the 'cargo:rustc-env' custom instructions
+        for (k, v) in &self.cargo_rustc_env_map_custom {
+            let sanitized_value = Self::filter_newlines(v);
+            writeln!(stdout, "cargo:rustc-env={k}={sanitized_value}")?;
         }
 
         // Emit the `cargo:warning` instructions
         if !self.quiet {
-            for warning in &self.warnings {
-                let output = Self::filter_newlines(warning);
-                writeln!(stdout, "cargo:warning={output}")?;
+            for warning in &self.cargo_warning {
+                let sanitized_output = Self::filter_newlines(warning);
+                writeln!(stdout, "cargo:warning={sanitized_output}")?;
             }
         }
 
         // Emit the 'cargo:rerun-if-changed' instructions for the git paths (if added)
-        for path in &self.rerun_if_changed {
-            let output = Self::filter_newlines(path);
-            writeln!(stdout, "cargo:rerun-if-changed={output}")?;
+        for path in &self.cargo_rerun_if_changed {
+            let sanitized_output = Self::filter_newlines(path);
+            writeln!(stdout, "cargo:rerun-if-changed={sanitized_output}")?;
         }
 
         // Emit the 'cargo:rerun-if-changed' instructions
-        if !self.cargo_rustc_env_map.is_empty() || !self.warnings.is_empty() {
+        if !self.cargo_rustc_env_map.is_empty() || !self.cargo_warning.is_empty() {
             let buildrs = if let Some(path) = self.custom_buildrs {
                 path
             } else {
                 "build.rs"
             };
-            let output = Self::filter_newlines(buildrs);
-            writeln!(stdout, "cargo:rerun-if-changed={output}")?;
+            let sanitized_output = Self::filter_newlines(buildrs);
+            writeln!(stdout, "cargo:rerun-if-changed={sanitized_output}")?;
             writeln!(stdout, "cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT")?;
             writeln!(stdout, "cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH")?;
         }
@@ -266,8 +316,7 @@ impl Emitter {
     /// # use test_util::with_cargo_vars;
     /// #
     /// # fn main() -> Result<()> {
-    /// with_cargo_vars(|| {
-    ///     let result = || -> Result<()> {
+    /// let result = with_cargo_vars(|| {
     #[cfg_attr(
         feature = "build",
         doc = r##"let build = BuildBuilder::default().all_build().build();"##
@@ -291,9 +340,8 @@ impl Emitter {
     #[cfg_attr(feature = "si", doc = r##".add_instructions(&si)?"##)]
     ///             .emit()?;
     ///         Ok(())
-    ///     }();
-    ///     assert!(result.is_ok());
     /// });
+    ///     assert!(result.is_ok());
     /// #   Ok(())
     /// # }
     /// ```
@@ -410,6 +458,11 @@ pub(crate) mod test {
     use anyhow::Result;
     use serial_test::serial;
     use std::io::Write;
+    #[cfg(feature = "build")]
+    use {
+        crate::BuildBuilder,
+        vergen_lib::{count_idempotent, CustomInsGen},
+    };
 
     #[test]
     #[serial]
@@ -443,5 +496,22 @@ pub(crate) mod test {
     #[serial]
     fn default_emit_is_ok() {
         assert!(Emitter::new().emit().is_ok());
+    }
+
+    #[test]
+    #[serial]
+    #[cfg(feature = "build")]
+    fn custom_emit_works() -> Result<()> {
+        let cust_gen = CustomInsGen::default();
+        let build = BuildBuilder::default().all_build().build();
+        let emitter = Emitter::default()
+            .add_instructions(&build)?
+            .add_custom_instructions(&cust_gen)?
+            .test_emit();
+        assert_eq!(2, emitter.cargo_rustc_env_map().len());
+        assert_eq!(1, emitter.cargo_rustc_env_map_custom().len());
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(0, emitter.cargo_warning().len());
+        Ok(())
     }
 }
