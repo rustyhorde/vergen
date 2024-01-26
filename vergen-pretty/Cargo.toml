@@ -30,6 +30,7 @@ color = ["console", "lazy_static"]
 header = ["console", "rand"]
 trace = ["tracing"]
 __vergen_test = ["vergen-gix", "vergen-gix/unstable"]
+__vergen_empty_test = ["vergen-gix", "vergen-gix/unstable"]
 
 [dependencies]
 anyhow = "1.0.70"

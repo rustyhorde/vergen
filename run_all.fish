@@ -37,6 +37,8 @@ cargo llvm-cov -p vergen-gix -F unstable --no-report; and \
 cargo llvm-cov -p vergen-gix -F unstable,build,cargo,rustc,si --no-report; and \
 cargo llvm-cov -p vergen-pretty -F __vergen_test --no-report; and \
 cargo llvm-cov -p vergen-pretty -F __vergen_test,color,header,serde,trace --no-report; and \
+cargo llvm-cov -p vergen-pretty -F __vergen_empty_test --no-report; and \
+cargo llvm-cov -p vergen-pretty -F __vergen_empty_test,color,header,serde,trace --no-report; and \
 cargo llvm-cov report --lcov --output-path lcov.info; and \
 cargo llvm-cov report --html; and \
 cargo doc -p vergen -F build,cargo,rustc,si; and \

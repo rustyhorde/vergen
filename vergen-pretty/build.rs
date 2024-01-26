@@ -1,5 +1,7 @@
 use anyhow::Result;
 use std::env;
+#[cfg(feature = "__vergen_empty_test")]
+use vergen_gix::Emitter;
 #[cfg(feature = "__vergen_test")]
 use vergen_gix::{BuildBuilder, CargoBuilder, Emitter, GixBuilder, RustcBuilder, SysinfoBuilder};
 
@@ -19,12 +21,12 @@ fn setup_env() -> Result<()> {
     Ok(())
 }
 
-#[cfg(not(feature = "__vergen_test"))]
+#[cfg(all(not(feature = "__vergen_test"), not(feature = "__vergen_empty_test")))]
 fn emit() -> Result<()> {
     Ok(())
 }
 
-#[cfg(feature = "__vergen_test")]
+#[cfg(all(feature = "__vergen_test", not(feature = "__vergen_empty_test")))]
 fn emit() -> Result<()> {
     println!("cargo:warning=VERGEN TEST ENABLED!");
     let build = BuildBuilder::default().all_build().build();
@@ -39,6 +41,12 @@ fn emit() -> Result<()> {
         .add_instructions(&si)?
         .add_instructions(&gix)?
         .emit()
+}
+
+#[cfg(all(not(feature = "__vergen_test"), feature = "__vergen_empty_test"))]
+fn emit() -> Result<()> {
+    println!("cargo:warning=VERGEN EMPTY TEST ENABLED!");
+    Emitter::default().emit()
 }
 
 #[rustversion::nightly]

@@ -289,6 +289,10 @@ jobs:
         run: cargo llvm-cov -p vergen-pretty -F __vergen_test --no-report
       - name: 🙊 Code Coverage (vergen-pretty - all) 🙊
         run: cargo llvm-cov -p vergen-pretty -F __vergen_test,color,header,serde,trace --no-report
+      - name: 🙊 Code Coverage (vergen-pretty - empty default) 🙊
+        run: cargo llvm-cov -p vergen-pretty -F __vergen_empty_test --no-report
+      - name: 🙊 Code Coverage (vergen-pretty - empty all) 🙊
+        run: cargo llvm-cov -p vergen-pretty -F __vergen_empty_test,color,header,serde,trace --no-report
       - name: 🙊 Code Coverage Report 🙊
         run: cargo llvm-cov report --codecov --output-path codecov.json
       - name: 🙊 Upload Code Coverage 🙊
