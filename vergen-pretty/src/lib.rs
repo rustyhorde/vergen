@@ -58,7 +58,12 @@ with the associated [`Config`] as a convenience wrapper around [`Pretty`].
 # Example
 ```
 # use anyhow::Result;
-# use vergen_pretty::{ConfigBuilder, header, Style, vergen_pretty_env};
+# use vergen_pretty::{ConfigBuilder, header, vergen_pretty_env};"##
+)]
+#![cfg_attr(feature = "color", doc = r##"# use vergen_pretty::Style;"##)]
+#![cfg_attr(
+    feature = "header",
+    doc = r##"
 #
 # pub fn main() -> Result<()> {
 let mut buf = vec![];

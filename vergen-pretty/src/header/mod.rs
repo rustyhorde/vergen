@@ -39,7 +39,8 @@ pub type Env = BTreeMap<&'static str, Option<&'static str>>;
 /// # Example
 /// ```
 /// # use anyhow::Result;
-/// # use vergen_pretty::{ConfigBuilder, header, Style, vergen_pretty_env};
+/// # use vergen_pretty::{ConfigBuilder, header, vergen_pretty_env};
+#[cfg_attr(feature = "color", doc = r##"use vergen_pretty::Style;"##)]
 /// #
 /// # pub fn main() -> Result<()> {
 /// let mut buf = vec![];
