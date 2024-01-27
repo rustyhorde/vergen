@@ -34,7 +34,27 @@ fn from_u8(val: u8) -> Style {
 /// Environment tree type alias
 pub type Env = BTreeMap<&'static str, Option<&'static str>>;
 
-/// Header Configuration
+/// Convenience configuration around [`crate::Pretty`] to ease output generation.
+///
+/// # Example
+/// ```
+/// # use anyhow::Result;
+/// # use vergen_pretty::{ConfigBuilder, header, Style, vergen_pretty_env};
+/// #
+/// # pub fn main() -> Result<()> {
+/// let mut buf = vec![];
+/// let config = ConfigBuilder::default()
+#[cfg_attr(feature = "color", doc = r##"    .style(Style::new().green())"##)]
+///     .prefix("HEADER_PREFIX")
+///     .env(vergen_pretty_env!())
+///     .suffix("HEADER_SUFFIX")
+///     .build()?;
+/// assert!(header(&config, Some(&mut buf)).is_ok());
+/// assert!(!buf.is_empty());
+/// #     Ok(())
+/// # }
+/// ```
+///
 #[derive(Builder, Clone, Debug, Default, PartialEq)]
 pub struct Config {
     #[cfg(feature = "color")]
@@ -55,9 +75,29 @@ pub struct Config {
     suffix: Option<&'static str>,
 }
 
-/// Generate a pretty header
+/// Generate a pretty header based off your emitted `vergen` variables.
+///
+/// # Example
+/// ```
+/// # use anyhow::Result;
+/// # use vergen_pretty::{ConfigBuilder, header, vergen_pretty_env};
+/// #
+/// # pub fn main() -> Result<()> {
+/// let mut buf = vec![];
+/// let config = ConfigBuilder::default()
+///     .prefix("HEADER_PREFIX")
+///     .env(vergen_pretty_env!())
+///     .suffix("HEADER_SUFFIX")
+///     .build()?;
+/// assert!(header(&config, Some(&mut buf)).is_ok());
+/// assert!(!buf.is_empty());
+/// #     Ok(())
+/// # }
+/// ```
 ///
 /// # Errors
+///
+/// The errors are generally passed up from [`PrettyBuilder`]
 ///
 pub fn header<T>(config: &Config, writer: Option<&mut T>) -> Result<()>
 where

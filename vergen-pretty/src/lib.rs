@@ -50,6 +50,39 @@
 //!
 //! See the [`Pretty`] documentation for more examples
 //!
+#![cfg_attr(
+    feature = "header",
+    doc = r##"If you enable the header feature, you can also use the [`header()`] function
+with the associated [`Config`] as a convenience wrapper around [`Pretty`].
+
+# Example
+```
+# use anyhow::Result;
+# use vergen_pretty::{ConfigBuilder, header, Style, vergen_pretty_env};
+#
+# pub fn main() -> Result<()> {
+let mut buf = vec![];
+let config = ConfigBuilder::default()"##
+)]
+#![cfg_attr(
+    all(feature = "color", feature = "header"),
+    doc = r##"    .style(Style::new().green())"##
+)]
+#![cfg_attr(
+    feature = "header",
+    doc = r##"
+    .prefix("HEADER_PREFIX")
+    .env(vergen_pretty_env!())
+    .suffix("HEADER_SUFFIX")
+    .build()?;
+assert!(header(&config, Some(&mut buf)).is_ok());
+assert!(!buf.is_empty());
+#     Ok(())
+# }
+```
+"##
+)]
+//!
 //! ## Features
 //! `vergen-pretty` has two feature toggles allowing you to customize your output. No features are enabled by default.  
 //! You **must** specifically enable the features you wish to use.
@@ -57,6 +90,7 @@
 //! | Feature | Enables |
 //! | ------- | ------- |
 //! |  color  | Colorize output, allow configuration of coloring via [`console`] |
+//! |  header | Generate pretty printed header output based on the given [`Config`] |
 //! |  trace  | Enable support for [`tracing`](https://docs.rs/tracing/latest/tracing/) output |
 //!
 
