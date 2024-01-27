@@ -231,19 +231,24 @@
 #![cfg_attr(all(doc, nightly), feature(doc_auto_cfg))]
 #![cfg_attr(all(docsrs, nightly), feature(doc_cfg))]
 
+#[cfg(test)]
+use temp_env as _;
+
 pub mod constants;
 mod entries;
 mod keys;
 mod utils;
 
+#[doc(hidden)]
 pub use entries::test_gen::CustomInsGen;
+#[doc(hidden)]
 pub use entries::test_gen::CustomInsGenBuilder;
 pub use entries::Add as AddEntries;
+pub use entries::AddCustom as AddCustomEntries;
 pub use entries::CargoRerunIfChanged;
 pub use entries::CargoRustcEnvMap;
 pub use entries::CargoWarning;
 pub use entries::DefaultConfig;
-pub use entries::InsGen;
 pub use keys::vergen_key::VergenKey;
 pub use utils::add_default_map_entry;
 pub use utils::add_map_entry;

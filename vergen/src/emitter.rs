@@ -13,7 +13,7 @@ use std::{
     env,
     io::{self, Write},
 };
-use vergen_lib::{AddEntries, CargoRustcEnvMap, DefaultConfig, InsGen};
+use vergen_lib::{AddCustomEntries, AddEntries, CargoRustcEnvMap, DefaultConfig};
 
 /// The `Emitter` will emit cargo instructions (i.e. cargo:rustc-env=NAME=VALUE)
 /// base on the configuration you enable.
@@ -203,7 +203,10 @@ impl Emitter {
     ///
     /// Errors may be generated if `fail_on_error` has been configured.
     ///
-    pub fn add_custom_instructions<K, V>(&mut self, gen: &impl InsGen<K, V>) -> Result<&mut Self>
+    pub fn add_custom_instructions<K, V>(
+        &mut self,
+        gen: &impl AddCustomEntries<K, V>,
+    ) -> Result<&mut Self>
     where
         K: Into<String> + Ord,
         V: Into<String>,

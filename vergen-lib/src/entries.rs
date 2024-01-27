@@ -74,7 +74,7 @@ pub trait Add {
 }
 
 /// This trait should be implemented to allow the `vergen` emitter to properly emit your custom instructions.
-pub trait InsGen<K: Into<String> + Ord, V: Into<String>> {
+pub trait AddCustom<K: Into<String> + Ord, V: Into<String>> {
     /// Try to add instructions entries to the various given arguments.
     ///
     /// * Write to the `cargo_rustc_env` map to emit 'cargo:rustc-env=NAME=VALUE' instructions.
@@ -115,17 +115,18 @@ pub trait InsGen<K: Into<String> + Ord, V: Into<String>> {
 
 #[doc(hidden)]
 pub(crate) mod test_gen {
-    use crate::{CargoRerunIfChanged, CargoWarning, InsGen};
+    use crate::{AddCustomEntries, CargoRerunIfChanged, CargoWarning};
     use anyhow::{anyhow, Result};
     use derive_builder::Builder;
     use std::collections::BTreeMap;
 
+    #[doc(hidden)]
     #[derive(Builder, Clone, Copy, Debug, Default)]
     pub struct CustomInsGen {
         fail: bool,
     }
 
-    impl InsGen<&str, &str> for CustomInsGen {
+    impl AddCustomEntries<&str, &str> for CustomInsGen {
         fn add_calculated_entries(
             &self,
             idempotent: bool,
