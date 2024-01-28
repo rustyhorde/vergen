@@ -134,7 +134,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
     #[serial]
     fn git_all_output_idempotent() -> Result<()> {
         let mut stdout_buf = vec![];
-        let mut gix = GixBuilder::default().all_git().build();
+        let mut gix = GixBuilder::all_git()?;
         let _ = gix.at_path(temp_dir());
         let failed = Emitter::default()
             .add_instructions(&gix)?
@@ -149,7 +149,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
     #[serial]
     fn git_all_output_default_dir() -> Result<()> {
         let mut stdout_buf = vec![];
-        let gix = GixBuilder::default().all_git().build();
+        let gix = GixBuilder::all_git()?;
         let failed = Emitter::default()
             .add_instructions(&gix)?
             .emit_to(&mut stdout_buf)?;
@@ -166,10 +166,10 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
         let repo = TestRepos::new(true, false, false)?;
         let mut stdout_buf = vec![];
         let mut gix = GixBuilder::default()
-            .all_git()
-            .describe(true)
+            .all()
+            .describe(true, false, None)
             .sha(true)
-            .build();
+            .build()?;
         let _ = gix.at_path(repo.path());
         let failed = Emitter::default()
             .add_instructions(&gix)?
@@ -186,11 +186,11 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
         let repo = TestRepos::new(true, false, false)?;
         let mut stdout_buf = vec![];
         let mut gix = GixBuilder::default()
-            .all_git()
-            .describe(true)
+            .all()
+            .describe(true, false, None)
             .sha(true)
-            .use_local()
-            .build();
+            .use_local(true)
+            .build()?;
         let _ = gix.at_path(repo.path());
         let result = || -> Result<bool> {
             let failed = Emitter::default()
@@ -221,7 +221,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
     fn git_all_output_test_repo() -> Result<()> {
         let repo = TestRepos::new(true, true, false)?;
         let mut stdout_buf = vec![];
-        let mut gix = GixBuilder::default().all_git().describe(true).build();
+        let mut gix = GixBuilder::all_git()?;
         let _ = gix.at_path(repo.path());
         let failed = Emitter::default()
             .add_instructions(&gix)?
@@ -237,185 +237,20 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
     fn git_emit_at_test_repo() -> Result<()> {
         let repo = TestRepos::new(true, false, false)?;
         let mut gix = GixBuilder::default()
-            .all_git()
-            .describe(true)
+            .all()
+            .describe(true, false, None)
             .sha(true)
-            .build();
+            .build()?;
         let _ = gix.at_path(repo.path());
         assert!(Emitter::default().add_instructions(&gix)?.emit().is_ok());
         Ok(())
     }
 
-    // #[cfg(all(feature = "git", any(feature = "gitcl", feature = "git2")))]
-    // #[cfg(test)]
-    // mod git_dirty {
-    //     use anyhow::Result;
-    //     use vergen::EmitBuilder;
-
-    //     use test_util::TestRepos;
-
-    //     const GIT_DIRTY_TRUE_OUTPUT: &str = r"cargo:rustc-env=VERGEN_GIT_DIRTY=true";
-    //     const GIT_DIRTY_FALSE_OUTPUT: &str = r"cargo:rustc-env=VERGEN_GIT_DIRTY=false";
-
-    //     fn strip_reruns(output: &str) -> String {
-    //         let lines: Vec<&str> = output
-    //             .lines()
-    //             .filter(|line| !line.starts_with("cargo:rerun-if"))
-    //             .collect();
-
-    //         lines.join("\n")
-    //     }
-
-    //     #[test]
-    //     #[serial_test::serial]
-    //     fn git_dirty_ignore_untracked_no_modified_no_untracked() -> Result<()> {
-    //         // On a repository with no modified files and no untracked files,
-    //         // dirty should be false.
-    //         let repo = TestRepos::new(false, false, false)?;
-
-    //         let mut stdout_buf = vec![];
-    //         EmitBuilder::builder()
-    //             .git_dirty(false)
-    //             .emit_to_at(&mut stdout_buf, Some(repo.path()))?;
-
-    //         let output = String::from_utf8_lossy(&stdout_buf);
-    //         let stripped_output = strip_reruns(&output);
-    //         assert_eq!(GIT_DIRTY_FALSE_OUTPUT, stripped_output);
-    //         Ok(())
-    //     }
-
-    //     #[test]
-    //     #[serial_test::serial]
-    //     fn git_dirty_include_untracked_no_modified_no_untracked() -> Result<()> {
-    //         // On a repository with no modified files and no untracked files,
-    //         // dirty should be false.
-    //         let repo = TestRepos::new(false, false, false)?;
-
-    //         let mut stdout_buf = vec![];
-    //         EmitBuilder::builder()
-    //             .git_dirty(true)
-    //             .emit_to_at(&mut stdout_buf, Some(repo.path()))?;
-
-    //         let output = String::from_utf8_lossy(&stdout_buf);
-    //         let stripped_output = strip_reruns(&output);
-    //         assert_eq!(GIT_DIRTY_FALSE_OUTPUT, stripped_output);
-    //         Ok(())
-    //     }
-
-    //     #[test]
-    //     #[serial_test::serial]
-    //     fn git_dirty_ignore_untracked_modified_no_untracked() -> Result<()> {
-    //         // On a repository with modified files and no untracked files,
-    //         // dirty should be true.
-    //         let repo = TestRepos::new(true, false, false)?;
-
-    //         let mut stdout_buf = vec![];
-    //         EmitBuilder::builder()
-    //             .git_dirty(false)
-    //             .emit_to_at(&mut stdout_buf, Some(repo.path()))?;
-
-    //         let output = String::from_utf8_lossy(&stdout_buf);
-    //         let stripped_output = strip_reruns(&output);
-    //         assert_eq!(GIT_DIRTY_TRUE_OUTPUT, stripped_output);
-    //         Ok(())
-    //     }
-
-    //     #[test]
-    //     #[serial_test::serial]
-    //     fn git_dirty_include_untracked_modified_no_untracked() -> Result<()> {
-    //         // On a repository with modified files and no untracked files,
-    //         // dirty should be true.
-    //         let repo = TestRepos::new(true, false, false)?;
-
-    //         let mut stdout_buf = vec![];
-    //         EmitBuilder::builder()
-    //             .git_dirty(true)
-    //             .emit_to_at(&mut stdout_buf, Some(repo.path()))?;
-
-    //         let output = String::from_utf8_lossy(&stdout_buf);
-    //         let stripped_output = strip_reruns(&output);
-    //         assert_eq!(GIT_DIRTY_TRUE_OUTPUT, stripped_output);
-    //         Ok(())
-    //     }
-
-    //     #[test]
-    //     #[serial_test::serial]
-    //     fn git_dirty_ignore_untracked_no_modified_untracked() -> Result<()> {
-    //         // On a repository with no modified files and untracked files,
-    //         // dirty should be false when include_untracked is false.
-    //         let repo = TestRepos::new(false, true, false)?;
-
-    //         let mut stdout_buf = vec![];
-    //         EmitBuilder::builder()
-    //             .git_dirty(false)
-    //             .emit_to_at(&mut stdout_buf, Some(repo.path()))?;
-
-    //         let output = String::from_utf8_lossy(&stdout_buf);
-    //         let stripped_output = strip_reruns(&output);
-    //         assert_eq!(GIT_DIRTY_FALSE_OUTPUT, stripped_output);
-    //         Ok(())
-    //     }
-
-    //     #[test]
-    //     #[serial_test::serial]
-    //     fn git_dirty_include_untracked_no_modified_untracked() -> Result<()> {
-    //         // On a repository with no modified files and untracked files,
-    //         // dirty should be true when include_untracked is true.
-    //         let repo = TestRepos::new(false, true, false)?;
-
-    //         let mut stdout_buf = vec![];
-    //         EmitBuilder::builder()
-    //             .git_dirty(true)
-    //             .emit_to_at(&mut stdout_buf, Some(repo.path()))?;
-
-    //         let output = String::from_utf8_lossy(&stdout_buf);
-    //         let stripped_output = strip_reruns(&output);
-    //         assert_eq!(GIT_DIRTY_TRUE_OUTPUT, stripped_output);
-    //         Ok(())
-    //     }
-
-    //     #[test]
-    //     #[serial_test::serial]
-    //     fn git_dirty_ignore_untracked_modified_untracked() -> Result<()> {
-    //         // On a repository with modified files and untracked files,
-    //         // dirty should be true.
-    //         let repo = TestRepos::new(true, true, false)?;
-
-    //         let mut stdout_buf = vec![];
-    //         EmitBuilder::builder()
-    //             .git_dirty(false)
-    //             .emit_to_at(&mut stdout_buf, Some(repo.path()))?;
-
-    //         let output = String::from_utf8_lossy(&stdout_buf);
-    //         let stripped_output = strip_reruns(&output);
-    //         assert_eq!(GIT_DIRTY_TRUE_OUTPUT, stripped_output);
-    //         Ok(())
-    //     }
-
-    //     #[test]
-    //     #[serial_test::serial]
-    //     fn git_dirty_include_untracked_modified_untracked() -> Result<()> {
-    //         // On a repository with modified files and untracked files,
-    //         // dirty should be true.
-    //         let repo = TestRepos::new(true, true, false)?;
-
-    //         let mut stdout_buf = vec![];
-    //         EmitBuilder::builder()
-    //             .git_dirty(true)
-    //             .emit_to_at(&mut stdout_buf, Some(repo.path()))?;
-
-    //         let output = String::from_utf8_lossy(&stdout_buf);
-    //         let stripped_output = strip_reruns(&output);
-    //         assert_eq!(GIT_DIRTY_TRUE_OUTPUT, stripped_output);
-    //         Ok(())
-    //     }
-    // }
-
     #[test]
     #[serial]
     fn git_all_idempotent_output() -> Result<()> {
         let mut stdout_buf = vec![];
-        let gix = GixBuilder::default().all_git().build();
+        let gix = GixBuilder::all_git()?;
         let failed = Emitter::default()
             .idempotent()
             .add_instructions(&gix)?
@@ -431,7 +266,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
     #[serial_test::serial]
     fn git_all_idempotent_output_quiet() -> Result<()> {
         let mut stdout_buf = vec![];
-        let gix = GixBuilder::default().all_git().build();
+        let gix = GixBuilder::all_git()?;
         let failed = Emitter::default()
             .idempotent()
             .quiet()
@@ -450,7 +285,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
         with_var("VERGEN_GIT_BRANCH", Some("this is a bad date"), || {
             let result = || -> Result<()> {
                 let mut stdout_buf = vec![];
-                let gix = GixBuilder::default().all_git().build();
+                let gix = GixBuilder::all_git()?;
                 let _failed = Emitter::default()
                     .add_instructions(&gix)?
                     .emit_to(&mut stdout_buf)?;
@@ -472,7 +307,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             || {
                 let result = || -> Result<()> {
                     let mut stdout_buf = vec![];
-                    let gix = GixBuilder::default().all_git().build();
+                    let gix = GixBuilder::all_git()?;
                     let _failed = Emitter::default()
                         .add_instructions(&gix)?
                         .emit_to(&mut stdout_buf)?;
@@ -499,7 +334,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             || {
                 let result = || -> Result<()> {
                     let mut stdout_buf = vec![];
-                    let gix = GixBuilder::default().all_git().build();
+                    let gix = GixBuilder::all_git()?;
                     let _failed = Emitter::default()
                         .add_instructions(&gix)?
                         .emit_to(&mut stdout_buf)?;
@@ -526,7 +361,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             || {
                 let result = || -> Result<()> {
                     let mut stdout_buf = vec![];
-                    let gix = GixBuilder::default().all_git().build();
+                    let gix = GixBuilder::all_git()?;
                     let _failed = Emitter::default()
                         .add_instructions(&gix)?
                         .emit_to(&mut stdout_buf)?;
@@ -547,7 +382,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
         with_var("VERGEN_GIT_COMMIT_DATE", Some("this is a bad date"), || {
             let result = || -> Result<()> {
                 let mut stdout_buf = vec![];
-                let gix = GixBuilder::default().all_git().build();
+                let gix = GixBuilder::all_git()?;
                 let _failed = Emitter::default()
                     .add_instructions(&gix)?
                     .emit_to(&mut stdout_buf)?;
@@ -571,7 +406,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             || {
                 let result = || -> Result<()> {
                     let mut stdout_buf = vec![];
-                    let gix = GixBuilder::default().all_git().build();
+                    let gix = GixBuilder::all_git()?;
                     let _failed = Emitter::default()
                         .add_instructions(&gix)?
                         .emit_to(&mut stdout_buf)?;
@@ -595,7 +430,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             || {
                 let result = || -> Result<()> {
                     let mut stdout_buf = vec![];
-                    let gix = GixBuilder::default().all_git().build();
+                    let gix = GixBuilder::all_git()?;
                     let _failed = Emitter::default()
                         .add_instructions(&gix)?
                         .emit_to(&mut stdout_buf)?;
@@ -617,7 +452,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
         with_var("VERGEN_GIT_DESCRIBE", Some("this is a bad date"), || {
             let result = || -> Result<()> {
                 let mut stdout_buf = vec![];
-                let gix = GixBuilder::default().all_git().build();
+                let gix = GixBuilder::all_git()?;
                 let _failed = Emitter::default()
                     .add_instructions(&gix)?
                     .emit_to(&mut stdout_buf)?;
@@ -636,7 +471,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
         with_var("VERGEN_GIT_SHA", Some("this is a bad date"), || {
             let result = || -> Result<()> {
                 let mut stdout_buf = vec![];
-                let gix = GixBuilder::default().all_git().build();
+                let gix = GixBuilder::all_git()?;
                 let _failed = Emitter::default()
                     .add_instructions(&gix)?
                     .emit_to(&mut stdout_buf)?;
@@ -648,35 +483,4 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             assert!(result.is_ok());
         });
     }
-
-    // #[test]
-    // #[serial_test::serial]
-    // fn git_dirty_override_works() -> Result<()> {
-    //     env::set_var("VERGEN_GIT_DIRTY", "this is a bad date");
-    //     let mut stdout_buf = vec![];
-    //     let failed = EmitBuilder::builder().all_git().emit_to(&mut stdout_buf)?;
-    //     let output = String::from_utf8_lossy(&stdout_buf);
-    //     assert!(output.contains("cargo:rustc-env=VERGEN_GIT_DIRTY=this is a bad date"));
-    //     if failed {
-    //         assert!(output.contains("cargo:warning=VERGEN_GIT_DIRTY overidden"));
-    //     }
-    //     env::remove_var("VERGEN_GIT_DIRTY");
-    //     Ok(())
-    // }
-
-    // #[cfg(feature = "gitcl")]
-    // #[test]
-    // #[serial_test::serial]
-    // fn git_cmd_override_works() -> Result<()> {
-    //     let mut stdout_buf = vec![];
-    //     let failed = EmitBuilder::builder()
-    //         .all_git()
-    //         .git_cmd(Some("git -v"))
-    //         .emit_to(&mut stdout_buf)?;
-    //     let output = String::from_utf8_lossy(&stdout_buf);
-    //     assert!(!failed);
-    //     assert!(repo_exists().is_ok());
-    //     assert!(GIT_REGEX_INST.is_match(&output));
-    //     Ok(())
-    // }
 }

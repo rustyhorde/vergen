@@ -7,6 +7,234 @@
 // modified, or distributed except according to those terms.
 
 //! # vergen-gitcl - Emit cargo instructions from a build script
+//! `vergen-gitcl` uses [`git`](https://git-scm.com/) from the command line to generate the git instructions.
+//!
+//! `vergen-gitcl`, when used in conjunction with cargo [build scripts] can emit the following:
+//!
+//! - Will emit [`cargo:rustc-env=VAR=VALUE`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#cargorustc-envvarvalue)
+//! for each feature you have enabled.  These can be referenced with the [env!](std::env!) or [option_env!](std::option_env!) macro in your code.
+//! - Can emit [`cargo:warning`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#cargo-warning) outputs if the
+//! [`fail_on_error`](Emitter::fail_on_error) feature is not enabled and the requested variable is defaulted through error or
+//! the [`idempotent`](Emitter::idempotent) flag.
+//! - Will emit [`cargo:rerun-if-changed=.git/HEAD`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed)
+//! if git instructions are emitted.  This is done to ensure any git instructions are regenerated when commits are made.
+//! - Will emit [`cargo:rerun-if-changed=.git/<path_to_ref>`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed)
+//! if git instructions are emitted.  This is done to ensure any git instructions are regenerated when commits are made.
+//! - Will emit [`cargo:rerun-if-changed=build.rs`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed)
+//! to rerun instruction emission if the `build.rs` file changed.
+//! - Will emit [`cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed)
+//! to rerun instruction emission if the `VERGEN_IDEMPOTENT` environment variable has changed.
+//! - Will emit [`cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed)
+//! to rerun instruction emission if the `SOURCE_DATE_EPOCH` environment variable has changed.
+//!
+//! ## Usage
+//!
+//! 1. Ensure you have build scripts enabled via the `build` configuration in your `Cargo.toml`
+//!
+//! ```toml
+//! [package]
+//! #..
+//! build = "build.rs"
+//! ```
+//!
+//! 2. Add `vergen-gitcl` as a build dependency in `Cargo.toml`, specifying the features you wish to enable.
+//!
+//! ```toml
+//! [dependencies]
+//! #..
+//!
+//! [build-dependencies]
+//! # All features enabled
+//! vergen-gitcl = { version = "1.0.0-beta.0", features = ["build", "cargo", "rustc", "si"] }
+//! # or
+//! vergen-gitcl = { version = "1.0.0-beta.0", features = ["build"] }
+//! # if you wish to disable certain features
+//! ```
+//!
+//! 3. Create a `build.rs` file that uses `vergen-gitcl` to emit cargo instructions.  Configuration
+//! starts with [`Emitter`].  Eventually you will call [`emit`](Emitter::emit) to output the
+//! cargo instructions. See the [`emit`](Emitter::emit) documentation for more robust examples.
+//!
+//! #### Generate all output
+//!
+//! ```
+//! # use anyhow::Result;
+//! # use vergen_gitcl::{Emitter, GitclBuilder};
+#![cfg_attr(feature = "build", doc = r##"# use vergen_gitcl::BuildBuilder;"##)]
+#![cfg_attr(feature = "cargo", doc = r##"# use vergen_gitcl::CargoBuilder;"##)]
+#![cfg_attr(feature = "rustc", doc = r##"# use vergen_gitcl::RustcBuilder;"##)]
+#![cfg_attr(feature = "si", doc = r##"# use vergen_gitcl::SysinfoBuilder;"##)]
+#![cfg_attr(feature = "cargo", doc = r##"# use test_util::with_cargo_vars;"##)]
+//! #
+//! # pub fn main() -> Result<()> {
+#![cfg_attr(feature = "cargo", doc = r##"# let result = with_cargo_vars(|| {"##)]
+//! // NOTE: This will output everything, and requires all features enabled.
+//! // NOTE: See the specific builder documentation for configuration options.
+#![cfg_attr(
+    feature = "build",
+    doc = r##"let build = BuildBuilder::all_build()?;"##
+)]
+#![cfg_attr(
+    feature = "cargo",
+    doc = r##"let cargo = CargoBuilder::all_cargo()?;"##
+)]
+//! let gitcl = GitclBuilder::all_git()?;
+#![cfg_attr(
+    feature = "rustc",
+    doc = r##"let rustc = RustcBuilder::all_rustc()?;"##
+)]
+#![cfg_attr(feature = "si", doc = r##"let si = SysinfoBuilder::all_sysinfo()?;"##)]
+//!
+//! Emitter::default()
+#![cfg_attr(feature = "build", doc = r##"    .add_instructions(&build)?"##)]
+#![cfg_attr(feature = "cargo", doc = r##"    .add_instructions(&cargo)?"##)]
+//!     .add_instructions(&gitcl)?
+#![cfg_attr(feature = "rustc", doc = r##"    .add_instructions(&rustc)?"##)]
+#![cfg_attr(feature = "si", doc = r##"    .add_instructions(&si)?"##)]
+//!     .emit()?;
+#![cfg_attr(
+    feature = "cargo",
+    doc = r##"
+# Ok(())
+# });
+# assert!(result.is_ok());"##
+)]
+//! #    Ok(())
+//! # }
+//! ```
+//! #### Sample Output
+//! ```text
+//!                 Date (  build): 2024-01-28
+//!            Timestamp (  build): 2024-01-28T18:07:13.256193157Z
+//!                Debug (  cargo): true
+//!         Dependencies (  cargo): anyhow 1.0.79,vergen 8.3.1,vergen-pretty 0.3.1
+//!             Features (  cargo):
+//!            Opt Level (  cargo): 0
+//!        Target Triple (  cargo): x86_64-unknown-linux-gnu
+//!               Branch (    git): master
+//!  Commit Author Email (    git): a_serious@vergen.com
+//!   Commit Author Name (    git): Jason Ozias
+//!         Commit Count (    git): 39
+//!          Commit Date (    git): 2024-01-27
+//!       Commit Message (    git): depsup
+//!     Commit Timestamp (    git): 2024-01-27T15:13:49.000000000Z
+//!             Describe (    git): 0.1.0-beta.1-10-gc139056
+//!                Dirty (    git): false
+//!                  SHA (    git): c1390562822a2f89ded3430c07cba03bf1651458
+//!              Channel (  rustc): nightly
+//!          Commit Date (  rustc): 2024-01-27
+//!          Commit Hash (  rustc): 6b4f1c5e782c72a047a23e922decd33e7d462345
+//!          Host Triple (  rustc): x86_64-unknown-linux-gnu
+//!         LLVM Version (  rustc): 17.0
+//!               Semver (  rustc): 1.77.0-nightly
+//!            CPU Brand (sysinfo): AMD Ryzen Threadripper 1900X 8-Core Processor
+//!       CPU Core Count (sysinfo): 8
+//!        CPU Frequency (sysinfo): 3792
+//!             CPU Name (sysinfo): cpu0,cpu1,cpu2,cpu3,cpu4,cpu5,cpu6,cpu7
+//!           CPU Vendor (sysinfo): AuthenticAMD
+//!                 Name (sysinfo): Arch Linux
+//!           OS Version (sysinfo): Linux  Arch Linux
+//!         Total Memory (sysinfo): 31 GiB
+//!                 User (sysinfo): jozias
+//! ```
+//!
+//! #### Generate specific output
+//!
+//! ```
+//! # use anyhow::Result;
+//! # use vergen_gitcl::{Emitter, GitclBuilder};
+#![cfg_attr(feature = "build", doc = r##"# use vergen_gitcl::BuildBuilder;"##)]
+#![cfg_attr(feature = "cargo", doc = r##"# use vergen_gitcl::CargoBuilder;"##)]
+#![cfg_attr(feature = "rustc", doc = r##"# use vergen_gitcl::RustcBuilder;"##)]
+#![cfg_attr(feature = "si", doc = r##"# use vergen_gitcl::SysinfoBuilder;"##)]
+#![cfg_attr(feature = "cargo", doc = r##"# use test_util::with_cargo_vars;"##)]
+//! #
+//! # pub fn main() -> Result<()> {
+#![cfg_attr(feature = "cargo", doc = r##"# let result = with_cargo_vars(|| {"##)]
+#![cfg_attr(
+    feature = "build",
+    doc = r##"// NOTE: This will output only the instructions specified.
+// NOTE: See the specific builder documentation for configuration options. 
+let build = BuildBuilder::default().build_timestamp(true).build()?;"##
+)]
+#![cfg_attr(
+    feature = "cargo",
+    doc = r##"let cargo = CargoBuilder::default().opt_level(true).build()?;"##
+)]
+//! let gitcl = GitclBuilder::default().commit_timestamp(true).build()?;
+#![cfg_attr(
+    feature = "rustc",
+    doc = r##"let rustc = RustcBuilder::default().semver(true).build()?;"##
+)]
+#![cfg_attr(
+    feature = "si",
+    doc = r##"let si = SysinfoBuilder::default().cpu_core_count(true).build()?;"##
+)]
+//!
+//! Emitter::default()
+#![cfg_attr(feature = "build", doc = r##"    .add_instructions(&build)?"##)]
+#![cfg_attr(feature = "cargo", doc = r##"    .add_instructions(&cargo)?"##)]
+//!     .add_instructions(&gitcl)?
+#![cfg_attr(feature = "rustc", doc = r##"    .add_instructions(&rustc)?"##)]
+#![cfg_attr(feature = "si", doc = r##"    .add_instructions(&si)?"##)]
+//!     .emit()?;
+#![cfg_attr(
+    feature = "cargo",
+    doc = r##"
+#   Ok(())
+# });
+# assert!(result.is_ok());"##
+)]
+//! #     Ok(())
+//! # }
+//! ```
+//! #### Sample Output
+//! ```text
+//!        Timestamp (  build): 2024-01-28T18:07:13.256193157Z
+//!        Opt Level (  cargo): 0
+//! Commit Timestamp (    git): 2024-01-27T15:13:49.000000000Z
+//!           Semver (  rustc): 1.77.0-nightly
+//!   CPU Core Count (sysinfo): 8
+//! ```
+//!
+//! 4. Use the [`env!`](std::env!) or [`option_env!`](std::option_env!) macro in your code to read the environment variables.
+//!
+//! ```
+//! if let Some(timestamp) = option_env!("VERGEN_BUILD_TIMESTAMP") {
+//!     println!("Build Timestamp: {timestamp}");
+//! }
+//! if let Some(describe) = option_env!("VERGEN_GIT_DESCRIBE") {
+//!     println!("git describe: {describe}");
+//! }
+//! ```
+//!
+//! ## Features
+//! `vergen-gitcl` has four main feature toggles allowing you to customize your output. No features are enabled by default.  
+//! You **must** specifically enable the features you wish to use.
+//!
+//! | Feature | Enables |
+//! | ------- | ------- |
+//! |  build  | `VERGEN_BUILD_*` instructions |
+//! |  cargo  | `VERGEN_CARGO_*` instructions |
+//! |  rustc  | `VERGEN_RUSTC_*` instructions |
+//! |   si    | `VERGEN_SYSINFO_*` instructions |
+//!
+//! ## Environment Variables
+//! `vergen-gitcl` currently recognizes the following environment variables
+//!
+//! | Variable | Functionality |
+//! | -------- | ------------- |
+//! | `VERGEN_IDEMPOTENT` | If this environment variable is set `vergen` will use the idempotent output feature regardless of the configuration set in `build.rs`.  This exists mainly to allow package maintainers to force idempotent output to generate deterministic binary output. |
+//! | `SOURCE_DATE_EPOCH` | If this environment variable is set `vergen` will use the value (unix time since epoch) as the basis for a time based instructions.  This can help emit deterministic instructions. |
+//! | `VERGEN_BUILD_*` | If this environment variable is set `vergen` will use the value you specify for the output rather than generating it. |
+//! | `VERGEN_CARGO_*` | If this environment variable is set `vergen` will use the value you specify for the output rather than generating it. |
+//! | `VERGEN_GIT_*` | If this environment variable is set `vergen` will use the value you specify for the output rather than generating it. |
+//! | `VERGEN_RUSTC_*` | If this environment variable is set `vergen` will use the value you specify for the output rather than generating it. |
+//! | `VERGEN_SYSINFO_*` | If this environment variable is set `vergen` will use the value you specify for the output rather than generating it. |
+//!
+//! [build scripts]: https://doc.rust-lang.org/cargo/reference/build-scripts.html#outputs-of-the-build-script
+//! [cargo:rustc-env]: https://doc.rust-lang.org/cargo/reference/build-scripts.html#rustc-env
+//! [cargo:rerun-if-changed]: https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed
 //!
 
 // rustc lints
@@ -237,8 +465,8 @@ use {lazy_static as _, regex as _, temp_env as _};
 
 mod gitcl;
 
-pub use gitcl::Builder as GitclBuilder;
 pub use gitcl::Gitcl;
+pub use gitcl::GitclBuilder;
 #[cfg(feature = "build")]
 pub use vergen::BuildBuilder;
 #[cfg(feature = "cargo")]
