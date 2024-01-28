@@ -84,7 +84,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     #[serial]
     fn sysinfo_all_output() -> Result<()> {
         let mut stdout_buf = vec![];
-        let si = SysinfoBuilder::default().all_sysinfo().build();
+        let si = SysinfoBuilder::all_sysinfo()?;
         Emitter::default()
             .add_instructions(&si)?
             .emit_to(&mut stdout_buf)?;
@@ -96,7 +96,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     #[test]
     fn sysinfo_all_idempotent_output() -> Result<()> {
         let mut stdout_buf = vec![];
-        let si = SysinfoBuilder::default().all_sysinfo().build();
+        let si = SysinfoBuilder::all_sysinfo()?;
         Emitter::default()
             .idempotent()
             .add_instructions(&si)?
@@ -109,7 +109,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     #[test]
     fn sysinfo_all_idempotent_quiet_output() -> Result<()> {
         let mut stdout_buf = vec![];
-        let si = SysinfoBuilder::default().all_sysinfo().build();
+        let si = SysinfoBuilder::all_sysinfo()?;
         Emitter::default()
             .idempotent()
             .quiet()

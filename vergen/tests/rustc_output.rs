@@ -32,7 +32,7 @@ mod test_rustc {
     #[test]
     fn rustc_all_output() -> Result<()> {
         let mut stdout_buf = vec![];
-        let rustc = RustcBuilder::default().all_rustc().build();
+        let rustc = RustcBuilder::all_rustc()?;
         Emitter::default()
             .add_instructions(&rustc)?
             .emit_to(&mut stdout_buf)?;
@@ -44,7 +44,7 @@ mod test_rustc {
     #[test]
     fn rustc_all_idempotent_output() -> Result<()> {
         let mut stdout_buf = vec![];
-        let rustc = RustcBuilder::default().all_rustc().build();
+        let rustc = RustcBuilder::all_rustc()?;
         Emitter::default()
             .idempotent()
             .add_instructions(&rustc)?

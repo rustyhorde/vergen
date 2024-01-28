@@ -7,6 +7,7 @@
 // modified, or distributed except according to those terms.
 
 use anyhow::{anyhow, Result};
+use derive_builder::Builder as DeriveBuilder;
 use std::env;
 use sysinfo::{get_current_pid, Cpu, Pid, Process, RefreshKind, System, User, Users};
 use vergen_lib::{
@@ -41,7 +42,7 @@ use vergen_lib::{
 /// # use vergen::SysinfoBuilder;
 /// #
 /// # fn main() -> Result<()> {
-/// let si = SysinfoBuilder::default().all_sysinfo().build();
+/// let si = SysinfoBuilder::all_sysinfo()?;
 /// Emitter::default().add_instructions(&si)?.emit()?;
 /// #   Ok(())
 /// # }
@@ -55,7 +56,7 @@ use vergen_lib::{
 /// # use vergen::SysinfoBuilder;
 /// #
 /// # fn main() -> Result<()> {
-/// let si = SysinfoBuilder::default().os_version().cpu_core_count().build();
+/// let si = SysinfoBuilder::default().os_version(true).cpu_core_count(true).build()?;
 /// Emitter::default()
 ///     .add_instructions(&si)?
 ///     .emit()?;
@@ -74,7 +75,7 @@ use vergen_lib::{
 /// # fn main() -> Result<()> {
 /// temp_env::with_var("VERGEN_SYSINFO_NAME", Some("this is the name I want output"), || {
 ///     let result = || -> Result<()> {
-///         let si = SysinfoBuilder::default().all_sysinfo().build();
+///         let si = SysinfoBuilder::all_sysinfo()?;
 ///         Emitter::default().add_instructions(&si)?.emit()?;
 ///         Ok(())
 ///     }();
@@ -93,9 +94,34 @@ use vergen_lib::{
 /// # use vergen::SysinfoBuilder;
 /// #
 /// # fn main() -> Result<()> {
-/// let si = SysinfoBuilder::default().all_sysinfo().build();
+/// let si = SysinfoBuilder::all_sysinfo()?;
 /// Emitter::default().idempotent().add_instructions(&si)?.emit()?;
 /// #   Ok(())
+/// # }
+/// ```
+///
+/// # Example
+/// Use [`SysinfoBuilder::refresh_kind()`] to minimize the amount of data that [`sysinfo`] refreshes.
+///
+/// ```
+/// # use anyhow::Result;
+/// # use sysinfo::{CpuRefreshKind, RefreshKind};
+/// # use vergen::Emitter;
+/// # use vergen::SysinfoBuilder;
+/// #
+/// # pub fn main() -> Result<()> {
+/// let refresh_kind = RefreshKind::new();
+/// let cpu_refresh_kind = CpuRefreshKind::everything()
+///     .without_cpu_usage()
+///     .without_frequency();
+/// let si = SysinfoBuilder::default()
+///     .cpu_brand(true)
+///     .refresh_kind(refresh_kind.with_cpu(cpu_refresh_kind))
+///     .build()?;
+/// let config = Emitter::default()
+///     .add_instructions(&si)?
+///     .emit()?;
+/// #    Ok(())
 /// # }
 /// ```
 ///
@@ -125,158 +151,67 @@ use vergen_lib::{
 /// cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
 /// ```
 ///
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, DeriveBuilder, PartialEq)]
 #[allow(clippy::struct_excessive_bools)]
-pub struct Builder {
-    refresh_kind: Option<RefreshKind>,
-    name: bool,
-    os_version: bool,
-    user: bool,
-    memory: bool,
-    cpu_vendor: bool,
-    cpu_core_count: bool,
-    cpu_name: bool,
-    cpu_brand: bool,
-    cpu_frequency: bool,
-}
-
-impl Builder {
-    /// Enable all of the `VERGEN_SYSINFO_*` options
-    pub fn all_sysinfo(&mut self) -> &mut Self {
-        self.refresh_kind(None)
-            .name()
-            .os_version()
-            .user()
-            .memory()
-            .cpu_vendor()
-            .cpu_core_count()
-            .cpu_name()
-            .cpu_brand()
-            .cpu_frequency()
-    }
-
+pub struct Sysinfo {
     /// Set the [`RefreshKind`](sysinfo::RefreshKind) to use during sysinfo initialization.
     ///
     /// This allows the user to control at a more fine level what `sysinfo`
     /// will refresh on initialization.
-    ///
-    /// # Example
-    /// ```
-    /// # use anyhow::Result;
-    /// # use sysinfo::{CpuRefreshKind, RefreshKind};
-    /// # use vergen::Emitter;
-    /// # use vergen::SysinfoBuilder;
-    /// #
-    /// # pub fn main() -> Result<()> {
-    /// let refresh_kind = RefreshKind::new();
-    /// let cpu_refresh_kind = CpuRefreshKind::everything()
-    ///     .without_cpu_usage()
-    ///     .without_frequency();
-    /// let si = SysinfoBuilder::default()
-    ///     .cpu_brand()
-    ///     .refresh_kind(Some(refresh_kind.with_cpu(cpu_refresh_kind)))
-    ///     .build();
-    /// let config = Emitter::default()
-    ///     .add_instructions(&si)?
-    ///     .emit()?;
-    /// #    Ok(())
-    /// # }
-    /// ```
-    pub fn refresh_kind(&mut self, refresh_kind: Option<RefreshKind>) -> &mut Self {
-        self.refresh_kind = refresh_kind;
-        self
-    }
-
-    /// Enable the sysinfo name
-    pub fn name(&mut self) -> &mut Self {
-        self.name = true;
-        self
-    }
-
-    /// Enable the sysinfo OS version
-    pub fn os_version(&mut self) -> &mut Self {
-        self.os_version = true;
-        self
-    }
-
-    /// Enable sysinfo user
-    pub fn user(&mut self) -> &mut Self {
-        self.user = true;
-        self
-    }
-
-    /// Enable sysinfo memory
-    pub fn memory(&mut self) -> &mut Self {
-        self.memory = true;
-        self
-    }
-
-    /// Enable sysinfo cpu vendor
-    pub fn cpu_vendor(&mut self) -> &mut Self {
-        self.cpu_vendor = true;
-        self
-    }
-
-    /// Enable sysinfo cpu core count
-    pub fn cpu_core_count(&mut self) -> &mut Self {
-        self.cpu_core_count = true;
-        self
-    }
-
-    /// Enable sysinfo cpu name
-    pub fn cpu_name(&mut self) -> &mut Self {
-        self.cpu_name = true;
-        self
-    }
-
-    /// Enable sysinfo cpu brand
-    pub fn cpu_brand(&mut self) -> &mut Self {
-        self.cpu_brand = true;
-        self
-    }
-
-    /// Enable sysinfo cpu frequency
-    pub fn cpu_frequency(&mut self) -> &mut Self {
-        self.cpu_frequency = true;
-        self
-    }
-
-    ///
-    #[must_use]
-    pub fn build(self) -> Sysinfo {
-        Sysinfo {
-            refresh_kind: self.refresh_kind,
-            name: self.name,
-            os_version: self.os_version,
-            user: self.user,
-            memory: self.memory,
-            cpu_vendor: self.cpu_vendor,
-            cpu_core_count: self.cpu_core_count,
-            cpu_name: self.cpu_name,
-            cpu_brand: self.cpu_brand,
-            cpu_frequency: self.cpu_frequency,
-            #[cfg(test)]
-            fail_pid: false,
-        }
-    }
-}
-
-///
-#[derive(Clone, Copy, Debug, PartialEq)]
-#[allow(clippy::struct_excessive_bools)]
-pub struct Sysinfo {
+    #[builder(default = "None", setter(into))]
     refresh_kind: Option<RefreshKind>,
+    /// Enable the sysinfo name
+    #[builder(default = "false")]
     name: bool,
+    /// Enable the sysinfo OS version
+    #[builder(default = "false")]
     os_version: bool,
+    /// Enable sysinfo user
+    #[builder(default = "false")]
     user: bool,
+    /// Enable sysinfo memory
+    #[builder(default = "false")]
     memory: bool,
+    /// Enable sysinfo cpu vendor
+    #[builder(default = "false")]
     cpu_vendor: bool,
+    /// Enable sysinfo cpu core count
+    #[builder(default = "false")]
     cpu_core_count: bool,
+    /// Enable sysinfo cpu name
+    #[builder(default = "false")]
     cpu_name: bool,
+    /// Enable sysinfo cpu brand
+    #[builder(default = "false")]
     cpu_brand: bool,
+    /// Enable sysinfo cpu frequency
+    #[builder(default = "false")]
     cpu_frequency: bool,
     #[cfg(test)]
+    #[builder(setter(skip))]
     fail_pid: bool,
+}
+
+impl SysinfoBuilder {
+    /// Enable all of the `VERGEN_SYSINFO_*` options
+    ///
+    /// # Errors
+    /// The underlying build function can error
+    ///
+    pub fn all_sysinfo() -> Result<Sysinfo> {
+        Self::default()
+            .name(true)
+            .os_version(true)
+            .user(true)
+            .memory(true)
+            .cpu_vendor(true)
+            .cpu_core_count(true)
+            .cpu_name(true)
+            .cpu_brand(true)
+            .cpu_frequency(true)
+            .build()
+            .map_err(Into::into)
+    }
 }
 
 impl Sysinfo {
@@ -635,7 +570,7 @@ impl AddEntries for Sysinfo {
 
 #[cfg(test)]
 mod test {
-    use super::{Builder, Sysinfo};
+    use super::{Sysinfo, SysinfoBuilder};
     use crate::Emitter;
     use anyhow::Result;
     use serial_test::serial;
@@ -650,37 +585,17 @@ mod test {
     #[test]
     #[serial]
     #[allow(clippy::clone_on_copy, clippy::redundant_clone)]
-    fn builder_clone_works() {
-        let mut builder = Builder::default();
-        let _ = builder.all_sysinfo();
-        let another = builder.clone();
-        assert_eq!(another, builder);
-    }
-
-    #[test]
-    #[serial]
-    #[allow(clippy::clone_on_copy, clippy::redundant_clone)]
-    fn si_clone_works() {
-        let si = Builder::default().all_sysinfo().build();
+    fn si_clone_works() -> Result<()> {
+        let si = SysinfoBuilder::all_sysinfo()?;
         let another = si.clone();
         assert_eq!(another, si);
-    }
-
-    #[test]
-    #[serial]
-    fn builder_debug_works() -> Result<()> {
-        let mut builder = Builder::default();
-        let _ = builder.all_sysinfo();
-        let mut buf = vec![];
-        write!(buf, "{builder:?}")?;
-        assert!(!buf.is_empty());
         Ok(())
     }
 
     #[test]
     #[serial]
     fn si_debug_works() -> Result<()> {
-        let si = Builder::default().all_sysinfo().build();
+        let si = SysinfoBuilder::all_sysinfo()?;
         let mut buf = vec![];
         write!(buf, "{si:?}")?;
         assert!(!buf.is_empty());
@@ -690,7 +605,7 @@ mod test {
     #[test]
     #[serial]
     fn si_default() -> Result<()> {
-        let si = Builder::default().build();
+        let si = SysinfoBuilder::default().build()?;
         let emitter = Emitter::default().add_instructions(&si)?.test_emit();
         assert_eq!(0, emitter.cargo_rustc_env_map().len());
         assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
@@ -701,7 +616,7 @@ mod test {
     #[test]
     #[serial]
     fn sysinfo_all_idempotent() -> Result<()> {
-        let si = Builder::default().all_sysinfo().build();
+        let si = SysinfoBuilder::all_sysinfo()?;
         let config = Emitter::default()
             .idempotent()
             .add_instructions(&si)?
@@ -718,7 +633,7 @@ mod test {
     #[test]
     #[serial]
     fn sysinfo_all() -> Result<()> {
-        let si = Builder::default().all_sysinfo().build();
+        let si = SysinfoBuilder::all_sysinfo()?;
         let config = Emitter::default().add_instructions(&si)?.test_emit();
         assert_eq!(SYSINFO_COUNT, config.cargo_rustc_env_map().len());
         assert_eq!(IDEM_COUNT, count_idempotent(config.cargo_rustc_env_map()));
@@ -729,7 +644,7 @@ mod test {
     #[test]
     #[serial]
     fn sysinfo_name() -> Result<()> {
-        let si = Builder::default().name().build();
+        let si = SysinfoBuilder::default().name(true).build()?;
         let config = Emitter::default().add_instructions(&si)?.test_emit();
         assert_eq!(1, config.cargo_rustc_env_map().len());
         assert_eq!(IDEM_COUNT, count_idempotent(config.cargo_rustc_env_map()));
@@ -740,7 +655,7 @@ mod test {
     #[test]
     #[serial]
     fn sysinfo_os_version() -> Result<()> {
-        let si = Builder::default().os_version().build();
+        let si = SysinfoBuilder::default().os_version(true).build()?;
         let config = Emitter::default().add_instructions(&si)?.test_emit();
         assert_eq!(1, config.cargo_rustc_env_map().len());
         assert_eq!(IDEM_COUNT, count_idempotent(config.cargo_rustc_env_map()));
@@ -751,7 +666,7 @@ mod test {
     #[test]
     #[serial]
     fn sysinfo_user() -> Result<()> {
-        let si = Builder::default().user().build();
+        let si = SysinfoBuilder::default().user(true).build()?;
         let config = Emitter::default().add_instructions(&si)?.test_emit();
         assert_eq!(1, config.cargo_rustc_env_map().len());
         assert_eq!(IDEM_COUNT, count_idempotent(config.cargo_rustc_env_map()));
@@ -762,7 +677,7 @@ mod test {
     #[test]
     #[serial]
     fn sysinfo_memory() -> Result<()> {
-        let si = Builder::default().memory().build();
+        let si = SysinfoBuilder::default().memory(true).build()?;
         let config = Emitter::default().add_instructions(&si)?.test_emit();
         assert_eq!(1, config.cargo_rustc_env_map().len());
         assert_eq!(IDEM_COUNT, count_idempotent(config.cargo_rustc_env_map()));
@@ -773,7 +688,7 @@ mod test {
     #[test]
     #[serial]
     fn sysinfo_cpu_vendor() -> Result<()> {
-        let si = Builder::default().cpu_vendor().build();
+        let si = SysinfoBuilder::default().cpu_vendor(true).build()?;
         let config = Emitter::default().add_instructions(&si)?.test_emit();
         assert_eq!(1, config.cargo_rustc_env_map().len());
         assert_eq!(IDEM_COUNT, count_idempotent(config.cargo_rustc_env_map()));
@@ -784,7 +699,7 @@ mod test {
     #[test]
     #[serial]
     fn sysinfo_cpu_core_count() -> Result<()> {
-        let si = Builder::default().cpu_core_count().build();
+        let si = SysinfoBuilder::default().cpu_core_count(true).build()?;
         let config = Emitter::default().add_instructions(&si)?.test_emit();
         assert_eq!(1, config.cargo_rustc_env_map().len());
         assert_eq!(IDEM_COUNT, count_idempotent(config.cargo_rustc_env_map()));
@@ -795,7 +710,7 @@ mod test {
     #[test]
     #[serial]
     fn sysinfo_cpu_name() -> Result<()> {
-        let si = Builder::default().cpu_name().build();
+        let si = SysinfoBuilder::default().cpu_name(true).build()?;
         let config = Emitter::default().add_instructions(&si)?.test_emit();
         assert_eq!(1, config.cargo_rustc_env_map().len());
         assert_eq!(IDEM_COUNT, count_idempotent(config.cargo_rustc_env_map()));
@@ -806,7 +721,7 @@ mod test {
     #[test]
     #[serial]
     fn sysinfo_cpu_brand() -> Result<()> {
-        let si = Builder::default().cpu_brand().build();
+        let si = SysinfoBuilder::default().cpu_brand(true).build()?;
         let config = Emitter::default().add_instructions(&si)?.test_emit();
         assert_eq!(1, config.cargo_rustc_env_map().len());
         assert_eq!(IDEM_COUNT, count_idempotent(config.cargo_rustc_env_map()));
@@ -817,7 +732,7 @@ mod test {
     #[test]
     #[serial]
     fn sysinfo_cpu_frequency() -> Result<()> {
-        let si = Builder::default().cpu_frequency().build();
+        let si = SysinfoBuilder::default().cpu_frequency(true).build()?;
         let config = Emitter::default().add_instructions(&si)?.test_emit();
         assert_eq!(1, config.cargo_rustc_env_map().len());
         assert_eq!(IDEM_COUNT, count_idempotent(config.cargo_rustc_env_map()));
@@ -832,10 +747,10 @@ mod test {
         let cpu_refresh_kind = CpuRefreshKind::everything()
             .without_cpu_usage()
             .without_frequency();
-        let si = Builder::default()
+        let si = SysinfoBuilder::default()
             .refresh_kind(Some(refresh_kind.with_cpu(cpu_refresh_kind)))
-            .cpu_brand()
-            .build();
+            .cpu_brand(true)
+            .build()?;
         let config = Emitter::default().add_instructions(&si)?.test_emit();
         assert_eq!(1, config.cargo_rustc_env_map().len());
         assert_eq!(IDEM_COUNT, count_idempotent(config.cargo_rustc_env_map()));
@@ -882,7 +797,7 @@ mod test {
     #[test]
     #[serial_test::serial]
     fn pid_lookup_fails() -> Result<()> {
-        let mut si = Builder::default().all_sysinfo().build();
+        let mut si = SysinfoBuilder::all_sysinfo()?;
         let _ = si.fail_pid();
         let emitter = Emitter::default().add_instructions(&si)?.test_emit();
         assert_eq!(SYSINFO_COUNT, emitter.cargo_rustc_env_map().len());
@@ -897,7 +812,7 @@ mod test {
         with_var("VERGEN_SYSINFO_NAME", Some("this is a bad date"), || {
             let result = || -> Result<()> {
                 let mut stdout_buf = vec![];
-                let si = Builder::default().all_sysinfo().build();
+                let si = SysinfoBuilder::all_sysinfo()?;
                 let _failed = Emitter::default()
                     .add_instructions(&si)?
                     .emit_to(&mut stdout_buf)?;
@@ -918,7 +833,7 @@ mod test {
             || {
                 let result = || -> Result<()> {
                     let mut stdout_buf = vec![];
-                    let si = Builder::default().all_sysinfo().build();
+                    let si = SysinfoBuilder::all_sysinfo()?;
                     let _failed = Emitter::default()
                         .add_instructions(&si)?
                         .emit_to(&mut stdout_buf)?;
@@ -938,7 +853,7 @@ mod test {
         with_var("VERGEN_SYSINFO_USER", Some("this is a bad date"), || {
             let result = || -> Result<()> {
                 let mut stdout_buf = vec![];
-                let si = Builder::default().all_sysinfo().build();
+                let si = SysinfoBuilder::all_sysinfo()?;
                 let _failed = Emitter::default()
                     .add_instructions(&si)?
                     .emit_to(&mut stdout_buf)?;
@@ -959,7 +874,7 @@ mod test {
             || {
                 let result = || -> Result<()> {
                     let mut stdout_buf = vec![];
-                    let si = Builder::default().all_sysinfo().build();
+                    let si = SysinfoBuilder::all_sysinfo()?;
                     let _failed = Emitter::default()
                         .add_instructions(&si)?
                         .emit_to(&mut stdout_buf)?;
@@ -983,7 +898,7 @@ mod test {
             || {
                 let result = || -> Result<()> {
                     let mut stdout_buf = vec![];
-                    let si = Builder::default().all_sysinfo().build();
+                    let si = SysinfoBuilder::all_sysinfo()?;
                     let _failed = Emitter::default()
                         .add_instructions(&si)?
                         .emit_to(&mut stdout_buf)?;
@@ -1006,7 +921,7 @@ mod test {
             || {
                 let result = || -> Result<()> {
                     let mut stdout_buf = vec![];
-                    let si = Builder::default().all_sysinfo().build();
+                    let si = SysinfoBuilder::all_sysinfo()?;
                     let _failed = Emitter::default()
                         .add_instructions(&si)?
                         .emit_to(&mut stdout_buf)?;
@@ -1030,7 +945,7 @@ mod test {
             || {
                 let result = || -> Result<()> {
                     let mut stdout_buf = vec![];
-                    let si = Builder::default().all_sysinfo().build();
+                    let si = SysinfoBuilder::all_sysinfo()?;
                     let _failed = Emitter::default()
                         .add_instructions(&si)?
                         .emit_to(&mut stdout_buf)?;
@@ -1053,7 +968,7 @@ mod test {
             || {
                 let result = || -> Result<()> {
                     let mut stdout_buf = vec![];
-                    let si = Builder::default().all_sysinfo().build();
+                    let si = SysinfoBuilder::all_sysinfo()?;
                     let _failed = Emitter::default()
                         .add_instructions(&si)?
                         .emit_to(&mut stdout_buf)?;
@@ -1076,7 +991,7 @@ mod test {
             || {
                 let result = || -> Result<()> {
                     let mut stdout_buf = vec![];
-                    let si = Builder::default().all_sysinfo().build();
+                    let si = SysinfoBuilder::all_sysinfo()?;
                     let _failed = Emitter::default()
                         .add_instructions(&si)?
                         .emit_to(&mut stdout_buf)?;

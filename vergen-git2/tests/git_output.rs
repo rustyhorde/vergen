@@ -143,10 +143,10 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
     #[serial]
     fn git_all_output_idempotent() -> Result<()> {
         let mut stdout_buf = vec![];
-        let mut gix = Git2Builder::default().all_git().build();
-        let _ = gix.at_path(temp_dir());
+        let mut git2 = Git2Builder::all_git()?;
+        let _ = git2.at_path(temp_dir());
         let failed = Emitter::default()
-            .add_instructions(&gix)?
+            .add_instructions(&git2)?
             .emit_to(&mut stdout_buf)?;
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(!failed);
@@ -158,9 +158,9 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
     #[serial]
     fn git_all_output_default_dir() -> Result<()> {
         let mut stdout_buf = vec![];
-        let gix = Git2Builder::default().all_git().build();
+        let git2 = Git2Builder::all_git()?;
         let failed = Emitter::default()
-            .add_instructions(&gix)?
+            .add_instructions(&git2)?
             .emit_to(&mut stdout_buf)?;
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(!failed);
@@ -174,17 +174,18 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
     fn git_all_flags_test_repo() -> Result<()> {
         let repo = TestRepos::new(true, false, false)?;
         let mut stdout_buf = vec![];
-        let mut gix = Git2Builder::default()
-            .all_git()
+        let mut git2 = Git2Builder::default()
+            .all()
             .describe(true, false, None)
             .sha(true)
-            .build();
-        let _ = gix.at_path(repo.path());
+            .build()?;
+        let _ = git2.at_path(repo.path());
         let failed = Emitter::default()
-            .add_instructions(&gix)?
+            .add_instructions(&git2)?
             .emit_to(&mut stdout_buf)?;
         assert!(!failed);
         let output = String::from_utf8_lossy(&stdout_buf);
+        eprintln!("BLAH: {output}");
         assert!(GIT_REGEX_SHORT_INST.is_match(&output));
         Ok(())
     }
@@ -194,17 +195,17 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
     fn git_all_flags_test_repo_local() -> Result<()> {
         let repo = TestRepos::new(true, false, false)?;
         let mut stdout_buf = vec![];
-        let mut gix = Git2Builder::default()
-            .all_git()
+        let mut git2 = Git2Builder::default()
+            .all()
             .describe(true, false, None)
             .sha(true)
-            .use_local()
-            .build();
-        let _ = gix.at_path(repo.path());
+            .use_local(true)
+            .build()?;
+        let _ = git2.at_path(repo.path());
         let result = || -> Result<bool> {
             let failed = Emitter::default()
                 .fail_on_error()
-                .add_instructions(&gix)?
+                .add_instructions(&git2)?
                 .emit_to(&mut stdout_buf)?;
             Ok(failed)
         }();
@@ -230,13 +231,13 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
     fn git_all_output_test_repo() -> Result<()> {
         let repo = TestRepos::new(true, true, false)?;
         let mut stdout_buf = vec![];
-        let mut gix = Git2Builder::default()
-            .all_git()
+        let mut git2 = Git2Builder::default()
+            .all()
             .describe(true, false, None)
-            .build();
-        let _ = gix.at_path(repo.path());
+            .build()?;
+        let _ = git2.at_path(repo.path());
         let failed = Emitter::default()
-            .add_instructions(&gix)?
+            .add_instructions(&git2)?
             .emit_to(&mut stdout_buf)?;
         assert!(!failed);
         let output = String::from_utf8_lossy(&stdout_buf);
@@ -249,13 +250,13 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
     fn git_all_describe_all_test_repo() -> Result<()> {
         let repo = TestRepos::new(true, true, false)?;
         let mut stdout_buf = vec![];
-        let mut gix = Git2Builder::default()
-            .all_git()
+        let mut git2 = Git2Builder::default()
+            .all()
             .describe(true, true, Some("0.1.0"))
-            .build();
-        let _ = gix.at_path(repo.path());
+            .build()?;
+        let _ = git2.at_path(repo.path());
         let failed = Emitter::default()
-            .add_instructions(&gix)?
+            .add_instructions(&git2)?
             .emit_to(&mut stdout_buf)?;
         assert!(!failed);
         let output = String::from_utf8_lossy(&stdout_buf);
@@ -267,13 +268,13 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
     #[serial]
     fn git_emit_at_test_repo() -> Result<()> {
         let repo = TestRepos::new(true, false, false)?;
-        let mut gix = Git2Builder::default()
-            .all_git()
+        let mut git2 = Git2Builder::default()
+            .all()
             .describe(true, false, None)
             .sha(true)
-            .build();
-        let _ = gix.at_path(repo.path());
-        assert!(Emitter::default().add_instructions(&gix)?.emit().is_ok());
+            .build()?;
+        let _ = git2.at_path(repo.path());
+        assert!(Emitter::default().add_instructions(&git2)?.emit().is_ok());
         Ok(())
     }
 
@@ -303,7 +304,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             let repo = TestRepos::new(false, false, false)?;
 
             let mut stdout_buf = vec![];
-            let mut git2 = Git2Builder::default().dirty(false).build();
+            let mut git2 = Git2Builder::default().dirty(false).build()?;
             let _ = git2.at_path(repo.path());
             let _emitter = Emitter::default()
                 .add_instructions(&git2)?
@@ -323,7 +324,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             let repo = TestRepos::new(false, false, false)?;
 
             let mut stdout_buf = vec![];
-            let mut git2 = Git2Builder::default().dirty(true).build();
+            let mut git2 = Git2Builder::default().dirty(true).build()?;
             let _ = git2.at_path(repo.path());
             let _emitter = Emitter::default()
                 .add_instructions(&git2)?
@@ -343,7 +344,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             let repo = TestRepos::new(true, false, false)?;
 
             let mut stdout_buf = vec![];
-            let mut git2 = Git2Builder::default().dirty(false).build();
+            let mut git2 = Git2Builder::default().dirty(false).build()?;
             let _ = git2.at_path(repo.path());
             let _emitter = Emitter::default()
                 .add_instructions(&git2)?
@@ -363,7 +364,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             let repo = TestRepos::new(true, false, false)?;
 
             let mut stdout_buf = vec![];
-            let mut git2 = Git2Builder::default().dirty(true).build();
+            let mut git2 = Git2Builder::default().dirty(true).build()?;
             let _ = git2.at_path(repo.path());
             let _emitter = Emitter::default()
                 .add_instructions(&git2)?
@@ -383,7 +384,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             let repo = TestRepos::new(false, true, false)?;
 
             let mut stdout_buf = vec![];
-            let mut git2 = Git2Builder::default().dirty(false).build();
+            let mut git2 = Git2Builder::default().dirty(false).build()?;
             let _ = git2.at_path(repo.path());
             let _emitter = Emitter::default()
                 .add_instructions(&git2)?
@@ -403,7 +404,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             let repo = TestRepos::new(false, true, false)?;
 
             let mut stdout_buf = vec![];
-            let mut git2 = Git2Builder::default().dirty(true).build();
+            let mut git2 = Git2Builder::default().dirty(true).build()?;
             let _ = git2.at_path(repo.path());
             let _emitter = Emitter::default()
                 .add_instructions(&git2)?
@@ -423,7 +424,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             let repo = TestRepos::new(true, true, false)?;
 
             let mut stdout_buf = vec![];
-            let mut git2 = Git2Builder::default().dirty(false).build();
+            let mut git2 = Git2Builder::default().dirty(false).build()?;
             let _ = git2.at_path(repo.path());
             let _emitter = Emitter::default()
                 .add_instructions(&git2)?
@@ -443,7 +444,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             let repo = TestRepos::new(true, true, false)?;
 
             let mut stdout_buf = vec![];
-            let mut git2 = Git2Builder::default().dirty(true).build();
+            let mut git2 = Git2Builder::default().dirty(true).build()?;
             let _ = git2.at_path(repo.path());
             let _emitter = Emitter::default()
                 .add_instructions(&git2)?
@@ -460,10 +461,10 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
     #[serial]
     fn git_all_idempotent_output() -> Result<()> {
         let mut stdout_buf = vec![];
-        let gix = Git2Builder::default().all_git().build();
+        let git2 = Git2Builder::all_git()?;
         let failed = Emitter::default()
             .idempotent()
-            .add_instructions(&gix)?
+            .add_instructions(&git2)?
             .emit_to(&mut stdout_buf)?;
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(!failed);
@@ -476,11 +477,11 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
     #[serial]
     fn git_all_idempotent_output_quiet() -> Result<()> {
         let mut stdout_buf = vec![];
-        let gix = Git2Builder::default().all_git().build();
+        let git2 = Git2Builder::all_git()?;
         let failed = Emitter::default()
             .idempotent()
             .quiet()
-            .add_instructions(&gix)?
+            .add_instructions(&git2)?
             .emit_to(&mut stdout_buf)?;
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(!failed);
@@ -495,9 +496,9 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
         with_var("VERGEN_GIT_BRANCH", Some("this is a bad date"), || {
             let result = || -> Result<()> {
                 let mut stdout_buf = vec![];
-                let gix = Git2Builder::default().all_git().build();
+                let git2 = Git2Builder::all_git()?;
                 let _failed = Emitter::default()
-                    .add_instructions(&gix)?
+                    .add_instructions(&git2)?
                     .emit_to(&mut stdout_buf)?;
                 let output = String::from_utf8_lossy(&stdout_buf);
                 assert!(output.contains("cargo:rustc-env=VERGEN_GIT_BRANCH=this is a bad date"));
@@ -517,9 +518,9 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             || {
                 let result = || -> Result<()> {
                     let mut stdout_buf = vec![];
-                    let gix = Git2Builder::default().all_git().build();
+                    let git2 = Git2Builder::all_git()?;
                     let _failed = Emitter::default()
-                        .add_instructions(&gix)?
+                        .add_instructions(&git2)?
                         .emit_to(&mut stdout_buf)?;
                     let output = String::from_utf8_lossy(&stdout_buf);
                     assert!(output.contains(
@@ -544,9 +545,9 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             || {
                 let result = || -> Result<()> {
                     let mut stdout_buf = vec![];
-                    let gix = Git2Builder::default().all_git().build();
+                    let git2 = Git2Builder::all_git()?;
                     let _failed = Emitter::default()
-                        .add_instructions(&gix)?
+                        .add_instructions(&git2)?
                         .emit_to(&mut stdout_buf)?;
                     let output = String::from_utf8_lossy(&stdout_buf);
                     assert!(output.contains(
@@ -571,9 +572,9 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             || {
                 let result = || -> Result<()> {
                     let mut stdout_buf = vec![];
-                    let gix = Git2Builder::default().all_git().build();
+                    let git2 = Git2Builder::all_git()?;
                     let _failed = Emitter::default()
-                        .add_instructions(&gix)?
+                        .add_instructions(&git2)?
                         .emit_to(&mut stdout_buf)?;
                     let output = String::from_utf8_lossy(&stdout_buf);
                     assert!(output
@@ -592,9 +593,9 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
         with_var("VERGEN_GIT_COMMIT_DATE", Some("this is a bad date"), || {
             let result = || -> Result<()> {
                 let mut stdout_buf = vec![];
-                let gix = Git2Builder::default().all_git().build();
+                let git2 = Git2Builder::all_git()?;
                 let _failed = Emitter::default()
-                    .add_instructions(&gix)?
+                    .add_instructions(&git2)?
                     .emit_to(&mut stdout_buf)?;
                 let output = String::from_utf8_lossy(&stdout_buf);
                 assert!(
@@ -616,9 +617,9 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             || {
                 let result = || -> Result<()> {
                     let mut stdout_buf = vec![];
-                    let gix = Git2Builder::default().all_git().build();
+                    let git2 = Git2Builder::all_git()?;
                     let _failed = Emitter::default()
-                        .add_instructions(&gix)?
+                        .add_instructions(&git2)?
                         .emit_to(&mut stdout_buf)?;
                     let output = String::from_utf8_lossy(&stdout_buf);
                     assert!(output
@@ -640,9 +641,9 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             || {
                 let result = || -> Result<()> {
                     let mut stdout_buf = vec![];
-                    let gix = Git2Builder::default().all_git().build();
+                    let git2 = Git2Builder::all_git()?;
                     let _failed = Emitter::default()
-                        .add_instructions(&gix)?
+                        .add_instructions(&git2)?
                         .emit_to(&mut stdout_buf)?;
                     let output = String::from_utf8_lossy(&stdout_buf);
                     assert!(output.contains(
@@ -662,9 +663,9 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
         with_var("VERGEN_GIT_DESCRIBE", Some("this is a bad date"), || {
             let result = || -> Result<()> {
                 let mut stdout_buf = vec![];
-                let gix = Git2Builder::default().all_git().build();
+                let git2 = Git2Builder::all_git()?;
                 let _failed = Emitter::default()
-                    .add_instructions(&gix)?
+                    .add_instructions(&git2)?
                     .emit_to(&mut stdout_buf)?;
                 let output = String::from_utf8_lossy(&stdout_buf);
                 assert!(output.contains("cargo:rustc-env=VERGEN_GIT_DESCRIBE=this is a bad date"));
@@ -681,9 +682,9 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
         with_var("VERGEN_GIT_SHA", Some("this is a bad date"), || {
             let result = || -> Result<()> {
                 let mut stdout_buf = vec![];
-                let gix = Git2Builder::default().all_git().build();
+                let git2 = Git2Builder::all_git()?;
                 let _failed = Emitter::default()
-                    .add_instructions(&gix)?
+                    .add_instructions(&git2)?
                     .emit_to(&mut stdout_buf)?;
                 let output = String::from_utf8_lossy(&stdout_buf);
                 assert!(output.contains("cargo:rustc-env=VERGEN_GIT_SHA=this is a bad date"));
@@ -700,9 +701,9 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
         with_var("VERGEN_GIT_DIRTY", Some("this is a bad date"), || {
             let result = || -> Result<()> {
                 let mut stdout_buf = vec![];
-                let gix = Git2Builder::default().all_git().build();
+                let git2 = Git2Builder::all_git()?;
                 let _failed = Emitter::default()
-                    .add_instructions(&gix)?
+                    .add_instructions(&git2)?
                     .emit_to(&mut stdout_buf)?;
                 let output = String::from_utf8_lossy(&stdout_buf);
                 assert!(output.contains("cargo:rustc-env=VERGEN_GIT_DIRTY=this is a bad date"));

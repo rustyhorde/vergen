@@ -9,6 +9,7 @@
 #[cfg(test)]
 use anyhow::anyhow;
 use anyhow::{Error, Result};
+use derive_builder::Builder as DeriveBuilder;
 use git2_rs::{
     BranchType, Commit, DescribeFormatOptions, DescribeOptions, Reference, Repository,
     StatusOptions,
@@ -54,7 +55,7 @@ use vergen_lib::{
 /// # use vergen_git2::{Emitter, Git2Builder};
 /// #
 /// # fn main() -> Result<()> {
-/// let git2 = Git2Builder::default().all_git().build();
+/// let git2 = Git2Builder::all_git()?;
 /// Emitter::default().add_instructions(&git2)?.emit()?;
 /// #   Ok(())
 /// # }
@@ -69,7 +70,7 @@ use vergen_lib::{
 /// # fn main() -> Result<()> {
 /// temp_env::with_var("VERGEN_GIT_BRANCH", Some("this is the branch I want output"), || {
 ///     let result = || -> Result<()> {
-///         let git2 = Git2Builder::default().all_git().build();
+///         let git2 = Git2Builder::all_git()?;
 ///         Emitter::default().add_instructions(&git2)?.emit()?;
 ///         Ok(())
 ///     }();
@@ -79,128 +80,155 @@ use vergen_lib::{
 /// # }
 /// ```
 ///
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, DeriveBuilder, PartialEq)]
 #[allow(clippy::struct_excessive_bools)]
-pub struct Builder {
-    // git rev-parse --abbrev-ref HEAD
-    branch: bool,
-    // git log -1 --pretty=format:'%an'
-    commit_author_name: bool,
-    // git log -1 --pretty=format:'%ae'
-    commit_author_email: bool,
-    // git rev-list --count HEAD
-    commit_count: bool,
-    // git log -1 --format=%s
-    commit_message: bool,
-    // git log -1 --pretty=format:'%cs'
-    commit_date: bool,
-    // git log -1 --pretty=format:'%cI'
-    commit_timestamp: bool,
-    // git describe --always (optionally --tags, --dirty)
-    describe: bool,
-    describe_tags: bool,
-    describe_dirty: bool,
-    describe_match_pattern: Option<&'static str>,
-    // git rev-parse HEAD (optionally with --short)
-    sha: bool,
-    sha_short: bool,
-    // if output from:
-    // git status --porcelain (optionally with "--untracked-files=no")
-    dirty: bool,
-    dirty_include_untracked: bool,
-    use_local: bool,
-}
-
-impl Builder {
-    /// Emit all of the `VERGEN_GIT_*` instructions
-    pub fn all_git(&mut self) -> &mut Self {
-        self.branch()
-            .commit_author_email()
-            .commit_author_name()
-            .commit_count()
-            .commit_date()
-            .commit_message()
-            .commit_timestamp()
-            .describe(false, false, None)
-            .sha(false)
-            .dirty(false)
-    }
-
+pub struct Git2 {
+    /// An optional path to a repository.
+    #[builder(default = "None")]
+    repo_path: Option<PathBuf>,
     /// Emit the current git branch
     ///
     /// ```text
     /// cargo:rustc-env=VERGEN_GIT_BRANCH=<BRANCH_NAME>
     /// ```
     ///
-    pub fn branch(&mut self) -> &mut Self {
-        self.branch = true;
-        self
-    }
-
+    #[builder(default = "false")]
+    branch: bool,
     /// Emit the author email of the most recent commit
     ///
     /// ```text
     /// cargo:rustc-env=VERGEN_GIT_COMMIT_AUTHOR_EMAIL=<AUTHOR_EMAIL>
     /// ```
     ///
-    pub fn commit_author_email(&mut self) -> &mut Self {
-        self.commit_author_email = true;
-        self
-    }
-
+    #[builder(default = "false")]
+    commit_author_name: bool,
     /// Emit the author name of the most recent commit
     ///
     /// ```text
     /// cargo:rustc-env=VERGEN_GIT_COMMIT_AUTHOR_NAME=<AUTHOR_NAME>
     /// ```
     ///
-    pub fn commit_author_name(&mut self) -> &mut Self {
-        self.commit_author_name = true;
-        self
-    }
-
+    #[builder(default = "false")]
+    commit_author_email: bool,
     /// Emit the total commit count to HEAD
     ///
     /// ```text
     /// cargo:rustc-env=VERGEN_GIT_COMMIT_COUNT=<COUNT>
     /// ```
-    ///
-    pub fn commit_count(&mut self) -> &mut Self {
-        self.commit_count = true;
-        self
-    }
-
-    /// Emit the commit date of the latest commit
-    ///
-    /// ```text
-    /// cargo:rustc-env=VERGEN_GIT_COMMIT_DATE=<YYYY-MM-DD>
-    /// ```
-    ///
-    pub fn commit_date(&mut self) -> &mut Self {
-        self.commit_date = true;
-        self
-    }
-
+    #[builder(default = "false")]
+    commit_count: bool,
     /// Emit the commit message of the latest commit
     ///
     /// ```text
     /// cargo:rustc-env=VERGEN_GIT_COMMIT_MESSAGE=<MESSAGE>
     /// ```
     ///
-    pub fn commit_message(&mut self) -> &mut Self {
-        self.commit_message = true;
-        self
-    }
-
+    #[builder(default = "false")]
+    commit_message: bool,
+    /// Emit the commit date of the latest commit
+    ///
+    /// ```text
+    /// cargo:rustc-env=VERGEN_GIT_COMMIT_DATE=<YYYY-MM-DD>
+    /// ```
+    ///
+    #[builder(default = "false")]
+    commit_date: bool,
     /// Emit the commit timestamp of the latest commit
     ///
     /// ```text
     /// cargo:rustc-env=VERGEN_GIT_COMMIT_TIMESTAMP=<YYYY-MM-DDThh:mm:ssZ>
     /// ```
     ///
-    pub fn commit_timestamp(&mut self) -> &mut Self {
-        self.commit_timestamp = true;
-        self
+    #[builder(default = "false")]
+    commit_timestamp: bool,
+    /// Emit the describe output
+    ///
+    /// ```text
+    /// cargo:rustc-env=VERGEN_GIT_DESCRIBE=<DESCRIBE>
+    /// ```
+    ///
+    /// Optionally, add the `dirty` or `tags` flag to describe.
+    /// See [`git describe`](https://git-scm.com/docs/git-describe#_options) for more details
+    ///
+    #[builder(default = "false", setter(custom))]
+    describe: bool,
+    /// Instead of using only the annotated tags, use any tag found in refs/tags namespace.
+    #[builder(default = "false", private)]
+    describe_tags: bool,
+    /// If the working tree has local modification "-dirty" is appended to it.
+    #[builder(default = "false", private)]
+    describe_dirty: bool,
+    /// Only consider tags matching the given glob pattern, excluding the "refs/tags/" prefix.
+    #[builder(default = "None", private)]
+    describe_match_pattern: Option<&'static str>,
+    /// Emit the SHA of the latest commit
+    ///
+    /// ```text
+    /// cargo:rustc-env=VERGEN_GIT_SHA=<SHA>
+    /// ```
+    ///
+    /// Optionally, add the `short` flag to rev-parse.
+    /// See [`git rev-parse`](https://git-scm.com/docs/git-rev-parse#_options_for_output) for more details.
+    ///
+    #[builder(default = "false", setter(custom))]
+    sha: bool,
+    /// Shortens the object name to a unique prefix
+    #[builder(default = "false", private)]
+    sha_short: bool,
+    /// Emit the dirty state of the git repository
+    /// ```text
+    /// cargo:rustc-env=VERGEN_GIT_DIRTY=(true|false)
+    /// ```
+    ///
+    /// Optionally, include untracked files when determining the dirty status of the repository.
+    ///
+    #[builder(default = "false", setter(custom))]
+    dirty: bool,
+    /// Should we include/ignore untracked files in deciding whether the repository is dirty.
+    #[builder(default = "false", private)]
+    dirty_include_untracked: bool,
+    /// Enable local offset date/timestamp output
+    #[builder(default = "false")]
+    use_local: bool,
+    #[cfg(test)]
+    #[builder(default = "false")]
+    fail: bool,
+}
+
+impl Git2Builder {
+    /// Emit all of the `VERGEN_GIT_*` instructions
+    ///
+    /// # Errors
+    /// The underlying build function can error
+    ///
+    pub fn all_git() -> Result<Git2> {
+        Self::default()
+            .branch(true)
+            .commit_author_email(true)
+            .commit_author_name(true)
+            .commit_count(true)
+            .commit_date(true)
+            .commit_message(true)
+            .commit_timestamp(true)
+            .describe(false, false, None)
+            .sha(false)
+            .dirty(false)
+            .build()
+            .map_err(Into::into)
+    }
+
+    /// Convenience method to setup the [`Git2Builder`] with all of the `VERGEN_GIT_*` instructions on
+    pub fn all(&mut self) -> &mut Self {
+        self.branch(true)
+            .commit_author_email(true)
+            .commit_author_name(true)
+            .commit_count(true)
+            .commit_date(true)
+            .commit_message(true)
+            .commit_timestamp(true)
+            .describe(false, false, None)
+            .sha(false)
+            .dirty(false)
     }
 
     /// Emit the describe output
@@ -214,14 +242,27 @@ impl Builder {
     ///
     pub fn describe(
         &mut self,
-        dirty: bool,
         tags: bool,
-        match_pattern: Option<&'static str>,
+        dirty: bool,
+        matches: Option<&'static str>,
     ) -> &mut Self {
-        self.describe = true;
-        self.describe_tags = tags;
-        self.describe_dirty = dirty;
-        self.describe_match_pattern = match_pattern;
+        self.describe = Some(true);
+        let _ = self.describe_tags(tags);
+        let _ = self.describe_dirty(dirty);
+        let _ = self.describe_match_pattern(matches);
+        self
+    }
+
+    /// Emit the dirty state of the git repository
+    /// ```text
+    /// cargo:rustc-env=VERGEN_GIT_DIRTY=(true|false)
+    /// ```
+    ///
+    /// Optionally, include untracked files when determining the dirty status of the repository.
+    ///
+    pub fn dirty(&mut self, include_untracked: bool) -> &mut Self {
+        self.dirty = Some(true);
+        let _ = self.dirty_include_untracked(include_untracked);
         self
     }
 
@@ -235,89 +276,10 @@ impl Builder {
     /// See [`git rev-parse`](https://git-scm.com/docs/git-rev-parse#_options_for_output) for more details.
     ///
     pub fn sha(&mut self, short: bool) -> &mut Self {
-        self.sha = true;
-        self.sha_short = short;
+        self.sha = Some(true);
+        let _ = self.sha_short(short);
         self
     }
-
-    /// Emit the dirty state of the git repository
-    /// ```text
-    /// cargo:rustc-env=VERGEN_GIT_DIRTY=(true|false)
-    /// ```
-    ///
-    /// Optionally, include/ignore untracked files in deciding whether the repository
-    /// is dirty.
-    pub fn dirty(&mut self, include_untracked_files: bool) -> &mut Self {
-        self.dirty = true;
-        self.dirty_include_untracked = include_untracked_files;
-        self
-    }
-
-    /// Enable local offset date/timestamp output
-    pub fn use_local(&mut self) -> &mut Self {
-        self.use_local = true;
-        self
-    }
-
-    ///
-    #[must_use]
-    pub fn build(self) -> Git2 {
-        Git2 {
-            repo_path: None,
-            branch: self.branch,
-            commit_author_name: self.commit_author_name,
-            commit_author_email: self.commit_author_email,
-            commit_count: self.commit_count,
-            commit_message: self.commit_message,
-            commit_date: self.commit_date,
-            commit_timestamp: self.commit_timestamp,
-            describe: self.describe,
-            describe_tags: self.describe_tags,
-            describe_dirty: self.describe_dirty,
-            describe_match_pattern: self.describe_match_pattern,
-            sha: self.sha,
-            sha_short: self.sha_short,
-            dirty: self.dirty,
-            dirty_include_untracked: self.dirty_include_untracked,
-            use_local: self.use_local,
-            #[cfg(test)]
-            fail: false,
-        }
-    }
-}
-
-///
-#[derive(Clone, Debug, PartialEq)]
-#[allow(clippy::struct_excessive_bools)]
-pub struct Git2 {
-    repo_path: Option<PathBuf>,
-    // git rev-parse --abbrev-ref HEAD
-    branch: bool,
-    // git log -1 --pretty=format:'%an'
-    commit_author_name: bool,
-    // git log -1 --pretty=format:'%ae'
-    commit_author_email: bool,
-    // git rev-list --count HEAD
-    commit_count: bool,
-    // git log -1 --format=%s
-    commit_message: bool,
-    // git log -1 --pretty=format:'%cs'
-    commit_date: bool,
-    // git log -1 --pretty=format:'%cI'
-    commit_timestamp: bool,
-    // git describe --always (optionally --tags, --dirty)
-    describe: bool,
-    describe_tags: bool,
-    describe_dirty: bool,
-    describe_match_pattern: Option<&'static str>,
-    // git rev-parse HEAD (optionally with --short)
-    sha: bool,
-    sha_short: bool,
-    dirty: bool,
-    dirty_include_untracked: bool,
-    use_local: bool,
-    #[cfg(test)]
-    fail: bool,
 }
 
 impl Git2 {
@@ -334,7 +296,7 @@ impl Git2 {
             || self.dirty
     }
 
-    ///
+    /// Use the repository location at the given path to determine the git instruction output.
     pub fn at_path(&mut self, path: PathBuf) -> &mut Self {
         self.repo_path = Some(path);
         self
@@ -813,7 +775,7 @@ impl AddEntries for Git2 {
 
 #[cfg(test)]
 mod test {
-    use super::{Builder, Git2};
+    use super::{Git2, Git2Builder};
     use anyhow::Result;
     use git2_rs::Repository;
     use serial_test::serial;
@@ -825,37 +787,17 @@ mod test {
     #[test]
     #[serial]
     #[allow(clippy::clone_on_copy, clippy::redundant_clone)]
-    fn builder_clone_works() {
-        let mut builder = Builder::default();
-        let _ = builder.all_git();
-        let another = builder.clone();
-        assert_eq!(another, builder);
-    }
-
-    #[test]
-    #[serial]
-    #[allow(clippy::clone_on_copy, clippy::redundant_clone)]
-    fn git2_clone_works() {
-        let git2 = Builder::default().all_git().build();
+    fn git2_clone_works() -> Result<()> {
+        let git2 = Git2Builder::all_git()?;
         let another = git2.clone();
         assert_eq!(another, git2);
-    }
-
-    #[test]
-    #[serial]
-    fn builder_debug_works() -> Result<()> {
-        let mut builder = Builder::default();
-        let _ = builder.all_git();
-        let mut buf = vec![];
-        write!(buf, "{builder:?}")?;
-        assert!(!buf.is_empty());
         Ok(())
     }
 
     #[test]
     #[serial]
     fn git2_debug_works() -> Result<()> {
-        let git2 = Builder::default().all_git().build();
+        let git2 = Git2Builder::all_git()?;
         let mut buf = vec![];
         write!(buf, "{git2:?}")?;
         assert!(!buf.is_empty());
@@ -865,7 +807,7 @@ mod test {
     #[test]
     #[serial]
     fn git2_default() -> Result<()> {
-        let git2 = Builder::default().build();
+        let git2 = Git2Builder::default().build()?;
         let emitter = Emitter::default().add_instructions(&git2)?.test_emit();
         assert_eq!(0, emitter.cargo_rustc_env_map().len());
         assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
@@ -923,7 +865,7 @@ mod test {
     #[test]
     #[serial]
     fn git_all_idempotent() -> Result<()> {
-        let git2 = Builder::default().all_git().build();
+        let git2 = Git2Builder::all_git()?;
         let emitter = Emitter::default()
             .idempotent()
             .add_instructions(&git2)?
@@ -938,7 +880,7 @@ mod test {
     #[serial]
     fn git_all_shallow_clone() -> Result<()> {
         let repo = TestRepos::new(false, false, true)?;
-        let mut git2 = Builder::default().all_git().build();
+        let mut git2 = Git2Builder::all_git()?;
         let _ = git2.at_path(repo.path());
         let emitter = Emitter::default().add_instructions(&git2)?.test_emit();
         assert_eq!(10, emitter.cargo_rustc_env_map().len());
@@ -950,7 +892,7 @@ mod test {
     #[test]
     #[serial]
     fn git_all_idempotent_no_warn() -> Result<()> {
-        let git2 = Builder::default().all_git().build();
+        let git2 = Git2Builder::all_git()?;
         let emitter = Emitter::default()
             .idempotent()
             .quiet()
@@ -966,7 +908,7 @@ mod test {
     #[test]
     #[serial]
     fn git_all() -> Result<()> {
-        let git2 = Builder::default().all_git().build();
+        let git2 = Git2Builder::all_git()?;
         let emitter = Emitter::default().add_instructions(&git2)?.test_emit();
         assert_eq!(10, emitter.cargo_rustc_env_map().len());
         assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
@@ -976,19 +918,20 @@ mod test {
 
     #[test]
     #[serial]
-    fn git_error_fails() {
-        let mut git2 = Builder::default().all_git().build();
+    fn git_error_fails() -> Result<()> {
+        let mut git2 = Git2Builder::all_git()?;
         let _ = git2.fail();
         assert!(Emitter::default()
             .fail_on_error()
             .add_instructions(&git2)
             .is_err());
+        Ok(())
     }
 
     #[test]
     #[serial]
     fn git_error_defaults() -> Result<()> {
-        let mut git2 = Builder::default().all_git().build();
+        let mut git2 = Git2Builder::all_git()?;
         let _ = git2.fail();
         let emitter = Emitter::default().add_instructions(&git2)?.test_emit();
         assert_eq!(10, emitter.cargo_rustc_env_map().len());
@@ -1003,7 +946,10 @@ mod test {
         temp_env::with_var("SOURCE_DATE_EPOCH", Some("1671809360"), || {
             let result = || -> Result<()> {
                 let mut stdout_buf = vec![];
-                let gix = Builder::default().commit_date().commit_timestamp().build();
+                let gix = Git2Builder::default()
+                    .commit_date(true)
+                    .commit_timestamp(true)
+                    .build()?;
                 _ = Emitter::new()
                     .idempotent()
                     .add_instructions(&gix)?
@@ -1037,7 +983,7 @@ mod test {
         temp_env::with_var("SOURCE_DATE_EPOCH", Some(os_str), || {
             let result = || -> Result<bool> {
                 let mut stdout_buf = vec![];
-                let gix = Builder::default().commit_date().build();
+                let gix = Git2Builder::default().commit_date(true).build()?;
                 Emitter::new()
                     .idempotent()
                     .fail_on_error()
@@ -1060,7 +1006,7 @@ mod test {
         temp_env::with_var("SOURCE_DATE_EPOCH", Some(os_str), || {
             let result = || -> Result<bool> {
                 let mut stdout_buf = vec![];
-                let gix = Builder::default().commit_date().build();
+                let gix = Git2Builder::default().commit_date(true).build()?;
                 Emitter::new()
                     .idempotent()
                     .add_instructions(&gix)?
@@ -1083,7 +1029,7 @@ mod test {
         temp_env::with_var("SOURCE_DATE_EPOCH", Some(os_str), || {
             let result = || -> Result<bool> {
                 let mut stdout_buf = vec![];
-                let gix = Builder::default().commit_date().build();
+                let gix = Git2Builder::default().commit_date(true).build()?;
                 Emitter::new()
                     .idempotent()
                     .add_instructions(&gix)?
@@ -1106,7 +1052,7 @@ mod test {
         temp_env::with_var("SOURCE_DATE_EPOCH", Some(os_str), || {
             let result = || -> Result<bool> {
                 let mut stdout_buf = vec![];
-                let gix = Builder::default().commit_date().build();
+                let gix = Git2Builder::default().commit_date(true).build()?;
                 Emitter::new()
                     .idempotent()
                     .add_instructions(&gix)?

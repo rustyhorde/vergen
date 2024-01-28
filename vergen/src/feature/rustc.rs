@@ -7,6 +7,7 @@
 // modified, or distributed except according to those terms.
 
 use anyhow::{Error, Result};
+use derive_builder::Builder as DeriveBuilder;
 use rustc_version::{version_meta, Channel, VersionMeta};
 use std::env;
 use vergen_lib::{
@@ -42,7 +43,7 @@ use vergen_lib::{
 /// # use vergen::RustcBuilder;
 /// #
 /// # fn main() -> Result<()> {
-/// let rustc = RustcBuilder::default().all_rustc().build();
+/// let rustc = RustcBuilder::all_rustc()?;
 /// Emitter::default().add_instructions(&rustc)?.emit();
 /// #   Ok(())
 /// # }
@@ -56,7 +57,7 @@ use vergen_lib::{
 /// # use vergen::RustcBuilder;
 /// #
 /// # fn main() -> Result<()> {
-/// let rustc = RustcBuilder::default().channel().semver().build();
+/// let rustc = RustcBuilder::default().channel(true).semver(true).build()?;
 /// Emitter::default().add_instructions(&rustc)?.emit();
 /// #   Ok(())
 /// # }
@@ -73,7 +74,7 @@ use vergen_lib::{
 /// # fn main() -> Result<()> {
 /// temp_env::with_var("VERGEN_RUSTC_CHANNEL", Some("this is the channel I want output"), || {
 ///     let result = || -> Result<()> {
-///         let rustc = RustcBuilder::default().channel().semver().build();
+///         let rustc = RustcBuilder::default().channel(true).semver(true).build()?;
 ///         Emitter::default().add_instructions(&rustc)?.emit();   
 ///         Ok(())  
 ///     }();
@@ -83,92 +84,49 @@ use vergen_lib::{
 /// # }
 /// ```
 ///
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
-#[allow(clippy::struct_excessive_bools)]
-pub struct Builder {
-    channel: bool,
-    commit_date: bool,
-    commit_hash: bool,
-    host_triple: bool,
-    llvm_version: bool,
-    semver: bool,
-}
-
-impl Builder {
-    /// Enable all of the `VERGEN_RUSTC_*` options
-    pub fn all_rustc(&mut self) -> &mut Self {
-        self.channel()
-            .commit_date()
-            .commit_hash()
-            .host_triple()
-            .llvm_version()
-            .semver()
-    }
-
-    /// Enable the rustc channel
-    pub fn channel(&mut self) -> &mut Self {
-        self.channel = true;
-        self
-    }
-
-    /// Enable the rustc commit date
-    pub fn commit_date(&mut self) -> &mut Self {
-        self.commit_date = true;
-        self
-    }
-
-    /// Enable the rustc SHA
-    pub fn commit_hash(&mut self) -> &mut Self {
-        self.commit_hash = true;
-        self
-    }
-
-    /// Enable rustc host triple
-    pub fn host_triple(&mut self) -> &mut Self {
-        self.host_triple = true;
-        self
-    }
-
-    /// Enable rustc LLVM version
-    pub fn llvm_version(&mut self) -> &mut Self {
-        self.llvm_version = true;
-        self
-    }
-
-    /// Enable the rustc semver
-    pub fn semver(&mut self) -> &mut Self {
-        self.semver = true;
-        self
-    }
-
-    ///
-    #[must_use]
-    pub fn build(self) -> Rustc {
-        Rustc {
-            channel: self.channel,
-            commit_date: self.commit_date,
-            commit_hash: self.commit_hash,
-            host_triple: self.host_triple,
-            llvm_version: self.llvm_version,
-            semver: self.semver,
-            #[cfg(test)]
-            str_to_test: None,
-        }
-    }
-}
-
-///
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, DeriveBuilder, PartialEq)]
 #[allow(clippy::struct_excessive_bools)]
 pub struct Rustc {
+    /// Enable the rustc channel
+    #[builder(default = "false")]
     channel: bool,
+    /// Enable the rustc commit date
+    #[builder(default = "false")]
     commit_date: bool,
+    /// Enable the rustc SHA
+    #[builder(default = "false")]
     commit_hash: bool,
+    /// Enable rustc host triple
+    #[builder(default = "false")]
     host_triple: bool,
+    /// Enable rustc LLVM version
+    #[builder(default = "false")]
     llvm_version: bool,
+    /// Enable the rustc semver
+    #[builder(default = "false")]
     semver: bool,
     #[cfg(test)]
+    #[builder(default = "None", setter(skip))]
     str_to_test: Option<&'static str>,
+}
+
+impl RustcBuilder {
+    /// Enable all of the `VERGEN_RUSTC_*` options
+    ///
+    /// # Errors
+    /// The underlying build function can error
+    ///
+    pub fn all_rustc() -> Result<Rustc> {
+        Self::default()
+            .channel(true)
+            .commit_date(true)
+            .commit_hash(true)
+            .host_triple(true)
+            .llvm_version(true)
+            .semver(true)
+            .build()
+            .map_err(Into::into)
+    }
 }
 
 impl Rustc {
@@ -360,7 +318,7 @@ impl AddEntries for Rustc {
 
 #[cfg(test)]
 mod test {
-    use super::Builder;
+    use super::RustcBuilder;
     use crate::Emitter;
     use anyhow::Result;
     use serial_test::serial;
@@ -371,37 +329,17 @@ mod test {
     #[test]
     #[serial]
     #[allow(clippy::clone_on_copy, clippy::redundant_clone)]
-    fn builder_clone_works() {
-        let mut builder = Builder::default();
-        let _ = builder.all_rustc();
-        let another = builder.clone();
-        assert_eq!(another, builder);
-    }
-
-    #[test]
-    #[serial]
-    #[allow(clippy::clone_on_copy, clippy::redundant_clone)]
-    fn rustc_clone_works() {
-        let rustc = Builder::default().all_rustc().build();
+    fn rustc_clone_works() -> Result<()> {
+        let rustc = RustcBuilder::all_rustc()?;
         let another = rustc.clone();
         assert_eq!(another, rustc);
-    }
-
-    #[test]
-    #[serial]
-    fn builder_debug_works() -> Result<()> {
-        let mut builder = Builder::default();
-        let _ = builder.all_rustc();
-        let mut buf = vec![];
-        write!(buf, "{builder:?}")?;
-        assert!(!buf.is_empty());
         Ok(())
     }
 
     #[test]
     #[serial]
     fn rustc_debug_works() -> Result<()> {
-        let rustc = Builder::default().all_rustc().build();
+        let rustc = RustcBuilder::all_rustc()?;
         let mut buf = vec![];
         write!(buf, "{rustc:?}")?;
         assert!(!buf.is_empty());
@@ -411,7 +349,7 @@ mod test {
     #[test]
     #[serial]
     fn rustc_default() -> Result<()> {
-        let rustc = Builder::default().build();
+        let rustc = RustcBuilder::default().build()?;
         let emitter = Emitter::default().add_instructions(&rustc)?.test_emit();
         assert_eq!(0, emitter.cargo_rustc_env_map().len());
         assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
@@ -422,7 +360,7 @@ mod test {
     #[test]
     #[serial]
     fn rustc_all_idempotent() -> Result<()> {
-        let rustc = Builder::default().all_rustc().build();
+        let rustc = RustcBuilder::all_rustc()?;
         let config = Emitter::default()
             .idempotent()
             .add_instructions(&rustc)?
@@ -436,7 +374,7 @@ mod test {
     #[test]
     #[serial]
     fn rustc_all() -> Result<()> {
-        let rustc = Builder::default().all_rustc().build();
+        let rustc = RustcBuilder::all_rustc()?;
         let config = Emitter::default().add_instructions(&rustc)?.test_emit();
         assert_eq!(6, config.cargo_rustc_env_map().len());
         assert_eq!(0, count_idempotent(config.cargo_rustc_env_map()));
@@ -447,7 +385,7 @@ mod test {
     #[test]
     #[serial]
     fn rustc_commit_date() -> Result<()> {
-        let rustc = Builder::default().commit_date().build();
+        let rustc = RustcBuilder::default().commit_date(true).build()?;
         let config = Emitter::default().add_instructions(&rustc)?.test_emit();
         assert_eq!(1, config.cargo_rustc_env_map().len());
         assert_eq!(0, count_idempotent(config.cargo_rustc_env_map()));
@@ -458,7 +396,7 @@ mod test {
     #[test]
     #[serial]
     fn rustc_commit_hash() -> Result<()> {
-        let rustc = Builder::default().commit_hash().build();
+        let rustc = RustcBuilder::default().commit_hash(true).build()?;
         let config = Emitter::default().add_instructions(&rustc)?.test_emit();
         assert_eq!(1, config.cargo_rustc_env_map().len());
         assert_eq!(0, count_idempotent(config.cargo_rustc_env_map()));
@@ -469,7 +407,7 @@ mod test {
     #[test]
     #[serial]
     fn rustc_host_triple() -> Result<()> {
-        let rustc = Builder::default().host_triple().build();
+        let rustc = RustcBuilder::default().host_triple(true).build()?;
         let config = Emitter::default().add_instructions(&rustc)?.test_emit();
         assert_eq!(1, config.cargo_rustc_env_map().len());
         assert_eq!(0, count_idempotent(config.cargo_rustc_env_map()));
@@ -480,7 +418,7 @@ mod test {
     #[test]
     #[serial]
     fn rustc_llvm_version() -> Result<()> {
-        let rustc = Builder::default().llvm_version().build();
+        let rustc = RustcBuilder::default().llvm_version(true).build()?;
         let config = Emitter::default().add_instructions(&rustc)?.test_emit();
         assert_eq!(1, config.cargo_rustc_env_map().len());
         assert_eq!(0, count_idempotent(config.cargo_rustc_env_map()));
@@ -491,7 +429,7 @@ mod test {
     #[test]
     #[serial]
     fn rustc_semver() -> Result<()> {
-        let rustc = Builder::default().semver().build();
+        let rustc = RustcBuilder::default().semver(true).build()?;
         let config = Emitter::default().add_instructions(&rustc)?.test_emit();
         assert_eq!(1, config.cargo_rustc_env_map().len());
         assert_eq!(0, count_idempotent(config.cargo_rustc_env_map()));
@@ -510,7 +448,7 @@ release: 1.68.0-nightly
     #[test]
     #[serial]
     fn no_llvm_in_rustc() -> Result<()> {
-        let mut rustc = Builder::default().all_rustc().build();
+        let mut rustc = RustcBuilder::all_rustc()?;
         let _ = rustc.with_rustc_str(NO_LLVM);
         let emitter = Emitter::default()
             .fail_on_error()
@@ -534,7 +472,7 @@ LLVM version: 15.0.6
     #[test]
     #[serial]
     fn rustc_dev_build() -> Result<()> {
-        let mut rustc = Builder::default().all_rustc().build();
+        let mut rustc = RustcBuilder::all_rustc()?;
         let _ = rustc.with_rustc_str(DEV_BUILD);
         let emitter = Emitter::default()
             .fail_on_error()
@@ -558,7 +496,7 @@ LLVM version: 15.0.6
     #[test]
     #[serial]
     fn rustc_unknown_bits() -> Result<()> {
-        let mut rustc = Builder::default().all_rustc().build();
+        let mut rustc = RustcBuilder::all_rustc()?;
         let _ = rustc.with_rustc_str(UNKNOWN_BITS);
         let emitter = Emitter::default()
             .fail_on_error()
@@ -572,19 +510,20 @@ LLVM version: 15.0.6
 
     #[test]
     #[serial]
-    fn rustc_fails_on_bad_input() {
-        let mut rustc = Builder::default().all_rustc().build();
+    fn rustc_fails_on_bad_input() -> Result<()> {
+        let mut rustc = RustcBuilder::all_rustc()?;
         let _ = rustc.with_rustc_str("a_bad_rustcvv_string");
         assert!(Emitter::default()
             .fail_on_error()
             .add_instructions(&rustc)
             .is_err());
+        Ok(())
     }
 
     #[test]
     #[serial]
     fn rustc_defaults_on_bad_input() -> Result<()> {
-        let mut rustc = Builder::default().all_rustc().build();
+        let mut rustc = RustcBuilder::all_rustc()?;
         let _ = rustc.with_rustc_str("a_bad_rustcvv_string");
         let emitter = Emitter::default().add_instructions(&rustc)?.test_emit();
         assert_eq!(6, emitter.cargo_rustc_env_map().len());
@@ -599,7 +538,7 @@ LLVM version: 15.0.6
         with_var("VERGEN_RUSTC_CHANNEL", Some("this is a bad date"), || {
             let result = || -> Result<()> {
                 let mut stdout_buf = vec![];
-                let rustc = Builder::default().all_rustc().build();
+                let rustc = RustcBuilder::all_rustc()?;
                 assert!(Emitter::default()
                     .add_instructions(&rustc)?
                     .emit_to(&mut stdout_buf)
@@ -621,7 +560,7 @@ LLVM version: 15.0.6
             || {
                 let result = || -> Result<()> {
                     let mut stdout_buf = vec![];
-                    let rustc = Builder::default().all_rustc().build();
+                    let rustc = RustcBuilder::all_rustc()?;
                     assert!(Emitter::default()
                         .add_instructions(&rustc)?
                         .emit_to(&mut stdout_buf)
@@ -645,7 +584,7 @@ LLVM version: 15.0.6
             || {
                 let result = || -> Result<()> {
                     let mut stdout_buf = vec![];
-                    let rustc = Builder::default().all_rustc().build();
+                    let rustc = RustcBuilder::all_rustc()?;
                     assert!(Emitter::default()
                         .add_instructions(&rustc)?
                         .emit_to(&mut stdout_buf)
@@ -669,7 +608,7 @@ LLVM version: 15.0.6
             || {
                 let result = || -> Result<()> {
                     let mut stdout_buf = vec![];
-                    let rustc = Builder::default().all_rustc().build();
+                    let rustc = RustcBuilder::all_rustc()?;
                     assert!(Emitter::default()
                         .add_instructions(&rustc)?
                         .emit_to(&mut stdout_buf)
@@ -693,7 +632,7 @@ LLVM version: 15.0.6
             || {
                 let result = || -> Result<()> {
                     let mut stdout_buf = vec![];
-                    let rustc = Builder::default().all_rustc().build();
+                    let rustc = RustcBuilder::all_rustc()?;
                     assert!(Emitter::default()
                         .add_instructions(&rustc)?
                         .emit_to(&mut stdout_buf)
@@ -714,7 +653,7 @@ LLVM version: 15.0.6
         with_var("VERGEN_RUSTC_SEMVER", Some("this is a bad date"), || {
             let result = || -> Result<()> {
                 let mut stdout_buf = vec![];
-                let rustc = Builder::default().all_rustc().build();
+                let rustc = RustcBuilder::all_rustc()?;
                 assert!(Emitter::default()
                     .add_instructions(&rustc)?
                     .emit_to(&mut stdout_buf)

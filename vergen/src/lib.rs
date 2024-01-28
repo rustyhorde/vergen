@@ -10,7 +10,7 @@
 //! `vergen`, when used in conjunction with cargo [build scripts] can emit the following:
 //!
 //! - Will emit [`cargo:rustc-env=VAR=VALUE`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#cargorustc-envvarvalue)
-//! for each feature you have enabled.  These can be referenced with the [env!](std::env!) macro in your code.
+//! for each feature you have enabled.  These can be referenced with the [env!](std::env!) or [option_env!](std::option_env!) macro in your code.
 //! - Can emit [`cargo:warning`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#cargo-warning) outputs if the
 //! [`fail_on_error`](Emitter::fail_on_error) feature is not enabled and the requested variable is defaulted through error or
 //! the [`idempotent`](Emitter::idempotent) flag.
@@ -59,43 +59,65 @@
 #![cfg_attr(feature = "rustc", doc = r##"# use vergen::RustcBuilder;"##)]
 #![cfg_attr(feature = "si", doc = r##"# use vergen::SysinfoBuilder;"##)]
 #![cfg_attr(feature = "cargo", doc = r##"# use test_util::with_cargo_vars;"##)]
-//!
-//! pub fn main() -> Result<()> {
+//! #
+//! # pub fn main() -> Result<()> {
 #![cfg_attr(feature = "cargo", doc = r##"# let result = with_cargo_vars(|| {"##)]
-//!     // NOTE: This will output everything, and requires all features enabled.
-//!     // NOTE: See the specific builder documentation for configuration options.
+//! // NOTE: This will output everything, and requires all features enabled.
+//! // NOTE: See the specific builder documentation for configuration options.
 #![cfg_attr(
     feature = "build",
-    doc = r##"    let build = BuildBuilder::default().all_build().build();"##
+    doc = r##"let build = BuildBuilder::all_build()?;"##
 )]
 #![cfg_attr(
     feature = "cargo",
-    doc = r##"    let cargo = CargoBuilder::default().all_cargo().build();"##
+    doc = r##"let cargo = CargoBuilder::all_cargo()?;"##
 )]
 #![cfg_attr(
     feature = "rustc",
-    doc = r##"    let rustc = RustcBuilder::default().all_rustc().build();"##
+    doc = r##"let rustc = RustcBuilder::all_rustc()?;"##
 )]
-#![cfg_attr(
-    feature = "si",
-    doc = r##"    let si = SysinfoBuilder::default().all_sysinfo().build();"##
-)]
+#![cfg_attr(feature = "si", doc = r##"let si = SysinfoBuilder::all_sysinfo()?;"##)]
 //!
-//!     Emitter::default()
-#![cfg_attr(feature = "build", doc = r##"        .add_instructions(&build)?"##)]
-#![cfg_attr(feature = "cargo", doc = r##"        .add_instructions(&cargo)?"##)]
-#![cfg_attr(feature = "rustc", doc = r##"        .add_instructions(&rustc)?"##)]
-#![cfg_attr(feature = "si", doc = r##"        .add_instructions(&si)?"##)]
-//!         .emit()?;
+//! Emitter::default()
+#![cfg_attr(feature = "build", doc = r##"    .add_instructions(&build)?"##)]
+#![cfg_attr(feature = "cargo", doc = r##"    .add_instructions(&cargo)?"##)]
+#![cfg_attr(feature = "rustc", doc = r##"    .add_instructions(&rustc)?"##)]
+#![cfg_attr(feature = "si", doc = r##"    .add_instructions(&si)?"##)]
+//!     .emit()?;
 #![cfg_attr(
     feature = "cargo",
     doc = r##"
-#   Ok(())
+# Ok(())
 # });
 # assert!(result.is_ok());"##
 )]
-//!     Ok(())
-//! }
+//! #    Ok(())
+//! # }
+//! ```
+//! #### Sample Output
+//! ```text
+//!           Date (  build): 2024-01-28
+//!      Timestamp (  build): 2024-01-28T18:07:13.256193157Z
+//!          Debug (  cargo): true
+//!   Dependencies (  cargo): anyhow 1.0.79,vergen 8.3.1,vergen-pretty 0.3.1
+//!       Features (  cargo):
+//!      Opt Level (  cargo): 0
+//!  Target Triple (  cargo): x86_64-unknown-linux-gnu
+//!        Channel (  rustc): nightly
+//!    Commit Date (  rustc): 2024-01-27
+//!    Commit Hash (  rustc): 6b4f1c5e782c72a047a23e922decd33e7d462345
+//!    Host Triple (  rustc): x86_64-unknown-linux-gnu
+//!   LLVM Version (  rustc): 17.0
+//!         Semver (  rustc): 1.77.0-nightly
+//!      CPU Brand (sysinfo): AMD Ryzen Threadripper 1900X 8-Core Processor
+//! CPU Core Count (sysinfo): 8
+//!  CPU Frequency (sysinfo): 3792
+//!       CPU Name (sysinfo): cpu0,cpu1,cpu2,cpu3,cpu4,cpu5,cpu6,cpu7
+//!     CPU Vendor (sysinfo): AuthenticAMD
+//!           Name (sysinfo): Arch Linux
+//!     OS Version (sysinfo): Linux  Arch Linux
+//!   Total Memory (sysinfo): 31 GiB
+//!           User (sysinfo): jozias
 //! ```
 //!
 //! #### Generate specific output
@@ -108,51 +130,61 @@
 #![cfg_attr(feature = "rustc", doc = r##"# use vergen::RustcBuilder;"##)]
 #![cfg_attr(feature = "si", doc = r##"# use vergen::SysinfoBuilder;"##)]
 #![cfg_attr(feature = "cargo", doc = r##"# use test_util::with_cargo_vars;"##)]
-//!
-//! pub fn main() -> Result<()> {
+//! #
+//! # pub fn main() -> Result<()> {
 #![cfg_attr(feature = "cargo", doc = r##"# let result = with_cargo_vars(|| {"##)]
 #![cfg_attr(
     feature = "build",
-    doc = r##"    // NOTE: This will output only a build timestamp.
-    // NOTE: This set requires the build feature.
-    // NOTE: See the BuildBuilder documentation for configuration options. 
-    let build = BuildBuilder::default().build_timestamp().build();"##
+    doc = r##"// NOTE: This will output only the instructions specified.
+// NOTE: See the specific builder documentation for configuration options. 
+let build = BuildBuilder::default().build_timestamp(true).build()?;"##
 )]
 #![cfg_attr(
     feature = "cargo",
-    doc = r##"    let cargo = CargoBuilder::default().opt_level().build();"##
+    doc = r##"let cargo = CargoBuilder::default().opt_level(true).build()?;"##
 )]
 #![cfg_attr(
     feature = "rustc",
-    doc = r##"    let rustc = RustcBuilder::default().semver().build();"##
+    doc = r##"let rustc = RustcBuilder::default().semver(true).build()?;"##
 )]
 #![cfg_attr(
     feature = "si",
-    doc = r##"    let si = SysinfoBuilder::default().cpu_core_count().build();"##
+    doc = r##"let si = SysinfoBuilder::default().cpu_core_count(true).build()?;"##
 )]
 //!
-//!     Emitter::default()
-#![cfg_attr(feature = "build", doc = r##"        .add_instructions(&build)?"##)]
-#![cfg_attr(feature = "cargo", doc = r##"        .add_instructions(&cargo)?"##)]
-#![cfg_attr(feature = "rustc", doc = r##"        .add_instructions(&rustc)?"##)]
-#![cfg_attr(feature = "si", doc = r##"        .add_instructions(&si)?"##)]
-//!         .emit()?;
+//! Emitter::default()
+#![cfg_attr(feature = "build", doc = r##"    .add_instructions(&build)?"##)]
+#![cfg_attr(feature = "cargo", doc = r##"    .add_instructions(&cargo)?"##)]
+#![cfg_attr(feature = "rustc", doc = r##"    .add_instructions(&rustc)?"##)]
+#![cfg_attr(feature = "si", doc = r##"    .add_instructions(&si)?"##)]
+//!     .emit()?;
 #![cfg_attr(
     feature = "cargo",
     doc = r##"
 #   Ok(())
 # });
-    assert!(result.is_ok());"##
+#    assert!(result.is_ok());"##
 )]
-//!     Ok(())
-//! }
+//! #   Ok(())
+//! # }
+//! ```
+//! #### Sample Output
+//! ```text
+//!      Timestamp (  build): 2024-01-28T18:07:13.256193157Z
+//!      Opt Level (  cargo): 0
+//!         Semver (  rustc): 1.77.0-nightly
+//! CPU Core Count (sysinfo): 8
 //! ```
 //!
-//! 4. Use the [`env!`](std::env!) macro in your code to read the environment variables.
+//! 4. Use the [`env!`](std::env!) or [`option_env!`](std::option_env!) macro in your code to read the environment variables.
 //!
-//! ```wont_compile
-//! println!("Build Timestamp: {}", env!("VERGEN_BUILD_TIMESTAMP"));
-//! println!("git describe: {}", env!("VERGEN_GIT_DESCRIBE"));
+//! ```
+//! if let Some(timestamp) = option_env!("VERGEN_BUILD_TIMESTAMP") {
+//!     println!("Build Timestamp: {timestamp}");
+//! }
+//! if let Some(describe) = option_env!("VERGEN_GIT_DESCRIBE") {
+//!     println!("git describe: {describe}");
+//! }
 //! ```
 //!
 //! ## Features
@@ -472,6 +504,13 @@ mod emitter;
 mod feature;
 
 // This is here to appease the `unused_crate_dependencies` lint
+#[cfg(not(any(
+    feature = "build",
+    feature = "cargo",
+    feature = "rustc",
+    feature = "si"
+)))]
+use derive_builder as _;
 #[cfg(test)]
 use {lazy_static as _, regex as _, serial_test as _, temp_env as _, test_util as _};
 
@@ -479,25 +518,21 @@ pub use crate::emitter::Emitter;
 #[cfg(feature = "cargo")]
 pub use cargo_metadata::DependencyKind;
 #[cfg(feature = "build")]
-#[doc(hidden)]
 pub use feature::build::Build;
 #[cfg(feature = "build")]
-pub use feature::build::Builder as BuildBuilder;
+pub use feature::build::BuildBuilder;
 #[cfg(feature = "cargo")]
-pub use feature::cargo::Builder as CargoBuilder;
-#[cfg(feature = "cargo")]
-#[doc(hidden)]
 pub use feature::cargo::Cargo;
+#[cfg(feature = "cargo")]
+pub use feature::cargo::CargoBuilder;
 #[cfg(feature = "rustc")]
-pub use feature::rustc::Builder as RustcBuilder;
-#[cfg(feature = "rustc")]
-#[doc(hidden)]
 pub use feature::rustc::Rustc;
+#[cfg(feature = "rustc")]
+pub use feature::rustc::RustcBuilder;
 #[cfg(feature = "si")]
-pub use feature::si::Builder as SysinfoBuilder;
-#[cfg(feature = "si")]
-#[doc(hidden)]
 pub use feature::si::Sysinfo;
+#[cfg(feature = "si")]
+pub use feature::si::SysinfoBuilder;
 #[cfg(feature = "si")]
 pub use sysinfo::CpuRefreshKind;
 #[cfg(feature = "si")]

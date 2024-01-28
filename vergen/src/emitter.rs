@@ -322,20 +322,17 @@ impl Emitter {
     /// let result = with_cargo_vars(|| {
     #[cfg_attr(
         feature = "build",
-        doc = r##"let build = BuildBuilder::default().all_build().build();"##
+        doc = r##"let build = BuildBuilder::all_build()?;"##
     )]
     #[cfg_attr(
         feature = "cargo",
-        doc = r##"let cargo = CargoBuilder::default().all_cargo().build();"##
+        doc = r##"let cargo = CargoBuilder::all_cargo()?;"##
     )]
     #[cfg_attr(
         feature = "rustc",
-        doc = r##"let rustc = RustcBuilder::default().all_rustc().build();"##
+        doc = r##"let rustc = RustcBuilder::all_rustc()?;"##
     )]
-    #[cfg_attr(
-        feature = "si",
-        doc = r##"let si = SysinfoBuilder::default().all_sysinfo().build();"##
-    )]
+    #[cfg_attr(feature = "si", doc = r##"let si = SysinfoBuilder::all_sysinfo()?;"##)]
     ///         let emitter = Emitter::default()
     #[cfg_attr(feature = "build", doc = r##".add_instructions(&build)?"##)]
     #[cfg_attr(feature = "cargo", doc = r##".add_instructions(&cargo)?"##)]
@@ -506,7 +503,7 @@ pub(crate) mod test {
     #[cfg(feature = "build")]
     fn custom_emit_works() -> Result<()> {
         let cust_gen = CustomInsGen::default();
-        let build = BuildBuilder::default().all_build().build();
+        let build = BuildBuilder::all_build()?;
         let emitter = Emitter::default()
             .add_instructions(&build)?
             .add_custom_instructions(&cust_gen)?

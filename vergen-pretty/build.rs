@@ -29,10 +29,10 @@ fn emit() -> Result<()> {
 #[cfg(all(feature = "__vergen_test", not(feature = "__vergen_empty_test")))]
 fn emit() -> Result<()> {
     println!("cargo:warning=VERGEN TEST ENABLED!");
-    let build = BuildBuilder::default().all_build().build();
-    let cargo = CargoBuilder::default().all_cargo().build();
-    let rustc = RustcBuilder::default().all_rustc().build();
-    let si = SysinfoBuilder::default().all_sysinfo().build();
+    let build = BuildBuilder::all_build()?;
+    let cargo = CargoBuilder::all_cargo()?;
+    let rustc = RustcBuilder::all_rustc()?;
+    let si = SysinfoBuilder::all_sysinfo()?;
     let gix = GixBuilder::default().all_git().build();
     Emitter::default()
         .add_instructions(&build)?

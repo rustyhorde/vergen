@@ -7,6 +7,7 @@
 // modified, or distributed except according to those terms.
 
 use anyhow::{Context, Error, Result};
+use derive_builder::Builder as DeriveBuilder;
 use std::{env, str::FromStr};
 use time::{
     format_description::{self, well_known::Iso8601},
@@ -34,7 +35,7 @@ use vergen_lib::{
 /// # use vergen::BuildBuilder;
 /// #
 /// # fn main() -> Result<()> {
-/// let build = BuildBuilder::default().all_build().build();
+/// let build = BuildBuilder::all_build()?;
 /// Emitter::new().add_instructions(&build)?.emit()?;
 /// #     Ok(())
 /// # }
@@ -48,7 +49,7 @@ use vergen_lib::{
 /// # use vergen::BuildBuilder;
 /// #
 /// # fn main() -> Result<()> {
-/// let build = BuildBuilder::default().build_timestamp().build();
+/// let build = BuildBuilder::default().build_timestamp(true).build()?;
 /// Emitter::new().add_instructions(&build)?.emit()?;
 /// #     Ok(())
 /// # }
@@ -63,13 +64,14 @@ use vergen_lib::{
 /// # use vergen::BuildBuilder;
 /// #
 /// # fn main() -> Result<()> {
-/// #     temp_env::with_var("VERGEN_BUILD_DATE", Some("1671809360"), || {
-/// #         let result = || -> Result<()> {
-/// let build = BuildBuilder::default().build_date().build();
-/// Emitter::new().add_instructions(&build)?.emit()?;
-/// #             Ok(())
-/// #         }();
-/// #     });
+/// temp_env::with_var("VERGEN_BUILD_DATE", Some("01/01/2023"), || {
+///     let result = || -> Result<()> {
+///         let build = BuildBuilder::default().build_date(true).build()?;
+///         Emitter::new().add_instructions(&build)?.emit()?;
+///         Ok(())
+///     }();
+///     assert!(result.is_ok());
+/// });
 /// #     Ok(())
 /// # }
 /// ```
@@ -86,13 +88,13 @@ use vergen_lib::{
 /// # use vergen::BuildBuilder;
 /// #
 /// # fn main() -> Result<()> {
-/// # temp_env::with_var("SOURCE_DATE_EPOCH", Some("1671809360"), || {
-/// #     let result = || -> Result<()> {
-/// let build = BuildBuilder::default().all_build().build();
-/// Emitter::new().add_instructions(&build)?.emit()?;
-/// #         Ok(())
-/// #     }();
-/// # });
+/// temp_env::with_var("SOURCE_DATE_EPOCH", Some("1671809360"), || {
+///     let result = || -> Result<()> {
+///         let build = BuildBuilder::all_build()?;
+///         Emitter::new().add_instructions(&build)?.emit()?;
+///         Ok(())
+///     }();
+/// });
 /// #   Ok(())
 /// # }
 /// ```
@@ -118,7 +120,7 @@ use vergen_lib::{
 /// # use vergen::BuildBuilder;
 /// #
 /// # fn main() -> Result<()> {
-/// let build = BuildBuilder::default().build();
+/// let build = BuildBuilder::default().build()?;
 /// Emitter::new().idempotent().add_instructions(&build)?.emit()?;
 /// #   Ok(())
 /// # }
@@ -138,54 +140,32 @@ use vergen_lib::{
 /// cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
 /// ```
 ///
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
-#[allow(clippy::struct_excessive_bools)]
-pub struct Builder {
-    build_date: bool,
-    build_timestamp: bool,
-    use_local: bool,
-}
-
-impl Builder {
-    /// Enable all of the `VERGEN_BUILD_*` options
-    pub fn all_build(&mut self) -> &mut Self {
-        self.build_date().build_timestamp()
-    }
-
-    /// Enable the `VERGEN_BUILD_DATE` date output
-    pub fn build_date(&mut self) -> &mut Self {
-        self.build_date = true;
-        self
-    }
-
-    /// Enable the `VERGEN_BUILD_TIMESTAMP` date output
-    pub fn build_timestamp(&mut self) -> &mut Self {
-        self.build_timestamp = true;
-        self
-    }
-
-    /// Enable local offset date/timestamp output
-    pub fn use_local(&mut self) -> &mut Self {
-        self.use_local = true;
-        self
-    }
-
-    ///
-    #[must_use]
-    pub fn build(self) -> Build {
-        Build {
-            build_date: self.build_date,
-            build_timestamp: self.build_timestamp,
-            use_local: self.use_local,
-        }
-    }
-}
-///
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, DeriveBuilder, PartialEq)]
 pub struct Build {
+    /// Enable the `VERGEN_BUILD_DATE` date output
+    #[builder(default = "false")]
     build_date: bool,
+    /// Enable the `VERGEN_BUILD_TIMESTAMP` date output
+    #[builder(default = "false")]
     build_timestamp: bool,
+    /// Enable local offset date/timestamp output
+    #[builder(default = "false")]
     use_local: bool,
+}
+
+impl BuildBuilder {
+    /// Enable all of the `VERGEN_BUILD_*` options
+    ///
+    /// # Errors
+    /// The build function can error
+    ///
+    pub fn all_build() -> Result<Build> {
+        Self::default()
+            .build_date(true)
+            .build_timestamp(true)
+            .build()
+            .map_err(Into::into)
+    }
 }
 
 impl Build {
@@ -308,7 +288,7 @@ impl AddEntries for Build {
 
 #[cfg(test)]
 mod test {
-    use super::Builder;
+    use super::BuildBuilder;
     use crate::Emitter;
     use anyhow::Result;
     use serial_test::serial;
@@ -318,27 +298,27 @@ mod test {
     #[test]
     #[serial]
     #[allow(clippy::clone_on_copy, clippy::redundant_clone)]
-    fn builder_clone() {
-        let mut builder = Builder::default();
-        let _ = builder.all_build();
-        let another = builder.clone();
-        assert_eq!(another, builder);
+    fn builder_clone() -> Result<()> {
+        let build = BuildBuilder::all_build()?;
+        let another = build.clone();
+        assert_eq!(another, build);
+        Ok(())
     }
 
     #[test]
     #[serial]
     #[allow(clippy::clone_on_copy, clippy::redundant_clone)]
-    fn build_clone() {
-        let build = Builder::default().all_build().build();
+    fn build_clone() -> Result<()> {
+        let build = BuildBuilder::all_build()?;
         let another = build.clone();
         assert_eq!(another, build);
+        Ok(())
     }
 
     #[test]
     #[serial]
     fn builder_debug() -> Result<()> {
-        let mut builder = Builder::default();
-        let _ = builder.all_build();
+        let builder = BuildBuilder::all_build()?;
         let mut buf = vec![];
         write!(buf, "{builder:?}")?;
         assert!(!buf.is_empty());
@@ -348,7 +328,7 @@ mod test {
     #[test]
     #[serial]
     fn build_debug() -> Result<()> {
-        let build = Builder::default().all_build().build();
+        let build = BuildBuilder::all_build()?;
         let mut buf = vec![];
         write!(buf, "{build:?}")?;
         assert!(!buf.is_empty());
@@ -358,7 +338,7 @@ mod test {
     #[test]
     #[serial]
     fn build_default() -> Result<()> {
-        let build = Builder::default().build();
+        let build = BuildBuilder::default().build()?;
         let emitter = Emitter::default().add_instructions(&build)?.test_emit();
         assert_eq!(0, emitter.cargo_rustc_env_map().len());
         assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
@@ -369,7 +349,7 @@ mod test {
     #[test]
     #[serial]
     fn build_all_idempotent() -> Result<()> {
-        let build = Builder::default().all_build().build();
+        let build = BuildBuilder::all_build()?;
         let emitter = Emitter::new()
             .idempotent()
             .add_instructions(&build)?
@@ -383,7 +363,7 @@ mod test {
     #[test]
     #[serial]
     fn build_all() -> Result<()> {
-        let build = Builder::default().all_build().build();
+        let build = BuildBuilder::all_build()?;
         let emitter = Emitter::new().add_instructions(&build)?.test_emit();
         assert_eq!(2, emitter.cargo_rustc_env_map().len());
         assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
@@ -394,7 +374,7 @@ mod test {
     #[test]
     #[serial]
     fn build_date() -> Result<()> {
-        let build = Builder::default().build_date().build();
+        let build = BuildBuilder::default().build_date(true).build()?;
         let emitter = Emitter::new().add_instructions(&build)?.test_emit();
         assert_eq!(1, emitter.cargo_rustc_env_map().len());
         assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
@@ -407,7 +387,10 @@ mod test {
     #[serial]
     fn build_date_local() -> Result<()> {
         // use local is unsound on nix
-        let build = Builder::default().build_date().use_local().build();
+        let build = BuildBuilder::default()
+            .build_date(true)
+            .use_local(true)
+            .build()?;
         let emitter = Emitter::new().add_instructions(&build)?.test_emit();
         assert_eq!(1, emitter.cargo_rustc_env_map().len());
         assert_eq!(1, count_idempotent(emitter.cargo_rustc_env_map()));
@@ -419,7 +402,10 @@ mod test {
     #[test]
     #[serial]
     fn build_date_local() -> Result<()> {
-        let build = Builder::default().build_date().use_local().build();
+        let build = BuildBuilder::default()
+            .build_date(true)
+            .use_local(true)
+            .build()?;
         let emitter = Emitter::new().add_instructions(&build)?.test_emit();
         assert_eq!(1, emitter.cargo_rustc_env_map().len());
         assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
@@ -430,7 +416,7 @@ mod test {
     #[test]
     #[serial]
     fn build_timestamp() -> Result<()> {
-        let build = Builder::default().build_timestamp().build();
+        let build = BuildBuilder::default().build_timestamp(true).build()?;
         let emitter = Emitter::new().add_instructions(&build)?.test_emit();
         assert_eq!(1, emitter.cargo_rustc_env_map().len());
         assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
@@ -443,7 +429,10 @@ mod test {
     #[serial]
     fn build_timestamp_local() -> Result<()> {
         // use local is unsound on nix
-        let build = Builder::default().build_timestamp().use_local().build();
+        let build = BuildBuilder::default()
+            .build_timestamp(true)
+            .use_local(true)
+            .build()?;
         let emitter = Emitter::new().add_instructions(&build)?.test_emit();
         assert_eq!(1, emitter.cargo_rustc_env_map().len());
         assert_eq!(1, count_idempotent(emitter.cargo_rustc_env_map()));
@@ -455,7 +444,10 @@ mod test {
     #[test]
     #[serial]
     fn build_timestamp_local() -> Result<()> {
-        let build = Builder::default().build_timestamp().use_local().build();
+        let build = BuildBuilder::default()
+            .build_timestamp(true)
+            .use_local(true)
+            .build()?;
         let emitter = Emitter::new().add_instructions(&build)?.test_emit();
         assert_eq!(1, emitter.cargo_rustc_env_map().len());
         assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
@@ -469,7 +461,7 @@ mod test {
         temp_env::with_var("SOURCE_DATE_EPOCH", Some("1671809360"), || {
             let result = || -> Result<()> {
                 let mut stdout_buf = vec![];
-                let build = Builder::default().all_build().build();
+                let build = BuildBuilder::all_build()?;
                 _ = Emitter::new()
                     .idempotent()
                     .add_instructions(&build)?
@@ -503,7 +495,7 @@ mod test {
         temp_env::with_var("SOURCE_DATE_EPOCH", Some(os_str), || {
             let result = || -> Result<bool> {
                 let mut stdout_buf = vec![];
-                let build = Builder::default().all_build().build();
+                let build = BuildBuilder::all_build()?;
                 Emitter::new()
                     .idempotent()
                     .fail_on_error()
@@ -526,7 +518,7 @@ mod test {
         temp_env::with_var("SOURCE_DATE_EPOCH", Some(os_str), || {
             let result = || -> Result<bool> {
                 let mut stdout_buf = vec![];
-                let build = Builder::default().all_build().build();
+                let build = BuildBuilder::all_build()?;
                 Emitter::new()
                     .idempotent()
                     .add_instructions(&build)?
@@ -588,7 +580,7 @@ mod test {
         temp_env::with_var("VERGEN_BUILD_DATE", Some("this is a bad date"), || {
             let result = || -> Result<()> {
                 let mut stdout_buf = vec![];
-                let build = Builder::default().all_build().build();
+                let build = BuildBuilder::all_build()?;
                 assert!(Emitter::default()
                     .add_instructions(&build)?
                     .emit_to(&mut stdout_buf)
@@ -610,7 +602,7 @@ mod test {
             || {
                 let result = || -> Result<()> {
                     let mut stdout_buf = vec![];
-                    let build = Builder::default().all_build().build();
+                    let build = BuildBuilder::all_build()?;
                     assert!(Emitter::default()
                         .add_instructions(&build)?
                         .emit_to(&mut stdout_buf)

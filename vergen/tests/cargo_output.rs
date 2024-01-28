@@ -55,7 +55,7 @@ mod test_cargo {
     fn cargo_all_output() {
         let result = with_cargo_vars(|| {
             let mut stdout_buf = vec![];
-            let cargo = CargoBuilder::default().all_cargo().build();
+            let cargo = CargoBuilder::all_cargo()?;
             Emitter::default()
                 .add_instructions(&cargo)?
                 .emit_to(&mut stdout_buf)?;
@@ -71,7 +71,7 @@ mod test_cargo {
     fn cargo_all_idempotent_output() {
         let result = with_cargo_vars(|| {
             let mut stdout_buf = vec![];
-            let cargo = CargoBuilder::default().all_cargo().build();
+            let cargo = CargoBuilder::all_cargo()?;
             Emitter::default()
                 .idempotent()
                 .add_instructions(&cargo)?
@@ -88,10 +88,8 @@ mod test_cargo {
     fn cargo_all_name_filter_none_output() {
         let result = with_cargo_vars(|| {
             let mut stdout_buf = vec![];
-            let cargo = CargoBuilder::default()
-                .all_cargo()
-                .dependencies_name_filter(Some("blah"))
-                .build();
+            let mut cargo = CargoBuilder::all_cargo()?;
+            cargo.set_name_filter(Some("blah"));
             Emitter::default()
                 .add_instructions(&cargo)?
                 .emit_to(&mut stdout_buf)?;
@@ -107,10 +105,8 @@ mod test_cargo {
     fn cargo_all_name_filter_some_output() {
         let result = with_cargo_vars(|| {
             let mut stdout_buf = vec![];
-            let cargo = CargoBuilder::default()
-                .all_cargo()
-                .dependencies_name_filter(Some("anyhow"))
-                .build();
+            let mut cargo = CargoBuilder::all_cargo()?;
+            cargo.set_name_filter(Some("anyhow"));
             Emitter::default()
                 .add_instructions(&cargo)?
                 .emit_to(&mut stdout_buf)?;
@@ -124,13 +120,11 @@ mod test_cargo {
 
     #[test]
     #[serial]
-    fn cargo_all_dep_kind_filter_none_output() {
+    fn cargo_all_dep_kind_filter_output() {
         let result = with_cargo_vars(|| {
             let mut stdout_buf = vec![];
-            let cargo = CargoBuilder::default()
-                .all_cargo()
-                .dependencies_dep_kind_filter(Some(DependencyKind::Build))
-                .build();
+            let mut cargo = CargoBuilder::all_cargo()?;
+            cargo.set_dep_kind_filter(Some(DependencyKind::Build));
             Emitter::default()
                 .add_instructions(&cargo)?
                 .emit_to(&mut stdout_buf)?;
@@ -144,14 +138,12 @@ mod test_cargo {
 
     #[test]
     #[serial]
-    fn cargo_all_dep_kind_filter_some_output() {
+    fn cargo_all_dep_kind_filter_with_name_filter_output() {
         let result = with_cargo_vars(|| {
             let mut stdout_buf = vec![];
-            let cargo = CargoBuilder::default()
-                .all_cargo()
-                .dependencies_name_filter(Some("regex"))
-                .dependencies_dep_kind_filter(Some(DependencyKind::Development))
-                .build();
+            let mut cargo = CargoBuilder::all_cargo()?;
+            cargo.set_dep_kind_filter(Some(DependencyKind::Development));
+            cargo.set_name_filter(Some("regex"));
             Emitter::default()
                 .add_instructions(&cargo)?
                 .emit_to(&mut stdout_buf)?;
