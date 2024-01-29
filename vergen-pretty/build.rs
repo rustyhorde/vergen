@@ -31,15 +31,15 @@ fn emit() -> Result<()> {
     println!("cargo:warning=VERGEN TEST ENABLED!");
     let build = BuildBuilder::all_build()?;
     let cargo = CargoBuilder::all_cargo()?;
+    let gix = GixBuilder::all_git()?;
     let rustc = RustcBuilder::all_rustc()?;
     let si = SysinfoBuilder::all_sysinfo()?;
-    let gix = GixBuilder::default().all_git().build();
     Emitter::default()
         .add_instructions(&build)?
         .add_instructions(&cargo)?
+        .add_instructions(&gix)?
         .add_instructions(&rustc)?
         .add_instructions(&si)?
-        .add_instructions(&gix)?
         .emit()
 }
 
