@@ -17,10 +17,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
+# permissions:
+#   contents: read
+#   pages: write
+#   id-token: write
 
 env:
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
@@ -183,9 +183,9 @@ jobs:
           cargo test -p vergen-pretty -F __vergen_test,trace,serde
           cargo test -p vergen-pretty -F __vergen_test,color,serde,trace
   coverage:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+    # environment:
+    #   name: github-pages
+    #   url: ${{ steps.deployment.outputs.page_url }}
     name: 🧱 Code Coverage 🧱
     needs: test-linux
     runs-on: ${{ matrix.os }}
@@ -255,18 +255,18 @@ jobs:
         uses: codecov/codecov-action@v3
         with:
           files: ./lcov.info
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
-        if: ${{ matrix.rust == 'nightly' }}
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        if: ${{ matrix.rust == 'nightly' }}
-        with:
-          path: 'target/llvm-cov/html'
-      - name: Deploy to GitHub Pages
-        id: deployment
-        if: ${{ matrix.rust == 'nightly' }}
-        uses: actions/deploy-pages@v4
+      # - name: Setup Pages
+      #   uses: actions/configure-pages@v4
+      #   if: ${{ matrix.rust == 'nightly' }}
+      # - name: Upload artifact
+      #   uses: actions/upload-pages-artifact@v3
+      #   if: ${{ matrix.rust == 'nightly' }}
+      #   with:
+      #     path: 'target/llvm-cov/html'
+      # - name: Deploy to GitHub Pages
+      #   id: deployment
+      #   if: ${{ matrix.rust == 'nightly' }}
+      #   uses: actions/deploy-pages@v4
   test-macos:
     name: 🧪 MacOS 🧪
     needs: lints-macos
