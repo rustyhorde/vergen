@@ -193,7 +193,6 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-            target/coverage
           key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock', '**/main.yml') }}
           restore-keys: |
             ${{ runner.os }}-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock', '**/main.yml') }}
@@ -249,7 +248,7 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-            target/coverage
+            target/llvm-cov
           key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock', '**/main.yml') }}
           restore-keys: |
             ${{ runner.os }}-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock', '**/main.yml') }}
@@ -293,12 +292,14 @@ jobs:
         run: cargo llvm-cov -p vergen-pretty -F __vergen_empty_test --no-report
       - name: 🙊 Code Coverage (vergen-pretty - empty all) 🙊
         run: cargo llvm-cov -p vergen-pretty -F __vergen_empty_test,color,header,serde,trace --no-report
-      - name: 🙊 Code Coverage Report 🙊
-        run: cargo llvm-cov report --codecov --output-path codecov.json
+      - name: 🙊 Code Coverage Report (LCOV) 🙊
+        run: cargo llvm-cov report --lcov --output-path lcov.info
+      - name: 🙊 Code Coverage Report (HTML) 🙊
+        run: cargo llvm-cov report --html
       - name: 🙊 Upload Code Coverage 🙊
         uses: codecov/codecov-action@v3
         with:
-          files: ./codecov.json
+          files: ./lcov.info
   test-macos:
     name: 🧪 MacOS 🧪
     needs: lints-macos
