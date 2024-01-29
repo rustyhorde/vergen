@@ -54,16 +54,6 @@ jobs:
     steps:
       - name: ✅ Checkout ✅
         uses: actions/checkout@v4
-      - name: 💵 Cache 💵
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: ${{ runner.os }}-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock', '**/main.yml') }}
       - name: 🧰 Toolchain 🧰
         run: |
           rustup toolchain remove ${{ matrix.rust }}
@@ -100,16 +90,6 @@ jobs:
     steps:
       - name: ✅ Checkout ✅
         uses: actions/checkout@v4
-      - name: 💵 Cache 💵
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: ${{ runner.os }}-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock', '**/main.yml') }}
       - name: 🧰 Toolchain 🧰
         run: |
           rustup toolchain remove ${{ matrix.rust }}
@@ -143,16 +123,6 @@ jobs:
     steps:
       - name: ✅ Checkout ✅
         uses: actions/checkout@v4
-      - name: 💵 Cache 💵
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: ${{ runner.os }}-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock', '**/main.yml') }}
       - name: 🧰 Toolchain 🧰
         run: |
           rustup toolchain remove ${{ matrix.rust }}
@@ -190,17 +160,6 @@ jobs:
     steps:
       - name: ✅ Checkout ✅
         uses: actions/checkout@v4
-      - name: 💵 Cache 💵
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-          key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock', '**/main.yml') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock', '**/main.yml') }}
       - name: 🧰 Toolchain 🧰
         run: |
           rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
@@ -248,18 +207,6 @@ jobs:
     steps:
       - name: ✅ Checkout ✅
         uses: actions/checkout@v4
-      - name: 💵 Cache 💵
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/llvm-cov
-          key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock', '**/main.yml') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock', '**/main.yml') }}
       - name: 🧰 Toolchain 🧰
         run: |
           rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
@@ -310,15 +257,15 @@ jobs:
           files: ./lcov.info
       - name: Setup Pages
         uses: actions/configure-pages@v4
-        if: ${{ matrix.rust.nightly }}
+        if: ${{ matrix.rust == 'nightly' }}
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
-        if: ${{ matrix.rust.nightly }}
+        if: ${{ matrix.rust == 'nightly' }}
         with:
           path: 'target/llvm-cov/html'
       - name: Deploy to GitHub Pages
         id: deployment
-        if: ${{ matrix.rust.nightly }}
+        if: ${{ matrix.rust == 'nightly' }}
         uses: actions/deploy-pages@v4
   test-macos:
     name: 🧪 MacOS 🧪
@@ -342,17 +289,6 @@ jobs:
     steps:
       - name: ✅ Checkout ✅
         uses: actions/checkout@v4
-      - name: 💵 Cache 💵
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-          key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock', '**/main.yml') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock', '**/main.yml') }}
       - name: 🧰 Toolchain 🧰
         run: |
           rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
@@ -409,17 +345,6 @@ jobs:
     steps:
       - name: ✅ Checkout ✅
         uses: actions/checkout@v4
-      - name: 💵 Cache 💵
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-          key: ${{ runner.os }}-${{ matrix.rust }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock', '**/main.yml') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock', '**/main.yml') }}
       - name: 🧰 Toolchain 🧰
         run: |
           rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
