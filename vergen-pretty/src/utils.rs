@@ -20,6 +20,7 @@ pub(crate) fn has_value(
     }
 }
 
+#[allow(clippy::unnecessary_wraps)]
 pub(crate) fn split_key(tuple: (&str, &str)) -> Option<(Vec<String>, String)> {
     let (key, value) = tuple;
     let key = key.to_ascii_lowercase();
@@ -31,6 +32,7 @@ pub(crate) fn split_key(tuple: (&str, &str)) -> Option<(Vec<String>, String)> {
     }
 }
 
+#[allow(clippy::unnecessary_wraps)]
 pub(crate) fn split_kv(tuple: (Vec<String>, String)) -> Option<(String, String, String)> {
     let (mut kv, v) = tuple;
     if kv.len() >= 2 {
