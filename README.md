@@ -50,6 +50,7 @@ to rerun instruction emission if the `SOURCE_DATE_EPOCH` environment variable ha
 * The git based features have been removed from the base `vergen` library.
 * `vergen` now contains the `build`, `cargo`, `rustc`, and `sysinfo` feature implementations.   These features are re-exported by the new libraries allowing you to configure the output as you have previously.
 * Version 9 introduces the `AddCustomEntries` trait.  Implementing this trait allows you to include your own custom Cargo instructions, using `vergen` as the engine to generate them. See the [`AddCustomEntries`](https://docs.rs/vergen/9.0.0-beta.0/vergen/trait.AddCustomEntries.html) docs for more information.
+* The [version 8 branch](https://github.com/rustyhorde/vergen/tree/legacy/v8) will be maintained for some time.
 
 ### Why?
 This was done to resolve issues with [Cargo feature unification](https://doc.rust-lang.org/cargo/reference/features.html#mutually-exclusive-features) and mutually exclusive features.  Previous version of `vergen` had 3 mutually exclusive features (`git2`, `gitcl`, and `gix`).  Feature unification could cause compilation issues if you had included a dependency that also used `vergen` but had configured a different git feature.  Splitting the git backends into separate libraries helps alleviate this issue.
