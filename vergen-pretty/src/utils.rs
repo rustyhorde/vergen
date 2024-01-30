@@ -27,7 +27,7 @@ pub(crate) fn split_key(tuple: (&str, &str)) -> Option<(Vec<String>, String)> {
         let kv_vec: Vec<String> = key.split('_').filter_map(not_vergen).collect();
         Some((kv_vec, value.to_string()))
     } else {
-        None
+        Some((vec![key], value.to_string()))
     }
 }
 
@@ -41,7 +41,7 @@ pub(crate) fn split_kv(tuple: (Vec<String>, String)) -> Option<(String, String, 
             .fold(String::new(), |a, b| a + " " + &b);
         Some((category, label, v))
     } else {
-        None
+        Some(("custom".to_string(), kv[0].clone(), v))
     }
 }
 
@@ -87,12 +87,19 @@ pub(crate) mod test_utils {
     }
 
     #[test]
-    fn split_key_no_vergen_is_none() {
-        assert!(split_key(("test", "test")).is_none());
+    fn split_key_no_vergen_is_not_split() {
+        let (split_key, value) = split_key(("test_k", "test_v")).unwrap_or_default();
+        assert_eq!(1, split_key.len());
+        assert_eq!("test_k", split_key[0]);
+        assert_eq!("test_v", value);
     }
 
     #[test]
-    fn split_kv_too_short_is_none() {
-        assert!(split_kv((vec!["test".to_string()], "test".to_string())).is_none());
+    fn split_kv_too_short_is_custom() {
+        let (category, label, value) =
+            split_kv((vec!["test_k".to_string()], "test_v".to_string())).unwrap_or_default();
+        assert_eq!("custom", category);
+        assert_eq!("test_k", label);
+        assert_eq!("test_v", value);
     }
 }
