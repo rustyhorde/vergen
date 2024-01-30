@@ -33,7 +33,7 @@ time = { version = "0.3.23", features = [
     "local-offset",
     "parsing",
 ] }
-vergen = { path = "../vergen", default-features = false }
+vergen = { version = "9.0.0-beta.0", path = "../vergen", default-features = false }
 vergen-lib = { version = "0.1.0", path = "../vergen-lib", features = ["git"] }
 
 [build-dependencies]
