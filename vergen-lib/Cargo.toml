@@ -1,8 +1,8 @@
 [package]
 authors = ["Jason Ozias <jason.g.ozias@gmail.com>"]
 categories = ["development-tools", "development-tools::build-utils"]
-description = "Generate 'cargo:rustc-env' instructions via 'build.rs' for use in your code via the 'env!' macro"
-documentation = "https://docs.rs/vergen"
+description = "Common code used to support the vergen libraries"
+documentation = "https://docs.rs/vergen-lib"
 edition = "2021"
 homepage = "https://github.com/rustyhorde/vergen"
 keywords = ["cargo", "instructions", "build", "tool"]
