@@ -1,5 +1,5 @@
 # vergen - A suite of libraries for generating cargo instructions from a Cargo build script
-### `vergen`, `vergen-git2`, `vergen-gitcl`, `vergen-gix`
+### `vergen`, `vergen-git2`, `vergen-gitcl`, `vergen-gix`. `vergen-pretty`
 When used in conjunction with cargo [build scripts](https://doc.rust-lang.org/cargo/reference/build-scripts.html) can emit the following [output]((https://doc.rust-lang.org/cargo/reference/build-scripts.html#outputs-of-the-build-script)):
 
 - Will emit [`cargo:rustc-env=VAR=VALUE`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#cargorustc-envvarvalue)
@@ -15,6 +15,8 @@ to rerun instruction emission if the `build.rs` file changed.
 to rerun instruction emission if the `VERGEN_IDEMPOTENT` environment variable has changed.
 - Will emit [`cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed)
 to rerun instruction emission if the `SOURCE_DATE_EPOCH` environment variable has changed.
+
+`vergen-pretty` is a macro and pretty printer for `vergen` based cargo instruction output.
 
 ## Current Releases
 ### vergen
@@ -44,6 +46,12 @@ to rerun instruction emission if the `SOURCE_DATE_EPOCH` environment variable ha
 [![Crates.io](https://img.shields.io/crates/l/vergen-gix.svg)](https://crates.io/crates/vergen-gix)
 [![Crates.io](https://img.shields.io/crates/d/vergen-gix.svg)](https://crates.io/crates/vergen-gix)
 
+### vergen-pretty
+[![docs.rs](https://docs.rs/vergen-pretty/badge.svg)](https://docs.rs/vergen-pretty)
+[![Crates.io](https://img.shields.io/crates/v/vergen-pretty.svg)](https://crates.io/crates/vergen-pretty)
+[![Crates.io](https://img.shields.io/crates/l/vergen-pretty.svg)](https://crates.io/crates/vergen-pretty)
+[![Crates.io](https://img.shields.io/crates/d/vergen-pretty.svg)](https://crates.io/crates/vergen-pretty)
+
 ## MSRV
 The current minimum supported rust version is 1.70.0
 
@@ -66,6 +74,7 @@ See the documentation at [MIGRATING_v8_to_v9.md](MIGRATING_v8_to_v9.md)
 * [vergen-git2](https://docs.rs/vergen-git2/latest)
 * [vergen-gitcl](https://docs.rs/vergen-gitcl/latest)
 * [vergen-gix](https://docs.rs/vergen-gix/latest)
+* [vergen-pretty](https://docs.rs/vergen-pretty/latest)
 
 ## Contributing
 See the documentation at [CONTRIBUTING.md](CONTRIBUTING.md)
