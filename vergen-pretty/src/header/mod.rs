@@ -34,8 +34,29 @@ fn from_u8(val: u8) -> Style {
 /// Environment tree type alias
 pub type Env = BTreeMap<&'static str, Option<&'static str>>;
 
-/// Header Configuration
-#[derive(Builder, Clone, Debug, Default)]
+/// Convenience configuration around [`crate::Pretty`] to ease output generation.
+///
+/// # Example
+/// ```
+/// # use anyhow::Result;
+/// # use vergen_pretty::{ConfigBuilder, header, vergen_pretty_env};
+#[cfg_attr(feature = "color", doc = r##"use vergen_pretty::Style;"##)]
+/// #
+/// # pub fn main() -> Result<()> {
+/// let mut buf = vec![];
+/// let config = ConfigBuilder::default()
+#[cfg_attr(feature = "color", doc = r##"    .style(Style::new().green())"##)]
+///     .prefix("HEADER_PREFIX")
+///     .env(vergen_pretty_env!())
+///     .suffix("HEADER_SUFFIX")
+///     .build()?;
+/// assert!(header(&config, Some(&mut buf)).is_ok());
+/// assert!(!buf.is_empty());
+/// #     Ok(())
+/// # }
+/// ```
+///
+#[derive(Builder, Clone, Debug, Default, PartialEq)]
 pub struct Config {
     #[cfg(feature = "color")]
     #[builder(default)]
@@ -55,9 +76,29 @@ pub struct Config {
     suffix: Option<&'static str>,
 }
 
-/// Generate a pretty header
+/// Generate a pretty header based off your emitted `vergen` variables.
+///
+/// # Example
+/// ```
+/// # use anyhow::Result;
+/// # use vergen_pretty::{ConfigBuilder, header, vergen_pretty_env};
+/// #
+/// # pub fn main() -> Result<()> {
+/// let mut buf = vec![];
+/// let config = ConfigBuilder::default()
+///     .prefix("HEADER_PREFIX")
+///     .env(vergen_pretty_env!())
+///     .suffix("HEADER_SUFFIX")
+///     .build()?;
+/// assert!(header(&config, Some(&mut buf)).is_ok());
+/// assert!(!buf.is_empty());
+/// #     Ok(())
+/// # }
+/// ```
 ///
 /// # Errors
+///
+/// The errors are generally passed up from [`PrettyBuilder`]
 ///
 pub fn header<T>(config: &Config, writer: Option<&mut T>) -> Result<()>
 where
@@ -198,12 +239,13 @@ mod test {
     use super::from_u8;
     #[cfg(feature = "__vergen_test")]
     use super::header;
-    #[cfg(feature = "__vergen_test")]
+    use super::Config;
     use anyhow::Result;
     #[cfg(feature = "color")]
     use console::Style;
     use lazy_static::lazy_static;
     use regex::Regex;
+    use std::io::Write;
 
     #[cfg(feature = "__vergen_test")]
     const HEADER_PREFIX: &str = r"██████╗ ██╗   ██╗██████╗ ██╗    ██╗
@@ -225,6 +267,23 @@ mod test {
         static ref BUILD_TIMESTAMP: Regex = Regex::new(r"Timestamp \(  build\)").unwrap();
         static ref BUILD_SEMVER: Regex = Regex::new(r"Semver \(  rustc\)").unwrap();
         static ref GIT_BRANCH: Regex = Regex::new(r"Branch \(    git\)").unwrap();
+    }
+
+    #[test]
+    #[allow(clippy::clone_on_copy, clippy::redundant_clone)]
+    fn header_clone_works() {
+        let config = Config::default();
+        let another = config.clone();
+        assert_eq!(another, config);
+    }
+
+    #[test]
+    fn builder_debug_works() -> Result<()> {
+        let config = Config::default();
+        let mut buf = vec![];
+        write!(buf, "{config:?}")?;
+        assert!(!buf.is_empty());
+        Ok(())
     }
 
     #[test]
@@ -254,6 +313,19 @@ mod test {
         assert!(BUILD_TIMESTAMP.is_match(&header_str));
         assert!(BUILD_SEMVER.is_match(&header_str));
         assert!(GIT_BRANCH.is_match(&header_str));
+        Ok(())
+    }
+
+    #[test]
+    #[cfg(feature = "__vergen_test")]
+    fn header_no_writer() -> Result<()> {
+        use super::ConfigBuilder;
+        use crate::vergen_pretty_env;
+
+        let buf: Vec<u8> = vec![];
+        let config = ConfigBuilder::default().env(vergen_pretty_env!()).build()?;
+        assert!(header(&config, None::<&mut Vec<u8>>).is_ok());
+        assert!(buf.is_empty());
         Ok(())
     }
 

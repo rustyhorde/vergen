@@ -1,0 +1,36 @@
+[package]
+authors = ["Jason Ozias <jason.g.ozias@gmail.com>"]
+categories = ["development-tools", "development-tools::build-utils"]
+description = "Common code used to support the vergen libraries"
+documentation = "https://docs.rs/vergen-lib"
+edition = "2021"
+homepage = "https://github.com/rustyhorde/vergen"
+keywords = ["cargo", "instructions", "build", "tool"]
+license = "MIT OR Apache-2.0"
+name = "vergen-lib"
+readme = "README.md"
+repository = "https://github.com/rustyhorde/vergen"
+version = "0.1.0"
+
+[package.metadata.cargo-all-features]
+denylist = ["unstable"]
+
+[features]
+default = []
+build = []
+cargo = []
+git = []
+rustc = []
+unstable = []
+si = []
+
+[dependencies]
+anyhow = "1.0.79"
+derive_builder = "0.13.0"
+getset = "0.1.2"
+
+[build-dependencies]
+rustversion = "1.0.14"
+
+[dev-dependencies]
+temp-env = "0.3.6"

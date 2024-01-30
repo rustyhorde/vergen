@@ -1,8 +1,0 @@
-[default]
-features = "__vergen_test"
-
-[no_color]
-features = "__vergen_test header serde trace"
-
-[all]
-features = "__vergen_test color header serde trace"

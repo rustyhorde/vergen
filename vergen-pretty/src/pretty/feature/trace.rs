@@ -168,7 +168,7 @@ mod test {
     fn initialize_tracing() {
         INIT_TRACING.call_once(|| {
             let format = fmt::layer().compact().with_level(true).with_ansi(true);
-            let filter_layer = LevelFilter::from(Level::INFO);
+            let filter_layer = LevelFilter::from(Level::TRACE);
             registry()
                 .with(format)
                 .with(filter_layer)

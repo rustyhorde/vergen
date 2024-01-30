@@ -3,7 +3,8 @@ mod test_sysinfo {
     use anyhow::Result;
     use lazy_static::lazy_static;
     use regex::Regex;
-    use vergen::EmitBuilder;
+    use serial_test::serial;
+    use vergen::{Emitter, SysinfoBuilder};
 
     lazy_static! {
         static ref NAME_RE_STR: &'static str = r"cargo:rustc-env=VERGEN_SYSINFO_NAME=.*";
@@ -79,13 +80,13 @@ cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT
 cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
 ";
 
-    const DISABLED_OUTPUT: &str = r"";
-
     #[test]
+    #[serial]
     fn sysinfo_all_output() -> Result<()> {
         let mut stdout_buf = vec![];
-        EmitBuilder::builder()
-            .all_sysinfo()
+        let si = SysinfoBuilder::all_sysinfo()?;
+        Emitter::default()
+            .add_instructions(&si)?
             .emit_to(&mut stdout_buf)?;
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(SYSINFO_REGEX_INST.is_match(&output));
@@ -93,24 +94,12 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     }
 
     #[test]
-    #[serial_test::serial]
-    fn sysinfo_disabled_output() -> Result<()> {
-        let mut stdout_buf = vec![];
-        EmitBuilder::builder()
-            .all_sysinfo()
-            .disable_sysinfo()
-            .emit_to(&mut stdout_buf)?;
-        let output = String::from_utf8_lossy(&stdout_buf);
-        assert_eq!(DISABLED_OUTPUT, output);
-        Ok(())
-    }
-
-    #[test]
     fn sysinfo_all_idempotent_output() -> Result<()> {
         let mut stdout_buf = vec![];
-        EmitBuilder::builder()
+        let si = SysinfoBuilder::all_sysinfo()?;
+        Emitter::default()
             .idempotent()
-            .all_sysinfo()
+            .add_instructions(&si)?
             .emit_to(&mut stdout_buf)?;
         let output = String::from_utf8_lossy(&stdout_buf);
         assert_eq!(IDEM_OUTPUT, output);
@@ -120,10 +109,11 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     #[test]
     fn sysinfo_all_idempotent_quiet_output() -> Result<()> {
         let mut stdout_buf = vec![];
-        EmitBuilder::builder()
+        let si = SysinfoBuilder::all_sysinfo()?;
+        Emitter::default()
             .idempotent()
             .quiet()
-            .all_sysinfo()
+            .add_instructions(&si)?
             .emit_to(&mut stdout_buf)?;
         let output = String::from_utf8_lossy(&stdout_buf);
         assert_eq!(IDEM_QUITE_OUTPUT, output);

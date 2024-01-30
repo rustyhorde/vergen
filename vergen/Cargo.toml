@@ -10,46 +10,34 @@ license = "MIT OR Apache-2.0"
 name = "vergen"
 readme = "README.md"
 repository = "https://github.com/rustyhorde/vergen"
-version = "8.3.1"
+version = "9.0.0-beta.0"
 
 [package.metadata.cargo-all-features]
 denylist = [
     "cargo_metadata",
-    "cfg-if",
-    "git",
-    "git2",
-    "git2-rs",
-    "gitcl",
-    "gix",
-    "gitoxide",
     "regex",
     "rustc_version",
     "sysinfo",
     "time",
     "unstable",
+    "vergen-lib",
+    "emit_and_set",
 ]
 
 [features]
 default = []
-build = ["time"]
-cargo = ["cargo_metadata", "regex"]
-git = ["cfg-if"]
-gitcl = ["time"]
-git2 = ["time", "git2-rs"]
-gitoxide = ["time", "gix"]
-rustc = ["rustc_version"]
+build = ["time", "vergen-lib/build"]
+cargo = ["cargo_metadata", "regex", "vergen-lib/cargo"]
+rustc = ["rustc_version", "vergen-lib/rustc"]
+si = ["sysinfo", "vergen-lib/si"]
 unstable = []
-si = ["sysinfo"]
+emit_and_set = []
 
 [dependencies]
 anyhow = "1.0.72"
 cargo_metadata = { version = "0.18.1", optional = true }
-cfg-if = { version = "1.0.0", optional = true }
-git2-rs = { version = "0.18.0", package = "git2", optional = true, default-features = false }
-gix = { version = "0.57.1", optional = true, default-features = false, features = [
-    "revision",
-    "interrupt",
-] }
+derive_builder = "0.13.0"
+getset = "0.1.2"
 regex = { version = "1.9.1", optional = true }
 rustc_version = { version = "0.4.0", optional = true }
 sysinfo = { version = "0.30.4", optional = true, default-features = false }
@@ -58,18 +46,18 @@ time = { version = "0.3.23", features = [
     "local-offset",
     "parsing",
 ], optional = true }
+vergen-lib = { version = "0.1.0", path = "../vergen-lib" }
 
 [build-dependencies]
 rustversion = "1.0.14"
 
 [dev-dependencies]
-gix = "0.57.1"
 lazy_static = "1.4.0"
 regex = "1.9.1"
-repo_util = { path = "../repo_util" }
+test_util = { path = "../test_util" }
 serial_test = "3.0.0"
 temp-env = "0.3.6"
 
 [package.metadata.docs.rs]
-features = ["build", "cargo", "git", "gitcl", "rustc", "si"]
+features = ["build", "cargo", "rustc", "si"]
 rustdoc-args = ["--cfg", "docsrs"]

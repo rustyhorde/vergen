@@ -3,7 +3,7 @@ mod test_rustc {
     use anyhow::Result;
     use lazy_static::lazy_static;
     use regex::Regex;
-    use vergen::EmitBuilder;
+    use vergen::{Emitter, RustcBuilder};
 
     lazy_static! {
         static ref RUSTC_CHANNEL_RE_STR: &'static str = r"cargo:rustc-env=VERGEN_RUSTC_CHANNEL=.*";
@@ -29,13 +29,12 @@ mod test_rustc {
         };
     }
 
-    const DISABLED_OUTPUT: &str = r"";
-
     #[test]
     fn rustc_all_output() -> Result<()> {
         let mut stdout_buf = vec![];
-        EmitBuilder::builder()
-            .all_rustc()
+        let rustc = RustcBuilder::all_rustc()?;
+        Emitter::default()
+            .add_instructions(&rustc)?
             .emit_to(&mut stdout_buf)?;
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(RUSTC_REGEX.is_match(&output));
@@ -43,24 +42,12 @@ mod test_rustc {
     }
 
     #[test]
-    #[serial_test::serial]
-    fn rustc_disabled_output() -> Result<()> {
-        let mut stdout_buf = vec![];
-        EmitBuilder::builder()
-            .all_rustc()
-            .disable_rustc()
-            .emit_to(&mut stdout_buf)?;
-        let output = String::from_utf8_lossy(&stdout_buf);
-        assert_eq!(DISABLED_OUTPUT, output);
-        Ok(())
-    }
-
-    #[test]
     fn rustc_all_idempotent_output() -> Result<()> {
         let mut stdout_buf = vec![];
-        EmitBuilder::builder()
+        let rustc = RustcBuilder::all_rustc()?;
+        Emitter::default()
             .idempotent()
-            .all_rustc()
+            .add_instructions(&rustc)?
             .emit_to(&mut stdout_buf)?;
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(RUSTC_REGEX.is_match(&output));

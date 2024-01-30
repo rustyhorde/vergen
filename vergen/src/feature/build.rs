@@ -1,28 +1,23 @@
-use crate::{
-    constants::{BUILD_DATE_NAME, BUILD_TIMESTAMP_NAME},
-    emitter::{EmitBuilder, RustcEnvMap},
-    key::VergenKey,
-    utils::fns::{add_default_map_entry, add_map_entry},
-};
+// Copyright (c) 2022 vergen developers
+//
+// Licensed under the Apache License, Version 2.0
+// <LICENSE-APACHE or https://www.apache.org/licenses/LICENSE-2.0> or the MIT
+// license <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
+// option. All files in the project carrying such notice may not be copied,
+// modified, or distributed except according to those terms.
+
 use anyhow::{Context, Error, Result};
+use derive_builder::Builder as DeriveBuilder;
 use std::{env, str::FromStr};
 use time::{
     format_description::{self, well_known::Iso8601},
     OffsetDateTime,
 };
-
-#[derive(Clone, Copy, Debug, Default)]
-pub(crate) struct Config {
-    pub(crate) build_date: bool,
-    pub(crate) build_timestamp: bool,
-    use_local: bool,
-}
-
-impl Config {
-    pub(crate) fn any(self) -> bool {
-        self.build_date || self.build_timestamp
-    }
-}
+use vergen_lib::{
+    add_default_map_entry, add_map_entry,
+    constants::{BUILD_DATE_NAME, BUILD_TIMESTAMP_NAME},
+    AddEntries, CargoRerunIfChanged, CargoRustcEnvMap, CargoWarning, DefaultConfig, VergenKey,
+};
 
 /// The `VERGEN_BUILD_*` configuration features
 ///
@@ -36,11 +31,13 @@ impl Config {
 ///
 /// ```
 /// # use anyhow::Result;
-/// # use vergen::EmitBuilder;
+/// # use vergen::Emitter;
+/// # use vergen::BuildBuilder;
 /// #
 /// # fn main() -> Result<()> {
-/// EmitBuilder::builder().all_build().emit()?;
-/// #   Ok(())
+/// let build = BuildBuilder::all_build()?;
+/// Emitter::new().add_instructions(&build)?.emit()?;
+/// #     Ok(())
 /// # }
 /// ```
 ///
@@ -48,11 +45,13 @@ impl Config {
 ///
 /// ```
 /// # use anyhow::Result;
-/// # use vergen::EmitBuilder;
+/// # use vergen::Emitter;
+/// # use vergen::BuildBuilder;
 /// #
 /// # fn main() -> Result<()> {
-/// EmitBuilder::builder().build_timestamp().emit()?;
-/// #   Ok(())
+/// let build = BuildBuilder::default().build_timestamp(true).build()?;
+/// Emitter::new().add_instructions(&build)?.emit()?;
+/// #     Ok(())
 /// # }
 /// ```
 ///
@@ -61,13 +60,19 @@ impl Config {
 /// ```
 /// # use anyhow::Result;
 /// # use std::env;
-/// # use vergen::EmitBuilder;
+/// # use vergen::Emitter;
+/// # use vergen::BuildBuilder;
 /// #
 /// # fn main() -> Result<()> {
-/// env::set_var("VERGEN_BUILD_DATE", "this is the date I want output");
-/// EmitBuilder::builder().build_date().emit()?;
-/// # env::remove_var("VERGEN_BUILD_DATE");
-/// #   Ok(())
+/// temp_env::with_var("VERGEN_BUILD_DATE", Some("01/01/2023"), || {
+///     let result = || -> Result<()> {
+///         let build = BuildBuilder::default().build_date(true).build()?;
+///         Emitter::new().add_instructions(&build)?.emit()?;
+///         Ok(())
+///     }();
+///     assert!(result.is_ok());
+/// });
+/// #     Ok(())
 /// # }
 /// ```
 ///
@@ -79,17 +84,17 @@ impl Config {
 /// ```
 /// # use anyhow::Result;
 /// # use std::env;
-/// # use vergen::EmitBuilder;
+/// # use vergen::Emitter;
+/// # use vergen::BuildBuilder;
 /// #
 /// # fn main() -> Result<()> {
-/// env::set_var("SOURCE_DATE_EPOCH", "1671809360");
-#[cfg_attr(
-    feature = "build",
-    doc = r##"
-EmitBuilder::builder().all_build().emit()?;
-"##
-)]
-/// # env::remove_var("SOURCE_DATE_EPOCH");
+/// temp_env::with_var("SOURCE_DATE_EPOCH", Some("1671809360"), || {
+///     let result = || -> Result<()> {
+///         let build = BuildBuilder::all_build()?;
+///         Emitter::new().add_instructions(&build)?.emit()?;
+///         Ok(())
+///     }();
+/// });
 /// #   Ok(())
 /// # }
 /// ```
@@ -111,21 +116,19 @@ EmitBuilder::builder().all_build().emit()?;
 ///
 /// ```
 /// # use anyhow::Result;
-/// # use vergen::EmitBuilder;
+/// # use vergen::Emitter;
+/// # use vergen::BuildBuilder;
 /// #
 /// # fn main() -> Result<()> {
-#[cfg_attr(
-    feature = "build",
-    doc = r##"
-EmitBuilder::builder().idempotent().all_build().emit()?;
-"##
-)]
+/// let build = BuildBuilder::default().build()?;
+/// Emitter::new().idempotent().add_instructions(&build)?.emit()?;
 /// #   Ok(())
 /// # }
 /// ```
 ///
 /// The above will always generate the following output for the timestamp
-/// related instructions
+/// related instructions unless you also use quiet, then the warnings will
+/// be suppressed.
 ///
 /// ```text
 /// cargo:rustc-env=VERGEN_BUILD_DATE=VERGEN_IDEMPOTENT_OUTPUT
@@ -137,69 +140,44 @@ EmitBuilder::builder().idempotent().all_build().emit()?;
 /// cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
 /// ```
 ///
-#[cfg_attr(docsrs, doc(cfg(feature = "build")))]
-impl EmitBuilder {
-    /// Enable all of the `VERGEN_BUILD_*` options
-    pub fn all_build(&mut self) -> &mut Self {
-        self.build_date().build_timestamp()
-    }
-
+#[derive(Clone, Copy, Debug, DeriveBuilder, PartialEq)]
+pub struct Build {
     /// Enable the `VERGEN_BUILD_DATE` date output
-    pub fn build_date(&mut self) -> &mut Self {
-        self.build_config.build_date = true;
-        self
-    }
-
+    #[builder(default = "false")]
+    build_date: bool,
     /// Enable the `VERGEN_BUILD_TIMESTAMP` date output
-    pub fn build_timestamp(&mut self) -> &mut Self {
-        self.build_config.build_timestamp = true;
-        self
-    }
-
+    #[builder(default = "false")]
+    build_timestamp: bool,
     /// Enable local offset date/timestamp output
-    pub fn use_local_build(&mut self) -> &mut Self {
-        self.build_config.use_local = true;
-        self
-    }
+    #[builder(default = "false")]
+    use_local: bool,
+}
 
-    pub(crate) fn add_build_default(
-        &self,
-        e: Error,
-        fail_on_error: bool,
-        map: &mut RustcEnvMap,
-        warnings: &mut Vec<String>,
-    ) -> Result<()> {
-        if fail_on_error {
-            Err(e)
-        } else {
-            if self.build_config.build_date {
-                add_default_map_entry(VergenKey::BuildDate, map, warnings);
-            }
-            if self.build_config.build_timestamp {
-                add_default_map_entry(VergenKey::BuildTimestamp, map, warnings);
-            }
-            Ok(())
-        }
+impl BuildBuilder {
+    /// Enable all of the `VERGEN_BUILD_*` options
+    ///
+    /// # Errors
+    /// The build function can error
+    ///
+    pub fn all_build() -> Result<Build> {
+        Self::default()
+            .build_date(true)
+            .build_timestamp(true)
+            .build()
+            .map_err(Into::into)
     }
+}
 
-    pub(crate) fn add_build_map_entries(
-        &self,
-        idempotent: bool,
-        map: &mut RustcEnvMap,
-        warnings: &mut Vec<String>,
-    ) -> Result<()> {
-        if self.build_config.any() {
-            self.add_timestamp_entries(idempotent, map, warnings)
-                .with_context(|| "Error adding build timestamp entries")?;
-        }
-        Ok(())
+impl Build {
+    fn any(self) -> bool {
+        self.build_date || self.build_timestamp
     }
 
     fn add_timestamp_entries(
-        &self,
+        self,
         idempotent: bool,
-        map: &mut RustcEnvMap,
-        warnings: &mut Vec<String>,
+        cargo_rustc_env: &mut CargoRustcEnvMap,
+        cargo_warning: &mut CargoWarning,
     ) -> Result<()> {
         let (sde, ts) = match env::var("SOURCE_DATE_EPOCH") {
             Ok(v) => (
@@ -207,7 +185,7 @@ impl EmitBuilder {
                 OffsetDateTime::from_unix_timestamp(i64::from_str(&v)?)?,
             ),
             Err(std::env::VarError::NotPresent) => {
-                if self.build_config.use_local {
+                if self.use_local {
                     (false, OffsetDateTime::now_local()?)
                 } else {
                     (false, OffsetDateTime::now_utc())
@@ -216,50 +194,50 @@ impl EmitBuilder {
             Err(e) => return Err(e.into()),
         };
 
-        self.add_date_entry(idempotent, sde, &ts, map, warnings)?;
-        self.add_timestamp_entry(idempotent, sde, &ts, map, warnings)?;
+        self.add_date_entry(idempotent, sde, &ts, cargo_rustc_env, cargo_warning)?;
+        self.add_timestamp_entry(idempotent, sde, &ts, cargo_rustc_env, cargo_warning)?;
         Ok(())
     }
 
     fn add_date_entry(
-        &self,
+        self,
         idempotent: bool,
         source_date_epoch: bool,
         ts: &OffsetDateTime,
-        map: &mut RustcEnvMap,
-        warnings: &mut Vec<String>,
+        cargo_rustc_env: &mut CargoRustcEnvMap,
+        cargo_warning: &mut CargoWarning,
     ) -> Result<()> {
-        if self.build_config.build_date {
+        if self.build_date {
             if let Ok(value) = env::var(BUILD_DATE_NAME) {
-                add_map_entry(VergenKey::BuildDate, value, map);
+                add_map_entry(VergenKey::BuildDate, value, cargo_rustc_env);
             } else if idempotent && !source_date_epoch {
-                add_default_map_entry(VergenKey::BuildDate, map, warnings);
+                add_default_map_entry(VergenKey::BuildDate, cargo_rustc_env, cargo_warning);
             } else {
                 let format = format_description::parse("[year]-[month]-[day]")?;
-                add_map_entry(VergenKey::BuildDate, ts.format(&format)?, map);
+                add_map_entry(VergenKey::BuildDate, ts.format(&format)?, cargo_rustc_env);
             }
         }
         Ok(())
     }
 
     fn add_timestamp_entry(
-        &self,
+        self,
         idempotent: bool,
         source_date_epoch: bool,
         ts: &OffsetDateTime,
-        map: &mut RustcEnvMap,
-        warnings: &mut Vec<String>,
+        cargo_rustc_env: &mut CargoRustcEnvMap,
+        cargo_warning: &mut CargoWarning,
     ) -> Result<()> {
-        if self.build_config.build_timestamp {
+        if self.build_timestamp {
             if let Ok(value) = env::var(BUILD_TIMESTAMP_NAME) {
-                add_map_entry(VergenKey::BuildTimestamp, value, map);
+                add_map_entry(VergenKey::BuildTimestamp, value, cargo_rustc_env);
             } else if idempotent && !source_date_epoch {
-                add_default_map_entry(VergenKey::BuildTimestamp, map, warnings);
+                add_default_map_entry(VergenKey::BuildTimestamp, cargo_rustc_env, cargo_warning);
             } else {
                 add_map_entry(
                     VergenKey::BuildTimestamp,
                     ts.format(&Iso8601::DEFAULT)?,
-                    map,
+                    cargo_rustc_env,
                 );
             }
         }
@@ -267,174 +245,376 @@ impl EmitBuilder {
     }
 }
 
-#[cfg(test)]
-mod test {
-    use crate::{emitter::test::count_idempotent, EmitBuilder};
-    use anyhow::Result;
-    use std::env;
-
-    #[test]
-    #[serial_test::serial]
-    fn build_all_idempotent() -> Result<()> {
-        let config = EmitBuilder::builder()
-            .idempotent()
-            .all_build()
-            .test_emit()?;
-        assert_eq!(2, config.cargo_rustc_env_map.len());
-        assert_eq!(2, count_idempotent(&config.cargo_rustc_env_map));
-        assert_eq!(2, config.warnings.len());
+impl AddEntries for Build {
+    fn add_map_entries(
+        &self,
+        idempotent: bool,
+        cargo_rustc_env: &mut CargoRustcEnvMap,
+        _cargo_rerun_if_changed: &mut CargoRerunIfChanged,
+        cargo_warning: &mut CargoWarning,
+    ) -> Result<()> {
+        if self.any() {
+            self.add_timestamp_entries(idempotent, cargo_rustc_env, cargo_warning)
+                .with_context(|| "Error adding build timestamp entries")?;
+        }
         Ok(())
     }
 
-    #[test]
-    #[serial_test::serial]
-    fn build_all() -> Result<()> {
-        let config = EmitBuilder::builder().all_build().test_emit()?;
-        assert_eq!(2, config.cargo_rustc_env_map.len());
-        assert_eq!(0, count_idempotent(&config.cargo_rustc_env_map));
-        assert_eq!(0, config.warnings.len());
-        Ok(())
-    }
-
-    #[test]
-    #[serial_test::serial]
-    fn source_date_epoch_works() -> Result<()> {
-        env::set_var("SOURCE_DATE_EPOCH", "1671809360");
-        let mut stdout_buf = vec![];
-        _ = EmitBuilder::builder()
-            .idempotent()
-            .all_build()
-            .emit_to(&mut stdout_buf)?;
-        let output = String::from_utf8_lossy(&stdout_buf);
-        for (idx, line) in output.lines().enumerate() {
-            if idx == 0 {
-                assert_eq!("cargo:rustc-env=VERGEN_BUILD_DATE=2022-12-23", line);
-            } else if idx == 1 {
-                assert_eq!(
-                    "cargo:rustc-env=VERGEN_BUILD_TIMESTAMP=2022-12-23T15:29:20.000000000Z",
-                    line
+    fn add_default_entries(
+        &self,
+        config: &DefaultConfig,
+        cargo_rustc_env_map: &mut CargoRustcEnvMap,
+        _cargo_rerun_if_changed: &mut CargoRerunIfChanged,
+        cargo_warning: &mut CargoWarning,
+    ) -> Result<()> {
+        if *config.fail_on_error() {
+            let error = Error::msg(format!("{:?}", config.error()));
+            Err(error)
+        } else {
+            if self.build_date {
+                add_default_map_entry(VergenKey::BuildDate, cargo_rustc_env_map, cargo_warning);
+            }
+            if self.build_timestamp {
+                add_default_map_entry(
+                    VergenKey::BuildTimestamp,
+                    cargo_rustc_env_map,
+                    cargo_warning,
                 );
             }
+            Ok(())
         }
-        env::remove_var("SOURCE_DATE_EPOCH");
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::BuildBuilder;
+    use crate::Emitter;
+    use anyhow::Result;
+    use serial_test::serial;
+    use std::io::Write;
+    use vergen_lib::count_idempotent;
+
+    #[test]
+    #[serial]
+    #[allow(clippy::clone_on_copy, clippy::redundant_clone)]
+    fn builder_clone() -> Result<()> {
+        let build = BuildBuilder::all_build()?;
+        let another = build.clone();
+        assert_eq!(another, build);
         Ok(())
     }
 
     #[test]
-    #[serial_test::serial]
-    #[cfg(unix)]
-    fn bad_source_date_epoch_fails() -> Result<()> {
-        use std::ffi::OsStr;
-        use std::os::unix::prelude::OsStrExt;
+    #[serial]
+    #[allow(clippy::clone_on_copy, clippy::redundant_clone)]
+    fn build_clone() -> Result<()> {
+        let build = BuildBuilder::all_build()?;
+        let another = build.clone();
+        assert_eq!(another, build);
+        Ok(())
+    }
 
-        let source = [0x66, 0x6f, 0x80, 0x6f];
-        let os_str = OsStr::from_bytes(&source[..]);
-        env::set_var("SOURCE_DATE_EPOCH", os_str);
+    #[test]
+    #[serial]
+    fn builder_debug() -> Result<()> {
+        let builder = BuildBuilder::all_build()?;
+        let mut buf = vec![];
+        write!(buf, "{builder:?}")?;
+        assert!(!buf.is_empty());
+        Ok(())
+    }
 
-        let mut stdout_buf = vec![];
-        assert!(EmitBuilder::builder()
+    #[test]
+    #[serial]
+    fn build_debug() -> Result<()> {
+        let build = BuildBuilder::all_build()?;
+        let mut buf = vec![];
+        write!(buf, "{build:?}")?;
+        assert!(!buf.is_empty());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn build_default() -> Result<()> {
+        let build = BuildBuilder::default().build()?;
+        let emitter = Emitter::default().add_instructions(&build)?.test_emit();
+        assert_eq!(0, emitter.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(0, emitter.cargo_warning().len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn build_all_idempotent() -> Result<()> {
+        let build = BuildBuilder::all_build()?;
+        let emitter = Emitter::new()
             .idempotent()
-            .fail_on_error()
-            .all_build()
-            .emit_to(&mut stdout_buf)
-            .is_err());
-        env::remove_var("SOURCE_DATE_EPOCH");
+            .add_instructions(&build)?
+            .test_emit();
+        assert_eq!(2, emitter.cargo_rustc_env_map().len());
+        assert_eq!(2, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(2, emitter.cargo_warning().len());
         Ok(())
     }
 
     #[test]
-    #[serial_test::serial]
-    #[cfg(unix)]
-    fn bad_source_date_epoch_defaults() -> Result<()> {
-        use std::ffi::OsStr;
-        use std::os::unix::prelude::OsStrExt;
-
-        let source = [0x66, 0x6f, 0x80, 0x6f];
-        let os_str = OsStr::from_bytes(&source[..]);
-        env::set_var("SOURCE_DATE_EPOCH", os_str);
-
-        let mut stdout_buf = vec![];
-        assert!(EmitBuilder::builder()
-            .idempotent()
-            .all_build()
-            .emit_to(&mut stdout_buf)
-            .is_ok());
-        env::remove_var("SOURCE_DATE_EPOCH");
+    #[serial]
+    fn build_all() -> Result<()> {
+        let build = BuildBuilder::all_build()?;
+        let emitter = Emitter::new().add_instructions(&build)?.test_emit();
+        assert_eq!(2, emitter.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(0, emitter.cargo_warning().len());
         Ok(())
     }
 
     #[test]
-    #[serial_test::serial]
+    #[serial]
+    fn build_date() -> Result<()> {
+        let build = BuildBuilder::default().build_date(true).build()?;
+        let emitter = Emitter::new().add_instructions(&build)?.test_emit();
+        assert_eq!(1, emitter.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(0, emitter.cargo_warning().len());
+        Ok(())
+    }
+
+    #[cfg(any(unix, target_os = "macos"))]
+    #[test]
+    #[serial]
+    fn build_date_local() -> Result<()> {
+        // use local is unsound on nix
+        let build = BuildBuilder::default()
+            .build_date(true)
+            .use_local(true)
+            .build()?;
+        let emitter = Emitter::new().add_instructions(&build)?.test_emit();
+        assert_eq!(1, emitter.cargo_rustc_env_map().len());
+        assert_eq!(1, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(1, emitter.cargo_warning().len());
+        Ok(())
+    }
+
     #[cfg(windows)]
-    fn bad_source_date_epoch_fails() -> Result<()> {
+    #[test]
+    #[serial]
+    fn build_date_local() -> Result<()> {
+        let build = BuildBuilder::default()
+            .build_date(true)
+            .use_local(true)
+            .build()?;
+        let emitter = Emitter::new().add_instructions(&build)?.test_emit();
+        assert_eq!(1, emitter.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(0, emitter.cargo_warning().len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn build_timestamp() -> Result<()> {
+        let build = BuildBuilder::default().build_timestamp(true).build()?;
+        let emitter = Emitter::new().add_instructions(&build)?.test_emit();
+        assert_eq!(1, emitter.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(0, emitter.cargo_warning().len());
+        Ok(())
+    }
+
+    #[cfg(any(unix, target_os = "macos"))]
+    #[test]
+    #[serial]
+    fn build_timestamp_local() -> Result<()> {
+        // use local is unsound on nix
+        let build = BuildBuilder::default()
+            .build_timestamp(true)
+            .use_local(true)
+            .build()?;
+        let emitter = Emitter::new().add_instructions(&build)?.test_emit();
+        assert_eq!(1, emitter.cargo_rustc_env_map().len());
+        assert_eq!(1, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(1, emitter.cargo_warning().len());
+        Ok(())
+    }
+
+    #[cfg(windows)]
+    #[test]
+    #[serial]
+    fn build_timestamp_local() -> Result<()> {
+        let build = BuildBuilder::default()
+            .build_timestamp(true)
+            .use_local(true)
+            .build()?;
+        let emitter = Emitter::new().add_instructions(&build)?.test_emit();
+        assert_eq!(1, emitter.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(0, emitter.cargo_warning().len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn source_date_epoch_works() {
+        temp_env::with_var("SOURCE_DATE_EPOCH", Some("1671809360"), || {
+            let result = || -> Result<()> {
+                let mut stdout_buf = vec![];
+                let build = BuildBuilder::all_build()?;
+                _ = Emitter::new()
+                    .idempotent()
+                    .add_instructions(&build)?
+                    .emit_to(&mut stdout_buf)?;
+                let output = String::from_utf8_lossy(&stdout_buf);
+                for (idx, line) in output.lines().enumerate() {
+                    if idx == 0 {
+                        assert_eq!("cargo:rustc-env=VERGEN_BUILD_DATE=2022-12-23", line);
+                    } else if idx == 1 {
+                        assert_eq!(
+                            "cargo:rustc-env=VERGEN_BUILD_TIMESTAMP=2022-12-23T15:29:20.000000000Z",
+                            line
+                        );
+                    }
+                }
+                Ok(())
+            }();
+            assert!(result.is_ok());
+        });
+    }
+
+    #[test]
+    #[serial]
+    #[cfg(unix)]
+    fn bad_source_date_epoch_fails() {
+        use std::ffi::OsStr;
+        use std::os::unix::prelude::OsStrExt;
+
+        let source = [0x66, 0x6f, 0x80, 0x6f];
+        let os_str = OsStr::from_bytes(&source[..]);
+        temp_env::with_var("SOURCE_DATE_EPOCH", Some(os_str), || {
+            let result = || -> Result<bool> {
+                let mut stdout_buf = vec![];
+                let build = BuildBuilder::all_build()?;
+                Emitter::new()
+                    .idempotent()
+                    .fail_on_error()
+                    .add_instructions(&build)?
+                    .emit_to(&mut stdout_buf)
+            }();
+            assert!(result.is_err());
+        });
+    }
+
+    #[test]
+    #[serial]
+    #[cfg(unix)]
+    fn bad_source_date_epoch_defaults() {
+        use std::ffi::OsStr;
+        use std::os::unix::prelude::OsStrExt;
+
+        let source = [0x66, 0x6f, 0x80, 0x6f];
+        let os_str = OsStr::from_bytes(&source[..]);
+        temp_env::with_var("SOURCE_DATE_EPOCH", Some(os_str), || {
+            let result = || -> Result<bool> {
+                let mut stdout_buf = vec![];
+                let build = BuildBuilder::all_build()?;
+                Emitter::new()
+                    .idempotent()
+                    .add_instructions(&build)?
+                    .emit_to(&mut stdout_buf)
+            }();
+            assert!(result.is_ok());
+        });
+    }
+
+    #[test]
+    #[serial]
+    #[cfg(windows)]
+    fn bad_source_date_epoch_fails() {
         use std::ffi::OsString;
         use std::os::windows::prelude::OsStringExt;
 
         let source = [0x0066, 0x006f, 0xD800, 0x006f];
         let os_string = OsString::from_wide(&source[..]);
         let os_str = os_string.as_os_str();
-        env::set_var("SOURCE_DATE_EPOCH", os_str);
-
-        let mut stdout_buf = vec![];
-        assert!(EmitBuilder::builder()
-            .idempotent()
-            .fail_on_error()
-            .all_build()
-            .emit_to(&mut stdout_buf)
-            .is_err());
-        env::remove_var("SOURCE_DATE_EPOCH");
-        Ok(())
+        temp_env::with_var("SOURCE_DATE_EPOCH", Some(os_str), || {
+            let result = || -> Result<bool> {
+                let mut stdout_buf = vec![];
+                let build = Builder::default().all_build().build();
+                Emitter::new()
+                    .idempotent()
+                    .add_instructions(&build)?
+                    .emit_to(&mut stdout_buf)
+            }();
+            assert!(result.is_err());
+        });
     }
 
     #[test]
-    #[serial_test::serial]
+    #[serial]
     #[cfg(windows)]
-    fn bad_source_date_epoch_defaults() -> Result<()> {
+    fn bad_source_date_epoch_defaults() {
         use std::ffi::OsString;
         use std::os::windows::prelude::OsStringExt;
 
         let source = [0x0066, 0x006f, 0xD800, 0x006f];
         let os_string = OsString::from_wide(&source[..]);
         let os_str = os_string.as_os_str();
-        env::set_var("SOURCE_DATE_EPOCH", os_str);
-
-        let mut stdout_buf = vec![];
-        assert!(EmitBuilder::builder()
-            .idempotent()
-            .all_build()
-            .emit_to(&mut stdout_buf)
-            .is_ok());
-        env::remove_var("SOURCE_DATE_EPOCH");
-        Ok(())
+        temp_env::with_var("SOURCE_DATE_EPOCH", Some(os_str), || {
+            let result = || -> Result<bool> {
+                let mut stdout_buf = vec![];
+                let build = Builder::default().all_build().build();
+                Emitter::new()
+                    .idempotent()
+                    .add_instructions(&build)?
+                    .emit_to(&mut stdout_buf)
+            }();
+            assert!(result.is_ok());
+        });
     }
 
     #[test]
-    #[serial_test::serial]
-    fn build_date_override_works() -> Result<()> {
-        env::set_var("VERGEN_BUILD_DATE", "this is a bad date");
-        let mut stdout_buf = vec![];
-        assert!(EmitBuilder::builder()
-            .all_build()
-            .emit_to(&mut stdout_buf)
-            .is_ok());
-        let output = String::from_utf8_lossy(&stdout_buf);
-        assert!(output.contains("cargo:rustc-env=VERGEN_BUILD_DATE=this is a bad date"));
-        env::remove_var("VERGEN_BUILD_DATE");
-        Ok(())
+    #[serial]
+    fn build_date_override_works() {
+        temp_env::with_var("VERGEN_BUILD_DATE", Some("this is a bad date"), || {
+            let result = || -> Result<()> {
+                let mut stdout_buf = vec![];
+                let build = BuildBuilder::all_build()?;
+                assert!(Emitter::default()
+                    .add_instructions(&build)?
+                    .emit_to(&mut stdout_buf)
+                    .is_ok());
+                let output = String::from_utf8_lossy(&stdout_buf);
+                assert!(output.contains("cargo:rustc-env=VERGEN_BUILD_DATE=this is a bad date"));
+                Ok(())
+            }();
+            assert!(result.is_ok());
+        });
     }
 
     #[test]
-    #[serial_test::serial]
-    fn build_timestamp_override_works() -> Result<()> {
-        env::set_var("VERGEN_BUILD_TIMESTAMP", "this is a bad timestamp");
-        let mut stdout_buf = vec![];
-        assert!(EmitBuilder::builder()
-            .all_build()
-            .emit_to(&mut stdout_buf)
-            .is_ok());
-        let output = String::from_utf8_lossy(&stdout_buf);
-        assert!(output.contains("cargo:rustc-env=VERGEN_BUILD_TIMESTAMP=this is a bad timestamp"));
-        env::remove_var("VERGEN_BUILD_TIMESTAMP");
-        Ok(())
+    #[serial]
+    fn build_timestamp_override_works() {
+        temp_env::with_var(
+            "VERGEN_BUILD_TIMESTAMP",
+            Some("this is a bad timestamp"),
+            || {
+                let result = || -> Result<()> {
+                    let mut stdout_buf = vec![];
+                    let build = BuildBuilder::all_build()?;
+                    assert!(Emitter::default()
+                        .add_instructions(&build)?
+                        .emit_to(&mut stdout_buf)
+                        .is_ok());
+                    let output = String::from_utf8_lossy(&stdout_buf);
+                    assert!(output.contains(
+                        "cargo:rustc-env=VERGEN_BUILD_TIMESTAMP=this is a bad timestamp"
+                    ));
+                    Ok(())
+                }();
+                assert!(result.is_ok());
+            },
+        );
     }
 }

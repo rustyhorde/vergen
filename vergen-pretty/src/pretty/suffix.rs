@@ -17,7 +17,7 @@ use std::io::Write;
 use tracing::Level;
 
 /// Configure suffix output for [`PrettyBuilder`](crate::PrettyBuilder)
-#[derive(Builder, Clone, Debug)]
+#[derive(Builder, Clone, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
 pub struct Suffix {
     /// The suffix lines to output
@@ -65,6 +65,29 @@ mod test {
         utils::test_utils::TEST_PREFIX_SUFFIX, vergen_pretty_env, PrettyBuilder, SuffixBuilder,
     };
     use anyhow::Result;
+    use std::io::Write;
+
+    #[test]
+    #[allow(clippy::clone_on_copy, clippy::redundant_clone)]
+    fn suffix_clone_works() -> Result<()> {
+        let suffix = SuffixBuilder::default()
+            .lines(TEST_PREFIX_SUFFIX.lines().map(str::to_string).collect())
+            .build()?;
+        let another = suffix.clone();
+        assert_eq!(suffix, another);
+        Ok(())
+    }
+
+    #[test]
+    fn suffix_debug_works() -> Result<()> {
+        let suffix = SuffixBuilder::default()
+            .lines(TEST_PREFIX_SUFFIX.lines().map(str::to_string).collect())
+            .build()?;
+        let mut buf = vec![];
+        write!(buf, "{suffix:?}")?;
+        assert!(!buf.is_empty());
+        Ok(())
+    }
 
     #[test]
     fn display_suffix_works() -> Result<()> {
