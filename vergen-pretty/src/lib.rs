@@ -99,7 +99,6 @@ assert!(!buf.is_empty());
 //! |  trace  | Enable support for [`tracing`](https://docs.rs/tracing/latest/tracing/) output |
 //!
 
-#![cfg_attr(docsrs, feature(doc_cfg))]
 // rustc lints
 #![cfg_attr(
     all(msrv, feature = "unstable", nightly),
