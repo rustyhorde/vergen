@@ -49,3 +49,7 @@ regex = "1.10.2"
 test_util = { path = "../test_util", features = ["repo"] }
 serial_test = "3.0.0"
 temp-env = "0.3.6"
+
+[package.metadata.docs.rs]
+features = ["build", "cargo", "rustc", "si"]
+rustdoc-args = ["--cfg", "docsrs"]
