@@ -10,7 +10,7 @@ license = "MIT OR Apache-2.0"
 name = "vergen-gix"
 readme = "README.md"
 repository = "https://github.com/rustyhorde/vergen"
-version = "1.0.0-beta.0"
+version = "1.0.0-beta.1"
 
 [package.metadata.cargo-all-features]
 denylist = [
