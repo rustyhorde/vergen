@@ -1,4 +1,4 @@
-# vergen - A suite of libraries for generating cargo instructions from a build script
+# vergen - A suite of libraries for generating cargo instructions from a Cargo build script
 ### `vergen`, `vergen-git2`, `vergen-gitcl`, `vergen-gix`
 When used in conjunction with cargo [build scripts](https://doc.rust-lang.org/cargo/reference/build-scripts.html) can emit the following [output]((https://doc.rust-lang.org/cargo/reference/build-scripts.html#outputs-of-the-build-script)):
 
@@ -16,7 +16,7 @@ to rerun instruction emission if the `VERGEN_IDEMPOTENT` environment variable ha
 - Will emit [`cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed)
 to rerun instruction emission if the `SOURCE_DATE_EPOCH` environment variable has changed.
 
-## Current Release
+## Current Releases
 ### vergen
 [![docs.rs](https://docs.rs/vergen/badge.svg)](https://docs.rs/vergen)
 [![Crates.io](https://img.shields.io/crates/v/vergen.svg)](https://crates.io/crates/vergen)
@@ -26,14 +26,36 @@ to rerun instruction emission if the `SOURCE_DATE_EPOCH` environment variable ha
 [![CI](https://github.com/rustyhorde/vergen/actions/workflows/main.yml/badge.svg)](https://github.com/rustyhorde/vergen/actions)
 [![sponsor](https://img.shields.io/github/sponsors/crazysacx?logo=github-sponsors)](https://github.com/sponsors/CraZySacX)
 
+### vergen-git2
+[![docs.rs](https://docs.rs/vergen-git2/badge.svg)](https://docs.rs/vergen-git2)
+[![Crates.io](https://img.shields.io/crates/v/vergen-git2.svg)](https://crates.io/crates/vergen-git2)
+[![Crates.io](https://img.shields.io/crates/l/vergen-git2.svg)](https://crates.io/crates/vergen-git2)
+[![Crates.io](https://img.shields.io/crates/d/vergen-git2.svg)](https://crates.io/crates/vergen-git2)
+
+### vergen-gitcl
+[![docs.rs](https://docs.rs/vergen-gitcl/badge.svg)](https://docs.rs/vergen-gitcl)
+[![Crates.io](https://img.shields.io/crates/v/vergen-gitcl.svg)](https://crates.io/crates/vergen-gitcl)
+[![Crates.io](https://img.shields.io/crates/l/vergen-gitcl.svg)](https://crates.io/crates/vergen-gitcl)
+[![Crates.io](https://img.shields.io/crates/d/vergen-gitcl.svg)](https://crates.io/crates/vergen-gitcl)
+
+### vergen-gix
+[![docs.rs](https://docs.rs/vergen-gix/badge.svg)](https://docs.rs/vergen-gix)
+[![Crates.io](https://img.shields.io/crates/v/vergen-gix.svg)](https://crates.io/crates/vergen-gix)
+[![Crates.io](https://img.shields.io/crates/l/vergen-gix.svg)](https://crates.io/crates/vergen-gix)
+[![Crates.io](https://img.shields.io/crates/d/vergen-gix.svg)](https://crates.io/crates/vergen-gix)
+
 ## ⚠️ Notes on version 9 ⚠️
-With version 9 comes the introduction of 3 new libraries, `vergen-git2`, `vergen-gitcl`, and `vergen-gix`.  Along with this change, the git features has been removed from the base `vergen` library.   The 3 new libraries are intended to be drop in replacements for
-`vergen` when you need to generate git based cargo build script instructions.   `vergen` now contains the `build`, `cargo`, `rustc`, and `sysinfo` feature implementations.   These features are re-exported by the new libraries allowing you to configure the
-output as you have previously.
+* Version 9 introduces 3 new libraries, `vergen-git2`, `vergen-gitcl`, and `vergen-gix`.
+* The 3 new libraries are intended to be drop in replacements for `vergen` when you need to generate git based cargo build script instructions.
+* The git based features have been removed from the base `vergen` library.
+* `vergen` now contains the `build`, `cargo`, `rustc`, and `sysinfo` feature implementations.   These features are re-exported by the new libraries allowing you to configure the output as you have previously.
+* Version 9 introduces the `AddCustomEntries` trait.  Implementing this trait allows you to include your own custom Cargo instructions, using `vergen` as the engine to generate them. See the [`AddCustomEntries`](https://docs.rs/vergen/9.0.0-beta.0/vergen/trait.AddCustomEntries.html) docs for more information.
 
-Why?  This was done to resolve issues with [Cargo feature unification](https://doc.rust-lang.org/cargo/reference/features.html#mutually-exclusive-features) and mutually exclusive features.  Previous version of `vergen` had 3 mutually exclusive features (`git2`, `gitcl`, and `gix`).  Feature unification could cause compilation issues if you had included a dependency that also used `vergen` but had configured a different git feature.  Splitting the git backends into separate libraries helps alleviate this issue.
+### Why?
+This was done to resolve issues with [Cargo feature unification](https://doc.rust-lang.org/cargo/reference/features.html#mutually-exclusive-features) and mutually exclusive features.  Previous version of `vergen` had 3 mutually exclusive features (`git2`, `gitcl`, and `gix`).  Feature unification could cause compilation issues if you had included a dependency that also used `vergen` but had configured a different git feature.  Splitting the git backends into separate libraries helps alleviate this issue.
 
-Version 9 also introduces the `AddCustomEntries` trait.  Implementing this trait allows you to include your own custom Cargo instructions, using `vergen` as the engine to generate them. See the [`AddCustomEntries`](https://docs.rs/vergen/latest/vergen/) docs for more information.
+### Migration from version 8
+Will complete this documentation as I release more beta versions.
 
 ## MSRV
 The current minimum supported rust version is 1.70.0
