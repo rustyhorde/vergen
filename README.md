@@ -61,8 +61,11 @@ This was done to resolve issues with [Cargo feature unification](https://doc.rus
 ## Migration from version 8
 See the documentation at [MIGRATING_v8_to_v9.md](MIGRATING_v8_to_v9.md)
 
-## Example Usage
-See the documentation at [docs.rs](https://docs.rs/vergen/latest/vergen/) for example usage
+## Documentation
+* [vergen](https://docs.rs/vergen/latest)
+* [vergen-git2](https://docs.rs/vergen-git2/latest)
+* [vergen-gitcl](https://docs.rs/vergen-gitcl/latest)
+* [vergen-gix](https://docs.rs/vergen-gix/latest)
 
 ## Contributing
 See the documentation at [CONTRIBUTING.md](CONTRIBUTING.md)
