@@ -542,3 +542,6 @@ pub use sysinfo::ProcessRefreshKind;
 #[cfg(feature = "si")]
 pub use sysinfo::RefreshKind;
 pub use vergen_lib::AddCustomEntries;
+pub use vergen_lib::CargoRerunIfChanged;
+pub use vergen_lib::CargoWarning;
+pub use vergen_lib::DefaultConfig;

@@ -485,4 +485,13 @@ macro_rules! vergen_pretty_env {
         );
         map
     }};
+    ( $( $x:expr ),* ) => {{
+        {
+            let mut map = $crate::vergen_pretty_env!();
+            $(
+                let _old = map.insert($x, option_env!($x));
+            )*
+            map
+        }
+    }};
 }

@@ -3,7 +3,14 @@ use std::env;
 #[cfg(feature = "__vergen_empty_test")]
 use vergen_gix::Emitter;
 #[cfg(feature = "__vergen_test")]
-use vergen_gix::{BuildBuilder, CargoBuilder, Emitter, GixBuilder, RustcBuilder, SysinfoBuilder};
+use {
+    std::collections::BTreeMap,
+    vergen_gix::{
+        AddCustomEntries, BuildBuilder, CargoBuilder, Emitter, GixBuilder, RustcBuilder,
+        SysinfoBuilder,
+    },
+    vergen_lib::{CargoRerunIfChanged, CargoWarning, DefaultConfig},
+};
 
 fn main() -> Result<()> {
     nightly();
@@ -27,6 +34,35 @@ fn emit() -> Result<()> {
 }
 
 #[cfg(all(feature = "__vergen_test", not(feature = "__vergen_empty_test")))]
+#[derive(Default)]
+struct Custom {}
+
+#[cfg(all(feature = "__vergen_test", not(feature = "__vergen_empty_test")))]
+impl AddCustomEntries<&str, &str> for Custom {
+    fn add_calculated_entries(
+        &self,
+        _idempotent: bool,
+        cargo_rustc_env_map: &mut BTreeMap<&str, &str>,
+        _cargo_rerun_if_changed: &mut CargoRerunIfChanged,
+        cargo_warning: &mut CargoWarning,
+    ) -> Result<()> {
+        cargo_rustc_env_map.insert("vergen-cl", "custom_instruction");
+        cargo_warning.push("custom instruction generated".to_string());
+        Ok(())
+    }
+
+    fn add_default_entries(
+        &self,
+        _config: &DefaultConfig,
+        _cargo_rustc_env_map: &mut BTreeMap<&str, &str>,
+        _cargo_rerun_if_changed: &mut CargoRerunIfChanged,
+        _cargo_warning: &mut CargoWarning,
+    ) -> Result<()> {
+        Ok(())
+    }
+}
+
+#[cfg(all(feature = "__vergen_test", not(feature = "__vergen_empty_test")))]
 fn emit() -> Result<()> {
     println!("cargo:warning=VERGEN TEST ENABLED!");
     let build = BuildBuilder::all_build()?;
@@ -40,6 +76,7 @@ fn emit() -> Result<()> {
         .add_instructions(&gix)?
         .add_instructions(&rustc)?
         .add_instructions(&si)?
+        .add_custom_instructions(&Custom::default())?
         .emit()
 }
 

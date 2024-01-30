@@ -231,6 +231,7 @@ pub(crate) mod vergen_key {
 
     impl VergenKey {
         /// Get the name for the given key.
+        #[must_use]
         pub fn name(self) -> &'static str {
             match self {
                 VergenKey::Empty => "",

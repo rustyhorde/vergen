@@ -292,4 +292,19 @@ mod tests {
         }
         Ok(())
     }
+
+    #[test]
+    fn custom_display_works() -> Result<()> {
+        let mut stdout = vec![];
+        let map = vergen_pretty_env!("vergen-cl");
+        let empty = is_empty(&map);
+        let fmt = PrettyBuilder::default().env(map).build()?;
+        fmt.display(&mut stdout)?;
+        if empty {
+            assert!(stdout.is_empty());
+        } else {
+            assert!(!stdout.is_empty());
+        }
+        Ok(())
+    }
 }

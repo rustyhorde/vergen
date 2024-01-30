@@ -487,3 +487,6 @@ pub use vergen::RustcBuilder;
 #[cfg(feature = "si")]
 pub use vergen::SysinfoBuilder;
 pub use vergen_lib::AddCustomEntries;
+pub use vergen_lib::CargoRerunIfChanged;
+pub use vergen_lib::CargoWarning;
+pub use vergen_lib::DefaultConfig;
