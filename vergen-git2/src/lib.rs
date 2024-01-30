@@ -486,3 +486,4 @@ pub use vergen::RefreshKind;
 pub use vergen::RustcBuilder;
 #[cfg(feature = "si")]
 pub use vergen::SysinfoBuilder;
+pub use vergen_lib::AddCustomEntries;

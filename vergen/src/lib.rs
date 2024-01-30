@@ -541,3 +541,4 @@ pub use sysinfo::MemoryRefreshKind;
 pub use sysinfo::ProcessRefreshKind;
 #[cfg(feature = "si")]
 pub use sysinfo::RefreshKind;
+pub use vergen_lib::AddCustomEntries;
