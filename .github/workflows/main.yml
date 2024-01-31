@@ -17,11 +17,6 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
-# permissions:
-#   contents: read
-#   pages: write
-#   id-token: write
-
 env:
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
