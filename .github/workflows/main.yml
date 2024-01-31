@@ -206,7 +206,9 @@ jobs:
       - name: 🙊 Code Coverage Report (HTML) 🙊
         run: cargo llvm-cov report --html
       - name: 🙊 Upload Code Coverage 🙊
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4-beta
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         with:
           files: ./lcov.info
   test-macos:
