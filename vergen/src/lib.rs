@@ -96,28 +96,31 @@
 //! ```
 //! #### Sample Output
 //! ```text
-//!           Date (  build): 2024-01-28
-//!      Timestamp (  build): 2024-01-28T18:07:13.256193157Z
-//!          Debug (  cargo): true
-//!   Dependencies (  cargo): anyhow 1.0.79,vergen 8.3.1,vergen-pretty 0.3.1
-//!       Features (  cargo):
-//!      Opt Level (  cargo): 0
-//!  Target Triple (  cargo): x86_64-unknown-linux-gnu
-//!        Channel (  rustc): nightly
-//!    Commit Date (  rustc): 2024-01-27
-//!    Commit Hash (  rustc): 6b4f1c5e782c72a047a23e922decd33e7d462345
-//!    Host Triple (  rustc): x86_64-unknown-linux-gnu
-//!   LLVM Version (  rustc): 17.0
-//!         Semver (  rustc): 1.77.0-nightly
-//!      CPU Brand (sysinfo): AMD Ryzen Threadripper 1900X 8-Core Processor
-//! CPU Core Count (sysinfo): 8
-//!  CPU Frequency (sysinfo): 3792
-//!       CPU Name (sysinfo): cpu0,cpu1,cpu2,cpu3,cpu4,cpu5,cpu6,cpu7
-//!     CPU Vendor (sysinfo): AuthenticAMD
-//!           Name (sysinfo): Arch Linux
-//!     OS Version (sysinfo): Linux  Arch Linux
-//!   Total Memory (sysinfo): 31 GiB
-//!           User (sysinfo): jozias
+//! cargo:rustc-env=VERGEN_BUILD_DATE=2024-01-31
+//! cargo:rustc-env=VERGEN_BUILD_TIMESTAMP=2024-01-31T03:26:34.065893658Z
+//! cargo:rustc-env=VERGEN_CARGO_DEBUG=true
+//! cargo:rustc-env=VERGEN_CARGO_FEATURES=
+//! cargo:rustc-env=VERGEN_CARGO_OPT_LEVEL=0
+//! cargo:rustc-env=VERGEN_CARGO_TARGET_TRIPLE=x86_64-unknown-linux-gnu
+//! cargo:rustc-env=VERGEN_CARGO_DEPENDENCIES=anyhow 1.0.79,vergen-pretty 0.3.2
+//! cargo:rustc-env=VERGEN_RUSTC_CHANNEL=nightly
+//! cargo:rustc-env=VERGEN_RUSTC_COMMIT_DATE=2024-01-29
+//! cargo:rustc-env=VERGEN_RUSTC_COMMIT_HASH=5518eaa946291f00471af8b254b2a1715f234882
+//! cargo:rustc-env=VERGEN_RUSTC_HOST_TRIPLE=x86_64-unknown-linux-gnu
+//! cargo:rustc-env=VERGEN_RUSTC_LLVM_VERSION=17.0
+//! cargo:rustc-env=VERGEN_RUSTC_SEMVER=1.77.0-nightly
+//! cargo:rustc-env=VERGEN_SYSINFO_NAME=Arch Linux
+//! cargo:rustc-env=VERGEN_SYSINFO_OS_VERSION=Linux  Arch Linux
+//! cargo:rustc-env=VERGEN_SYSINFO_USER=jozias
+//! cargo:rustc-env=VERGEN_SYSINFO_TOTAL_MEMORY=31 GiB
+//! cargo:rustc-env=VERGEN_SYSINFO_CPU_VENDOR=AuthenticAMD
+//! cargo:rustc-env=VERGEN_SYSINFO_CPU_CORE_COUNT=8
+//! cargo:rustc-env=VERGEN_SYSINFO_CPU_NAME=cpu0,cpu1,cpu2,cpu3,cpu4,cpu5,cpu6,cpu7
+//! cargo:rustc-env=VERGEN_SYSINFO_CPU_BRAND=AMD Ryzen Threadripper 1900X 8-Core Processor
+//! cargo:rustc-env=VERGEN_SYSINFO_CPU_FREQUENCY=3792
+//! cargo:rerun-if-changed=build.rs
+//! cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT
+//! cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
 //! ```
 //!
 //! #### Generate specific output
@@ -170,10 +173,13 @@ let build = BuildBuilder::default().build_timestamp(true).build()?;"##
 //! ```
 //! #### Sample Output
 //! ```text
-//!      Timestamp (  build): 2024-01-28T18:07:13.256193157Z
-//!      Opt Level (  cargo): 0
-//!         Semver (  rustc): 1.77.0-nightly
-//! CPU Core Count (sysinfo): 8
+//! cargo:rustc-env=VERGEN_BUILD_TIMESTAMP=2024-01-31T03:26:34.065893658Z
+//! cargo:rustc-env=VERGEN_CARGO_OPT_LEVEL=0
+//! cargo:rustc-env=VERGEN_RUSTC_SEMVER=1.77.0-nightly
+//! cargo:rustc-env=VERGEN_SYSINFO_CPU_CORE_COUNT=8
+//! cargo:rerun-if-changed=build.rs
+//! cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT
+//! cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
 //! ```
 //!
 //! 4. Use the [`env!`](std::env!) or [`option_env!`](std::option_env!) macro in your code to read the environment variables.
@@ -199,7 +205,8 @@ let build = BuildBuilder::default().build_timestamp(true).build()?;"##
 //! |   si    | `VERGEN_SYSINFO_*` instructions |
 //!
 //! ## Environment Variables
-//! `vergen` currently recognizes the following environment variables
+//! `vergen` currently recognizes the following environment variables. The full list of the environment variable names can be
+//! found as [constants here](https://docs.rs/vergen-lib/latest/vergen_lib/constants/features/index.html)
 //!
 //! | Variable | Functionality |
 //! | -------- | ------------- |
@@ -225,7 +232,7 @@ let build = BuildBuilder::default().build_timestamp(true).build()?;"##
 //! maintainers to force sane defaults when packaging rust binaries for distribution.
 //!
 //! #### Minimize the compile time impact
-//! - I've removed some extraneous libraries.   Any libraries added in the future will be checked against
+//! - I've removed some extraneous libraries.  Any libraries added in the future will be checked against
 //! the current standard compile times to ensure the impact is not too great.
 //! - `vergen` should compile and test from a source tarball.
 //!
