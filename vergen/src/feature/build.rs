@@ -541,7 +541,7 @@ mod test {
         temp_env::with_var("SOURCE_DATE_EPOCH", Some(os_str), || {
             let result = || -> Result<bool> {
                 let mut stdout_buf = vec![];
-                let build = Builder::default().all_build().build();
+                let build = BuildBuilder::default().all_build().build();
                 Emitter::new()
                     .idempotent()
                     .add_instructions(&build)?
@@ -564,7 +564,7 @@ mod test {
         temp_env::with_var("SOURCE_DATE_EPOCH", Some(os_str), || {
             let result = || -> Result<bool> {
                 let mut stdout_buf = vec![];
-                let build = Builder::default().all_build().build();
+                let build = BuildBuilder::default().all_build().build();
                 Emitter::new()
                     .idempotent()
                     .add_instructions(&build)?
