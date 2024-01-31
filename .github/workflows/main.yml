@@ -44,12 +44,6 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            rust: "1.70.0"
-          - os: ubuntu-latest
-            rust: stable
-          - os: ubuntu-latest
-            rust: beta
-          - os: ubuntu-latest
             rust: nightly
     steps:
       - name: ✅ Checkout ✅
@@ -57,9 +51,6 @@ jobs:
       - name: 🧰 Toolchain 🧰
         run: |
           rustup toolchain remove ${{ matrix.rust }}
-          rm -f ~/.cargo/bin/rustfmt
-          rm -f ~/.cargo/bin/cargo-fmt
-          rm -f ~/.cargo/bin/cargo-clippy
           rustup toolchain install ${{ matrix.rust }} --profile default
           rustup default ${{ matrix.rust }}
       - name: 📎 Clippy 📎
@@ -79,12 +70,6 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: macos-latest
-            rust: "1.70.0"
-          - os: macos-latest
-            rust: stable
-          - os: macos-latest
-            rust: beta
           - os: macos-latest
             rust: nightly
     steps:
@@ -112,12 +97,6 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: windows-latest
-            rust: "1.70.0"
-          - os: windows-latest
-            rust: stable
-          - os: windows-latest
-            rust: beta
           - os: windows-latest
             rust: nightly
     steps:
@@ -174,14 +153,6 @@ jobs:
         run: |
           cargo update
           cargo test-all-features
-          cargo test -p vergen-pretty -F __vergen_test
-          cargo test -p vergen-pretty -F __vergen_test,color
-          cargo test -p vergen-pretty -F __vergen_test,trace
-          cargo test -p vergen-pretty -F __vergen_test,serde
-          cargo test -p vergen-pretty -F __vergen_test,color,serde
-          cargo test -p vergen-pretty -F __vergen_test,color,trace
-          cargo test -p vergen-pretty -F __vergen_test,trace,serde
-          cargo test -p vergen-pretty -F __vergen_test,color,serde,trace
   coverage:
     name: 🧱 Code Coverage 🧱
     needs: test-linux
@@ -279,14 +250,6 @@ jobs:
         run: |
           cargo update
           cargo test-all-features
-          cargo test -p vergen-pretty -F __vergen_test
-          cargo test -p vergen-pretty -F __vergen_test,color
-          cargo test -p vergen-pretty -F __vergen_test,trace
-          cargo test -p vergen-pretty -F __vergen_test,serde
-          cargo test -p vergen-pretty -F __vergen_test,color,serde
-          cargo test -p vergen-pretty -F __vergen_test,color,trace
-          cargo test -p vergen-pretty -F __vergen_test,trace,serde
-          cargo test -p vergen-pretty -F __vergen_test,color,serde,trace
   test-windows:
     name: 🧪 Windows 🧪
     needs: lints-windows
@@ -335,11 +298,3 @@ jobs:
         run: |
           cargo update
           cargo test-all-features
-          cargo test -p vergen-pretty -F __vergen_test
-          cargo test -p vergen-pretty -F __vergen_test,color
-          cargo test -p vergen-pretty -F __vergen_test,trace
-          cargo test -p vergen-pretty -F __vergen_test,serde
-          cargo test -p vergen-pretty -F __vergen_test,color,serde
-          cargo test -p vergen-pretty -F __vergen_test,color,trace
-          cargo test -p vergen-pretty -F __vergen_test,trace,serde
-          cargo test -p vergen-pretty -F __vergen_test,color,serde,trace
