@@ -988,8 +988,16 @@ mod test {
         let os_string = OsString::from_wide(&source[..]);
         let os_str = os_string.as_os_str();
         temp_env::with_var("SOURCE_DATE_EPOCH", Some(os_str), || {
-            let gix = GixBuilder::default().commit_date(true).build()?;
-            assert!(Emitter::new().idempotent().add_instructions(&gix).is_err());
+            let result = || -> Result<bool> {
+                let mut stdout_buf = vec![];
+                let gix = GixBuilder::default().commit_date(true).build()?;
+                Emitter::default()
+                    .fail_on_error()
+                    .idempotent()
+                    .add_instructions(&gix)?
+                    .emit_to(&mut stdout_buf)
+            }();
+            assert!(result.is_err());
         });
     }
 
@@ -1007,7 +1015,7 @@ mod test {
             let result = || -> Result<bool> {
                 let mut stdout_buf = vec![];
                 let gix = GixBuilder::default().commit_date(true).build()?;
-                Emitter::new()
+                Emitter::default()
                     .idempotent()
                     .add_instructions(&gix)?
                     .emit_to(&mut stdout_buf)

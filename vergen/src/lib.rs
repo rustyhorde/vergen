@@ -96,28 +96,31 @@
 //! ```
 //! #### Sample Output
 //! ```text
-//!           Date (  build): 2024-01-28
-//!      Timestamp (  build): 2024-01-28T18:07:13.256193157Z
-//!          Debug (  cargo): true
-//!   Dependencies (  cargo): anyhow 1.0.79,vergen 8.3.1,vergen-pretty 0.3.1
-//!       Features (  cargo):
-//!      Opt Level (  cargo): 0
-//!  Target Triple (  cargo): x86_64-unknown-linux-gnu
-//!        Channel (  rustc): nightly
-//!    Commit Date (  rustc): 2024-01-27
-//!    Commit Hash (  rustc): 6b4f1c5e782c72a047a23e922decd33e7d462345
-//!    Host Triple (  rustc): x86_64-unknown-linux-gnu
-//!   LLVM Version (  rustc): 17.0
-//!         Semver (  rustc): 1.77.0-nightly
-//!      CPU Brand (sysinfo): AMD Ryzen Threadripper 1900X 8-Core Processor
-//! CPU Core Count (sysinfo): 8
-//!  CPU Frequency (sysinfo): 3792
-//!       CPU Name (sysinfo): cpu0,cpu1,cpu2,cpu3,cpu4,cpu5,cpu6,cpu7
-//!     CPU Vendor (sysinfo): AuthenticAMD
-//!           Name (sysinfo): Arch Linux
-//!     OS Version (sysinfo): Linux  Arch Linux
-//!   Total Memory (sysinfo): 31 GiB
-//!           User (sysinfo): jozias
+//! cargo:rustc-env=VERGEN_BUILD_DATE=2024-01-31
+//! cargo:rustc-env=VERGEN_BUILD_TIMESTAMP=2024-01-31T03:26:34.065893658Z
+//! cargo:rustc-env=VERGEN_CARGO_DEBUG=true
+//! cargo:rustc-env=VERGEN_CARGO_FEATURES=
+//! cargo:rustc-env=VERGEN_CARGO_OPT_LEVEL=0
+//! cargo:rustc-env=VERGEN_CARGO_TARGET_TRIPLE=x86_64-unknown-linux-gnu
+//! cargo:rustc-env=VERGEN_CARGO_DEPENDENCIES=anyhow 1.0.79,vergen-pretty 0.3.2
+//! cargo:rustc-env=VERGEN_RUSTC_CHANNEL=nightly
+//! cargo:rustc-env=VERGEN_RUSTC_COMMIT_DATE=2024-01-29
+//! cargo:rustc-env=VERGEN_RUSTC_COMMIT_HASH=5518eaa946291f00471af8b254b2a1715f234882
+//! cargo:rustc-env=VERGEN_RUSTC_HOST_TRIPLE=x86_64-unknown-linux-gnu
+//! cargo:rustc-env=VERGEN_RUSTC_LLVM_VERSION=17.0
+//! cargo:rustc-env=VERGEN_RUSTC_SEMVER=1.77.0-nightly
+//! cargo:rustc-env=VERGEN_SYSINFO_NAME=Arch Linux
+//! cargo:rustc-env=VERGEN_SYSINFO_OS_VERSION=Linux  Arch Linux
+//! cargo:rustc-env=VERGEN_SYSINFO_USER=jozias
+//! cargo:rustc-env=VERGEN_SYSINFO_TOTAL_MEMORY=31 GiB
+//! cargo:rustc-env=VERGEN_SYSINFO_CPU_VENDOR=AuthenticAMD
+//! cargo:rustc-env=VERGEN_SYSINFO_CPU_CORE_COUNT=8
+//! cargo:rustc-env=VERGEN_SYSINFO_CPU_NAME=cpu0,cpu1,cpu2,cpu3,cpu4,cpu5,cpu6,cpu7
+//! cargo:rustc-env=VERGEN_SYSINFO_CPU_BRAND=AMD Ryzen Threadripper 1900X 8-Core Processor
+//! cargo:rustc-env=VERGEN_SYSINFO_CPU_FREQUENCY=3792
+//! cargo:rerun-if-changed=build.rs
+//! cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT
+//! cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
 //! ```
 //!
 //! #### Generate specific output
@@ -170,10 +173,13 @@ let build = BuildBuilder::default().build_timestamp(true).build()?;"##
 //! ```
 //! #### Sample Output
 //! ```text
-//!      Timestamp (  build): 2024-01-28T18:07:13.256193157Z
-//!      Opt Level (  cargo): 0
-//!         Semver (  rustc): 1.77.0-nightly
-//! CPU Core Count (sysinfo): 8
+//! cargo:rustc-env=VERGEN_BUILD_TIMESTAMP=2024-01-31T03:26:34.065893658Z
+//! cargo:rustc-env=VERGEN_CARGO_OPT_LEVEL=0
+//! cargo:rustc-env=VERGEN_RUSTC_SEMVER=1.77.0-nightly
+//! cargo:rustc-env=VERGEN_SYSINFO_CPU_CORE_COUNT=8
+//! cargo:rerun-if-changed=build.rs
+//! cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT
+//! cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
 //! ```
 //!
 //! 4. Use the [`env!`](std::env!) or [`option_env!`](std::option_env!) macro in your code to read the environment variables.
@@ -199,7 +205,8 @@ let build = BuildBuilder::default().build_timestamp(true).build()?;"##
 //! |   si    | `VERGEN_SYSINFO_*` instructions |
 //!
 //! ## Environment Variables
-//! `vergen` currently recognizes the following environment variables
+//! `vergen` currently recognizes the following environment variables. The full list of the environment variable names can be
+//! found as [constants here](https://docs.rs/vergen-lib/latest/vergen_lib/constants/features/index.html)
 //!
 //! | Variable | Functionality |
 //! | -------- | ------------- |
@@ -225,7 +232,7 @@ let build = BuildBuilder::default().build_timestamp(true).build()?;"##
 //! maintainers to force sane defaults when packaging rust binaries for distribution.
 //!
 //! #### Minimize the compile time impact
-//! - I've removed some extraneous libraries.   Any libraries added in the future will be checked against
+//! - I've removed some extraneous libraries.  Any libraries added in the future will be checked against
 //! the current standard compile times to ensure the impact is not too great.
 //! - `vergen` should compile and test from a source tarball.
 //!
@@ -279,33 +286,40 @@ let build = BuildBuilder::default().build_timestamp(true).build()?;"##
 
 // rustc lints
 #![cfg_attr(
-    all(msrv, feature = "unstable", nightly),
+    all(feature = "unstable", nightly),
     feature(
+        diagnostic_namespace,
         lint_reasons,
         multiple_supertrait_upcastable,
         must_not_suspend,
         non_exhaustive_omitted_patterns_lint,
+        rustdoc_missing_doc_code_examples,
         strict_provenance,
         type_privacy_lints,
-        rustdoc_missing_doc_code_examples,
     )
 )]
+#![cfg_attr(nightly, allow(box_pointers))]
 #![cfg_attr(
-    msrv,
+    nightly,
     deny(
         absolute_paths_not_starting_with_crate,
+        ambiguous_glob_imports,
+        ambiguous_glob_reexports,
+        ambiguous_wide_pointer_comparisons,
         anonymous_parameters,
         array_into_iter,
         asm_sub_register,
+        async_fn_in_trait,
         bad_asm_style,
         bare_trait_objects,
-        // box_pointers,
         break_with_label_and_loop,
+        byte_slice_in_packed_struct_with_derive,
         clashing_extern_declarations,
         coherence_leak_check,
         confusable_idents,
         const_evaluatable_unchecked,
         const_item_mutation,
+        const_patterns_without_partial_eq,
         dead_code,
         deprecated,
         deprecated_in_future,
@@ -313,22 +327,33 @@ let build = BuildBuilder::default().build_timestamp(true).build()?;"##
         deref_into_dyn_supertrait,
         deref_nullptr,
         drop_bounds,
+        dropping_copy_types,
+        dropping_references,
         duplicate_macro_attributes,
         dyn_drop,
+        elided_lifetimes_in_associated_constant,
         elided_lifetimes_in_paths,
         ellipsis_inclusive_range_patterns,
         explicit_outlives_requirements,
         exported_private_dependencies,
+        ffi_unwind_calls,
         forbidden_lint_groups,
+        forgetting_copy_types,
+        forgetting_references,
         for_loops_over_fallibles,
         function_item_references,
+        hidden_glob_reexports,
         illegal_floating_point_literal_pattern,
         improper_ctypes,
         improper_ctypes_definitions,
         incomplete_features,
         indirect_structural_match,
         inline_no_sanitize,
+        internal_features,
         invalid_doc_attributes,
+        invalid_from_utf8,
+        invalid_macro_export_arguments,
+        invalid_nan_comparisons,
         invalid_value,
         irrefutable_let_patterns,
         keyword_idents,
@@ -337,6 +362,7 @@ let build = BuildBuilder::default().build_timestamp(true).build()?;"##
         legacy_derive_helpers,
         let_underscore_drop,
         macro_use_extern_crate,
+        map_unit_fn,
         meta_variable_misuse,
         missing_abi,
         missing_copy_implementations,
@@ -357,7 +383,10 @@ let build = BuildBuilder::default().build_timestamp(true).build()?;"##
         overlapping_range_endpoints,
         path_statements,
         pointer_structural_match,
+        private_bounds,
+        private_interfaces,
         redundant_semicolons,
+        refining_impl_trait,
         renamed_and_removed_lints,
         repr_transparent_external_private_fields,
         rust_2021_incompatible_closure_captures,
@@ -368,7 +397,9 @@ let build = BuildBuilder::default().build_timestamp(true).build()?;"##
         single_use_lifetimes,
         special_module_name,
         stable_features,
+        static_mut_ref,
         suspicious_auto_trait_impls,
+        suspicious_double_ref_op,
         temporary_cstring_as_ptr,
         trivial_bounds,
         trivial_casts,
@@ -377,9 +408,11 @@ let build = BuildBuilder::default().build_timestamp(true).build()?;"##
         tyvar_behind_raw_pointer,
         uncommon_codepoints,
         unconditional_recursion,
+        undefined_naked_function_abi,
         unexpected_cfgs,
         ungated_async_fn_track_caller,
         uninhabited_static,
+        unit_bindings,
         unknown_lints,
         unnameable_test_items,
         unreachable_code,
@@ -387,12 +420,12 @@ let build = BuildBuilder::default().build_timestamp(true).build()?;"##
         unreachable_pub,
         unsafe_code,
         unsafe_op_in_unsafe_fn,
-        unstable_features,
         unstable_name_collisions,
         unstable_syntax_pre_expansion,
         unsupported_calling_conventions,
         unused_allocation,
         unused_assignments,
+        unused_associated_type_bounds,
         unused_attributes,
         unused_braces,
         unused_comparisons,
@@ -413,75 +446,36 @@ let build = BuildBuilder::default().build_timestamp(true).build()?;"##
         unused_results,
         unused_unsafe,
         unused_variables,
+        useless_ptr_null_checks,
         variant_size_differences,
         where_clauses_object_safety,
         while_true,
+        writes_through_immutable_pointer,
     )
 )]
-#![cfg_attr(msrv, allow(single_use_lifetimes))]
-// If nightly or beta and unstable, allow `unstable_features`
-#![cfg_attr(
-    all(msrv, feature = "unstable", any(nightly, beta)),
-    allow(unstable_features)
-)]
+// If nightly and unstable, allow `unstable_features`
+#![cfg_attr(all(feature = "unstable", nightly), allow(unstable_features))]
+// If nightly and not unstable, deny `unstable_features`
+#![cfg_attr(all(not(feature = "unstable"), nightly), deny(unstable_features))]
 // The unstable lints
 #![cfg_attr(
-    all(msrv, feature = "unstable", nightly),
+    all(feature = "unstable", nightly),
     deny(
-        ffi_unwind_calls,
         fuzzy_provenance_casts,
         lossy_provenance_casts,
         multiple_supertrait_upcastable,
         must_not_suspend,
         non_exhaustive_omitted_patterns,
-        private_bounds,
-        private_interfaces,
         unfulfilled_lint_expectations,
+        unknown_or_malformed_diagnostic_attributes,
         unnameable_types,
     )
 )]
-// If nightly and not unstable, deny `unstable_features`
-#![cfg_attr(all(msrv, not(feature = "unstable"), nightly), deny(unstable_features))]
-// nightly only lints
-#![cfg_attr(
-    all(msrv, nightly),
-    deny(ambiguous_glob_imports, invalid_reference_casting)
-)]
-// nightly or beta only lints
-#![cfg_attr(
-    all(msrv, any(beta, nightly)),
-    deny(
-        ambiguous_glob_reexports,
-        byte_slice_in_packed_struct_with_derive,
-        dropping_copy_types,
-        dropping_references,
-        forgetting_copy_types,
-        forgetting_references,
-        hidden_glob_reexports,
-        invalid_from_utf8,
-        invalid_macro_export_arguments,
-        invalid_nan_comparisons,
-        map_unit_fn,
-        suspicious_double_ref_op,
-        undefined_naked_function_abi,
-        unused_associated_type_bounds,
-    )
-)]
-// beta only lints
-// #![cfg_attr( all(msrv, beta), deny())]
-// beta or stable only lints
-#![cfg_attr(all(msrv, any(beta, stable)), deny(unused_tuple_struct_fields))]
-// stable only lints
-#![cfg_attr(
-    all(msrv, stable),
-    deny(bindings_with_variant_name, implied_bounds_entailment)
-)]
 // clippy lints
-#![cfg_attr(msrv, deny(clippy::all, clippy::pedantic))]
-#![cfg_attr(all(msrv, lints_fix), allow(clippy::struct_field_names))]
+#![cfg_attr(nightly, deny(clippy::all, clippy::pedantic))]
 // rustdoc lints
 #![cfg_attr(
-    msrv,
+    nightly,
     deny(
         rustdoc::bare_urls,
         rustdoc::broken_intra_doc_links,
@@ -493,7 +487,7 @@ let build = BuildBuilder::default().build_timestamp(true).build()?;"##
     )
 )]
 #![cfg_attr(
-    all(msrv, feature = "unstable", nightly),
+    all(nightly, feature = "unstable"),
     deny(rustdoc::missing_doc_code_examples)
 )]
 #![cfg_attr(all(doc, nightly), feature(doc_auto_cfg))]

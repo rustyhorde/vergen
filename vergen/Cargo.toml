@@ -13,16 +13,8 @@ repository = "https://github.com/rustyhorde/vergen"
 version = "9.0.0-beta.1"
 
 [package.metadata.cargo-all-features]
-denylist = [
-    "cargo_metadata",
-    "regex",
-    "rustc_version",
-    "sysinfo",
-    "time",
-    "unstable",
-    "vergen-lib",
-    "emit_and_set",
-]
+denylist = ["emit_and_set", "unstable"]
+skip_optional_dependencies = true
 
 [features]
 default = []

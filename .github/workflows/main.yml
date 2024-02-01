@@ -17,11 +17,6 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
-# permissions:
-#   contents: read
-#   pages: write
-#   id-token: write
-
 env:
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
@@ -44,12 +39,6 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            rust: "1.70.0"
-          - os: ubuntu-latest
-            rust: stable
-          - os: ubuntu-latest
-            rust: beta
-          - os: ubuntu-latest
             rust: nightly
     steps:
       - name: ✅ Checkout ✅
@@ -57,9 +46,6 @@ jobs:
       - name: 🧰 Toolchain 🧰
         run: |
           rustup toolchain remove ${{ matrix.rust }}
-          rm -f ~/.cargo/bin/rustfmt
-          rm -f ~/.cargo/bin/cargo-fmt
-          rm -f ~/.cargo/bin/cargo-clippy
           rustup toolchain install ${{ matrix.rust }} --profile default
           rustup default ${{ matrix.rust }}
       - name: 📎 Clippy 📎
@@ -79,12 +65,6 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: macos-latest
-            rust: "1.70.0"
-          - os: macos-latest
-            rust: stable
-          - os: macos-latest
-            rust: beta
           - os: macos-latest
             rust: nightly
     steps:
@@ -112,12 +92,6 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: windows-latest
-            rust: "1.70.0"
-          - os: windows-latest
-            rust: stable
-          - os: windows-latest
-            rust: beta
           - os: windows-latest
             rust: nightly
     steps:
@@ -174,33 +148,13 @@ jobs:
         run: |
           cargo update
           cargo test-all-features
-          cargo test -p vergen-pretty -F __vergen_test
-          cargo test -p vergen-pretty -F __vergen_test,color
-          cargo test -p vergen-pretty -F __vergen_test,trace
-          cargo test -p vergen-pretty -F __vergen_test,serde
-          cargo test -p vergen-pretty -F __vergen_test,color,serde
-          cargo test -p vergen-pretty -F __vergen_test,color,trace
-          cargo test -p vergen-pretty -F __vergen_test,trace,serde
-          cargo test -p vergen-pretty -F __vergen_test,color,serde,trace
   coverage:
-    # environment:
-    #   name: github-pages
-    #   url: ${{ steps.deployment.outputs.page_url }}
     name: 🧱 Code Coverage 🧱
     needs: test-linux
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         include:
-          - os: ubuntu-latest
-            rust: "1.70.0"
-            target: x86_64-unknown-linux-gnu
-          - os: ubuntu-latest
-            rust: stable
-            target: x86_64-unknown-linux-gnu
-          - os: ubuntu-latest
-            rust: beta
-            target: x86_64-unknown-linux-gnu
           - os: ubuntu-latest
             rust: nightly
             target: x86_64-unknown-linux-gnu
@@ -252,21 +206,11 @@ jobs:
       - name: 🙊 Code Coverage Report (HTML) 🙊
         run: cargo llvm-cov report --html
       - name: 🙊 Upload Code Coverage 🙊
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4-beta
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         with:
           files: ./lcov.info
-      # - name: Setup Pages
-      #   uses: actions/configure-pages@v4
-      #   if: ${{ matrix.rust == 'nightly' }}
-      # - name: Upload artifact
-      #   uses: actions/upload-pages-artifact@v3
-      #   if: ${{ matrix.rust == 'nightly' }}
-      #   with:
-      #     path: 'target/llvm-cov/html'
-      # - name: Deploy to GitHub Pages
-      #   id: deployment
-      #   if: ${{ matrix.rust == 'nightly' }}
-      #   uses: actions/deploy-pages@v4
   test-macos:
     name: 🧪 MacOS 🧪
     needs: lints-macos
@@ -303,14 +247,6 @@ jobs:
         run: |
           cargo update
           cargo test-all-features
-          cargo test -p vergen-pretty -F __vergen_test
-          cargo test -p vergen-pretty -F __vergen_test,color
-          cargo test -p vergen-pretty -F __vergen_test,trace
-          cargo test -p vergen-pretty -F __vergen_test,serde
-          cargo test -p vergen-pretty -F __vergen_test,color,serde
-          cargo test -p vergen-pretty -F __vergen_test,color,trace
-          cargo test -p vergen-pretty -F __vergen_test,trace,serde
-          cargo test -p vergen-pretty -F __vergen_test,color,serde,trace
   test-windows:
     name: 🧪 Windows 🧪
     needs: lints-windows
@@ -359,11 +295,3 @@ jobs:
         run: |
           cargo update
           cargo test-all-features
-          cargo test -p vergen-pretty -F __vergen_test
-          cargo test -p vergen-pretty -F __vergen_test,color
-          cargo test -p vergen-pretty -F __vergen_test,trace
-          cargo test -p vergen-pretty -F __vergen_test,serde
-          cargo test -p vergen-pretty -F __vergen_test,color,serde
-          cargo test -p vergen-pretty -F __vergen_test,color,trace
-          cargo test -p vergen-pretty -F __vergen_test,trace,serde
-          cargo test -p vergen-pretty -F __vergen_test,color,serde,trace

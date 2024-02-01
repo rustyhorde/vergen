@@ -9,21 +9,6 @@ cargo clippy -p vergen-lib --all-targets --features build,cargo,git,rustc,si -- 
 cargo clippy -p vergen-pretty --all-targets --features color,header,trace -- -Dwarnings; and \
 cargo build-all-features; and \
 cargo test-all-features; and \
-cargo test -p vergen-pretty -F __vergen_test; and \
-cargo test -p vergen-pretty -F __vergen_test,color; and \
-cargo test -p vergen-pretty -F __vergen_test,header; and \
-cargo test -p vergen-pretty -F __vergen_test,trace; and \
-cargo test -p vergen-pretty -F __vergen_test,serde; and \
-cargo test -p vergen-pretty -F __vergen_test,color,header; and \
-cargo test -p vergen-pretty -F __vergen_test,color,serde; and \
-cargo test -p vergen-pretty -F __vergen_test,color,trace; and \
-cargo test -p vergen-pretty -F __vergen_test,header,serde; and \
-cargo test -p vergen-pretty -F __vergen_test,header,trace; and \
-cargo test -p vergen-pretty -F __vergen_test,serde,trace; and \
-cargo test -p vergen-pretty -F __vergen_test,color,header,serde; and \
-cargo test -p vergen-pretty -F __vergen_test,color,header,trace; and \
-cargo test -p vergen-pretty -F __vergen_test,header,serde,trace; and \
-cargo test -p vergen-pretty -F __vergen_test,color,header,serde,trace; and \
 cargo llvm-cov clean --workspace; and \
 cargo llvm-cov -p vergen-lib -F unstable --no-report; and \
 cargo llvm-cov -p vergen-lib -F unstable,build,cargo,git,rustc,si --no-report; and \

@@ -13,15 +13,9 @@ repository = "https://github.com/rustyhorde/vergen"
 version = "0.3.2"
 
 [package.metadata.cargo-all-features]
-denylist = [
-    "console",
-    "lazy_static",
-    "serde",
-    "tracing",
-    "unstable",
-    "vergen-gix",
-    "rand",
-]
+denylist = ["unstable"]
+skip_optional_dependencies = true
+always_include_features = ["__vergen_test"]
 
 [features]
 default = []

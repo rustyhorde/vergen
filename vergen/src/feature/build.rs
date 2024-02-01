@@ -532,8 +532,7 @@ mod test {
     #[serial]
     #[cfg(windows)]
     fn bad_source_date_epoch_fails() {
-        use std::ffi::OsString;
-        use std::os::windows::prelude::OsStringExt;
+        use std::{ffi::OsString, os::windows::prelude::OsStringExt};
 
         let source = [0x0066, 0x006f, 0xD800, 0x006f];
         let os_string = OsString::from_wide(&source[..]);
@@ -541,8 +540,9 @@ mod test {
         temp_env::with_var("SOURCE_DATE_EPOCH", Some(os_str), || {
             let result = || -> Result<bool> {
                 let mut stdout_buf = vec![];
-                let build = Builder::default().all_build().build();
+                let build = BuildBuilder::all_build()?;
                 Emitter::new()
+                    .fail_on_error()
                     .idempotent()
                     .add_instructions(&build)?
                     .emit_to(&mut stdout_buf)
@@ -555,8 +555,7 @@ mod test {
     #[serial]
     #[cfg(windows)]
     fn bad_source_date_epoch_defaults() {
-        use std::ffi::OsString;
-        use std::os::windows::prelude::OsStringExt;
+        use std::{ffi::OsString, os::windows::prelude::OsStringExt};
 
         let source = [0x0066, 0x006f, 0xD800, 0x006f];
         let os_string = OsString::from_wide(&source[..]);
@@ -564,7 +563,7 @@ mod test {
         temp_env::with_var("SOURCE_DATE_EPOCH", Some(os_str), || {
             let result = || -> Result<bool> {
                 let mut stdout_buf = vec![];
-                let build = Builder::default().all_build().build();
+                let build = BuildBuilder::all_build()?;
                 Emitter::new()
                     .idempotent()
                     .add_instructions(&build)?

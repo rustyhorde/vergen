@@ -1031,6 +1031,7 @@ mod test {
                 let mut stdout_buf = vec![];
                 let gix = Git2Builder::default().commit_date(true).build()?;
                 Emitter::new()
+                    .fail_on_error()
                     .idempotent()
                     .add_instructions(&gix)?
                     .emit_to(&mut stdout_buf)
