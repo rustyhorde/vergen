@@ -112,8 +112,8 @@ jobs:
           cargo clippy -p vergen-gitcl --all-targets --features build,cargo,emit_and_set,rustc,si -- -Dwarnings
           cargo clippy -p vergen-gix --all-targets --features build,cargo,emit_and_set,rustc,si -- -Dwarnings
           cargo clippy -p vergen-pretty --all-targets --features color,header,trace -- -Dwarnings
-  test-linux:
-    name: 🧪 Linux 🧪
+  test-linux-chunk-1:
+    name: 🧪 Linux (Chunk 1) 🧪
     needs: lints-linux
     runs-on: ${{ matrix.os }}
     strategy:
@@ -147,10 +147,124 @@ jobs:
       - name: 🧪 Test 🧪
         run: |
           cargo update
-          cargo test-all-features
+          cargo test-all-features --n-chunks 4 --chunk 1
+  test-linux-chunk-2:
+    name: 🧪 Linux (Chunk 2) 🧪
+    needs: lints-linux
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            rust: "1.70.0"
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-latest
+            rust: stable
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-latest
+            rust: beta
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-latest
+            rust: nightly
+            target: x86_64-unknown-linux-gnu
+    steps:
+      - name: ✅ Checkout ✅
+        uses: actions/checkout@v4
+      - name: 🧰 Toolchain 🧰
+        run: |
+          rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
+          rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile minimal
+          rustup default ${{ matrix.rust }}
+      - name: 💾 Install (cargo-binstall) 💾
+        uses: cargo-bins/cargo-binstall@main
+      - name: 💾 Install (all-features) 💾
+        continue-on-error: true
+        run: cargo binstall --no-confirm --no-symlinks cargo-all-features
+      - name: 🧪 Test 🧪
+        run: |
+          cargo update
+          cargo test-all-features --n-chunks 4 --chunk 2
+  test-linux-chunk-3:
+    name: 🧪 Linux (Chunk 3) 🧪
+    needs: lints-linux
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            rust: "1.70.0"
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-latest
+            rust: stable
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-latest
+            rust: beta
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-latest
+            rust: nightly
+            target: x86_64-unknown-linux-gnu
+    steps:
+      - name: ✅ Checkout ✅
+        uses: actions/checkout@v4
+      - name: 🧰 Toolchain 🧰
+        run: |
+          rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
+          rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile minimal
+          rustup default ${{ matrix.rust }}
+      - name: 💾 Install (cargo-binstall) 💾
+        uses: cargo-bins/cargo-binstall@main
+      - name: 💾 Install (all-features) 💾
+        continue-on-error: true
+        run: cargo binstall --no-confirm --no-symlinks cargo-all-features
+      - name: 🧪 Test 🧪
+        run: |
+          cargo update
+          cargo test-all-features --n-chunks 4 --chunk 3
+  test-linux-chunk-4:
+    name: 🧪 Linux (Chunk 4) 🧪
+    needs: lints-linux
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            rust: "1.70.0"
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-latest
+            rust: stable
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-latest
+            rust: beta
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-latest
+            rust: nightly
+            target: x86_64-unknown-linux-gnu
+    steps:
+      - name: ✅ Checkout ✅
+        uses: actions/checkout@v4
+      - name: 🧰 Toolchain 🧰
+        run: |
+          rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
+          rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile minimal
+          rustup default ${{ matrix.rust }}
+      - name: 💾 Install (cargo-binstall) 💾
+        uses: cargo-bins/cargo-binstall@main
+      - name: 💾 Install (all-features) 💾
+        continue-on-error: true
+        run: cargo binstall --no-confirm --no-symlinks cargo-all-features
+      - name: 🧪 Test 🧪
+        run: |
+          cargo update
+          cargo test-all-features --n-chunks 4 --chunk 4
   coverage:
     name: 🧱 Code Coverage 🧱
-    needs: test-linux
+    needs:
+      [
+        test-linux-chunk-1,
+        test-linux-chunk-2,
+        test-linux-chunk-3,
+        test-linux-chunk-4,
+      ]
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
