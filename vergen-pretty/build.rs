@@ -1,8 +1,8 @@
 use anyhow::Result;
 use std::env;
-#[cfg(feature = "__vergen_empty_test")]
+#[cfg(all(feature = "__vergen_empty_test", not(feature = "__vergen_test")))]
 use vergen_gix::Emitter;
-#[cfg(feature = "__vergen_test")]
+#[cfg(all(feature = "__vergen_test", not(feature = "__vergen_empty_test")))]
 use {
     std::collections::BTreeMap,
     vergen_gix::{
@@ -27,7 +27,12 @@ fn setup_env() -> Result<()> {
     Ok(())
 }
 
-#[cfg(all(not(feature = "__vergen_test"), not(feature = "__vergen_empty_test")))]
+#[cfg(all(feature = "__vergen_test", feature = "__vergen_empty_test"))]
+fn emit() -> Result<()> {
+    Ok(())
+}
+
+#[cfg(not(any(feature = "__vergen_test", feature = "__vergen_empty_test")))]
 fn emit() -> Result<()> {
     Ok(())
 }

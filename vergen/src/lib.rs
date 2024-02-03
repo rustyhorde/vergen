@@ -195,7 +195,11 @@ let build = BuildBuilder::default().build_timestamp(true).build()?;"##
 //!
 //! ## Features
 //! `vergen` has four main feature toggles allowing you to customize your output. No features are enabled by default.  
-//! You **must** specifically enable the features you wish to use.
+//! You **must** specifically enable the features you wish to use.  
+#![cfg_attr(
+    feature = "emit_and_set",
+    doc = r##"There is also a toggle for the [`emit_and_set`](Emitter::emit_and_set) function.  This version of emit will also set the instructions you requests as environment variables for use in `build.rs`"##
+)]
 //!
 //! | Feature | Enables |
 //! | ------- | ------- |
