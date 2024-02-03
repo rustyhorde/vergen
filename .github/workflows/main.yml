@@ -53,10 +53,10 @@ jobs:
           cargo update
           cargo clippy -p test_util --all-targets -- -Dwarnings
           cargo clippy -p vergen-lib --all-targets --features build,cargo,git,rustc,si -- -Dwarnings
-          cargo clippy -p vergen --all-targets --features build,cargo,rustc,si -- -Dwarnings
-          cargo clippy -p vergen-gix --all-targets --features build,cargo,rustc,si -- -Dwarnings
-          cargo clippy -p vergen-git2 --all-targets --features build,cargo,rustc,si -- -Dwarnings
-          cargo clippy -p vergen-gitcl --all-targets --features build,cargo,rustc,si -- -Dwarnings
+          cargo clippy -p vergen --all-targets --features build,cargo,emit_and_set,rustc,si -- -Dwarnings
+          cargo clippy -p vergen-git2 --all-targets --features build,cargo,emit_and_set,rustc,si -- -Dwarnings
+          cargo clippy -p vergen-gitcl --all-targets --features build,cargo,emit_and_set,rustc,si -- -Dwarnings
+          cargo clippy -p vergen-gix --all-targets --features build,cargo,emit_and_set,rustc,si -- -Dwarnings
           cargo clippy -p vergen-pretty --all-targets --features color,header,trace -- -Dwarnings
   lints-macos:
     name: 🕳️ Lints MacOS 🕳️
@@ -80,10 +80,10 @@ jobs:
           cargo update
           cargo clippy -p test_util --all-targets -- -Dwarnings
           cargo clippy -p vergen-lib --all-targets --features build,cargo,git,rustc,si -- -Dwarnings
-          cargo clippy -p vergen --all-targets --features build,cargo,rustc,si -- -Dwarnings
-          cargo clippy -p vergen-gix --all-targets --features build,cargo,rustc,si -- -Dwarnings
-          cargo clippy -p vergen-git2 --all-targets --features build,cargo,rustc,si -- -Dwarnings
-          cargo clippy -p vergen-gitcl --all-targets --features build,cargo,rustc,si -- -Dwarnings
+          cargo clippy -p vergen --all-targets --features build,cargo,emit_and_set,rustc,si -- -Dwarnings
+          cargo clippy -p vergen-git2 --all-targets --features build,cargo,emit_and_set,rustc,si -- -Dwarnings
+          cargo clippy -p vergen-gitcl --all-targets --features build,cargo,emit_and_set,rustc,si -- -Dwarnings
+          cargo clippy -p vergen-gix --all-targets --features build,cargo,emit_and_set,rustc,si -- -Dwarnings
           cargo clippy -p vergen-pretty --all-targets --features color,header,trace -- -Dwarnings
   lints-windows:
     name: 🕳️ Lints Windows 🕳️
@@ -107,10 +107,10 @@ jobs:
           cargo update
           cargo clippy -p test_util --all-targets -- -Dwarnings
           cargo clippy -p vergen-lib --all-targets --features build,cargo,git,rustc,si -- -Dwarnings
-          cargo clippy -p vergen --all-targets --features build,cargo,rustc,si -- -Dwarnings
-          cargo clippy -p vergen-gix --all-targets --features build,cargo,rustc,si -- -Dwarnings
-          cargo clippy -p vergen-git2 --all-targets --features build,cargo,rustc,si -- -Dwarnings
-          cargo clippy -p vergen-gitcl --all-targets --features build,cargo,rustc,si -- -Dwarnings
+          cargo clippy -p vergen --all-targets --features build,cargo,emit_and_set,rustc,si -- -Dwarnings
+          cargo clippy -p vergen-git2 --all-targets --features build,cargo,emit_and_set,rustc,si -- -Dwarnings
+          cargo clippy -p vergen-gitcl --all-targets --features build,cargo,emit_and_set,rustc,si -- -Dwarnings
+          cargo clippy -p vergen-gix --all-targets --features build,cargo,emit_and_set,rustc,si -- -Dwarnings
           cargo clippy -p vergen-pretty --all-targets --features color,header,trace -- -Dwarnings
   test-linux:
     name: 🧪 Linux 🧪
@@ -166,6 +166,7 @@ jobs:
           rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
           rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile minimal
           rustup default ${{ matrix.rust }}
+          rustup component add llvm-tools-preview
       - name: 💾 Install (cargo-binstall) 💾
         uses: cargo-bins/cargo-binstall@main
       - name: 💾 Install (llvm-cov) 💾
