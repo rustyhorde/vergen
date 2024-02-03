@@ -326,8 +326,8 @@ jobs:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         with:
           files: ./lcov.info
-  test-macos:
-    name: 🧪 MacOS 🧪
+  test-macos-chunk-1:
+    name: 🧪 MacOS (Chunk 1) 🧪
     needs: lints-macos
     runs-on: ${{ matrix.os }}
     strategy:
@@ -361,9 +361,117 @@ jobs:
       - name: 🧪 Test 🧪
         run: |
           cargo update
-          cargo test-all-features
-  test-windows:
-    name: 🧪 Windows 🧪
+          cargo test-all-features --n-chunks 4 --chunk 1
+  test-macos-chunk-2:
+    name: 🧪 MacOS (Chunk 2) 🧪
+    needs: lints-macos
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: macos-latest
+            rust: "1.70.0"
+            target: x86_64-apple-darwin
+          - os: macos-latest
+            rust: stable
+            target: x86_64-apple-darwin
+          - os: macos-latest
+            rust: beta
+            target: x86_64-apple-darwin
+          - os: macos-latest
+            rust: nightly
+            target: x86_64-apple-darwin
+    steps:
+      - name: ✅ Checkout ✅
+        uses: actions/checkout@v4
+      - name: 🧰 Toolchain 🧰
+        run: |
+          rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
+          rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile minimal
+          rustup default ${{ matrix.rust }}
+      - name: 💾 Install (cargo-binstall) 💾
+        uses: cargo-bins/cargo-binstall@main
+      - name: 💾 Install (all-features) 💾
+        continue-on-error: true
+        run: cargo binstall --no-confirm --no-symlinks cargo-all-features
+      - name: 🧪 Test 🧪
+        run: |
+          cargo update
+          cargo test-all-features --n-chunks 4 --chunk 2
+  test-macos-chunk-3:
+    name: 🧪 MacOS (Chunk 3) 🧪
+    needs: lints-macos
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: macos-latest
+            rust: "1.70.0"
+            target: x86_64-apple-darwin
+          - os: macos-latest
+            rust: stable
+            target: x86_64-apple-darwin
+          - os: macos-latest
+            rust: beta
+            target: x86_64-apple-darwin
+          - os: macos-latest
+            rust: nightly
+            target: x86_64-apple-darwin
+    steps:
+      - name: ✅ Checkout ✅
+        uses: actions/checkout@v4
+      - name: 🧰 Toolchain 🧰
+        run: |
+          rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
+          rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile minimal
+          rustup default ${{ matrix.rust }}
+      - name: 💾 Install (cargo-binstall) 💾
+        uses: cargo-bins/cargo-binstall@main
+      - name: 💾 Install (all-features) 💾
+        continue-on-error: true
+        run: cargo binstall --no-confirm --no-symlinks cargo-all-features
+      - name: 🧪 Test 🧪
+        run: |
+          cargo update
+          cargo test-all-features --n-chunks 4 --chunk 3
+  test-macos-chunk-4:
+    name: 🧪 MacOS (Chunk 4) 🧪
+    needs: lints-macos
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: macos-latest
+            rust: "1.70.0"
+            target: x86_64-apple-darwin
+          - os: macos-latest
+            rust: stable
+            target: x86_64-apple-darwin
+          - os: macos-latest
+            rust: beta
+            target: x86_64-apple-darwin
+          - os: macos-latest
+            rust: nightly
+            target: x86_64-apple-darwin
+    steps:
+      - name: ✅ Checkout ✅
+        uses: actions/checkout@v4
+      - name: 🧰 Toolchain 🧰
+        run: |
+          rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
+          rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile minimal
+          rustup default ${{ matrix.rust }}
+      - name: 💾 Install (cargo-binstall) 💾
+        uses: cargo-bins/cargo-binstall@main
+      - name: 💾 Install (all-features) 💾
+        continue-on-error: true
+        run: cargo binstall --no-confirm --no-symlinks cargo-all-features
+      - name: 🧪 Test 🧪
+        run: |
+          cargo update
+          cargo test-all-features --n-chunks 4 --chunk 4
+  test-windows-chunk-1:
+    name: 🧪 Windows (Chunk 1) 🧪
     needs: lints-windows
     runs-on: ${{ matrix.os }}
     strategy:
@@ -409,4 +517,148 @@ jobs:
       - name: 🧪 Test 🧪
         run: |
           cargo update
-          cargo test-all-features
+          cargo test-all-features --n-chunks 4 --chunk 1
+  test-windows-chunk-2:
+    name: 🧪 Windows (Chunk 2) 🧪
+    needs: lints-windows
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            rust: "1.70.0"
+            target: x86_64-pc-windows-msvc
+          - os: windows-latest
+            rust: stable
+            target: x86_64-pc-windows-msvc
+          - os: windows-latest
+            rust: beta
+            target: x86_64-pc-windows-msvc
+          - os: windows-latest
+            rust: nightly
+            target: x86_64-pc-windows-msvc
+          - os: windows-latest
+            rust: "1.70.0"
+            target: x86_64-pc-windows-gnu
+          - os: windows-latest
+            rust: stable
+            target: x86_64-pc-windows-gnu
+          - os: windows-latest
+            rust: beta
+            target: x86_64-pc-windows-gnu
+          - os: windows-latest
+            rust: nightly
+            target: x86_64-pc-windows-gnu
+    steps:
+      - name: ✅ Checkout ✅
+        uses: actions/checkout@v4
+      - name: 🧰 Toolchain 🧰
+        run: |
+          rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
+          rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile minimal --no-self-update
+          rustup default ${{ matrix.rust }}
+      - name: 💾 Install (cargo-binstall) 💾
+        uses: cargo-bins/cargo-binstall@main
+      - name: 💾 Install (all-features) 💾
+        continue-on-error: true
+        run: cargo binstall --no-confirm --no-symlinks cargo-all-features
+      - name: 🧪 Test 🧪
+        run: |
+          cargo update
+          cargo test-all-features --n-chunks 4 --chunk 2
+  test-windows-chunk-3:
+    name: 🧪 Windows (Chunk 3) 🧪
+    needs: lints-windows
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            rust: "1.70.0"
+            target: x86_64-pc-windows-msvc
+          - os: windows-latest
+            rust: stable
+            target: x86_64-pc-windows-msvc
+          - os: windows-latest
+            rust: beta
+            target: x86_64-pc-windows-msvc
+          - os: windows-latest
+            rust: nightly
+            target: x86_64-pc-windows-msvc
+          - os: windows-latest
+            rust: "1.70.0"
+            target: x86_64-pc-windows-gnu
+          - os: windows-latest
+            rust: stable
+            target: x86_64-pc-windows-gnu
+          - os: windows-latest
+            rust: beta
+            target: x86_64-pc-windows-gnu
+          - os: windows-latest
+            rust: nightly
+            target: x86_64-pc-windows-gnu
+    steps:
+      - name: ✅ Checkout ✅
+        uses: actions/checkout@v4
+      - name: 🧰 Toolchain 🧰
+        run: |
+          rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
+          rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile minimal --no-self-update
+          rustup default ${{ matrix.rust }}
+      - name: 💾 Install (cargo-binstall) 💾
+        uses: cargo-bins/cargo-binstall@main
+      - name: 💾 Install (all-features) 💾
+        continue-on-error: true
+        run: cargo binstall --no-confirm --no-symlinks cargo-all-features
+      - name: 🧪 Test 🧪
+        run: |
+          cargo update
+          cargo test-all-features --n-chunks 4 --chunk 3
+  test-windows-chunk-4:
+    name: 🧪 Windows (Chunk 4) 🧪
+    needs: lints-windows
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            rust: "1.70.0"
+            target: x86_64-pc-windows-msvc
+          - os: windows-latest
+            rust: stable
+            target: x86_64-pc-windows-msvc
+          - os: windows-latest
+            rust: beta
+            target: x86_64-pc-windows-msvc
+          - os: windows-latest
+            rust: nightly
+            target: x86_64-pc-windows-msvc
+          - os: windows-latest
+            rust: "1.70.0"
+            target: x86_64-pc-windows-gnu
+          - os: windows-latest
+            rust: stable
+            target: x86_64-pc-windows-gnu
+          - os: windows-latest
+            rust: beta
+            target: x86_64-pc-windows-gnu
+          - os: windows-latest
+            rust: nightly
+            target: x86_64-pc-windows-gnu
+    steps:
+      - name: ✅ Checkout ✅
+        uses: actions/checkout@v4
+      - name: 🧰 Toolchain 🧰
+        run: |
+          rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
+          rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile minimal --no-self-update
+          rustup default ${{ matrix.rust }}
+      - name: 💾 Install (cargo-binstall) 💾
+        uses: cargo-bins/cargo-binstall@main
+      - name: 💾 Install (all-features) 💾
+        continue-on-error: true
+        run: cargo binstall --no-confirm --no-symlinks cargo-all-features
+      - name: 🧪 Test 🧪
+        run: |
+          cargo update
+          cargo test-all-features --n-chunks 4 --chunk 4
