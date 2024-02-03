@@ -256,76 +256,6 @@ jobs:
         run: |
           cargo update
           cargo test-all-features --n-chunks 4 --chunk 4
-  coverage:
-    name: 🧱 Code Coverage 🧱
-    needs:
-      [
-        test-linux-chunk-1,
-        test-linux-chunk-2,
-        test-linux-chunk-3,
-        test-linux-chunk-4,
-      ]
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-latest
-            rust: nightly
-            target: x86_64-unknown-linux-gnu
-    steps:
-      - name: ✅ Checkout ✅
-        uses: actions/checkout@v4
-      - name: 🧰 Toolchain 🧰
-        run: |
-          rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
-          rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile minimal
-          rustup default ${{ matrix.rust }}
-          rustup component add llvm-tools-preview
-      - name: 💾 Install (cargo-binstall) 💾
-        uses: cargo-bins/cargo-binstall@main
-      - name: 💾 Install (llvm-cov) 💾
-        continue-on-error: true
-        run: cargo binstall --no-confirm --no-symlinks cargo-llvm-cov
-      - name: 🙊 Clean Workspace 🙊
-        run: cargo llvm-cov clean --workspace
-      - name: 🙊 Code Coverage (vergen-lib - default) 🙊
-        run: cargo llvm-cov -p vergen-lib -F unstable --no-report
-      - name: 🙊 Code Coverage (vergen-lib - all) 🙊
-        run: cargo llvm-cov -p vergen-lib -F unstable,build,cargo,git,rustc,si --no-report
-      - name: 🙊 Code Coverage (vergen - default) 🙊
-        run: cargo llvm-cov -p vergen -F unstable --no-report
-      - name: 🙊 Code Coverage (vergen - all) 🙊
-        run: cargo llvm-cov -p vergen -F unstable,build,cargo,rustc,si --no-report
-      - name: 🙊 Code Coverage (vergen-gix - default) 🙊
-        run: cargo llvm-cov -p vergen-gix -F unstable --no-report
-      - name: 🙊 Code Coverage (vergen-gix - all) 🙊
-        run: cargo llvm-cov -p vergen-gix -F unstable,build,cargo,rustc,si --no-report
-      - name: 🙊 Code Coverage (vergen-git2 - default) 🙊
-        run: cargo llvm-cov -p vergen-git2 -F unstable --no-report
-      - name: 🙊 Code Coverage (vergen-git2 - all) 🙊
-        run: cargo llvm-cov -p vergen-git2 -F unstable,build,cargo,rustc,si --no-report
-      - name: 🙊 Code Coverage (vergen-gitcl - default) 🙊
-        run: cargo llvm-cov -p vergen-gitcl -F unstable --no-report
-      - name: 🙊 Code Coverage (vergen-gitcl - all) 🙊
-        run: cargo llvm-cov -p vergen-gitcl -F unstable,build,cargo,rustc,si --no-report
-      - name: 🙊 Code Coverage (vergen-pretty - default) 🙊
-        run: cargo llvm-cov -p vergen-pretty -F __vergen_test --no-report
-      - name: 🙊 Code Coverage (vergen-pretty - all) 🙊
-        run: cargo llvm-cov -p vergen-pretty -F __vergen_test,color,header,serde,trace --no-report
-      - name: 🙊 Code Coverage (vergen-pretty - empty default) 🙊
-        run: cargo llvm-cov -p vergen-pretty -F __vergen_empty_test --no-report
-      - name: 🙊 Code Coverage (vergen-pretty - empty all) 🙊
-        run: cargo llvm-cov -p vergen-pretty -F __vergen_empty_test,color,header,serde,trace --no-report
-      - name: 🙊 Code Coverage Report (LCOV) 🙊
-        run: cargo llvm-cov report --lcov --output-path lcov.info
-      - name: 🙊 Code Coverage Report (HTML) 🙊
-        run: cargo llvm-cov report --html
-      - name: 🙊 Upload Code Coverage 🙊
-        uses: codecov/codecov-action@v4-beta
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-        with:
-          files: ./lcov.info
   test-macos-chunk-1:
     name: 🧪 MacOS (Chunk 1) 🧪
     needs: lints-macos
@@ -494,3 +424,86 @@ jobs:
         run: |
           cargo update
           cargo test-all-features --n-chunks 2 --chunk 2
+  coverage:
+    name: 🧱 Code Coverage 🧱
+    needs:
+      [
+        test-linux-chunk-1,
+        test-linux-chunk-2,
+        test-linux-chunk-3,
+        test-linux-chunk-4,
+        test-macos-chunk-1,
+        test-macos-chunk-2,
+        test-windows-chunk-1,
+        test-windows-chunk-2,
+      ]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            rust: nightly
+            target: x86_64-unknown-linux-gnu
+          - os: macos-latest
+            rust: nightly
+            target: x86_64-apple-darwin
+          - os: windows-latest
+            rust: nightly
+            target: x86_64-pc-windows-msvc
+          - os: windows-latest
+            rust: nightly
+            target: x86_64-pc-windows-gnu
+    steps:
+      - name: ✅ Checkout ✅
+        uses: actions/checkout@v4
+      - name: 🧰 Toolchain 🧰
+        run: |
+          rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
+          rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile minimal
+          rustup default ${{ matrix.rust }}
+          rustup component add llvm-tools-preview
+      - name: 💾 Install (cargo-binstall) 💾
+        uses: cargo-bins/cargo-binstall@main
+      - name: 💾 Install (llvm-cov) 💾
+        continue-on-error: true
+        run: cargo binstall --no-confirm --no-symlinks cargo-llvm-cov
+      - name: 🙊 Clean Workspace 🙊
+        run: cargo llvm-cov clean --workspace
+      - name: 🙊 Code Coverage (vergen-lib - default) 🙊
+        run: cargo llvm-cov -p vergen-lib -F unstable --no-report
+      - name: 🙊 Code Coverage (vergen-lib - all) 🙊
+        run: cargo llvm-cov -p vergen-lib -F unstable,build,cargo,git,rustc,si --no-report
+      - name: 🙊 Code Coverage (vergen - default) 🙊
+        run: cargo llvm-cov -p vergen -F unstable --no-report
+      - name: 🙊 Code Coverage (vergen - all) 🙊
+        run: cargo llvm-cov -p vergen -F unstable,build,cargo,rustc,si --no-report
+      - name: 🙊 Code Coverage (vergen-gix - default) 🙊
+        run: cargo llvm-cov -p vergen-gix -F unstable --no-report
+      - name: 🙊 Code Coverage (vergen-gix - all) 🙊
+        run: cargo llvm-cov -p vergen-gix -F unstable,build,cargo,rustc,si --no-report
+      - name: 🙊 Code Coverage (vergen-git2 - default) 🙊
+        run: cargo llvm-cov -p vergen-git2 -F unstable --no-report
+      - name: 🙊 Code Coverage (vergen-git2 - all) 🙊
+        run: cargo llvm-cov -p vergen-git2 -F unstable,build,cargo,rustc,si --no-report
+      - name: 🙊 Code Coverage (vergen-gitcl - default) 🙊
+        run: cargo llvm-cov -p vergen-gitcl -F unstable --no-report
+      - name: 🙊 Code Coverage (vergen-gitcl - all) 🙊
+        run: cargo llvm-cov -p vergen-gitcl -F unstable,build,cargo,rustc,si --no-report
+      - name: 🙊 Code Coverage (vergen-pretty - default) 🙊
+        run: cargo llvm-cov -p vergen-pretty -F __vergen_test --no-report
+      - name: 🙊 Code Coverage (vergen-pretty - all) 🙊
+        run: cargo llvm-cov -p vergen-pretty -F __vergen_test,color,header,serde,trace --no-report
+      - name: 🙊 Code Coverage (vergen-pretty - empty default) 🙊
+        run: cargo llvm-cov -p vergen-pretty -F __vergen_empty_test --no-report
+      - name: 🙊 Code Coverage (vergen-pretty - empty all) 🙊
+        run: cargo llvm-cov -p vergen-pretty -F __vergen_empty_test,color,header,serde,trace --no-report
+      - name: 🙊 Code Coverage Report (LCOV) 🙊
+        run: cargo llvm-cov report --lcov --output-path lcov.info
+      - name: 🙊 Code Coverage Report (HTML) 🙊
+        run: cargo llvm-cov report --html
+      - name: 🙊 Upload Code Coverage 🙊
+        uses: codecov/codecov-action@v4-beta
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        with:
+          files: ./lcov.info
