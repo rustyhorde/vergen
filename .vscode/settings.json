@@ -1,5 +1,5 @@
 {
     "rust-analyzer.cargo.features": [
-        "build","cargo","git","rustc","si","color","serde","trace","header"
+        "build","cargo","color","emit_and_set","git","header","repo","rustc","serde","si","trace","unstable"
     ]
 }

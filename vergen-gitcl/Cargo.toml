@@ -10,16 +10,17 @@ license = "MIT OR Apache-2.0"
 name = "vergen-gitcl"
 readme = "README.md"
 repository = "https://github.com/rustyhorde/vergen"
-version = "1.0.0-beta.1"
+version = "1.0.0-beta.2"
 
 [package.metadata.cargo-all-features]
-denylist = ["unstable"]
+denylist = ["emit_and_set", "unstable"]
 skip_optional_dependencies = true
 
 [features]
 default = []
 build = ["vergen/build"]
 cargo = ["vergen/cargo"]
+emit_and_set = ["vergen/emit_and_set"]
 rustc = ["vergen/rustc"]
 unstable = ["vergen/unstable"]
 si = ["vergen/si"]
@@ -46,5 +47,5 @@ temp-env = "0.3.6"
 test_util = { path = "../test_util", features = ["repo"] }
 
 [package.metadata.docs.rs]
-features = ["build", "cargo", "rustc", "si"]
+features = ["build", "cargo", "emit_and_set", "rustc", "si"]
 rustdoc-args = ["--cfg", "docsrs"]

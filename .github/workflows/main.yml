@@ -53,10 +53,10 @@ jobs:
           cargo update
           cargo clippy -p test_util --all-targets -- -Dwarnings
           cargo clippy -p vergen-lib --all-targets --features build,cargo,git,rustc,si -- -Dwarnings
-          cargo clippy -p vergen --all-targets --features build,cargo,rustc,si -- -Dwarnings
-          cargo clippy -p vergen-gix --all-targets --features build,cargo,rustc,si -- -Dwarnings
-          cargo clippy -p vergen-git2 --all-targets --features build,cargo,rustc,si -- -Dwarnings
-          cargo clippy -p vergen-gitcl --all-targets --features build,cargo,rustc,si -- -Dwarnings
+          cargo clippy -p vergen --all-targets --features build,cargo,emit_and_set,rustc,si -- -Dwarnings
+          cargo clippy -p vergen-git2 --all-targets --features build,cargo,emit_and_set,rustc,si -- -Dwarnings
+          cargo clippy -p vergen-gitcl --all-targets --features build,cargo,emit_and_set,rustc,si -- -Dwarnings
+          cargo clippy -p vergen-gix --all-targets --features build,cargo,emit_and_set,rustc,si -- -Dwarnings
           cargo clippy -p vergen-pretty --all-targets --features color,header,trace -- -Dwarnings
   lints-macos:
     name: 🕳️ Lints MacOS 🕳️
@@ -80,10 +80,10 @@ jobs:
           cargo update
           cargo clippy -p test_util --all-targets -- -Dwarnings
           cargo clippy -p vergen-lib --all-targets --features build,cargo,git,rustc,si -- -Dwarnings
-          cargo clippy -p vergen --all-targets --features build,cargo,rustc,si -- -Dwarnings
-          cargo clippy -p vergen-gix --all-targets --features build,cargo,rustc,si -- -Dwarnings
-          cargo clippy -p vergen-git2 --all-targets --features build,cargo,rustc,si -- -Dwarnings
-          cargo clippy -p vergen-gitcl --all-targets --features build,cargo,rustc,si -- -Dwarnings
+          cargo clippy -p vergen --all-targets --features build,cargo,emit_and_set,rustc,si -- -Dwarnings
+          cargo clippy -p vergen-git2 --all-targets --features build,cargo,emit_and_set,rustc,si -- -Dwarnings
+          cargo clippy -p vergen-gitcl --all-targets --features build,cargo,emit_and_set,rustc,si -- -Dwarnings
+          cargo clippy -p vergen-gix --all-targets --features build,cargo,emit_and_set,rustc,si -- -Dwarnings
           cargo clippy -p vergen-pretty --all-targets --features color,header,trace -- -Dwarnings
   lints-windows:
     name: 🕳️ Lints Windows 🕳️
@@ -107,13 +107,13 @@ jobs:
           cargo update
           cargo clippy -p test_util --all-targets -- -Dwarnings
           cargo clippy -p vergen-lib --all-targets --features build,cargo,git,rustc,si -- -Dwarnings
-          cargo clippy -p vergen --all-targets --features build,cargo,rustc,si -- -Dwarnings
-          cargo clippy -p vergen-gix --all-targets --features build,cargo,rustc,si -- -Dwarnings
-          cargo clippy -p vergen-git2 --all-targets --features build,cargo,rustc,si -- -Dwarnings
-          cargo clippy -p vergen-gitcl --all-targets --features build,cargo,rustc,si -- -Dwarnings
+          cargo clippy -p vergen --all-targets --features build,cargo,emit_and_set,rustc,si -- -Dwarnings
+          cargo clippy -p vergen-git2 --all-targets --features build,cargo,emit_and_set,rustc,si -- -Dwarnings
+          cargo clippy -p vergen-gitcl --all-targets --features build,cargo,emit_and_set,rustc,si -- -Dwarnings
+          cargo clippy -p vergen-gix --all-targets --features build,cargo,emit_and_set,rustc,si -- -Dwarnings
           cargo clippy -p vergen-pretty --all-targets --features color,header,trace -- -Dwarnings
-  test-linux:
-    name: 🧪 Linux 🧪
+  test-linux-chunk-1:
+    name: 🧪 Linux (Chunk 1) 🧪
     needs: lints-linux
     runs-on: ${{ matrix.os }}
     strategy:
@@ -147,14 +147,23 @@ jobs:
       - name: 🧪 Test 🧪
         run: |
           cargo update
-          cargo test-all-features
-  coverage:
-    name: 🧱 Code Coverage 🧱
-    needs: test-linux
+          cargo test-all-features --n-chunks 4 --chunk 1
+  test-linux-chunk-2:
+    name: 🧪 Linux (Chunk 2) 🧪
+    needs: lints-linux
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         include:
+          - os: ubuntu-latest
+            rust: "1.70.0"
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-latest
+            rust: stable
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-latest
+            rust: beta
+            target: x86_64-unknown-linux-gnu
           - os: ubuntu-latest
             rust: nightly
             target: x86_64-unknown-linux-gnu
@@ -168,51 +177,87 @@ jobs:
           rustup default ${{ matrix.rust }}
       - name: 💾 Install (cargo-binstall) 💾
         uses: cargo-bins/cargo-binstall@main
-      - name: 💾 Install (llvm-cov) 💾
+      - name: 💾 Install (all-features) 💾
         continue-on-error: true
-        run: cargo binstall --no-confirm --no-symlinks cargo-llvm-cov
-      - name: 🙊 Clean Workspace 🙊
-        run: cargo llvm-cov clean --workspace
-      - name: 🙊 Code Coverage (vergen-lib - default) 🙊
-        run: cargo llvm-cov -p vergen-lib -F unstable --no-report
-      - name: 🙊 Code Coverage (vergen-lib - all) 🙊
-        run: cargo llvm-cov -p vergen-lib -F unstable,build,cargo,git,rustc,si --no-report
-      - name: 🙊 Code Coverage (vergen - default) 🙊
-        run: cargo llvm-cov -p vergen -F unstable --no-report
-      - name: 🙊 Code Coverage (vergen - all) 🙊
-        run: cargo llvm-cov -p vergen -F unstable,build,cargo,rustc,si --no-report
-      - name: 🙊 Code Coverage (vergen-gix - default) 🙊
-        run: cargo llvm-cov -p vergen-gix -F unstable --no-report
-      - name: 🙊 Code Coverage (vergen-gix - all) 🙊
-        run: cargo llvm-cov -p vergen-gix -F unstable,build,cargo,rustc,si --no-report
-      - name: 🙊 Code Coverage (vergen-git2 - default) 🙊
-        run: cargo llvm-cov -p vergen-git2 -F unstable --no-report
-      - name: 🙊 Code Coverage (vergen-git2 - all) 🙊
-        run: cargo llvm-cov -p vergen-git2 -F unstable,build,cargo,rustc,si --no-report
-      - name: 🙊 Code Coverage (vergen-gitcl - default) 🙊
-        run: cargo llvm-cov -p vergen-gitcl -F unstable --no-report
-      - name: 🙊 Code Coverage (vergen-gitcl - all) 🙊
-        run: cargo llvm-cov -p vergen-gitcl -F unstable,build,cargo,rustc,si --no-report
-      - name: 🙊 Code Coverage (vergen-pretty - default) 🙊
-        run: cargo llvm-cov -p vergen-pretty -F __vergen_test --no-report
-      - name: 🙊 Code Coverage (vergen-pretty - all) 🙊
-        run: cargo llvm-cov -p vergen-pretty -F __vergen_test,color,header,serde,trace --no-report
-      - name: 🙊 Code Coverage (vergen-pretty - empty default) 🙊
-        run: cargo llvm-cov -p vergen-pretty -F __vergen_empty_test --no-report
-      - name: 🙊 Code Coverage (vergen-pretty - empty all) 🙊
-        run: cargo llvm-cov -p vergen-pretty -F __vergen_empty_test,color,header,serde,trace --no-report
-      - name: 🙊 Code Coverage Report (LCOV) 🙊
-        run: cargo llvm-cov report --lcov --output-path lcov.info
-      - name: 🙊 Code Coverage Report (HTML) 🙊
-        run: cargo llvm-cov report --html
-      - name: 🙊 Upload Code Coverage 🙊
-        uses: codecov/codecov-action@v4-beta
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-        with:
-          files: ./lcov.info
-  test-macos:
-    name: 🧪 MacOS 🧪
+        run: cargo binstall --no-confirm --no-symlinks cargo-all-features
+      - name: 🧪 Test 🧪
+        run: |
+          cargo update
+          cargo test-all-features --n-chunks 4 --chunk 2
+  test-linux-chunk-3:
+    name: 🧪 Linux (Chunk 3) 🧪
+    needs: lints-linux
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            rust: "1.70.0"
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-latest
+            rust: stable
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-latest
+            rust: beta
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-latest
+            rust: nightly
+            target: x86_64-unknown-linux-gnu
+    steps:
+      - name: ✅ Checkout ✅
+        uses: actions/checkout@v4
+      - name: 🧰 Toolchain 🧰
+        run: |
+          rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
+          rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile minimal
+          rustup default ${{ matrix.rust }}
+      - name: 💾 Install (cargo-binstall) 💾
+        uses: cargo-bins/cargo-binstall@main
+      - name: 💾 Install (all-features) 💾
+        continue-on-error: true
+        run: cargo binstall --no-confirm --no-symlinks cargo-all-features
+      - name: 🧪 Test 🧪
+        run: |
+          cargo update
+          cargo test-all-features --n-chunks 4 --chunk 3
+  test-linux-chunk-4:
+    name: 🧪 Linux (Chunk 4) 🧪
+    needs: lints-linux
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            rust: "1.70.0"
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-latest
+            rust: stable
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-latest
+            rust: beta
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-latest
+            rust: nightly
+            target: x86_64-unknown-linux-gnu
+    steps:
+      - name: ✅ Checkout ✅
+        uses: actions/checkout@v4
+      - name: 🧰 Toolchain 🧰
+        run: |
+          rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
+          rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile minimal
+          rustup default ${{ matrix.rust }}
+      - name: 💾 Install (cargo-binstall) 💾
+        uses: cargo-bins/cargo-binstall@main
+      - name: 💾 Install (all-features) 💾
+        continue-on-error: true
+        run: cargo binstall --no-confirm --no-symlinks cargo-all-features
+      - name: 🧪 Test 🧪
+        run: |
+          cargo update
+          cargo test-all-features --n-chunks 4 --chunk 4
+  test-macos-chunk-1:
+    name: 🧪 MacOS (Chunk 1) 🧪
     needs: lints-macos
     runs-on: ${{ matrix.os }}
     strategy:
@@ -246,9 +291,45 @@ jobs:
       - name: 🧪 Test 🧪
         run: |
           cargo update
-          cargo test-all-features
-  test-windows:
-    name: 🧪 Windows 🧪
+          cargo test-all-features --n-chunks 2 --chunk 1
+  test-macos-chunk-2:
+    name: 🧪 MacOS (Chunk 2) 🧪
+    needs: lints-macos
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: macos-latest
+            rust: "1.70.0"
+            target: x86_64-apple-darwin
+          - os: macos-latest
+            rust: stable
+            target: x86_64-apple-darwin
+          - os: macos-latest
+            rust: beta
+            target: x86_64-apple-darwin
+          - os: macos-latest
+            rust: nightly
+            target: x86_64-apple-darwin
+    steps:
+      - name: ✅ Checkout ✅
+        uses: actions/checkout@v4
+      - name: 🧰 Toolchain 🧰
+        run: |
+          rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
+          rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile minimal
+          rustup default ${{ matrix.rust }}
+      - name: 💾 Install (cargo-binstall) 💾
+        uses: cargo-bins/cargo-binstall@main
+      - name: 💾 Install (all-features) 💾
+        continue-on-error: true
+        run: cargo binstall --no-confirm --no-symlinks cargo-all-features
+      - name: 🧪 Test 🧪
+        run: |
+          cargo update
+          cargo test-all-features --n-chunks 2 --chunk 2
+  test-windows-chunk-1:
+    name: 🧪 Windows (Chunk 1) 🧪
     needs: lints-windows
     runs-on: ${{ matrix.os }}
     strategy:
@@ -294,4 +375,135 @@ jobs:
       - name: 🧪 Test 🧪
         run: |
           cargo update
-          cargo test-all-features
+          cargo test-all-features --n-chunks 2 --chunk 1
+  test-windows-chunk-2:
+    name: 🧪 Windows (Chunk 2) 🧪
+    needs: lints-windows
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            rust: "1.70.0"
+            target: x86_64-pc-windows-msvc
+          - os: windows-latest
+            rust: stable
+            target: x86_64-pc-windows-msvc
+          - os: windows-latest
+            rust: beta
+            target: x86_64-pc-windows-msvc
+          - os: windows-latest
+            rust: nightly
+            target: x86_64-pc-windows-msvc
+          - os: windows-latest
+            rust: "1.70.0"
+            target: x86_64-pc-windows-gnu
+          - os: windows-latest
+            rust: stable
+            target: x86_64-pc-windows-gnu
+          - os: windows-latest
+            rust: beta
+            target: x86_64-pc-windows-gnu
+          - os: windows-latest
+            rust: nightly
+            target: x86_64-pc-windows-gnu
+    steps:
+      - name: ✅ Checkout ✅
+        uses: actions/checkout@v4
+      - name: 🧰 Toolchain 🧰
+        run: |
+          rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
+          rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile minimal --no-self-update
+          rustup default ${{ matrix.rust }}
+      - name: 💾 Install (cargo-binstall) 💾
+        uses: cargo-bins/cargo-binstall@main
+      - name: 💾 Install (all-features) 💾
+        continue-on-error: true
+        run: cargo binstall --no-confirm --no-symlinks cargo-all-features
+      - name: 🧪 Test 🧪
+        run: |
+          cargo update
+          cargo test-all-features --n-chunks 2 --chunk 2
+  coverage:
+    name: 🧱 Code Coverage 🧱
+    needs:
+      [
+        test-linux-chunk-1,
+        test-linux-chunk-2,
+        test-linux-chunk-3,
+        test-linux-chunk-4,
+        test-macos-chunk-1,
+        test-macos-chunk-2,
+        test-windows-chunk-1,
+        test-windows-chunk-2,
+      ]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            rust: nightly
+            target: x86_64-unknown-linux-gnu
+          - os: macos-latest
+            rust: nightly
+            target: x86_64-apple-darwin
+          - os: windows-latest
+            rust: nightly
+            target: x86_64-pc-windows-msvc
+          - os: windows-latest
+            rust: nightly
+            target: x86_64-pc-windows-gnu
+    steps:
+      - name: ✅ Checkout ✅
+        uses: actions/checkout@v4
+      - name: 🧰 Toolchain 🧰
+        run: |
+          rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
+          rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile minimal
+          rustup default ${{ matrix.rust }}
+          rustup component add llvm-tools-preview
+      - name: 💾 Install (cargo-binstall) 💾
+        uses: cargo-bins/cargo-binstall@main
+      - name: 💾 Install (llvm-cov) 💾
+        continue-on-error: true
+        run: cargo binstall --no-confirm --no-symlinks cargo-llvm-cov
+      - name: 🙊 Clean Workspace 🙊
+        run: cargo llvm-cov clean --workspace
+      - name: 🙊 Code Coverage (vergen-lib - default) 🙊
+        run: cargo llvm-cov -p vergen-lib -F unstable --no-report
+      - name: 🙊 Code Coverage (vergen-lib - all) 🙊
+        run: cargo llvm-cov -p vergen-lib -F unstable,build,cargo,git,rustc,si --no-report
+      - name: 🙊 Code Coverage (vergen - default) 🙊
+        run: cargo llvm-cov -p vergen -F unstable --no-report
+      - name: 🙊 Code Coverage (vergen - all) 🙊
+        run: cargo llvm-cov -p vergen -F unstable,build,cargo,rustc,si --no-report
+      - name: 🙊 Code Coverage (vergen-gix - default) 🙊
+        run: cargo llvm-cov -p vergen-gix -F unstable --no-report
+      - name: 🙊 Code Coverage (vergen-gix - all) 🙊
+        run: cargo llvm-cov -p vergen-gix -F unstable,build,cargo,rustc,si --no-report
+      - name: 🙊 Code Coverage (vergen-git2 - default) 🙊
+        run: cargo llvm-cov -p vergen-git2 -F unstable --no-report
+      - name: 🙊 Code Coverage (vergen-git2 - all) 🙊
+        run: cargo llvm-cov -p vergen-git2 -F unstable,build,cargo,rustc,si --no-report
+      - name: 🙊 Code Coverage (vergen-gitcl - default) 🙊
+        run: cargo llvm-cov -p vergen-gitcl -F unstable --no-report
+      - name: 🙊 Code Coverage (vergen-gitcl - all) 🙊
+        run: cargo llvm-cov -p vergen-gitcl -F unstable,build,cargo,rustc,si --no-report
+      - name: 🙊 Code Coverage (vergen-pretty - default) 🙊
+        run: cargo llvm-cov -p vergen-pretty -F __vergen_test --no-report
+      - name: 🙊 Code Coverage (vergen-pretty - all) 🙊
+        run: cargo llvm-cov -p vergen-pretty -F __vergen_test,color,header,serde,trace --no-report
+      - name: 🙊 Code Coverage (vergen-pretty - empty default) 🙊
+        run: cargo llvm-cov -p vergen-pretty -F __vergen_empty_test --no-report
+      - name: 🙊 Code Coverage (vergen-pretty - empty all) 🙊
+        run: cargo llvm-cov -p vergen-pretty -F __vergen_empty_test,color,header,serde,trace --no-report
+      - name: 🙊 Code Coverage Report (LCOV) 🙊
+        run: cargo llvm-cov report --lcov --output-path lcov.info
+      - name: 🙊 Code Coverage Report (HTML) 🙊
+        run: cargo llvm-cov report --html
+      - name: 🙊 Upload Code Coverage 🙊
+        uses: codecov/codecov-action@v4-beta
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        with:
+          files: ./lcov.info
