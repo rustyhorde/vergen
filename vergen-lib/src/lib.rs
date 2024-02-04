@@ -216,13 +216,15 @@
 )]
 
 #[cfg(test)]
-use temp_env as _;
+use {temp_env as _, test_util as _};
 
 pub mod constants;
+mod emitter;
 mod entries;
 mod keys;
 mod utils;
 
+pub use emitter::Emitter;
 #[doc(hidden)]
 pub use entries::test_gen::CustomInsGen;
 #[doc(hidden)]

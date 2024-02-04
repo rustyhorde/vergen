@@ -293,7 +293,7 @@ mod test {
     use anyhow::Result;
     use serial_test::serial;
     use std::io::Write;
-    use vergen_lib::count_idempotent;
+    use vergen_lib::{count_idempotent, CustomInsGen};
 
     #[test]
     #[serial]
@@ -615,5 +615,21 @@ mod test {
                 assert!(result.is_ok());
             },
         );
+    }
+
+    #[test]
+    #[serial]
+    fn custom_emit_works() -> Result<()> {
+        let cust_gen = CustomInsGen::default();
+        let build = BuildBuilder::all_build()?;
+        let emitter = Emitter::default()
+            .add_instructions(&build)?
+            .add_custom_instructions(&cust_gen)?
+            .test_emit();
+        assert_eq!(2, emitter.cargo_rustc_env_map().len());
+        assert_eq!(1, emitter.cargo_rustc_env_map_custom().len());
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(0, emitter.cargo_warning().len());
+        Ok(())
     }
 }

@@ -45,9 +45,9 @@
 //!
 //! [build-dependencies]
 //! # All features enabled
-//! vergen-git2 = { version = "1.0.0-beta.0", features = ["build", "cargo", "rustc", "si"] }
+//! vergen-git2 = { version = "1.0.0", features = ["build", "cargo", "rustc", "si"] }
 //! # or
-//! vergen-git2 = { version = "1.0.0-beta.0", features = ["build"] }
+//! vergen-git2 = { version = "1.0.0", features = ["build"] }
 //! # if you wish to disable certain features
 //! ```
 //!
@@ -460,6 +460,14 @@ mod git2;
 
 #[cfg(test)]
 use {lazy_static as _, regex as _, temp_env as _};
+// This is here to appease the `unused_crate_dependencies` lint
+#[cfg(not(any(
+    feature = "build",
+    feature = "cargo",
+    feature = "rustc",
+    feature = "si"
+)))]
+use vergen as _;
 
 pub use crate::git2::Git2;
 pub use crate::git2::Git2Builder;
@@ -471,7 +479,6 @@ pub use vergen::CargoBuilder;
 pub use vergen::CpuRefreshKind;
 #[cfg(feature = "cargo")]
 pub use vergen::DependencyKind;
-pub use vergen::Emitter;
 #[cfg(feature = "si")]
 pub use vergen::MemoryRefreshKind;
 #[cfg(feature = "si")]
@@ -486,3 +493,4 @@ pub use vergen_lib::AddCustomEntries;
 pub use vergen_lib::CargoRerunIfChanged;
 pub use vergen_lib::CargoWarning;
 pub use vergen_lib::DefaultConfig;
+pub use vergen_lib::Emitter;
