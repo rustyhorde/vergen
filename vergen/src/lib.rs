@@ -201,12 +201,16 @@ let build = BuildBuilder::default().build_timestamp(true).build()?;"##
     doc = r##"There is also a toggle for the [`emit_and_set`](Emitter::emit_and_set) function.  This version of emit will also set the instructions you requests as environment variables for use in `build.rs`"##
 )]
 //!
-//! | Feature | Enables |
-//! | ------- | ------- |
-//! |  build  | `VERGEN_BUILD_*` instructions |
-//! |  cargo  | `VERGEN_CARGO_*` instructions |
-//! |  rustc  | `VERGEN_RUSTC_*` instructions |
-//! |   si    | `VERGEN_SYSINFO_*` instructions |
+//! |    Feature   | Enables                       |
+//! | ------------ | ----------------------------- |
+//! |     build    | `VERGEN_BUILD_*` instructions |
+//! |     cargo    | `VERGEN_CARGO_*` instructions |
+//! |     rustc    | `VERGEN_RUSTC_*` instructions |
+//! |      si      | `VERGEN_SYSINFO_*` instructions |
+#![cfg_attr(
+    feature = "emit_and_set",
+    doc = r##"| emit_and_set | Enable the `[`emit_and_set`](Emitter::emit_and_set)` function |"##
+)]
 //!
 //! ## Environment Variables
 //! `vergen` currently recognizes the following environment variables. The full list of the environment variable names can be
