@@ -45,7 +45,9 @@ jobs:
         uses: actions/checkout@v4
       - name: 🧰 Toolchain 🧰
         run: |
-          rm -rf /home/runner/.cargo/bin/*
+          rm -rf /home/runner/.cargo/bin/rustfmt
+          rm -rf /home/runner/.cargo/bin/cargo-fmt
+          rm -rf /home/runner/.cargo/bin/rust-analyzer
           rustup toolchain remove ${{ matrix.rust }}
           rustup toolchain install ${{ matrix.rust }} --profile default
           rustup default ${{ matrix.rust }}
@@ -73,7 +75,10 @@ jobs:
         uses: actions/checkout@v4
       - name: 🧰 Toolchain 🧰
         run: |
-          rm -rf /home/runner/.cargo/bin/*
+          ls -al /home/runner/.cargo/bin
+          rm -rf /home/runner/.cargo/bin/rustfmt
+          rm -rf /home/runner/.cargo/bin/cargo-fmt
+          rm -rf /home/runner/.cargo/bin/rust-analyzer
           rustup toolchain remove ${{ matrix.rust }}
           rustup toolchain install ${{ matrix.rust }} --profile default --no-self-update
           rustup default ${{ matrix.rust }}
@@ -101,7 +106,9 @@ jobs:
         uses: actions/checkout@v4
       - name: 🧰 Toolchain 🧰
         run: |
-          rm -rf /home/runner/.cargo/bin/*
+          rm -rf /home/runner/.cargo/bin/rustfmt
+          rm -rf /home/runner/.cargo/bin/cargo-fmt
+          rm -rf /home/runner/.cargo/bin/rust-analyzer
           rustup toolchain remove ${{ matrix.rust }}
           rustup toolchain install ${{ matrix.rust }} --profile default --no-self-update
           rustup default ${{ matrix.rust }}
@@ -139,7 +146,9 @@ jobs:
         uses: actions/checkout@v4
       - name: 🧰 Toolchain 🧰
         run: |
-          rm -rf /home/runner/.cargo/bin/*
+          rm -rf /home/runner/.cargo/bin/rustfmt
+          rm -rf /home/runner/.cargo/bin/cargo-fmt
+          rm -rf /home/runner/.cargo/bin/rust-analyzer
           rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
           rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile minimal
           rustup default ${{ matrix.rust }}
@@ -176,7 +185,9 @@ jobs:
         uses: actions/checkout@v4
       - name: 🧰 Toolchain 🧰
         run: |
-          rm -rf /home/runner/.cargo/bin/*
+          rm -rf /home/runner/.cargo/bin/rustfmt
+          rm -rf /home/runner/.cargo/bin/cargo-fmt
+          rm -rf /home/runner/.cargo/bin/rust-analyzer
           rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
           rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile minimal
           rustup default ${{ matrix.rust }}
@@ -213,7 +224,9 @@ jobs:
         uses: actions/checkout@v4
       - name: 🧰 Toolchain 🧰
         run: |
-          rm -rf /home/runner/.cargo/bin/*
+          rm -rf /home/runner/.cargo/bin/rustfmt
+          rm -rf /home/runner/.cargo/bin/cargo-fmt
+          rm -rf /home/runner/.cargo/bin/rust-analyzer
           rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
           rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile minimal
           rustup default ${{ matrix.rust }}
@@ -250,7 +263,9 @@ jobs:
         uses: actions/checkout@v4
       - name: 🧰 Toolchain 🧰
         run: |
-          rm -rf /home/runner/.cargo/bin/*
+          rm -rf /home/runner/.cargo/bin/rustfmt
+          rm -rf /home/runner/.cargo/bin/cargo-fmt
+          rm -rf /home/runner/.cargo/bin/rust-analyzer
           rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
           rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile minimal
           rustup default ${{ matrix.rust }}
@@ -287,7 +302,9 @@ jobs:
         uses: actions/checkout@v4
       - name: 🧰 Toolchain 🧰
         run: |
-          rm -rf /home/runner/.cargo/bin/*
+          rm -rf /home/runner/.cargo/bin/rustfmt
+          rm -rf /home/runner/.cargo/bin/cargo-fmt
+          rm -rf /home/runner/.cargo/bin/rust-analyzer
           rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
           rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile minimal
           rustup default ${{ matrix.rust }}
@@ -324,7 +341,9 @@ jobs:
         uses: actions/checkout@v4
       - name: 🧰 Toolchain 🧰
         run: |
-          rm -rf /home/runner/.cargo/bin/*
+          rm -rf /home/runner/.cargo/bin/rustfmt
+          rm -rf /home/runner/.cargo/bin/cargo-fmt
+          rm -rf /home/runner/.cargo/bin/rust-analyzer
           rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
           rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile minimal
           rustup default ${{ matrix.rust }}
@@ -373,7 +392,9 @@ jobs:
         uses: actions/checkout@v4
       - name: 🧰 Toolchain 🧰
         run: |
-          rm -rf /home/runner/.cargo/bin/*
+          rm -rf /home/runner/.cargo/bin/rustfmt
+          rm -rf /home/runner/.cargo/bin/cargo-fmt
+          rm -rf /home/runner/.cargo/bin/rust-analyzer
           rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
           rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile minimal --no-self-update
           rustup default ${{ matrix.rust }}
@@ -422,7 +443,9 @@ jobs:
         uses: actions/checkout@v4
       - name: 🧰 Toolchain 🧰
         run: |
-          rm -rf /home/runner/.cargo/bin/*
+          rm -rf /home/runner/.cargo/bin/rustfmt
+          rm -rf /home/runner/.cargo/bin/cargo-fmt
+          rm -rf /home/runner/.cargo/bin/rust-analyzer
           rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
           rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile minimal --no-self-update
           rustup default ${{ matrix.rust }}
@@ -469,7 +492,9 @@ jobs:
         uses: actions/checkout@v4
       - name: 🧰 Toolchain 🧰
         run: |
-          rm -rf /home/runner/.cargo/bin/*
+          rm -rf /home/runner/.cargo/bin/rustfmt
+          rm -rf /home/runner/.cargo/bin/cargo-fmt
+          rm -rf /home/runner/.cargo/bin/rust-analyzer
           rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
           rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile minimal
           rustup default ${{ matrix.rust }}
