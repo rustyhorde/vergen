@@ -471,11 +471,14 @@ jobs:
     steps:
       - name: ✅ Checkout ✅
         uses: actions/checkout@v4
-      - name: 🧰 Toolchain 🧰
+      - name: 🧹 Cleanup 🧹
+        if: matrix.os == 'ununtu-latest'
         run: |
           rm -rf /home/runner/.cargo/bin/rustfmt
           rm -rf /home/runner/.cargo/bin/cargo-fmt
           rm -rf /home/runner/.cargo/bin/rust-analyzer
+      - name: 🧰 Toolchain 🧰
+        run: |
           rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
           rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile minimal
           rustup default ${{ matrix.rust }}
