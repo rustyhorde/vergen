@@ -472,7 +472,7 @@ jobs:
       - name: ✅ Checkout ✅
         uses: actions/checkout@v4
       - name: 🧹 Cleanup 🧹
-        if: matrix.os == 'ununtu-latest'
+        if: matrix.os == 'ubuntu-latest'
         run: |
           rm -rf /home/runner/.cargo/bin/rustfmt
           rm -rf /home/runner/.cargo/bin/cargo-fmt
