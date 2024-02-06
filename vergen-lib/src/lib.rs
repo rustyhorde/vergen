@@ -68,7 +68,6 @@
         for_loops_over_fallibles,
         function_item_references,
         hidden_glob_reexports,
-        illegal_floating_point_literal_pattern,
         improper_ctypes,
         improper_ctypes_definitions,
         incomplete_features,
