@@ -62,7 +62,7 @@ jobs:
         uses: cargo-bins/cargo-binstall@main
       - name: 💾 Install (all-features) 💾
         continue-on-error: true
-        run: cargo binstall --no-confirm --no-symlinks cargo-all-features@1.11.0-beta.1 --target x86_64-unknown-linux-musl --force --pkg-url "https://github.com/rustyhorde/cargo-all-features/releases/download/{ version }/{ name }_{ version }_{ target }.{ archive-suffix }" --pkg-fmt="txz"
+        run: cargo binstall --no-confirm --no-symlinks cargo-all-features@latest --target x86_64-unknown-linux-musl --force --pkg-url "https://github.com/rustyhorde/cargo-all-features/releases/download/1.11.0-beta.1/{ name }_1.11.0-beta.1_{ target }.{ archive-suffix }" --pkg-fmt="txz"
       - name: 📎 Clippy 📎
         run: |
           cargo update
