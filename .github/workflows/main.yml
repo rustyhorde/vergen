@@ -52,7 +52,7 @@ jobs:
           rustup toolchain remove ${{ matrix.rust }}
           rustup toolchain install ${{ matrix.rust }} --profile default
           rustup default ${{ matrix.rust }}
-      - name: Enable Rust cache
+      - name: 💵 Rust Cache 💵
         uses: Swatinem/rust-cache@v2
         if: ${{ github.event_name != 'pull_request' || ! github.event.pull_request.head.repo.fork }}
         with:
@@ -86,7 +86,7 @@ jobs:
           rustup toolchain remove ${{ matrix.rust }}
           rustup toolchain install ${{ matrix.rust }} --profile default --no-self-update
           rustup default ${{ matrix.rust }}
-      - name: Enable Rust cache
+      - name: 💵 Rust Cache 💵
         uses: Swatinem/rust-cache@v2
         if: ${{ github.event_name != 'pull_request' || ! github.event.pull_request.head.repo.fork }}
         with:
@@ -120,7 +120,7 @@ jobs:
           rustup toolchain remove ${{ matrix.rust }}
           rustup toolchain install ${{ matrix.rust }} --profile default --no-self-update
           rustup default ${{ matrix.rust }}
-      - name: Enable Rust cache
+      - name: 💵 Rust Cache 💵
         uses: Swatinem/rust-cache@v2
         if: ${{ github.event_name != 'pull_request' || ! github.event.pull_request.head.repo.fork }}
         with:
@@ -166,7 +166,7 @@ jobs:
           rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
           rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile minimal
           rustup default ${{ matrix.rust }}
-      - name: Enable Rust cache
+      - name: 💵 Rust Cache 💵
         uses: Swatinem/rust-cache@v2
         if: ${{ github.event_name != 'pull_request' || ! github.event.pull_request.head.repo.fork }}
         with:
@@ -211,7 +211,7 @@ jobs:
           rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
           rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile minimal
           rustup default ${{ matrix.rust }}
-      - name: Enable Rust cache
+      - name: 💵 Rust Cache 💵
         uses: Swatinem/rust-cache@v2
         if: ${{ github.event_name != 'pull_request' || ! github.event.pull_request.head.repo.fork }}
         with:
@@ -256,7 +256,7 @@ jobs:
           rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
           rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile minimal
           rustup default ${{ matrix.rust }}
-      - name: Enable Rust cache
+      - name: 💵 Rust Cache 💵
         uses: Swatinem/rust-cache@v2
         if: ${{ github.event_name != 'pull_request' || ! github.event.pull_request.head.repo.fork }}
         with:
@@ -300,9 +300,9 @@ jobs:
           rm -rf /home/runner/.cargo/bin/rust-analyzer
           rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
           rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile minimal
-          rustup toolchain add aarch64-unknown-linux-gnu --profile minimal
+          rustup target add aarch64-unknown-linux-gnu
           rustup default ${{ matrix.rust }}
-      - name: Enable Rust cache
+      - name: 💵 Rust Cache 💵
         uses: Swatinem/rust-cache@v2
         if: ${{ github.event_name != 'pull_request' || ! github.event.pull_request.head.repo.fork }}
         with:
