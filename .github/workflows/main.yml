@@ -499,4 +499,4 @@ jobs:
   call_tier2:
     name: ☎️ Tier 2 ☎️
     needs: coverage
-    uses: rustyhorde/vergen/.github/workflows/tier2.yml@master
+    uses: ./.github/workflows/tier2.yml
