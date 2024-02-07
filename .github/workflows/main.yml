@@ -175,8 +175,7 @@ jobs:
       - name: 💾 Install (cargo-binstall) 💾
         uses: cargo-bins/cargo-binstall@main
       - name: 💾 Install (all-features) 💾
-        continue-on-error: true
-        run: cargo binstall --no-confirm --no-symlinks cargo-all-features
+        run: cargo binstall --no-confirm --no-symlinks cargo-all-features --force
       - name: 🧪 Test 🧪
         run: |
           cargo update
@@ -220,8 +219,7 @@ jobs:
       - name: 💾 Install (cargo-binstall) 💾
         uses: cargo-bins/cargo-binstall@main
       - name: 💾 Install (all-features) 💾
-        continue-on-error: true
-        run: cargo binstall --no-confirm --no-symlinks cargo-all-features
+        run: cargo binstall --no-confirm --no-symlinks cargo-all-features --force
       - name: 🧪 Test 🧪
         run: |
           cargo update
@@ -265,8 +263,7 @@ jobs:
       - name: 💾 Install (cargo-binstall) 💾
         uses: cargo-bins/cargo-binstall@main
       - name: 💾 Install (all-features) 💾
-        continue-on-error: true
-        run: cargo binstall --no-confirm --no-symlinks cargo-all-features
+        run: cargo binstall --no-confirm --no-symlinks cargo-all-features --force
       - name: 🧪 Test 🧪
         run: |
           cargo update
@@ -311,9 +308,9 @@ jobs:
       - name: 💾 Install (cargo-binstall) 💾
         uses: cargo-bins/cargo-binstall@main
       - name: 💾 Install (all-features) 💾
-        run: cargo binstall --no-confirm --no-symlinks cargo-all-features
+        run: cargo binstall --no-confirm --no-symlinks cargo-all-features --force
       - name: Install (cross)
-        run: cargo binstall --no-confirm --no-symlinks cross
+        run: cargo binstall --no-confirm --no-symlinks cross  --force
       - name: 🧪 Test 🧪
         run: |
           cargo update
@@ -350,7 +347,7 @@ jobs:
         uses: cargo-bins/cargo-binstall@main
       - name: 💾 Install (all-features) 💾
         continue-on-error: true
-        run: cargo binstall --no-confirm --no-symlinks cargo-all-features
+        run: cargo binstall --no-confirm --no-symlinks cargo-all-features --force
       - name: 🧪 Test 🧪
         run: |
           cargo update
@@ -398,7 +395,7 @@ jobs:
         uses: cargo-bins/cargo-binstall@main
       - name: 💾 Install (all-features) 💾
         continue-on-error: true
-        run: cargo binstall --no-confirm --no-symlinks cargo-all-features
+        run: cargo binstall --no-confirm --no-symlinks cargo-all-features --force
       - name: 🧪 Test 🧪
         run: |
           cargo update
