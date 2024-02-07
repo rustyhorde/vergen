@@ -20,6 +20,7 @@ skip_optional_dependencies = true
 default = []
 build = []
 cargo = []
+emit_and_set = []
 git = []
 rustc = []
 unstable = []
@@ -34,7 +35,9 @@ getset = "0.1.2"
 rustversion = "1.0.14"
 
 [dev-dependencies]
+serial_test = "3.0.0"
 temp-env = "0.3.6"
+test_util = { path = "../test_util" }
 
 [package.metadata.docs.rs]
 features = ["build", "cargo", "git", "rustc", "si"]

@@ -6,6 +6,7 @@
 // option. All files in the project carrying such notice may not be copied,
 // modified, or distributed except according to those terms.
 
+use crate::{AddCustomEntries, AddEntries, CargoRustcEnvMap, DefaultConfig};
 use anyhow::Result;
 use getset::Getters;
 use std::{
@@ -13,7 +14,6 @@ use std::{
     env,
     io::{self, Write},
 };
-use vergen_lib::{AddCustomEntries, AddEntries, CargoRustcEnvMap, DefaultConfig};
 
 /// The `Emitter` will emit cargo instructions (i.e. cargo:rustc-env=NAME=VALUE)
 /// base on the configuration you enable.
@@ -82,7 +82,7 @@ impl Emitter {
     ///
     /// ```
     /// # use anyhow::Result;
-    /// # use vergen::Emitter;
+    /// # use vergen_lib::Emitter;
     /// #
     /// # fn main() -> Result<()> {
     /// Emitter::new().idempotent().emit()?;
@@ -120,7 +120,7 @@ impl Emitter {
     ///
     /// ```
     /// # use anyhow::Result;
-    /// # use vergen::Emitter;
+    /// # use vergen_lib::Emitter;
     /// #
     /// # fn main() -> Result<()> {
     /// Emitter::new().fail_on_error().emit()?;
@@ -140,7 +140,7 @@ impl Emitter {
     ///
     /// ```
     /// # use anyhow::Result;
-    /// # use vergen::Emitter;
+    /// # use vergen_lib::Emitter;
     /// #
     /// # fn main() -> Result<()> {
     /// Emitter::new().quiet().emit()?;
@@ -162,7 +162,7 @@ impl Emitter {
     ///
     /// ```
     /// # use anyhow::Result;
-    /// # use vergen::Emitter;
+    /// # use vergen_lib::Emitter;
     /// #
     /// # fn main() -> Result<()> {
     /// Emitter::new().custom_build_rs("my/custom/build.rs").emit()?;
@@ -311,37 +311,10 @@ impl Emitter {
     /// ```
     /// # use anyhow::Result;
     /// # use std::env;
-    /// # use vergen::Emitter;
-    #[cfg_attr(feature = "build", doc = r##"use vergen::BuildBuilder;"##)]
-    #[cfg_attr(feature = "cargo", doc = r##"use vergen::CargoBuilder;"##)]
-    #[cfg_attr(feature = "rustc", doc = r##"use vergen::RustcBuilder;"##)]
-    #[cfg_attr(feature = "si", doc = r##"use vergen::SysinfoBuilder;"##)]
-    /// # use test_util::with_cargo_vars;
+    /// # use vergen_lib::Emitter;
     /// #
     /// # fn main() -> Result<()> {
-    /// let result = with_cargo_vars(|| {
-    #[cfg_attr(
-        feature = "build",
-        doc = r##"let build = BuildBuilder::all_build()?;"##
-    )]
-    #[cfg_attr(
-        feature = "cargo",
-        doc = r##"let cargo = CargoBuilder::all_cargo()?;"##
-    )]
-    #[cfg_attr(
-        feature = "rustc",
-        doc = r##"let rustc = RustcBuilder::all_rustc()?;"##
-    )]
-    #[cfg_attr(feature = "si", doc = r##"let si = SysinfoBuilder::all_sysinfo()?;"##)]
-    ///         let emitter = Emitter::default()
-    #[cfg_attr(feature = "build", doc = r##".add_instructions(&build)?"##)]
-    #[cfg_attr(feature = "cargo", doc = r##".add_instructions(&cargo)?"##)]
-    #[cfg_attr(feature = "rustc", doc = r##".add_instructions(&rustc)?"##)]
-    #[cfg_attr(feature = "si", doc = r##".add_instructions(&si)?"##)]
-    ///             .emit()?;
-    ///         Ok(())
-    /// });
-    ///     assert!(result.is_ok());
+    /// let emitter = Emitter::default().emit()?;
     /// #   Ok(())
     /// # }
     /// ```
@@ -409,7 +382,7 @@ impl Emitter {
     /// ```
     /// # use anyhow::Result;
     /// # use std::env;
-    /// # use vergen::Emitter;
+    /// # use vergen_lib::Emitter;
     /// #
     /// # fn main() -> Result<()> {
     /// Emitter::new().emit_and_set()?;
@@ -458,11 +431,6 @@ pub(crate) mod test {
     use anyhow::Result;
     use serial_test::serial;
     use std::io::Write;
-    #[cfg(feature = "build")]
-    use {
-        crate::BuildBuilder,
-        vergen_lib::{count_idempotent, CustomInsGen},
-    };
 
     #[test]
     #[serial]
@@ -496,22 +464,5 @@ pub(crate) mod test {
     #[serial]
     fn default_emit_is_ok() {
         assert!(Emitter::new().emit().is_ok());
-    }
-
-    #[test]
-    #[serial]
-    #[cfg(feature = "build")]
-    fn custom_emit_works() -> Result<()> {
-        let cust_gen = CustomInsGen::default();
-        let build = BuildBuilder::all_build()?;
-        let emitter = Emitter::default()
-            .add_instructions(&build)?
-            .add_custom_instructions(&cust_gen)?
-            .test_emit();
-        assert_eq!(2, emitter.cargo_rustc_env_map().len());
-        assert_eq!(1, emitter.cargo_rustc_env_map_custom().len());
-        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
-        assert_eq!(0, emitter.cargo_warning().len());
-        Ok(())
     }
 }

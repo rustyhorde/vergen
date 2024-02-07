@@ -40,14 +40,24 @@ jobs:
         include:
           - os: ubuntu-latest
             rust: nightly
+            target: x86_64-unknown-linux-gnu
     steps:
       - name: ✅ Checkout ✅
         uses: actions/checkout@v4
       - name: 🧰 Toolchain 🧰
         run: |
+          rm -rf /home/runner/.cargo/bin/rustfmt
+          rm -rf /home/runner/.cargo/bin/cargo-fmt
+          rm -rf /home/runner/.cargo/bin/rust-analyzer
           rustup toolchain remove ${{ matrix.rust }}
           rustup toolchain install ${{ matrix.rust }} --profile default
           rustup default ${{ matrix.rust }}
+      - name: 💵 Rust Cache 💵
+        uses: Swatinem/rust-cache@v2
+        if: ${{ github.event_name != 'pull_request' || ! github.event.pull_request.head.repo.fork }}
+        with:
+          key: ${{ matrix.target }}
+          cache-all-crates: true
       - name: 📎 Clippy 📎
         run: |
           cargo update
@@ -67,6 +77,7 @@ jobs:
         include:
           - os: macos-latest
             rust: nightly
+            target: x86_64-apple-darwin
     steps:
       - name: ✅ Checkout ✅
         uses: actions/checkout@v4
@@ -75,6 +86,12 @@ jobs:
           rustup toolchain remove ${{ matrix.rust }}
           rustup toolchain install ${{ matrix.rust }} --profile default --no-self-update
           rustup default ${{ matrix.rust }}
+      - name: 💵 Rust Cache 💵
+        uses: Swatinem/rust-cache@v2
+        if: ${{ github.event_name != 'pull_request' || ! github.event.pull_request.head.repo.fork }}
+        with:
+          key: ${{ matrix.target }}
+          cache-all-crates: true
       - name: 📎 Clippy 📎
         run: |
           cargo update
@@ -94,6 +111,7 @@ jobs:
         include:
           - os: windows-latest
             rust: nightly
+            target: x86_64-pc-windows-msvc
     steps:
       - name: ✅ Checkout ✅
         uses: actions/checkout@v4
@@ -102,6 +120,12 @@ jobs:
           rustup toolchain remove ${{ matrix.rust }}
           rustup toolchain install ${{ matrix.rust }} --profile default --no-self-update
           rustup default ${{ matrix.rust }}
+      - name: 💵 Rust Cache 💵
+        uses: Swatinem/rust-cache@v2
+        if: ${{ github.event_name != 'pull_request' || ! github.event.pull_request.head.repo.fork }}
+        with:
+          key: ${{ matrix.target }}
+          cache-all-crates: true
       - name: 📎 Clippy 📎
         run: |
           cargo update
@@ -136,14 +160,22 @@ jobs:
         uses: actions/checkout@v4
       - name: 🧰 Toolchain 🧰
         run: |
+          rm -rf /home/runner/.cargo/bin/rustfmt
+          rm -rf /home/runner/.cargo/bin/cargo-fmt
+          rm -rf /home/runner/.cargo/bin/rust-analyzer
           rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
           rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile minimal
           rustup default ${{ matrix.rust }}
+      - name: 💵 Rust Cache 💵
+        uses: Swatinem/rust-cache@v2
+        if: ${{ github.event_name != 'pull_request' || ! github.event.pull_request.head.repo.fork }}
+        with:
+          key: ${{ matrix.target }}
+          cache-all-crates: true
       - name: 💾 Install (cargo-binstall) 💾
         uses: cargo-bins/cargo-binstall@main
       - name: 💾 Install (all-features) 💾
-        continue-on-error: true
-        run: cargo binstall --no-confirm --no-symlinks cargo-all-features
+        run: cargo binstall --no-confirm --no-symlinks cargo-all-features --force
       - name: 🧪 Test 🧪
         run: |
           cargo update
@@ -172,14 +204,22 @@ jobs:
         uses: actions/checkout@v4
       - name: 🧰 Toolchain 🧰
         run: |
+          rm -rf /home/runner/.cargo/bin/rustfmt
+          rm -rf /home/runner/.cargo/bin/cargo-fmt
+          rm -rf /home/runner/.cargo/bin/rust-analyzer
           rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
           rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile minimal
           rustup default ${{ matrix.rust }}
+      - name: 💵 Rust Cache 💵
+        uses: Swatinem/rust-cache@v2
+        if: ${{ github.event_name != 'pull_request' || ! github.event.pull_request.head.repo.fork }}
+        with:
+          key: ${{ matrix.target }}
+          cache-all-crates: true
       - name: 💾 Install (cargo-binstall) 💾
         uses: cargo-bins/cargo-binstall@main
       - name: 💾 Install (all-features) 💾
-        continue-on-error: true
-        run: cargo binstall --no-confirm --no-symlinks cargo-all-features
+        run: cargo binstall --no-confirm --no-symlinks cargo-all-features --force
       - name: 🧪 Test 🧪
         run: |
           cargo update
@@ -208,14 +248,22 @@ jobs:
         uses: actions/checkout@v4
       - name: 🧰 Toolchain 🧰
         run: |
+          rm -rf /home/runner/.cargo/bin/rustfmt
+          rm -rf /home/runner/.cargo/bin/cargo-fmt
+          rm -rf /home/runner/.cargo/bin/rust-analyzer
           rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
           rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile minimal
           rustup default ${{ matrix.rust }}
+      - name: 💵 Rust Cache 💵
+        uses: Swatinem/rust-cache@v2
+        if: ${{ github.event_name != 'pull_request' || ! github.event.pull_request.head.repo.fork }}
+        with:
+          key: ${{ matrix.target }}
+          cache-all-crates: true
       - name: 💾 Install (cargo-binstall) 💾
         uses: cargo-bins/cargo-binstall@main
       - name: 💾 Install (all-features) 💾
-        continue-on-error: true
-        run: cargo binstall --no-confirm --no-symlinks cargo-all-features
+        run: cargo binstall --no-confirm --no-symlinks cargo-all-features --force
       - name: 🧪 Test 🧪
         run: |
           cargo update
@@ -244,20 +292,32 @@ jobs:
         uses: actions/checkout@v4
       - name: 🧰 Toolchain 🧰
         run: |
+          rm -rf /home/runner/.cargo/bin/rustfmt
+          rm -rf /home/runner/.cargo/bin/cargo-fmt
+          rm -rf /home/runner/.cargo/bin/rust-analyzer
           rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
           rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile minimal
+          rustup target add aarch64-unknown-linux-gnu
           rustup default ${{ matrix.rust }}
+      - name: 💵 Rust Cache 💵
+        uses: Swatinem/rust-cache@v2
+        if: ${{ github.event_name != 'pull_request' || ! github.event.pull_request.head.repo.fork }}
+        with:
+          key: ${{ matrix.target }}
+          cache-all-crates: true
       - name: 💾 Install (cargo-binstall) 💾
         uses: cargo-bins/cargo-binstall@main
       - name: 💾 Install (all-features) 💾
-        continue-on-error: true
-        run: cargo binstall --no-confirm --no-symlinks cargo-all-features
+        run: cargo binstall --no-confirm --no-symlinks cargo-all-features --force
+      - name: Install (cross)
+        run: cargo binstall --no-confirm --no-symlinks cross  --force
       - name: 🧪 Test 🧪
         run: |
           cargo update
           cargo test-all-features --n-chunks 4 --chunk 4
-  test-macos-chunk-1:
-    name: 🧪 MacOS (Chunk 1) 🧪
+          cross build-all-features --n-chunks 4 --chunk 4 --target=aarch64-unknown-linux-gnu
+  test-macos:
+    name: 🧪 MacOS 🧪
     needs: lints-macos
     runs-on: ${{ matrix.os }}
     strategy:
@@ -283,53 +343,22 @@ jobs:
           rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
           rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile minimal
           rustup default ${{ matrix.rust }}
+      - name: 💵 Rust Cache 💵
+        uses: Swatinem/rust-cache@v2
+        if: ${{ github.event_name != 'pull_request' || ! github.event.pull_request.head.repo.fork }}
+        with:
+          key: ${{ matrix.target }}
+          cache-all-crates: true
       - name: 💾 Install (cargo-binstall) 💾
         uses: cargo-bins/cargo-binstall@main
       - name: 💾 Install (all-features) 💾
-        continue-on-error: true
-        run: cargo binstall --no-confirm --no-symlinks cargo-all-features
+        run: cargo binstall --no-confirm --no-symlinks cargo-all-features --force
       - name: 🧪 Test 🧪
         run: |
           cargo update
-          cargo test-all-features --n-chunks 2 --chunk 1
-  test-macos-chunk-2:
-    name: 🧪 MacOS (Chunk 2) 🧪
-    needs: lints-macos
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        include:
-          - os: macos-latest
-            rust: "1.70.0"
-            target: x86_64-apple-darwin
-          - os: macos-latest
-            rust: stable
-            target: x86_64-apple-darwin
-          - os: macos-latest
-            rust: beta
-            target: x86_64-apple-darwin
-          - os: macos-latest
-            rust: nightly
-            target: x86_64-apple-darwin
-    steps:
-      - name: ✅ Checkout ✅
-        uses: actions/checkout@v4
-      - name: 🧰 Toolchain 🧰
-        run: |
-          rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
-          rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile minimal
-          rustup default ${{ matrix.rust }}
-      - name: 💾 Install (cargo-binstall) 💾
-        uses: cargo-bins/cargo-binstall@main
-      - name: 💾 Install (all-features) 💾
-        continue-on-error: true
-        run: cargo binstall --no-confirm --no-symlinks cargo-all-features
-      - name: 🧪 Test 🧪
-        run: |
-          cargo update
-          cargo test-all-features --n-chunks 2 --chunk 2
-  test-windows-chunk-1:
-    name: 🧪 Windows (Chunk 1) 🧪
+          cargo test-all-features
+  test-windows:
+    name: 🧪 Windows 🧪
     needs: lints-windows
     runs-on: ${{ matrix.os }}
     strategy:
@@ -367,63 +396,20 @@ jobs:
           rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
           rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile minimal --no-self-update
           rustup default ${{ matrix.rust }}
+      - name: 💵 Rust Cache 💵
+        uses: Swatinem/rust-cache@v2
+        if: ${{ github.event_name != 'pull_request' || ! github.event.pull_request.head.repo.fork }}
+        with:
+          key: ${{ matrix.target }}
+          cache-all-crates: true
       - name: 💾 Install (cargo-binstall) 💾
         uses: cargo-bins/cargo-binstall@main
       - name: 💾 Install (all-features) 💾
-        continue-on-error: true
-        run: cargo binstall --no-confirm --no-symlinks cargo-all-features
+        run: cargo binstall --no-confirm --no-symlinks cargo-all-features --force
       - name: 🧪 Test 🧪
         run: |
           cargo update
-          cargo test-all-features --n-chunks 2 --chunk 1
-  test-windows-chunk-2:
-    name: 🧪 Windows (Chunk 2) 🧪
-    needs: lints-windows
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        include:
-          - os: windows-latest
-            rust: "1.70.0"
-            target: x86_64-pc-windows-msvc
-          - os: windows-latest
-            rust: stable
-            target: x86_64-pc-windows-msvc
-          - os: windows-latest
-            rust: beta
-            target: x86_64-pc-windows-msvc
-          - os: windows-latest
-            rust: nightly
-            target: x86_64-pc-windows-msvc
-          - os: windows-latest
-            rust: "1.70.0"
-            target: x86_64-pc-windows-gnu
-          - os: windows-latest
-            rust: stable
-            target: x86_64-pc-windows-gnu
-          - os: windows-latest
-            rust: beta
-            target: x86_64-pc-windows-gnu
-          - os: windows-latest
-            rust: nightly
-            target: x86_64-pc-windows-gnu
-    steps:
-      - name: ✅ Checkout ✅
-        uses: actions/checkout@v4
-      - name: 🧰 Toolchain 🧰
-        run: |
-          rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
-          rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile minimal --no-self-update
-          rustup default ${{ matrix.rust }}
-      - name: 💾 Install (cargo-binstall) 💾
-        uses: cargo-bins/cargo-binstall@main
-      - name: 💾 Install (all-features) 💾
-        continue-on-error: true
-        run: cargo binstall --no-confirm --no-symlinks cargo-all-features
-      - name: 🧪 Test 🧪
-        run: |
-          cargo update
-          cargo test-all-features --n-chunks 2 --chunk 2
+          cargo test-all-features
   coverage:
     name: 🧱 Code Coverage 🧱
     needs:
@@ -432,10 +418,8 @@ jobs:
         test-linux-chunk-2,
         test-linux-chunk-3,
         test-linux-chunk-4,
-        test-macos-chunk-1,
-        test-macos-chunk-2,
-        test-windows-chunk-1,
-        test-windows-chunk-2,
+        test-macos,
+        test-windows,
       ]
     runs-on: ${{ matrix.os }}
     strategy:
@@ -456,6 +440,12 @@ jobs:
     steps:
       - name: ✅ Checkout ✅
         uses: actions/checkout@v4
+      - name: 🧹 Cleanup 🧹
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          rm -rf /home/runner/.cargo/bin/rustfmt
+          rm -rf /home/runner/.cargo/bin/cargo-fmt
+          rm -rf /home/runner/.cargo/bin/rust-analyzer
       - name: 🧰 Toolchain 🧰
         run: |
           rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
@@ -465,8 +455,7 @@ jobs:
       - name: 💾 Install (cargo-binstall) 💾
         uses: cargo-bins/cargo-binstall@main
       - name: 💾 Install (llvm-cov) 💾
-        continue-on-error: true
-        run: cargo binstall --no-confirm --no-symlinks cargo-llvm-cov
+        run: cargo binstall --no-confirm --no-symlinks cargo-llvm-cov --force
       - name: 🙊 Clean Workspace 🙊
         run: cargo llvm-cov clean --workspace
       - name: 🙊 Code Coverage (vergen-lib - default) 🙊
@@ -507,3 +496,7 @@ jobs:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         with:
           files: ./lcov.info
+  call_tier2:
+    name: ☎️ Tier 2 ☎️
+    needs: coverage
+    uses: rustyhorde/vergen/.github/workflows/tier2.yml@master

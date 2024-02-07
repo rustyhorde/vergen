@@ -6,9 +6,9 @@
 #..
 [build-dependencies]
 # All features enabled
-vergen = { version = "9.0.0-beta.1", features = ["build", "cargo", "rustc", "si"] }
+vergen = { version = "9.0.0", features = ["build", "cargo", "rustc", "si"] }
 # or
-vergen = { version = "9.0.0-beta.1", features = ["build"] }
+vergen = { version = "9.0.0", features = ["build"] }
 # if you wish to disable certain features
 ```
 
@@ -38,9 +38,9 @@ pub fn main() -> Result<()> {
 #..
 [build-dependencies]
 # All features enabled
-vergen-gix = { version = "1.0.0-beta.1", features = ["build", "cargo", "rustc", "si"] }
+vergen-gix = { version = "1.0.0", features = ["build", "cargo", "rustc", "si"] }
 # or
-vergen-gix = { version = "1.0.0-beta.1", features = ["build"] }
+vergen-gix = { version = "1.0.0", features = ["build"] }
 # if you wish to disable certain features
 ```
 
@@ -71,9 +71,9 @@ pub fn main() -> Result<()> {
 #..
 [build-dependencies]
 # All features enabled
-vergen-gitcl = { version = "1.0.0-beta.1", features = ["build", "cargo", "rustc", "si"] }
+vergen-gitcl = { version = "1.0.0", features = ["build", "cargo", "rustc", "si"] }
 # or
-vergen-gitcl = { version = "1.0.0-beta.1", features = ["build"] }
+vergen-gitcl = { version = "1.0.0", features = ["build"] }
 # if you wish to disable certain features
 ```
 
@@ -104,9 +104,9 @@ pub fn main() -> Result<()> {
 #..
 [build-dependencies]
 # All features enabled
-vergen-git2 = { version = "1.0.0-beta.1", features = ["build", "cargo", "rustc", "si"] }
+vergen-git2 = { version = "1.0.0", features = ["build", "cargo", "rustc", "si"] }
 # or
-vergen-git2 = { version = "1.0.0-beta.1", features = ["build"] }
+vergen-git2 = { version = "1.0.0", features = ["build"] }
 # if you wish to disable certain features
 ```
 

@@ -74,6 +74,56 @@ pub trait Add {
 }
 
 /// This trait should be implemented to allow the `vergen` emitter to properly emit your custom instructions.
+///
+/// # Example
+/// ```
+/// # use anyhow::Result;
+/// # use std::collections::BTreeMap;
+/// # use vergen_lib::{AddCustomEntries, CargoRerunIfChanged, CargoWarning, DefaultConfig};
+/// #[derive(Default)]
+/// struct Custom {}
+///
+/// impl AddCustomEntries<&str, &str> for Custom {
+///     fn add_calculated_entries(
+///         &self,
+///         _idempotent: bool,
+///         cargo_rustc_env_map: &mut BTreeMap<&str, &str>,
+///         _cargo_rerun_if_changed: &mut CargoRerunIfChanged,
+///         cargo_warning: &mut CargoWarning,
+///     ) -> Result<()> {
+///         cargo_rustc_env_map.insert("vergen-cl", "custom_instruction");
+///         cargo_warning.push("custom instruction generated".to_string());
+///         Ok(())
+///     }
+///
+///     fn add_default_entries(
+///         &self,
+///         _config: &DefaultConfig,
+///         _cargo_rustc_env_map: &mut BTreeMap<&str, &str>,
+///         _cargo_rerun_if_changed: &mut CargoRerunIfChanged,
+///         _cargo_warning: &mut CargoWarning,
+///     ) -> Result<()> {
+///         Ok(())
+///     }
+/// }
+/// ```
+/// ## Then in [`build.rs`]
+///
+/// ```will_not_compile
+/// let build = BuildBuilder::all_build()?;
+/// let cargo = CargoBuilder::all_cargo()?;
+/// let gix = GixBuilder::all_git()?;
+/// let rustc = RustcBuilder::all_rustc()?;
+/// let si = SysinfoBuilder::all_sysinfo()?;
+/// Emitter::default()
+///     .add_instructions(&build)?
+///     .add_instructions(&cargo)?
+///     .add_instructions(&gix)?
+///     .add_instructions(&rustc)?
+///     .add_instructions(&si)?
+///     .add_custom_instructions(&Custom::default())?
+///     .emit()
+/// ```
 pub trait AddCustom<K: Into<String> + Ord, V: Into<String>> {
     /// Try to add instructions entries to the various given arguments.
     ///

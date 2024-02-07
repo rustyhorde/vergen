@@ -20,6 +20,7 @@
 //! to rerun instruction emission if the `VERGEN_IDEMPOTENT` environment variable has changed.
 //! - Will emit [`cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed)
 //! to rerun instruction emission if the `SOURCE_DATE_EPOCH` environment variable has changed.
+//! - Will emit custom instructions via the [`AddCustomEntries`] and the [`add_custom_instructions`](Emitter::add_custom_instructions) function.
 //!
 //! ## Usage
 //!
@@ -39,9 +40,9 @@
 //!
 //! [build-dependencies]
 //! # All features enabled
-//! vergen = { version = "9.0.0-beta.0", features = ["build", "cargo", "rustc", "si"] }
+//! vergen = { version = "9.0.0", features = ["build", "cargo", "rustc", "si"] }
 //! # or
-//! vergen = { version = "9.0.0-beta.0", features = ["build"] }
+//! vergen = { version = "9.0.0", features = ["build"] }
 //! # if you wish to disable certain features
 //! ```
 //!
@@ -201,12 +202,16 @@ let build = BuildBuilder::default().build_timestamp(true).build()?;"##
     doc = r##"There is also a toggle for the [`emit_and_set`](Emitter::emit_and_set) function.  This version of emit will also set the instructions you requests as environment variables for use in `build.rs`"##
 )]
 //!
-//! | Feature | Enables |
-//! | ------- | ------- |
-//! |  build  | `VERGEN_BUILD_*` instructions |
-//! |  cargo  | `VERGEN_CARGO_*` instructions |
-//! |  rustc  | `VERGEN_RUSTC_*` instructions |
-//! |   si    | `VERGEN_SYSINFO_*` instructions |
+//! |    Feature   | Enables                       |
+//! | ------------ | ----------------------------- |
+//! |     build    | `VERGEN_BUILD_*` instructions |
+//! |     cargo    | `VERGEN_CARGO_*` instructions |
+//! |     rustc    | `VERGEN_RUSTC_*` instructions |
+//! |      si      | `VERGEN_SYSINFO_*` instructions |
+#![cfg_attr(
+    feature = "emit_and_set",
+    doc = r##"| emit_and_set | Enable the `[`emit_and_set`](Emitter::emit_and_set)` function |"##
+)]
 //!
 //! ## Environment Variables
 //! `vergen` currently recognizes the following environment variables. The full list of the environment variable names can be
@@ -497,7 +502,6 @@ let build = BuildBuilder::default().build_timestamp(true).build()?;"##
 #![cfg_attr(all(docsrs, nightly), feature(doc_cfg))]
 #![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
-mod emitter;
 mod feature;
 
 // This is here to appease the `unused_crate_dependencies` lint
@@ -507,11 +511,10 @@ mod feature;
     feature = "rustc",
     feature = "si"
 )))]
-use derive_builder as _;
+use {anyhow as _, derive_builder as _};
 #[cfg(test)]
 use {lazy_static as _, regex as _, serial_test as _, temp_env as _, test_util as _};
 
-pub use crate::emitter::Emitter;
 #[cfg(feature = "cargo")]
 pub use cargo_metadata::DependencyKind;
 #[cfg(feature = "build")]
@@ -542,3 +545,4 @@ pub use vergen_lib::AddCustomEntries;
 pub use vergen_lib::CargoRerunIfChanged;
 pub use vergen_lib::CargoWarning;
 pub use vergen_lib::DefaultConfig;
+pub use vergen_lib::Emitter;

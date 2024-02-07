@@ -60,7 +60,7 @@ The current minimum supported rust version is 1.70.0
 * The 3 new libraries are intended to be drop in replacements for `vergen` when you need to generate git based cargo build script instructions.
 * The git based features have been removed from the base `vergen` library.
 * `vergen` now contains the `build`, `cargo`, `rustc`, and `sysinfo` feature implementations.   These features are re-exported by the new libraries allowing you to configure the output as you have previously.
-* Version 9 introduces the `AddCustomEntries` trait.  Implementing this trait allows you to include your own custom Cargo instructions, using `vergen` as the engine to generate them. See the [`AddCustomEntries`](https://docs.rs/vergen/9.0.0-beta.1/vergen/trait.AddCustomEntries.html) docs for more information.
+* Version 9 introduces the `AddCustomEntries` trait.  Implementing this trait allows you to include your own custom Cargo instructions, using `vergen` as the engine to generate them. See the [`AddCustomEntries`](https://docs.rs/vergen/9.0.0/vergen/trait.AddCustomEntries.html) docs for more information.
 * The [version 8 branch](https://github.com/rustyhorde/vergen/tree/legacy/v8) will be maintained for some time.
 
 ### Why?

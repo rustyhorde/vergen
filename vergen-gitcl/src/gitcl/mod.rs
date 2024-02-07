@@ -961,11 +961,11 @@ impl AddEntries for Gitcl {
 #[cfg(test)]
 mod test {
     use super::{Gitcl, GitclBuilder};
+    use crate::Emitter;
     use anyhow::Result;
     use serial_test::serial;
     use std::{collections::BTreeMap, env::temp_dir, io::Write};
     use test_util::TestRepos;
-    use vergen::Emitter;
     use vergen_lib::{count_idempotent, VergenKey};
 
     #[test]
