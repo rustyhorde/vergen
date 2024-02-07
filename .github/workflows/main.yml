@@ -58,6 +58,11 @@ jobs:
         with:
           key: ${{ matrix.target }}
           cache-all-crates: true
+      - name: 💾 Install (cargo-binstall) 💾
+        uses: cargo-bins/cargo-binstall@main
+      - name: 💾 Install (all-features) 💾
+        continue-on-error: true
+        run: cargo binstall --no-confirm --no-symlinks cargo-all-features --force --pkg-url "https://github.com/rustyhorde/releases/download/{ version }/{ name }-{ version }-{ target }.{ archive-format }"
       - name: 📎 Clippy 📎
         run: |
           cargo update
