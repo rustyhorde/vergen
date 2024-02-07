@@ -61,19 +61,11 @@ jobs:
       - name: 💾 Install (cargo-binstall) 💾
         uses: cargo-bins/cargo-binstall@main
       - name: 💾 Install (all-features) 💾
-        continue-on-error: true
-        run: cargo binstall --no-confirm --no-symlinks --manifest-path side_load cargo-all-features --target x86_64-unknown-linux-musl --force --pkg-url "https://github.com/rustyhorde/cargo-all-features/releases/download/1.11.0-beta.1/cargo-all-features_1.11.0-beta.1_x86_64-unknown-linux-musl.tar.xz" --pkg-fmt="txz"
+        run: cargo binstall --no-confirm --no-symlinks --manifest-path side_load cargo-all-features@1.11.0-beta.2 --target x86_64-unknown-linux-musl --force --pkg-url "{ repo }/releases/download/{ version }/{ name }_{ version }_{ target }.{ archive-suffix }" --pkg-fmt="txz"
       - name: 📎 Clippy 📎
         run: |
           cargo update
-          cargo clippy-all-features -- -Dwarnings
-          cargo clippy -p test_util --all-targets -- -Dwarnings
-          cargo clippy -p vergen-lib --all-targets --features build,cargo,git,rustc,si -- -Dwarnings
-          cargo clippy -p vergen --all-targets --features build,cargo,emit_and_set,rustc,si -- -Dwarnings
-          cargo clippy -p vergen-git2 --all-targets --features build,cargo,emit_and_set,rustc,si -- -Dwarnings
-          cargo clippy -p vergen-gitcl --all-targets --features build,cargo,emit_and_set,rustc,si -- -Dwarnings
-          cargo clippy -p vergen-gix --all-targets --features build,cargo,emit_and_set,rustc,si -- -Dwarnings
-          cargo clippy -p vergen-pretty --all-targets --features color,header,trace -- -Dwarnings
+          cargo clippy-all-features
   lints-macos:
     name: 🕳️ Lints MacOS 🕳️
     needs: rustfmt
@@ -98,16 +90,14 @@ jobs:
         with:
           key: ${{ matrix.target }}
           cache-all-crates: true
+      - name: 💾 Install (cargo-binstall) 💾
+        uses: cargo-bins/cargo-binstall@main
+      - name: 💾 Install (all-features) 💾
+        run: cargo binstall --no-confirm --no-symlinks --manifest-path side_load cargo-all-features@1.11.0-beta.2 --target x86_64-apple-darwin --force --pkg-url "{ repo }/releases/download/{ version }/{ name }_{ version }_{ target }.{ archive-suffix }" --pkg-fmt="zip"
       - name: 📎 Clippy 📎
         run: |
           cargo update
-          cargo clippy -p test_util --all-targets -- -Dwarnings
-          cargo clippy -p vergen-lib --all-targets --features build,cargo,git,rustc,si -- -Dwarnings
-          cargo clippy -p vergen --all-targets --features build,cargo,emit_and_set,rustc,si -- -Dwarnings
-          cargo clippy -p vergen-git2 --all-targets --features build,cargo,emit_and_set,rustc,si -- -Dwarnings
-          cargo clippy -p vergen-gitcl --all-targets --features build,cargo,emit_and_set,rustc,si -- -Dwarnings
-          cargo clippy -p vergen-gix --all-targets --features build,cargo,emit_and_set,rustc,si -- -Dwarnings
-          cargo clippy -p vergen-pretty --all-targets --features color,header,trace -- -Dwarnings
+          cargo clippy-all-features
   lints-windows:
     name: 🕳️ Lints Windows 🕳️
     needs: rustfmt
@@ -132,16 +122,14 @@ jobs:
         with:
           key: ${{ matrix.target }}
           cache-all-crates: true
+      - name: 💾 Install (cargo-binstall) 💾
+        uses: cargo-bins/cargo-binstall@main
+      - name: 💾 Install (all-features) 💾
+        run: cargo binstall --no-confirm --no-symlinks --manifest-path side_load cargo-all-features@1.11.0-beta.2 --target x86_64-pc-windows-gnu --force --pkg-url "{ repo }/releases/download/{ version }/{ name }_{ version }_{ target }.{ archive-suffix }" --pkg-fmt="zip"
       - name: 📎 Clippy 📎
         run: |
           cargo update
-          cargo clippy -p test_util --all-targets -- -Dwarnings
-          cargo clippy -p vergen-lib --all-targets --features build,cargo,git,rustc,si -- -Dwarnings
-          cargo clippy -p vergen --all-targets --features build,cargo,emit_and_set,rustc,si -- -Dwarnings
-          cargo clippy -p vergen-git2 --all-targets --features build,cargo,emit_and_set,rustc,si -- -Dwarnings
-          cargo clippy -p vergen-gitcl --all-targets --features build,cargo,emit_and_set,rustc,si -- -Dwarnings
-          cargo clippy -p vergen-gix --all-targets --features build,cargo,emit_and_set,rustc,si -- -Dwarnings
-          cargo clippy -p vergen-pretty --all-targets --features color,header,trace -- -Dwarnings
+          cargo clippy-all-features
   test-linux-chunk-1:
     name: 🧪 Linux (Chunk 1) 🧪
     needs: lints-linux
