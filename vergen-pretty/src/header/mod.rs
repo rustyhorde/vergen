@@ -166,6 +166,7 @@ fn trace(config: &Config) -> Result<()> {
 }
 
 #[cfg(not(feature = "trace"))]
+#[allow(clippy::unnecessary_wraps)]
 fn trace(_config: &Config) -> Result<()> {
     Ok(())
 }
@@ -183,6 +184,7 @@ fn get_style(random_style: bool, style_opt: Option<Style>) -> Style {
 }
 
 #[cfg(not(feature = "color"))]
+#[allow(clippy::needless_pass_by_value)]
 fn get_style(_random_style: bool, _style_opt: Option<Style>) -> Style {
     Style::new()
 }
