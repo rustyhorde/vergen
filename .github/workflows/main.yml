@@ -93,7 +93,7 @@ jobs:
       - name: 💾 Install (cargo-binstall) 💾
         uses: cargo-bins/cargo-binstall@main
       - name: 💾 Install (all-features) 💾
-        run: cargo binstall --no-confirm --no-symlinks --manifest-path side_load cargo-all-features@1.11.0-beta.2 --target x86_64-apple-darwin --force --pkg-url "{ repo }/releases/download/{ version }/{ name }_{ version }_{ target }.{ archive-suffix }" --pkg-fmt="zip"
+        run: cargo binstall --no-confirm --no-symlinks --manifest-path side_load cargo-all-features --target x86_64-apple-darwin --force --pkg-url "{ repo }/releases/download/{ version }/{ name }_{ version }_{ target }.{ archive-suffix }" --pkg-fmt="zip"
       - name: 📎 Clippy 📎
         run: |
           cargo update
