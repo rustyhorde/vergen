@@ -343,10 +343,15 @@ jobs:
           rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
           rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile minimal
           rustup default ${{ matrix.rust }}
+      - name: 💵 Rust Cache 💵
+        uses: Swatinem/rust-cache@v2
+        if: ${{ github.event_name != 'pull_request' || ! github.event.pull_request.head.repo.fork }}
+        with:
+          key: ${{ matrix.target }}
+          cache-all-crates: true
       - name: 💾 Install (cargo-binstall) 💾
         uses: cargo-bins/cargo-binstall@main
       - name: 💾 Install (all-features) 💾
-        continue-on-error: true
         run: cargo binstall --no-confirm --no-symlinks cargo-all-features --force
       - name: 🧪 Test 🧪
         run: |
@@ -391,10 +396,15 @@ jobs:
           rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
           rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile minimal --no-self-update
           rustup default ${{ matrix.rust }}
+      - name: 💵 Rust Cache 💵
+        uses: Swatinem/rust-cache@v2
+        if: ${{ github.event_name != 'pull_request' || ! github.event.pull_request.head.repo.fork }}
+        with:
+          key: ${{ matrix.target }}
+          cache-all-crates: true
       - name: 💾 Install (cargo-binstall) 💾
         uses: cargo-bins/cargo-binstall@main
       - name: 💾 Install (all-features) 💾
-        continue-on-error: true
         run: cargo binstall --no-confirm --no-symlinks cargo-all-features --force
       - name: 🧪 Test 🧪
         run: |
@@ -445,8 +455,7 @@ jobs:
       - name: 💾 Install (cargo-binstall) 💾
         uses: cargo-bins/cargo-binstall@main
       - name: 💾 Install (llvm-cov) 💾
-        continue-on-error: true
-        run: cargo binstall --no-confirm --no-symlinks cargo-llvm-cov
+        run: cargo binstall --no-confirm --no-symlinks cargo-llvm-cov --force
       - name: 🙊 Clean Workspace 🙊
         run: cargo llvm-cov clean --workspace
       - name: 🙊 Code Coverage (vergen-lib - default) 🙊
