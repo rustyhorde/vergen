@@ -1,6 +1,6 @@
 [package]
 name = "cargo-all-features"
-version = "1.11.0-beta.2"
+version = "1.10.0"
 authors = ["Corey Farwell <coreyf@rwell.org>"]
 edition = "2021"
 description = "A Cargo subcommand to build and test all feature flag combinations"
