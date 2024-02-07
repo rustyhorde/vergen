@@ -1,0 +1,50 @@
+on:
+  workflow_dispatch:
+  workflow_call:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+
+name: 🦀 Rust (Tier 2) 🦀
+
+jobs:
+  test-linux-chunk-4:
+    name: 🧪 Linux (Chunk 4) 🧪
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            rust: nightly
+            target: x86_64-unknown-linux-gnu
+        targets:
+          - target: aarch64-unknown-linux-gnu
+    steps:
+      - name: ✅ Checkout ✅
+        uses: actions/checkout@v4
+      - name: 🧰 Toolchain 🧰
+        run: |
+          rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
+          rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile minimal
+          rustup target add ${{ matrix.targets.target }}
+          rustup default ${{ matrix.rust }}
+      - name: 💵 Rust Cache 💵
+        uses: Swatinem/rust-cache@v2
+        if: ${{ github.event_name != 'pull_request' || ! github.event.pull_request.head.repo.fork }}
+        with:
+          key: ${{ matrix.target }}
+          cache-all-crates: true
+      - name: 💾 Install (cargo-binstall) 💾
+        uses: cargo-bins/cargo-binstall@main
+      - name: 💾 Install (all-features) 💾
+        run: cargo binstall --no-confirm --no-symlinks cargo-all-features --force
+      - name: 💾 Install (cross) 💾
+        run: cargo binstall --no-confirm --no-symlinks cross --force
+      - name: 🧪 Test 🧪
+        run: |
+          cargo update
+          cross build-all-features --n-chunks 4 --chunk 4 --target=${{ matrix.targets.target }}
