@@ -2,10 +2,6 @@ on:
   workflow_dispatch:
   workflow_call:
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
-
 env:
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
