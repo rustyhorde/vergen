@@ -23,11 +23,17 @@ jobs:
             target: x86_64-unknown-linux-gnu
         targets:
           - target: aarch64-unknown-linux-gnu
+          - target: i686-pc-windows-gnu
+          - target: i686-pc-windows-msvc
+          - target: i686-unknown-linux-gnu
     steps:
       - name: ✅ Checkout ✅
         uses: actions/checkout@v4
       - name: 🧰 Toolchain 🧰
         run: |
+          rm -rf /home/runner/.cargo/bin/rustfmt
+          rm -rf /home/runner/.cargo/bin/cargo-fmt
+          rm -rf /home/runner/.cargo/bin/rust-analyzer
           rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
           rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile minimal
           rustup target add ${{ matrix.targets.target }}
@@ -44,7 +50,7 @@ jobs:
         run: cargo binstall --no-confirm --no-symlinks cargo-all-features --force
       - name: 💾 Install (cross) 💾
         run: cargo binstall --no-confirm --no-symlinks cross --force
-      - name: 🧪 Test 🧪
+      - name: 🧱 Build 🧱
         run: |
           cargo update
           cross build-all-features --n-chunks 4 --chunk 4 --target=${{ matrix.targets.target }}

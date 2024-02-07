@@ -496,3 +496,7 @@ jobs:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         with:
           files: ./lcov.info
+  call_tier2:
+    name: ☎️ Tier 2 ☎️
+    needs: coverage
+    uses: rustyhorde/vergen/.github/workflows/tier2.yml@master
