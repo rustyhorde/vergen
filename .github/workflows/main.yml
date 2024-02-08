@@ -28,49 +28,31 @@ jobs:
   lints-linux:
     name: 🕳️ Clippy (Linux) 🕳️
     needs: rustfmt
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-latest
-            channel: nightly
-            target: x86_64-unknown-linux-gnu
     uses: rustyhorde/workflows/.github/workflows/clippy-all-features.yml@main
     with:
-      os: ${{ matrix.os }}
-      channel: ${{ matrix.channel }}
-      target: ${{ matrix.target }}
+      os: ubuntu-latest
+      channel: nightly
+      target: x86_64-unknown-linux-gnu
       cargo_dir: side_load
 
   lints-macos:
     name: 🕳️ Clippy (MacOS) 🕳️
     needs: rustfmt
-    strategy:
-      matrix:
-        include:
-          - os: macos-latest
-            channel: nightly
-            target: x86_64-apple-darwin
     uses: rustyhorde/workflows/.github/workflows/clippy-all-features.yml@main
     with:
-      os: ${{ matrix.os }}
-      channel: ${{ matrix.channel }}
-      target: ${{ matrix.target }}
+      os: macos-latest
+      channel: nightly
+      target: $x86_64-apple-darwin
       cargo_dir: side_load
 
   lints-windows:
     name: 🕳️ Clippy (Windows) 🕳️
     needs: rustfmt
-    strategy:
-      matrix:
-        include:
-          - os: windows-latest
-            channel: nightly
-            target: x86_64-pc-windows-gnu
     uses: rustyhorde/workflows/.github/workflows/clippy-all-features.yml@main
     with:
-      os: ${{ matrix.os }}
-      channel: ${{ matrix.channel }}
-      target: ${{ matrix.target }}
+      os: windows-latest
+      channel: nightly
+      target: x86_64-pc-windows-gnu
       cargo_dir: side_load
 
   test-linux:
@@ -78,23 +60,10 @@ jobs:
     needs: lints-linux
     strategy:
       matrix:
-        include:
-          - os: ubuntu-latest
-            channel: "1.70.0"
-            target: x86_64-unknown-linux-gnu
-            chunk: [1, 2, 3, 4]
-          - os: ubuntu-latest
-            channel: stable
-            target: x86_64-unknown-linux-gnu
-            chunk: [1, 2, 3, 4]
-          - os: ubuntu-latest
-            channel: beta
-            target: x86_64-unknown-linux-gnu
-            chunk: [1, 2, 3, 4]
-          - os: ubuntu-latest
-            channel: nightly
-            target: x86_64-unknown-linux-gnu
-            chunk: [1, 2, 3, 4]
+        os: [ubuntu-latest]
+        channel: ["1.70.0", "stable", "beta", "nightly"]
+        target: [x86_64-unknown-linux-gnu]
+        chunk: [1, 2, 3, 4]
     uses: rustyhorde/workflows/.github/workflows/test-all-features.yml@main
     with:
       os: ${{ matrix.os }}
@@ -104,99 +73,39 @@ jobs:
       chunk: ${{ matrix.chunk }}
 
   test-macos:
-    name: 🧪 MacOS 🧪
+    name: 🧪 Test (MacOS) 🧪
     needs: lints-macos
-    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        include:
-          - os: macos-latest
-            rust: "1.70.0"
-            target: x86_64-apple-darwin
-          - os: macos-latest
-            rust: stable
-            target: x86_64-apple-darwin
-          - os: macos-latest
-            rust: beta
-            target: x86_64-apple-darwin
-          - os: macos-latest
-            rust: nightly
-            target: x86_64-apple-darwin
-    steps:
-      - name: ✅ Checkout ✅
-        uses: actions/checkout@v4
-      - name: 🧰 Toolchain 🧰
-        run: |
-          rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
-          rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile minimal
-          rustup default ${{ matrix.rust }}
-      - name: 💵 Rust Cache 💵
-        uses: Swatinem/rust-cache@v2
-        if: ${{ github.event_name != 'pull_request' || ! github.event.pull_request.head.repo.fork }}
-        with:
-          key: ${{ matrix.target }}
-          cache-all-crates: true
-      - name: 💾 Install (cargo-binstall) 💾
-        uses: cargo-bins/cargo-binstall@main
-      - name: 💾 Install (all-features) 💾
-        run: cargo binstall --no-confirm --no-symlinks cargo-all-features --force
-      - name: 🧪 Test 🧪
-        run: |
-          cargo update
-          cargo test-all-features
+        os: [macos-latest]
+        channel: ["1.70.0", "stable", "beta", "nightly"]
+        target: [x86_64-apple-darwin]
+        chunk: [1, 2, 3, 4]
+    uses: rustyhorde/workflows/.github/workflows/test-all-features.yml@main
+    with:
+      os: ${{ matrix.os }}
+      channel: ${{ matrix.channel }}
+      target: ${{ matrix.target }}
+      num_chunks: 4
+      chunk: ${{ matrix.chunk }}
+
   test-windows:
-    name: 🧪 Windows 🧪
+    name: 🧪 Test (Windows) 🧪
     needs: lints-windows
-    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        include:
-          - os: windows-latest
-            rust: "1.70.0"
-            target: x86_64-pc-windows-msvc
-          - os: windows-latest
-            rust: stable
-            target: x86_64-pc-windows-msvc
-          - os: windows-latest
-            rust: beta
-            target: x86_64-pc-windows-msvc
-          - os: windows-latest
-            rust: nightly
-            target: x86_64-pc-windows-msvc
-          - os: windows-latest
-            rust: "1.70.0"
-            target: x86_64-pc-windows-gnu
-          - os: windows-latest
-            rust: stable
-            target: x86_64-pc-windows-gnu
-          - os: windows-latest
-            rust: beta
-            target: x86_64-pc-windows-gnu
-          - os: windows-latest
-            rust: nightly
-            target: x86_64-pc-windows-gnu
-    steps:
-      - name: ✅ Checkout ✅
-        uses: actions/checkout@v4
-      - name: 🧰 Toolchain 🧰
-        run: |
-          rustup toolchain remove ${{ matrix.rust }}-${{ matrix.target }}
-          rustup toolchain add ${{ matrix.rust }}-${{ matrix.target }} --profile minimal --no-self-update
-          rustup default ${{ matrix.rust }}
-      - name: 💵 Rust Cache 💵
-        uses: Swatinem/rust-cache@v2
-        if: ${{ github.event_name != 'pull_request' || ! github.event.pull_request.head.repo.fork }}
-        with:
-          key: ${{ matrix.target }}
-          cache-all-crates: true
-      - name: 💾 Install (cargo-binstall) 💾
-        uses: cargo-bins/cargo-binstall@main
-      - name: 💾 Install (all-features) 💾
-        run: cargo binstall --no-confirm --no-symlinks cargo-all-features --force
-      - name: 🧪 Test 🧪
-        run: |
-          cargo update
-          cargo test-all-features
+        os: [windows-latest]
+        channel: ["1.70.0", "stable", "beta", "nightly"]
+        target: [x86_64-pc-windows-gnu, x86_64-pc-windows-msvc]
+        chunk: [1, 2, 3, 4]
+    uses: rustyhorde/workflows/.github/workflows/test-all-features.yml@main
+    with:
+      os: ${{ matrix.os }}
+      channel: ${{ matrix.channel }}
+      target: ${{ matrix.target }}
+      num_chunks: 4
+      chunk: ${{ matrix.chunk }}
+
   coverage:
     name: 🧱 Code Coverage 🧱
     needs: [test-linux, test-macos, test-windows]
