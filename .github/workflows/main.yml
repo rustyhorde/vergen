@@ -32,7 +32,7 @@ jobs:
       - name: ⭕ Rustfmt Check ⭕
         run: cargo fmt --all -- --check
   lints-linux:
-    name: 🕳️ Lints Linux 🕳️
+    name: 🕳️ Clippy (Linux) 🕳️
     needs: rustfmt
     strategy:
       matrix:
@@ -46,71 +46,36 @@ jobs:
       channel: ${{ matrix.rust }}
       target: ${{ matrix.target }}
       cargo_dir: side_load
-    secrets: inherit
   lints-macos:
-    name: 🕳️ Lints MacOS 🕳️
+    name: 🕳️ Clippy (MacOS) 🕳️
     needs: rustfmt
-    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         include:
           - os: macos-latest
             rust: nightly
             target: x86_64-apple-darwin
-    steps:
-      - name: ✅ Checkout ✅
-        uses: actions/checkout@v4
-      - name: 🧰 Toolchain 🧰
-        run: |
-          rustup toolchain remove ${{ matrix.rust }}
-          rustup toolchain install ${{ matrix.rust }} --profile default --no-self-update
-          rustup default ${{ matrix.rust }}
-      - name: 💵 Rust Cache 💵
-        uses: Swatinem/rust-cache@v2
-        if: ${{ github.event_name != 'pull_request' || ! github.event.pull_request.head.repo.fork }}
-        with:
-          key: ${{ matrix.target }}
-          cache-all-crates: true
-      - name: 💾 Install (cargo-binstall) 💾
-        uses: cargo-bins/cargo-binstall@main
-      - name: 💾 Install (all-features) 💾
-        run: cargo binstall --no-confirm --no-symlinks --manifest-path side_load cargo-all-features --force --pkg-url "https://github.com/rustyhorde/cargo-all-features/releases/download/1.11.0-beta.3/cargo-all-features_1.11.0-beta.3_x86_64-apple-darwin.zip" --pkg-fmt="zip"
-      - name: 📎 Clippy 📎
-        run: |
-          cargo update
-          cargo clippy-all-features -- -Dwarnings
+    uses: rustyhorde/workflows/.github/workflows/clippy-all-features.yml@main
+    with:
+      os: ${{ matrix.os }}
+      channel: ${{ matrix.rust }}
+      target: ${{ matrix.target }}
+      cargo_dir: side_load
   lints-windows:
-    name: 🕳️ Lints Windows 🕳️
+    name: 🕳️ Clippy (Windows) 🕳️
     needs: rustfmt
-    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         include:
           - os: windows-latest
             rust: nightly
-            target: x86_64-pc-windows-msvc
-    steps:
-      - name: ✅ Checkout ✅
-        uses: actions/checkout@v4
-      - name: 🧰 Toolchain 🧰
-        run: |
-          rustup toolchain remove ${{ matrix.rust }}
-          rustup toolchain install ${{ matrix.rust }} --profile default --no-self-update
-          rustup default ${{ matrix.rust }}
-      - name: 💵 Rust Cache 💵
-        uses: Swatinem/rust-cache@v2
-        if: ${{ github.event_name != 'pull_request' || ! github.event.pull_request.head.repo.fork }}
-        with:
-          key: ${{ matrix.target }}
-          cache-all-crates: true
-      - name: 💾 Install (cargo-binstall) 💾
-        uses: cargo-bins/cargo-binstall@main
-      - name: 💾 Install (all-features) 💾
-        run: cargo binstall --no-confirm --no-symlinks --manifest-path side_load cargo-all-features --force --pkg-url "https://github.com/rustyhorde/cargo-all-features/releases/download/1.11.0-beta.3/cargo-all-features_1.11.0-beta.3_x86_64-pc-windows-gnu.zip" --pkg-fmt="zip"
-      - name: 📎 Clippy 📎
-        run: |
-          cargo update
-          cargo clippy-all-features -- -Dwarnings
+            target: x86_64-pc-windows-gnu
+    uses: rustyhorde/workflows/.github/workflows/clippy-all-features.yml@main
+    with:
+      os: ${{ matrix.os }}
+      channel: ${{ matrix.rust }}
+      target: ${{ matrix.target }}
+      cargo_dir: side_load
   test-linux-chunk-1:
     name: 🧪 Linux (Chunk 1) 🧪
     needs: lints-linux
