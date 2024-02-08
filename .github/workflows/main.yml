@@ -45,6 +45,7 @@ jobs:
       os: ${{ matrix.os }}
       channel: ${{ matrix.rust }}
       target: ${{ matrix.target }}
+      cargo_dir: side_load
     secrets: inherit
   lints-macos:
     name: 🕳️ Lints MacOS 🕳️
