@@ -65,7 +65,7 @@ jobs:
       - name: 📎 Clippy 📎
         run: |
           cargo update
-          cargo clippy-all-features
+          cargo clippy-all-features -- -Dwarnings
   lints-macos:
     name: 🕳️ Lints MacOS 🕳️
     needs: rustfmt
@@ -97,7 +97,7 @@ jobs:
       - name: 📎 Clippy 📎
         run: |
           cargo update
-          cargo clippy-all-features
+          cargo clippy-all-features -- -Dwarnings
   lints-windows:
     name: 🕳️ Lints Windows 🕳️
     needs: rustfmt
@@ -129,7 +129,7 @@ jobs:
       - name: 📎 Clippy 📎
         run: |
           cargo update
-          cargo clippy-all-features
+          cargo clippy-all-features -- -Dwarnings
   test-linux-chunk-1:
     name: 🧪 Linux (Chunk 1) 🧪
     needs: lints-linux
