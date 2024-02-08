@@ -17,7 +17,6 @@ concurrency:
 
 env:
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-  COVERAGE_RUN_CMD: "cargo llvm-cov -p vergen-lib -F unstable --no-report && cargo llvm-cov -p vergen-lib -F unstable,build,cargo,git,rustc,si --no-report && cargo llvm-cov -p vergen -F unstable --no-report && cargo llvm-cov -p vergen -F unstable,build,cargo,rustc,si --no-report && cargo llvm-cov -p vergen-gix -F unstable --no-report && cargo llvm-cov -p vergen-gix -F unstable,build,cargo,rustc,si --no-report && cargo llvm-cov -p vergen-git2 -F unstable --no-report && cargo llvm-cov -p vergen-git2 -F unstable,build,cargo,rustc,si --no-report && cargo llvm-cov -p vergen-gitcl -F unstable --no-report && cargo llvm-cov -p vergen-gitcl -F unstable,build,cargo,rustc,si --no-report && cargo llvm-cov -p vergen-pretty -F __vergen_test --no-report && cargo llvm-cov -p vergen-pretty -F __vergen_test,color,header,serde,trace --no-report && cargo llvm-cov -p vergen-pretty -F __vergen_empty_test --no-report && cargo llvm-cov -p vergen-pretty -F __vergen_empty_test,color,header,serde,trace --no-report"
 
 name: 🦀 Rust 🦀
 
@@ -43,7 +42,7 @@ jobs:
     with:
       os: macos-latest
       channel: nightly
-      target: $x86_64-apple-darwin
+      target: x86_64-apple-darwin
       cargo_dir: side_load
 
   lints-windows:
@@ -111,7 +110,7 @@ jobs:
       target: x86_64-unknown-linux-gnu
       lcov: true
       html: true
-      run_cmd: $COVERAGE_RUN_CMD
+      run_cmd: ${{ vars.COVERAGE_RUN_CMD }}
 
   coverage-macos:
     name: 🧱 Coverage (MacOS) 🧱
@@ -123,7 +122,7 @@ jobs:
       target: x86_64-apple-darwin
       lcov: true
       html: true
-      run_cmd: $COVERAGE_RUN_CMD
+      run_cmd: ${{ vars.COVERAGE_RUN_CMD }}
 
   coverage-windows:
     name: 🧱 Coverage (Wndows) 🧱
@@ -138,7 +137,7 @@ jobs:
       target: ${{ matrix.target }}
       lcov: true
       html: true
-      run_cmd: $COVERAGE_RUN_CMD
+      run_cmd: ${{ vars.COVERAGE_RUN_CMD }}
 
   build_tier2:
     name: ☎️ Tier 2 ☎️
