@@ -12,7 +12,7 @@
 //! `vergen-gitcl`, when used in conjunction with cargo [build scripts] can emit the following:
 //!
 //! - Will emit [`cargo:rustc-env=VAR=VALUE`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#cargorustc-envvarvalue)
-//! for each feature you have enabled.  These can be referenced with the [env!](std::env!) or [option_env!](std::option_env!) macro in your code.
+//! for each feature you have enabled.  These can be referenced with the [`env`!](std::env!) or [`option_env`!](std::option_env!) macro in your code.
 //! - Can emit [`cargo:warning`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#cargo-warning) outputs if the
 //! [`fail_on_error`](Emitter::fail_on_error) feature is not enabled and the requested variable is defaulted through error or
 //! the [`idempotent`](Emitter::idempotent) flag.

@@ -1,0 +1,37 @@
+[package]
+name = "cargo-all-features"
+version = "1.10.0"
+authors = ["Corey Farwell <coreyf@rwell.org>"]
+edition = "2021"
+description = "A Cargo subcommand to build and test all feature flag combinations"
+repository = "https://github.com/frewsxcv/cargo-all-features"
+license = "MIT/Apache-2.0"
+readme = "./README.md"
+
+[[bin]]
+name = "cargo-build-all-features"
+path = "src/bin/cargo-build-all-features.rs"
+
+[[bin]]
+name = "cargo-check-all-features"
+path = "src/bin/cargo-check-all-features.rs"
+
+[[bin]]
+name = "cargo-clippy-all-features"
+path = "src/bin/cargo-clippy-all-features.rs"
+
+[[bin]]
+name = "cargo-test-all-features"
+path = "src/bin/cargo-test-all-features.rs"
+
+[dependencies]
+json = "0.12"
+itertools = "0.12"
+termcolor = "1"
+clap = { version = "4.3.19", features = ["derive"] }
+
+[dev-dependencies]
+assert_cmd = "2.0.11"
+predicates = "3.0.3"
+assert_fs = "1.0.13"
+regex = "1.9.4"
