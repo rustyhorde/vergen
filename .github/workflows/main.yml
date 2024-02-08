@@ -80,14 +80,13 @@ jobs:
         os: [macos-latest]
         channel: ["1.70.0", "stable", "beta", "nightly"]
         target: [x86_64-apple-darwin]
-        chunk: [1, 2, 3, 4]
     uses: rustyhorde/workflows/.github/workflows/test-all-features.yml@main
     with:
       os: ${{ matrix.os }}
       channel: ${{ matrix.channel }}
       target: ${{ matrix.target }}
-      num_chunks: 4
-      chunk: ${{ matrix.chunk }}
+      num_chunks: 1
+      chunk: 1
 
   test-windows:
     name: 🧪 Test (Windows) 🧪
@@ -97,14 +96,13 @@ jobs:
         os: [windows-latest]
         channel: ["1.70.0", "stable", "beta", "nightly"]
         target: [x86_64-pc-windows-gnu, x86_64-pc-windows-msvc]
-        chunk: [1, 2, 3, 4]
     uses: rustyhorde/workflows/.github/workflows/test-all-features.yml@main
     with:
       os: ${{ matrix.os }}
       channel: ${{ matrix.channel }}
       target: ${{ matrix.target }}
-      num_chunks: 4
-      chunk: ${{ matrix.chunk }}
+      num_chunks: 1
+      chunk: 1
 
   coverage:
     name: 🧱 Code Coverage 🧱
