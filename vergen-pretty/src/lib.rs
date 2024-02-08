@@ -190,7 +190,6 @@ assert!(!buf.is_empty());
         non_fmt_panics,
         non_shorthand_field_patterns,
         non_snake_case,
-        nontrivial_structural_match,
         non_upper_case_globals,
         noop_method_call,
         opaque_hidden_inferred_bound,

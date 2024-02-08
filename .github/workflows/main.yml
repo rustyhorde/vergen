@@ -61,11 +61,11 @@ jobs:
       - name: 💾 Install (cargo-binstall) 💾
         uses: cargo-bins/cargo-binstall@main
       - name: 💾 Install (all-features) 💾
-        run: cargo binstall --no-confirm --no-symlinks --manifest-path side_load cargo-all-features --force --pkg-url "https://github.com/rustyhorde/cargo-all-features/releases/download/1.11.0-beta.2/cargo-all-features_1.11.0-beta.2_x86_64-unknown-linux-musl.tar.xz" --pkg-fmt="txz"
+        run: cargo binstall --no-confirm --no-symlinks --manifest-path side_load cargo-all-features --force --pkg-url "https://github.com/rustyhorde/cargo-all-features/releases/download/1.11.0-beta.3/cargo-all-features_1.11.0-beta.3_x86_64-unknown-linux-musl.tar.xz" --pkg-fmt="txz"
       - name: 📎 Clippy 📎
         run: |
           cargo update
-          cargo clippy-all-features
+          cargo clippy-all-features -- -Dwarnings
   lints-macos:
     name: 🕳️ Lints MacOS 🕳️
     needs: rustfmt
@@ -93,11 +93,11 @@ jobs:
       - name: 💾 Install (cargo-binstall) 💾
         uses: cargo-bins/cargo-binstall@main
       - name: 💾 Install (all-features) 💾
-        run: cargo binstall --no-confirm --no-symlinks --manifest-path side_load cargo-all-features --force --pkg-url "https://github.com/rustyhorde/cargo-all-features/releases/download/1.11.0-beta.2/cargo-all-features_1.11.0-beta.2_x86_64-apple-darwin.zip" --pkg-fmt="zip"
+        run: cargo binstall --no-confirm --no-symlinks --manifest-path side_load cargo-all-features --force --pkg-url "https://github.com/rustyhorde/cargo-all-features/releases/download/1.11.0-beta.3/cargo-all-features_1.11.0-beta.3_x86_64-apple-darwin.zip" --pkg-fmt="zip"
       - name: 📎 Clippy 📎
         run: |
           cargo update
-          cargo clippy-all-features
+          cargo clippy-all-features -- -Dwarnings
   lints-windows:
     name: 🕳️ Lints Windows 🕳️
     needs: rustfmt
@@ -125,11 +125,11 @@ jobs:
       - name: 💾 Install (cargo-binstall) 💾
         uses: cargo-bins/cargo-binstall@main
       - name: 💾 Install (all-features) 💾
-        run: cargo binstall --no-confirm --no-symlinks --manifest-path side_load cargo-all-features --force --pkg-url "https://github.com/rustyhorde/cargo-all-features/releases/download/1.11.0-beta.2/cargo-all-features_1.11.0-beta.2_x86_64-pc-windows-gnu.zip" --pkg-fmt="zip"
+        run: cargo binstall --no-confirm --no-symlinks --manifest-path side_load cargo-all-features --force --pkg-url "https://github.com/rustyhorde/cargo-all-features/releases/download/1.11.0-beta.3/cargo-all-features_1.11.0-beta.3_x86_64-pc-windows-gnu.zip" --pkg-fmt="zip"
       - name: 📎 Clippy 📎
         run: |
           cargo update
-          cargo clippy-all-features
+          cargo clippy-all-features -- -Dwarnings
   test-linux-chunk-1:
     name: 🧪 Linux (Chunk 1) 🧪
     needs: lints-linux
