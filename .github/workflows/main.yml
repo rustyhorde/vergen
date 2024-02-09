@@ -138,29 +138,3 @@ jobs:
       lcov: true
       html: true
       run_cmd: ${{ vars.COVERAGE_RUN_CMD }}
-
-  build_tier2:
-    name: ☎️ Tier 2 ☎️
-    needs: [coverage-linux, coverage-macos, coverage-windows]
-    strategy:
-      matrix:
-        target:
-          [
-            aarch64-linux-android,
-            aarch64-unknown-linux-gnu,
-            aarch64-unknown-linux-musl,
-            i686-pc-windows-gnu,
-            i686-unknown-linux-gnu,
-            powerpc-unknown-linux-gnu,
-            powerpc64-unknown-linux-gnu,
-            riscv64gc-unknown-linux-gnu,
-            sparc64-unknown-linux-gnu,
-            wasm32-unknown-emscripten,
-            x86_64-unknown-linux-musl,
-          ]
-        chunk: [1, 2, 3, 4]
-    uses: rustyhorde/workflows/.github/workflows/build-tier2.yml@main
-    with:
-      target: ${{ matrix.target }}
-      num_chunks: 4
-      chunk: ${{ matrix.chunk }}
