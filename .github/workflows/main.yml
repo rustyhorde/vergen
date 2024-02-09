@@ -117,6 +117,7 @@ jobs:
       lcov: true
       html: true
       run_cmd: ${{ vars.COVERAGE_RUN_CMD }}
+    secrets: inherit
 
   coverage-macos:
     name: 🧱 Coverage (MacOS) 🧱
@@ -129,6 +130,7 @@ jobs:
       lcov: true
       html: true
       run_cmd: ${{ vars.COVERAGE_RUN_CMD }}
+    secrets: inherit
 
   coverage-windows:
     name: 🧱 Coverage (Wndows) 🧱
@@ -144,3 +146,4 @@ jobs:
       lcov: true
       html: true
       run_cmd: ${{ vars.COVERAGE_RUN_CMD }}
+    secrets: inherit
