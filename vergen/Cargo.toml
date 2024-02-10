@@ -12,10 +12,6 @@ readme = "README.md"
 repository = "https://github.com/rustyhorde/vergen"
 version = "9.0.0"
 
-[package.metadata.cargo-all-features]
-denylist = ["emit_and_set", "unstable"]
-skip_optional_dependencies = true
-
 [package.metadata.cargo-matrix]
 [[package.metadata.cargo-matrix.channel]]
 name = "default"
