@@ -16,6 +16,21 @@ version = "0.1.2"
 denylist = ["unstable"]
 skip_optional_dependencies = true
 
+[package.metadata.cargo-matrix]
+[[package.metadata.cargo-matrix.channel]]
+name = "default"
+always_deny = ["unstable"]
+
+[[package.metadata.cargo-matrix.channel]]
+name = "nightly"
+always_deny = []
+always_include = ["unstable"]
+
+[[package.metadata.cargo-matrix.channel]]
+name = "llvm-cov"
+always_deny = ["emit_and_set"]
+always_include = ["unstable"]
+
 [features]
 default = []
 build = []

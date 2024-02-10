@@ -17,6 +17,22 @@ denylist = ["unstable"]
 skip_optional_dependencies = true
 always_include_features = ["__vergen_test"]
 
+[package.metadata.cargo-matrix]
+[[package.metadata.cargo-matrix.channel]]
+name = "default"
+always_deny = ["unstable"]
+always_include = ["__vergen_test"]
+
+[[package.metadata.cargo-matrix.channel]]
+name = "nightly"
+always_deny = []
+always_include = ["__vergen_test", "unstable"]
+
+[[package.metadata.cargo-matrix.channel]]
+name = "nightly-empty"
+always_deny = []
+always_include = ["__vergen_empty_test", "unstable"]
+
 [features]
 default = []
 unstable = []
