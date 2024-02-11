@@ -43,21 +43,31 @@ jobs:
   lints-macos:
     name: 🕳️ Clippy (MacOS) 🕳️
     needs: rustfmt
+    strategy:
+      matrix:
+        chunk: [1, 2]
     uses: rustyhorde/workflows/.github/workflows/clippy-all-features.yml@main
     with:
       os: macos-latest
       channel: nightly
       target: x86_64-apple-darwin
+      num_chunks: 2
+      chunk: ${{ matrix.chunk }}
       update: true
 
   lints-windows:
     name: 🕳️ Clippy (Windows) 🕳️
     needs: rustfmt
+    strategy:
+      matrix:
+        chunk: [1, 2]
     uses: rustyhorde/workflows/.github/workflows/clippy-all-features.yml@main
     with:
       os: windows-latest
       channel: nightly
       target: x86_64-pc-windows-gnu
+      num_chunks: 2
+      chunk: ${{ matrix.chunk }}
       update: true
 
   test-linux:
@@ -78,7 +88,7 @@ jobs:
       chunk: ${{ matrix.chunk }}
       update: true
 
-  test-macos:
+  test-macos-1:
     name: 🧪 Test (MacOS) 🧪
     needs: lints-macos
     strategy:
@@ -91,21 +101,93 @@ jobs:
       os: ${{ matrix.os }}
       channel: ${{ matrix.channel }}
       target: ${{ matrix.target }}
+      num_chunks: 2
+      chunk: 1
       update: true
 
-  test-windows:
-    name: 🧪 Test (Windows) 🧪
-    needs: lints-windows
+  test-macos-2:
+    name: 🧪 Test (MacOS) 🧪
+    needs: test-macos-1
     strategy:
       matrix:
-        os: [windows-latest]
+        os: [macos-latest]
         channel: ["1.70.0", "stable", "beta", "nightly"]
-        target: [x86_64-pc-windows-gnu, x86_64-pc-windows-msvc]
+        target: [x86_64-apple-darwin]
     uses: rustyhorde/workflows/.github/workflows/test-all-features.yml@main
     with:
       os: ${{ matrix.os }}
       channel: ${{ matrix.channel }}
       target: ${{ matrix.target }}
+      num_chunks: 2
+      chunk: 2
+      update: true
+
+  test-windows-gnu-1:
+    name: 🧪 Test (Windows - GNU) 🧪
+    needs: lints-windows
+    strategy:
+      matrix:
+        os: [windows-latest]
+        channel: ["1.70.0", "stable", "beta", "nightly"]
+        target: [x86_64-pc-windows-gnu]
+    uses: rustyhorde/workflows/.github/workflows/test-all-features.yml@main
+    with:
+      os: ${{ matrix.os }}
+      channel: ${{ matrix.channel }}
+      target: ${{ matrix.target }}
+      num_chunks: 2
+      chunk: 1
+      update: true
+
+  test-windows-gnu-2:
+    name: 🧪 Test (Windows - GNU) 🧪
+    needs: test-windows-gnu-1
+    strategy:
+      matrix:
+        os: [windows-latest]
+        channel: ["1.70.0", "stable", "beta", "nightly"]
+        target: [x86_64-pc-windows-gnu]
+    uses: rustyhorde/workflows/.github/workflows/test-all-features.yml@main
+    with:
+      os: ${{ matrix.os }}
+      channel: ${{ matrix.channel }}
+      target: ${{ matrix.target }}
+      num_chunks: 2
+      chunk: 2
+      update: true
+
+  test-windows-msvc-1:
+    name: 🧪 Test (Windows - MSVC) 🧪
+    needs: lints-windows
+    strategy:
+      matrix:
+        os: [windows-latest]
+        channel: ["1.70.0", "stable", "beta", "nightly"]
+        target: [x86_64-pc-windows-msvc]
+    uses: rustyhorde/workflows/.github/workflows/test-all-features.yml@main
+    with:
+      os: ${{ matrix.os }}
+      channel: ${{ matrix.channel }}
+      target: ${{ matrix.target }}
+      num_chunks: 2
+      chunk: 1
+      update: true
+
+  test-windows-msvc-2:
+    name: 🧪 Test (Windows - MSVC) 🧪
+    needs: test-windows-msvc-1
+    strategy:
+      matrix:
+        os: [windows-latest]
+        channel: ["1.70.0", "stable", "beta", "nightly"]
+        target: [x86_64-pc-windows-msvc]
+    uses: rustyhorde/workflows/.github/workflows/test-all-features.yml@main
+    with:
+      os: ${{ matrix.os }}
+      channel: ${{ matrix.channel }}
+      target: ${{ matrix.target }}
+      num_chunks: 2
+      chunk: 2
       update: true
 
   coverage-linux:
@@ -123,7 +205,7 @@ jobs:
 
   coverage-macos:
     name: 🧱 Coverage (MacOS) 🧱
-    needs: test-macos
+    needs: test-macos-2
     uses: rustyhorde/workflows/.github/workflows/coverage.yml@main
     with:
       os: macos-latest
@@ -136,7 +218,7 @@ jobs:
 
   coverage-windows:
     name: 🧱 Coverage (Wndows) 🧱
-    needs: test-windows
+    needs: [test-windows-gnu-2, test-windows-msvc-2]
     strategy:
       matrix:
         target: [x86_64-pc-windows-gnu, x86_64-pc-windows-msvc]
