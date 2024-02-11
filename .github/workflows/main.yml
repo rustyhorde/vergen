@@ -30,13 +30,13 @@ jobs:
     needs: rustfmt
     strategy:
       matrix:
-        chunk: [1, 2, 3, 4]
+        chunk: [1, 2]
     uses: rustyhorde/workflows/.github/workflows/clippy-all-features.yml@main
     with:
       os: ubuntu-latest
       channel: nightly
       target: x86_64-unknown-linux-gnu
-      num_chunks: 4
+      num_chunks: 2
       chunk: ${{ matrix.chunk }}
       update: true
 
