@@ -28,11 +28,16 @@ jobs:
   lints-linux:
     name: 🕳️ Clippy (Linux) 🕳️
     needs: rustfmt
+    strategy:
+      matrix:
+        chunk: [1, 2, 3, 4]
     uses: rustyhorde/workflows/.github/workflows/clippy-all-features.yml@main
     with:
       os: ubuntu-latest
       channel: nightly
       target: x86_64-unknown-linux-gnu
+      num_chunks: 4
+      chunk: ${{ matrix.chunk }}
       update: true
 
   lints-macos:
