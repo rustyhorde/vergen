@@ -39,7 +39,7 @@ si = []
 
 [dependencies]
 anyhow = "1.0.79"
-derive_builder = "0.13.0"
+derive_builder = "0.20.0"
 getset = "0.1.2"
 
 [build-dependencies]
