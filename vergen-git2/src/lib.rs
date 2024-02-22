@@ -359,7 +359,6 @@ let build = BuildBuilder::default().build_timestamp(true).build()?;"##
         special_module_name,
         stable_features,
         static_mut_refs,
-        suspicious_auto_trait_impls,
         suspicious_double_ref_op,
         temporary_cstring_as_ptr,
         trivial_bounds,
