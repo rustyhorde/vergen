@@ -44,7 +44,6 @@
         confusable_idents,
         const_evaluatable_unchecked,
         const_item_mutation,
-        const_patterns_without_partial_eq,
         dead_code,
         deprecated,
         deprecated_in_future,
