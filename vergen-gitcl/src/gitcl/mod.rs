@@ -451,7 +451,7 @@ impl Gitcl {
             || self.dirty
     }
 
-    ///
+    /// Run at the given path
     pub fn at_path(&mut self, path: PathBuf) -> &mut Self {
         self.repo_path = Some(path);
         self
