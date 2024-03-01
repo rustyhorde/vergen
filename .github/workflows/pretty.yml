@@ -1,15 +1,8 @@
 on:
-  push:
-    branches:
-      - master
-      - legacy/*
-    tags-ignore:
-      - "*"
-  pull_request:
-    branches:
-      - "*"
-  schedule:
-    - cron: "13 3 * * *"
+  workflow_run:
+    workflows: [🦀 vergen 🦀]
+    types:
+      - completed
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -18,7 +11,7 @@ concurrency:
 env:
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
-name: 🦀 vergen 🦀
+name: 🦀 vergen-pretty 🦀
 
 jobs:
   rustfmt:
@@ -34,7 +27,7 @@ jobs:
       channel: nightly
       target: x86_64-unknown-linux-gnu
       update: true
-      project: vergen
+      project: vergen-pretty
 
   lints-macos:
     name: 🕳️ Clippy (MacOS) 🕳️
@@ -45,7 +38,7 @@ jobs:
       channel: nightly
       target: x86_64-apple-darwin
       update: true
-      project: vergen
+      project: vergen-pretty
 
   lints-windows:
     name: 🕳️ Clippy (Windows) 🕳️
@@ -56,7 +49,7 @@ jobs:
       channel: nightly
       target: x86_64-pc-windows-gnu
       update: true
-      project: vergen
+      project: vergen-pretty
 
   test-linux:
     name: 🧪 Test (Linux) 🧪
@@ -72,7 +65,7 @@ jobs:
       channel: ${{ matrix.channel }}
       target: ${{ matrix.target }}
       update: true
-      project: vergen
+      project: vergen-pretty
 
   test-macos:
     name: 🧪 Test (MacOS) 🧪
@@ -88,7 +81,7 @@ jobs:
       channel: ${{ matrix.channel }}
       target: ${{ matrix.target }}
       update: true
-      project: vergen
+      project: vergen-pretty
 
   test-windows-gnu:
     name: 🧪 Test (Windows - GNU) 🧪
@@ -104,7 +97,7 @@ jobs:
       channel: ${{ matrix.channel }}
       target: ${{ matrix.target }}
       update: true
-      project: vergen
+      project: vergen-pretty
 
   test-windows-msvc:
     name: 🧪 Test (Windows - MSVC) 🧪
@@ -120,7 +113,7 @@ jobs:
       channel: ${{ matrix.channel }}
       target: ${{ matrix.target }}
       update: true
-      project: vergen
+      project: vergen-pretty
 
   coverage-linux:
     name: 🧱 Coverage (Linux) 🧱
@@ -132,7 +125,7 @@ jobs:
       target: x86_64-unknown-linux-gnu
       lcov: true
       html: true
-      run_cmd: ${{ vars.VERGEN_RUN_CMD }}
+      run_cmd: ${{ vars.VERGEN_PRETTY_RUN_CMD }}
     secrets: inherit
 
   coverage-macos:
@@ -145,7 +138,7 @@ jobs:
       target: x86_64-apple-darwin
       lcov: true
       html: true
-      run_cmd: ${{ vars.VERGEN_RUN_CMD }}
+      run_cmd: ${{ vars.VERGEN_PRETTY_RUN_CMD }}
     secrets: inherit
 
   coverage-windows:
@@ -161,5 +154,5 @@ jobs:
       target: ${{ matrix.target }}
       lcov: true
       html: true
-      run_cmd: ${{ vars.VERGEN_RUN_CMD }}
+      run_cmd: ${{ vars.VERGEN_PRETTY_RUN_CMD }}
     secrets: inherit
