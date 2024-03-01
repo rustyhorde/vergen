@@ -39,6 +39,7 @@ jobs:
       num_chunks: 2
       chunk: ${{ matrix.chunk }}
       update: true
+      project: vergen
 
   lints-macos:
     name: 🕳️ Clippy (MacOS) 🕳️
@@ -69,6 +70,7 @@ jobs:
       num_chunks: 2
       chunk: ${{ matrix.chunk }}
       update: true
+      project: vergen
 
   test-linux:
     name: 🧪 Test (Linux) 🧪
@@ -87,6 +89,7 @@ jobs:
       num_chunks: 4
       chunk: ${{ matrix.chunk }}
       update: true
+      project: vergen
 
   test-macos-1:
     name: 🧪 Test (MacOS) 🧪
@@ -104,6 +107,7 @@ jobs:
       num_chunks: 2
       chunk: 1
       update: true
+      project: vergen
 
   test-macos-2:
     name: 🧪 Test (MacOS) 🧪
@@ -121,6 +125,7 @@ jobs:
       num_chunks: 2
       chunk: 2
       update: true
+      project: vergen
 
   test-windows-gnu-1:
     name: 🧪 Test (Windows - GNU) 🧪
@@ -138,6 +143,7 @@ jobs:
       num_chunks: 2
       chunk: 1
       update: true
+      project: vergen
 
   test-windows-gnu-2:
     name: 🧪 Test (Windows - GNU) 🧪
@@ -155,6 +161,7 @@ jobs:
       num_chunks: 2
       chunk: 2
       update: true
+      project: vergen
 
   test-windows-msvc-1:
     name: 🧪 Test (Windows - MSVC) 🧪
@@ -172,6 +179,7 @@ jobs:
       num_chunks: 2
       chunk: 1
       update: true
+      project: vergen
 
   test-windows-msvc-2:
     name: 🧪 Test (Windows - MSVC) 🧪
@@ -189,6 +197,7 @@ jobs:
       num_chunks: 2
       chunk: 2
       update: true
+      project: vergen
 
   coverage-linux:
     name: 🧱 Coverage (Linux) 🧱
@@ -200,7 +209,7 @@ jobs:
       target: x86_64-unknown-linux-gnu
       lcov: true
       html: true
-      run_cmd: ${{ vars.COVERAGE_RUN_CMD }}
+      run_cmd: ${{ vars.VERGEN_RUN_CMD }}
     secrets: inherit
 
   coverage-macos:
@@ -213,7 +222,7 @@ jobs:
       target: x86_64-apple-darwin
       lcov: true
       html: true
-      run_cmd: ${{ vars.COVERAGE_RUN_CMD }}
+      run_cmd: ${{ vars.VERGEN_RUN_CMD }}
     secrets: inherit
 
   coverage-windows:
@@ -229,5 +238,5 @@ jobs:
       target: ${{ matrix.target }}
       lcov: true
       html: true
-      run_cmd: ${{ vars.COVERAGE_RUN_CMD }}
+      run_cmd: ${{ vars.VERGEN_RUN_CMD }}
     secrets: inherit
