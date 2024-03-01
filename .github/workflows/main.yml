@@ -28,47 +28,35 @@ jobs:
   lints-linux:
     name: 🕳️ Clippy (Linux) 🕳️
     needs: rustfmt
-    strategy:
-      matrix:
-        chunk: [1, 2]
     uses: rustyhorde/workflows/.github/workflows/clippy-all-features.yml@main
     with:
       os: ubuntu-latest
       channel: nightly
       target: x86_64-unknown-linux-gnu
-      num_chunks: 2
-      chunk: ${{ matrix.chunk }}
       update: true
+      project: vergen
 
   lints-macos:
     name: 🕳️ Clippy (MacOS) 🕳️
     needs: rustfmt
-    strategy:
-      matrix:
-        chunk: [1, 2]
     uses: rustyhorde/workflows/.github/workflows/clippy-all-features.yml@main
     with:
       os: macos-latest
       channel: nightly
       target: x86_64-apple-darwin
-      num_chunks: 2
-      chunk: ${{ matrix.chunk }}
       update: true
+      project: vergen
 
   lints-windows:
     name: 🕳️ Clippy (Windows) 🕳️
     needs: rustfmt
-    strategy:
-      matrix:
-        chunk: [1, 2]
     uses: rustyhorde/workflows/.github/workflows/clippy-all-features.yml@main
     with:
       os: windows-latest
       channel: nightly
       target: x86_64-pc-windows-gnu
-      num_chunks: 2
-      chunk: ${{ matrix.chunk }}
       update: true
+      project: vergen
 
   test-linux:
     name: 🧪 Test (Linux) 🧪
@@ -78,17 +66,15 @@ jobs:
         os: [ubuntu-latest]
         channel: ["1.70.0", "stable", "beta", "nightly"]
         target: [x86_64-unknown-linux-gnu]
-        chunk: [1, 2, 3, 4]
     uses: rustyhorde/workflows/.github/workflows/test-all-features.yml@main
     with:
       os: ${{ matrix.os }}
       channel: ${{ matrix.channel }}
       target: ${{ matrix.target }}
-      num_chunks: 4
-      chunk: ${{ matrix.chunk }}
       update: true
+      project: vergen
 
-  test-macos-1:
+  test-macos:
     name: 🧪 Test (MacOS) 🧪
     needs: lints-macos
     strategy:
@@ -101,28 +87,10 @@ jobs:
       os: ${{ matrix.os }}
       channel: ${{ matrix.channel }}
       target: ${{ matrix.target }}
-      num_chunks: 2
-      chunk: 1
       update: true
+      project: vergen
 
-  test-macos-2:
-    name: 🧪 Test (MacOS) 🧪
-    needs: test-macos-1
-    strategy:
-      matrix:
-        os: [macos-latest]
-        channel: ["1.70.0", "stable", "beta", "nightly"]
-        target: [x86_64-apple-darwin]
-    uses: rustyhorde/workflows/.github/workflows/test-all-features.yml@main
-    with:
-      os: ${{ matrix.os }}
-      channel: ${{ matrix.channel }}
-      target: ${{ matrix.target }}
-      num_chunks: 2
-      chunk: 2
-      update: true
-
-  test-windows-gnu-1:
+  test-windows-gnu:
     name: 🧪 Test (Windows - GNU) 🧪
     needs: lints-windows
     strategy:
@@ -135,28 +103,10 @@ jobs:
       os: ${{ matrix.os }}
       channel: ${{ matrix.channel }}
       target: ${{ matrix.target }}
-      num_chunks: 2
-      chunk: 1
       update: true
+      project: vergen
 
-  test-windows-gnu-2:
-    name: 🧪 Test (Windows - GNU) 🧪
-    needs: test-windows-gnu-1
-    strategy:
-      matrix:
-        os: [windows-latest]
-        channel: ["1.70.0", "stable", "beta", "nightly"]
-        target: [x86_64-pc-windows-gnu]
-    uses: rustyhorde/workflows/.github/workflows/test-all-features.yml@main
-    with:
-      os: ${{ matrix.os }}
-      channel: ${{ matrix.channel }}
-      target: ${{ matrix.target }}
-      num_chunks: 2
-      chunk: 2
-      update: true
-
-  test-windows-msvc-1:
+  test-windows-msvc:
     name: 🧪 Test (Windows - MSVC) 🧪
     needs: lints-windows
     strategy:
@@ -169,26 +119,8 @@ jobs:
       os: ${{ matrix.os }}
       channel: ${{ matrix.channel }}
       target: ${{ matrix.target }}
-      num_chunks: 2
-      chunk: 1
       update: true
-
-  test-windows-msvc-2:
-    name: 🧪 Test (Windows - MSVC) 🧪
-    needs: test-windows-msvc-1
-    strategy:
-      matrix:
-        os: [windows-latest]
-        channel: ["1.70.0", "stable", "beta", "nightly"]
-        target: [x86_64-pc-windows-msvc]
-    uses: rustyhorde/workflows/.github/workflows/test-all-features.yml@main
-    with:
-      os: ${{ matrix.os }}
-      channel: ${{ matrix.channel }}
-      target: ${{ matrix.target }}
-      num_chunks: 2
-      chunk: 2
-      update: true
+      project: vergen
 
   coverage-linux:
     name: 🧱 Coverage (Linux) 🧱
@@ -200,12 +132,12 @@ jobs:
       target: x86_64-unknown-linux-gnu
       lcov: true
       html: true
-      run_cmd: ${{ vars.COVERAGE_RUN_CMD }}
+      run_cmd: ${{ vars.VERGEN_RUN_CMD }}
     secrets: inherit
 
   coverage-macos:
     name: 🧱 Coverage (MacOS) 🧱
-    needs: test-macos-2
+    needs: test-macos
     uses: rustyhorde/workflows/.github/workflows/coverage.yml@main
     with:
       os: macos-latest
@@ -213,12 +145,12 @@ jobs:
       target: x86_64-apple-darwin
       lcov: true
       html: true
-      run_cmd: ${{ vars.COVERAGE_RUN_CMD }}
+      run_cmd: ${{ vars.VERGEN_RUN_CMD }}
     secrets: inherit
 
   coverage-windows:
     name: 🧱 Coverage (Wndows) 🧱
-    needs: [test-windows-gnu-2, test-windows-msvc-2]
+    needs: [test-windows-gnu, test-windows-msvc]
     strategy:
       matrix:
         target: [x86_64-pc-windows-gnu, x86_64-pc-windows-msvc]
@@ -229,5 +161,5 @@ jobs:
       target: ${{ matrix.target }}
       lcov: true
       html: true
-      run_cmd: ${{ vars.COVERAGE_RUN_CMD }}
+      run_cmd: ${{ vars.VERGEN_RUN_CMD }}
     secrets: inherit

@@ -41,100 +41,100 @@ pub(crate) mod vergen_key {
     /// The keys used in the [`crate::CargoRustcEnvMap`]
     #[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
     pub enum VergenKey {
-        /// The build date. (VERGEN_BUILD_DATE)
+        /// The build date. (`VERGEN_BUILD_DATE`)
         #[cfg(feature = "build")]
         BuildDate,
-        /// The build timestamp. (VERGEN_BUILD_TIMESTAMP)
+        /// The build timestamp. (`VERGEN_BUILD_TIMESTAMP`)
         #[cfg(feature = "build")]
         BuildTimestamp,
-        /// The cargo debug flag (VERGEN_CARGO_DEBUG)
+        /// The cargo debug flag (`VERGEN_CARGO_DEBUG`)
         #[cfg(feature = "cargo")]
         CargoDebug,
-        /// The cargo features (VERGEN_CARGO_FEATURES)
+        /// The cargo features (`VERGEN_CARGO_FEATURES`)
         #[cfg(feature = "cargo")]
         CargoFeatures,
-        /// The cargo opt level (VERGEN_CARGO_OPT_LEVEL)
+        /// The cargo opt level (`VERGEN_CARGO_OPT_LEVEL`)
         #[cfg(feature = "cargo")]
         CargoOptLevel,
-        /// The cargo target triple (VERGEN_CARGO_TARGET_TRIPLE)
+        /// The cargo target triple (`VERGEN_CARGO_TARGET_TRIPLE`)
         #[cfg(feature = "cargo")]
         CargoTargetTriple,
-        /// The cargo dependencies (VERGEN_CARGO_DEPENDENCIES)
+        /// The cargo dependencies (`VERGEN_CARGO_DEPENDENCIES`)
         #[cfg(feature = "cargo")]
         CargoDependencies,
-        /// The current working branch name (VERGEN_GIT_BRANCH)
+        /// The current working branch name (`VERGEN_GIT_BRANCH`)
         #[cfg(feature = "git")]
         GitBranch,
-        /// The commit author's email. (VERGEN_GIT_COMMIT_AUTHOR_EMAIL)
+        /// The commit author's email. (`VERGEN_GIT_COMMIT_AUTHOR_EMAIL`)
         #[cfg(feature = "git")]
         GitCommitAuthorEmail,
-        /// The commit author's name. (VERGEN_GIT_COMMIT_AUTHOR_NAME)
+        /// The commit author's name. (`VERGEN_GIT_COMMIT_AUTHOR_NAME`)
         #[cfg(feature = "git")]
         GitCommitAuthorName,
-        /// Number of commits in current branch. (VERGEN_GIT_COMMIT_COUNT)
+        /// Number of commits in current branch. (`VERGEN_GIT_COMMIT_COUNT`)
         #[cfg(feature = "git")]
         GitCommitCount,
-        /// The commit date. (VERGEN_GIT_COMMIT_DATE)
+        /// The commit date. (`VERGEN_GIT_COMMIT_DATE`)
         #[cfg(feature = "git")]
         GitCommitDate,
-        /// Commit message (VERGEN_GIT_COMMIT_MESSAGE)
+        /// Commit message (`VERGEN_GIT_COMMIT_MESSAGE`)
         #[cfg(feature = "git")]
         GitCommitMessage,
-        /// The commit timestamp. (VERGEN_GIT_COMMIT_TIMESTAMP)
+        /// The commit timestamp. (`VERGEN_GIT_COMMIT_TIMESTAMP`)
         #[cfg(feature = "git")]
         GitCommitTimestamp,
-        /// The semver version from the last git tag. (VERGEN_GIT_SEMVER)
+        /// The semver version from the last git tag. (`VERGEN_GIT_SEMVER`)
         #[cfg(feature = "git")]
         GitDescribe,
-        /// The latest commit SHA. (VERGEN_GIT_SHA)
+        /// The latest commit SHA. (`VERGEN_GIT_SHA`)
         #[cfg(feature = "git")]
         GitSha,
-        /// Whether the repository is dirty. (VERGEN_GIT_DIRTY)
+        /// Whether the repository is dirty. (`VERGEN_GIT_DIRTY`)
         #[cfg(feature = "git")]
         GitDirty,
-        /// The release channel of the rust compiler. (VERGEN_RUSTC_CHANNEL)
+        /// The release channel of the rust compiler. (`VERGEN_RUSTC_CHANNEL`)
         #[cfg(feature = "rustc")]
         RustcChannel,
-        /// The rustc commit date. (VERGEN_RUSTC_COMMIT_DATE)
+        /// The rustc commit date. (`VERGEN_RUSTC_COMMIT_DATE`)
         #[cfg(feature = "rustc")]
         RustcCommitDate,
-        /// The rustc commit hash. (VERGEN_RUSTC_COMMIT_HASH)
+        /// The rustc commit hash. (`VERGEN_RUSTC_COMMIT_HASH`)
         #[cfg(feature = "rustc")]
         RustcCommitHash,
-        /// The host triple. (VERGEN_HOST_TRIPLE)
+        /// The host triple. (`VERGEN_HOST_TRIPLE`)
         #[cfg(feature = "rustc")]
         RustcHostTriple,
-        /// The rustc LLVM version. (VERGEN_RUSTC_LLVM_VERSION)
+        /// The rustc LLVM version. (`VERGEN_RUSTC_LLVM_VERSION`)
         #[cfg(feature = "rustc")]
         RustcLlvmVersion,
-        /// The version information of the rust compiler. (VERGEN_RUSTC_SEMVER)
+        /// The version information of the rust compiler. (`VERGEN_RUSTC_SEMVER`)
         #[cfg(feature = "rustc")]
         RustcSemver,
-        /// The sysinfo system name (VERGEN_SYSINFO_NAME)
+        /// The sysinfo system name (`VERGEN_SYSINFO_NAME`)
         #[cfg(feature = "si")]
         SysinfoName,
-        /// The sysinfo os version (VERGEN_SYSINFO_OS_VERSION)
+        /// The sysinfo os version (`VERGEN_SYSINFO_OS_VERSION`)
         #[cfg(feature = "si")]
         SysinfoOsVersion,
-        /// The sysinfo user name (VERGEN_SYSINFO_USER)
+        /// The sysinfo user name (`VERGEN_SYSINFO_USER`)
         #[cfg(feature = "si")]
         SysinfoUser,
-        /// The sysinfo total memory (VERGEN_SYSINFO_TOTAL_MEMORY)
+        /// The sysinfo total memory (`VERGEN_SYSINFO_TOTAL_MEMORY`)
         #[cfg(feature = "si")]
         SysinfoMemory,
-        /// The sysinfo cpu vendor (VERGEN_SYSINFO_CPU_VENDOR)
+        /// The sysinfo cpu vendor (`VERGEN_SYSINFO_CPU_VENDOR`)
         #[cfg(feature = "si")]
         SysinfoCpuVendor,
-        /// The sysinfo cpu core count (VERGEN_SYSINFO_CPU_CORE_COUNT)
+        /// The sysinfo cpu core count (`VERGEN_SYSINFO_CPU_CORE_COUNT`)
         #[cfg(feature = "si")]
         SysinfoCpuCoreCount,
-        /// The sysinfo cpu core count (VERGEN_SYSINFO_CPU_NAME)
+        /// The sysinfo cpu core count (`VERGEN_SYSINFO_CPU_NAME`)
         #[cfg(feature = "si")]
         SysinfoCpuName,
-        /// The sysinfo cpu core count (VERGEN_SYSINFO_CPU_BRAND)
+        /// The sysinfo cpu core count (`VERGEN_SYSINFO_CPU_BRAND`)
         #[cfg(feature = "si")]
         SysinfoCpuBrand,
-        /// The sysinfo cpu core count (VERGEN_SYSINFO_CPU_FREQUENCY)
+        /// The sysinfo cpu core count (`VERGEN_SYSINFO_CPU_FREQUENCY`)
         #[cfg(feature = "si")]
         SysinfoCpuFrequency,
     }
