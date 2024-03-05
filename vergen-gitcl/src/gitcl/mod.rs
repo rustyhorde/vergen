@@ -9,7 +9,7 @@
 use anyhow::{anyhow, Error, Result};
 use derive_builder::Builder as DeriveBuilder;
 use std::{
-    env,
+    env::{self, VarError},
     path::PathBuf,
     process::{Command, Output, Stdio},
     str::FromStr,
@@ -794,7 +794,7 @@ impl Gitcl {
                     true,
                     OffsetDateTime::from_unix_timestamp(i64::from_str(&v)?)?,
                 ),
-                Err(std::env::VarError::NotPresent) => self.compute_local_offset(&stdout)?,
+                Err(VarError::NotPresent) => self.compute_local_offset(&stdout)?,
                 Err(e) => return Err(e.into()),
             };
 
