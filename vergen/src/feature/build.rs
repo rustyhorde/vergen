@@ -8,7 +8,10 @@
 
 use anyhow::{Context, Error, Result};
 use derive_builder::Builder as DeriveBuilder;
-use std::{env, str::FromStr};
+use std::{
+    env::{self, VarError},
+    str::FromStr,
+};
 use time::{
     format_description::{self, well_known::Iso8601},
     OffsetDateTime,
@@ -184,7 +187,7 @@ impl Build {
                 true,
                 OffsetDateTime::from_unix_timestamp(i64::from_str(&v)?)?,
             ),
-            Err(std::env::VarError::NotPresent) => {
+            Err(VarError::NotPresent) => {
                 if self.use_local {
                     (false, OffsetDateTime::now_local()?)
                 } else {

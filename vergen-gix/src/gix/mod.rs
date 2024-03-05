@@ -10,7 +10,7 @@ use anyhow::{anyhow, Error, Result};
 use derive_builder::Builder as DeriveBuilder;
 use gix::{discover, head::Kind, Commit, Head, Id, Repository};
 use std::{
-    env,
+    env::{self, VarError},
     path::{Path, PathBuf},
     str::FromStr,
 };
@@ -486,7 +486,7 @@ impl Gix {
                 true,
                 OffsetDateTime::from_unix_timestamp(i64::from_str(&v)?)?,
             ),
-            Err(std::env::VarError::NotPresent) => self.compute_local_offset(commit)?,
+            Err(VarError::NotPresent) => self.compute_local_offset(commit)?,
             Err(e) => return Err(e.into()),
         };
 
