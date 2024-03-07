@@ -30,7 +30,7 @@ always_include = ["__vergen_empty_test", "unstable"]
 
 [features]
 default = []
-unstable = []
+unstable = ["vergen-gix/unstable"]
 color = ["console", "lazy_static"]
 header = ["console", "rand"]
 trace = ["tracing"]

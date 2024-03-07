@@ -28,7 +28,7 @@ build = ["vergen/build"]
 cargo = ["vergen/cargo"]
 emit_and_set = ["vergen-lib/emit_and_set"]
 rustc = ["vergen/rustc"]
-unstable = ["vergen/unstable"]
+unstable = ["vergen/unstable", "vergen-lib/unstable"]
 si = ["vergen/si"]
 
 [dependencies]

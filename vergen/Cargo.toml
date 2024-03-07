@@ -28,7 +28,7 @@ build = ["time", "vergen-lib/build"]
 cargo = ["cargo_metadata", "getset", "regex", "vergen-lib/cargo"]
 rustc = ["rustc_version", "vergen-lib/rustc"]
 si = ["sysinfo", "vergen-lib/si"]
-unstable = []
+unstable = ["vergen-lib/unstable"]
 emit_and_set = ["vergen-lib/emit_and_set"]
 
 [dependencies]
