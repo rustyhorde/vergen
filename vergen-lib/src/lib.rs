@@ -211,6 +211,9 @@
     all(nightly, feature = "unstable"),
     deny(rustdoc::missing_doc_code_examples)
 )]
+#![cfg_attr(all(doc, nightly), feature(doc_auto_cfg))]
+#![cfg_attr(all(docsrs, nightly), feature(doc_cfg))]
+#![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
 #[cfg(test)]
 use {temp_env as _, test_util as _};
