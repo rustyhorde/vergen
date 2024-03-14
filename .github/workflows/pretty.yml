@@ -1,6 +1,6 @@
 on:
   workflow_run:
-    workflows: [🦀 vergen 🦀, 🦀 vergen-lib 🦀]
+    workflows: [🦀 vergen-lib 🦀]
     types:
       - completed
 
