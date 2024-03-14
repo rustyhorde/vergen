@@ -53,7 +53,7 @@ tracing = { version = "0.1.37", features = [
 [build-dependencies]
 anyhow = "1.0.70"
 rustversion = "1.0.12"
-vergen-gix = { version = "1.0.0-beta.2", features = [
+vergen-gix = { version = "1.0.0", path = "../vergen-gix", features = [
     "build",
     "cargo",
     "rustc",
