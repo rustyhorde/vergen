@@ -71,7 +71,6 @@ the [`TestRepos`] struct to creat temporary git repositories useful for `vergen-
 #![cfg_attr(
     all(feature = "unstable", nightly),
     feature(
-        diagnostic_namespace,
         lint_reasons,
         multiple_supertrait_upcastable,
         must_not_suspend,
@@ -246,7 +245,7 @@ the [`TestRepos`] struct to creat temporary git repositories useful for `vergen-
         must_not_suspend,
         non_exhaustive_omitted_patterns,
         unfulfilled_lint_expectations,
-        unknown_or_malformed_diagnostic_attributes,
+        // unknown_or_malformed_diagnostic_attributes,
         unnameable_types,
     )
 )]
