@@ -1,15 +1,8 @@
 on:
-  push:
-    branches:
-      - master
-      - legacy/*
-    tags-ignore:
-      - "*"
-  pull_request:
-    branches:
-      - "*"
-  schedule:
-    - cron: "13 3 * * *"
+  workflow_run:
+    workflows: [🦀 vergen 🦀]
+    types:
+      - completed
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
