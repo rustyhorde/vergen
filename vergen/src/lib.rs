@@ -297,7 +297,6 @@ let build = BuildBuilder::default().build_timestamp(true).build()?;"##
 #![cfg_attr(
     all(feature = "unstable", nightly),
     feature(
-        diagnostic_namespace,
         lint_reasons,
         multiple_supertrait_upcastable,
         must_not_suspend,
@@ -472,7 +471,7 @@ let build = BuildBuilder::default().build_timestamp(true).build()?;"##
         must_not_suspend,
         non_exhaustive_omitted_patterns,
         unfulfilled_lint_expectations,
-        unknown_or_malformed_diagnostic_attributes,
+        // unknown_or_malformed_diagnostic_attributes,
         unnameable_types,
     )
 )]
