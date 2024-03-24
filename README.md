@@ -53,7 +53,7 @@ to rerun instruction emission if the `SOURCE_DATE_EPOCH` environment variable ha
 [![Crates.io](https://img.shields.io/crates/d/vergen-pretty.svg)](https://crates.io/crates/vergen-pretty)
 
 ## MSRV
-The current minimum supported rust version is 1.70.0
+The current minimum supported rust version is 1.73.0
 
 ## ⚠️ Notes on version 9 ⚠️
 * Version 9 introduces 3 new libraries, `vergen-git2`, `vergen-gitcl`, and `vergen-gix` that will be versioned independently from `vergen`.
