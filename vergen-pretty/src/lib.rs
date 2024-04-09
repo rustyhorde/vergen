@@ -109,7 +109,6 @@ assert!(!buf.is_empty());
         non_exhaustive_omitted_patterns_lint,
         rustdoc_missing_doc_code_examples,
         strict_provenance,
-        type_privacy_lints,
     )
 )]
 #![cfg_attr(nightly, allow(box_pointers))]
