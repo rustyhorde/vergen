@@ -40,7 +40,7 @@ si = ["vergen/si"]
 [dependencies]
 anyhow = "1.0.79"
 derive_builder = "0.20.0"
-gix = { version = "0.61.0", default-features = false, features = [
+gix = { version = "0.62.0", default-features = false, features = [
     "revision",
     "interrupt",
 ] }
