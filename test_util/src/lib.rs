@@ -243,7 +243,7 @@ the [`TestRepos`] struct to creat temporary git repositories useful for `vergen-
 // If nightly and unstable, allow `incomplete_features` and `unstable_features`
 #![cfg_attr(
     all(feature = "unstable", nightly),
-    allow(incomplete_features, unstable_features)
+    allow(incomplete_features)
 )]
 // If nightly and not unstable, deny `incomplete_features` and `unstable_features`
 #![cfg_attr(
