@@ -419,15 +419,9 @@ let build = BuildBuilder::default().build_timestamp(true).build()?;"##
         writes_through_immutable_pointer,
     )
 )]
-#![cfg_attr(
-    all(nightly),
-    allow(unstable_features)
-)]
+#![cfg_attr(all(nightly), allow(unstable_features))]
 // If nightly and unstable, allow `incomplete_features` and `unstable_features`
-#![cfg_attr(
-    all(feature = "unstable", nightly),
-    allow(incomplete_features)
-)]
+#![cfg_attr(all(feature = "unstable", nightly), allow(incomplete_features))]
 // If nightly and not unstable, deny `incomplete_features` and `unstable_features`
 #![cfg_attr(
     all(not(feature = "unstable"), nightly),
