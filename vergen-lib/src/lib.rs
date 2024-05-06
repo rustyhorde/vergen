@@ -22,7 +22,7 @@
         strict_provenance,
     )
 )]
-#![cfg_attr(nightly, allow(box_pointers, single_use_lifetimes))]
+#![cfg_attr(nightly, allow(box_pointers, single_use_lifetimes, unexpected_cfgs))]
 #![cfg_attr(
     nightly,
     deny(
@@ -134,7 +134,6 @@
         unconditional_recursion,
         uncovered_param_in_projection,
         undefined_naked_function_abi,
-        unexpected_cfgs,
         ungated_async_fn_track_caller,
         uninhabited_static,
         unit_bindings,
