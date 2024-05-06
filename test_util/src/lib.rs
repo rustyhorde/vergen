@@ -239,6 +239,10 @@ the [`TestRepos`] struct to creat temporary git repositories useful for `vergen-
         writes_through_immutable_pointer,
     )
 )]
+#![cfg_attr(
+    all(nightly),
+    allow(unstable_features)
+)]
 // If nightly and unstable, allow `incomplete_features` and `unstable_features`
 #![cfg_attr(
     all(feature = "unstable", nightly),
@@ -283,7 +287,7 @@ the [`TestRepos`] struct to creat temporary git repositories useful for `vergen-
 )]
 #![cfg_attr(all(doc, nightly), feature(doc_auto_cfg))]
 #![cfg_attr(all(docsrs, nightly), feature(doc_cfg))]
-#![cfg_attr(coverage_nightly, feature(coverage_attribute))]
+#![cfg_attr(all(nightly, coverage_nightly), feature(coverage_attribute))]
 
 #[cfg(all(test, not(feature = "repo")))]
 use {anyhow as _, serial_test as _};
