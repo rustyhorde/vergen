@@ -49,7 +49,7 @@ rustversion = "1.0.14"
 [dev-dependencies]
 serial_test = "3.0.0"
 temp-env = "0.3.6"
-test_util = { path = "../test_util" }
+test_util = { path = "../test_util", features = ["unstable"] }
 
 [package.metadata.docs.rs]
 features = ["build", "cargo", "git", "rustc", "si"]
