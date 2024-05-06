@@ -106,12 +106,13 @@ assert!(!buf.is_empty());
         lint_reasons,
         multiple_supertrait_upcastable,
         must_not_suspend,
+        mut_preserve_binding_mode_2024,
         non_exhaustive_omitted_patterns_lint,
         rustdoc_missing_doc_code_examples,
         strict_provenance,
     )
 )]
-#![cfg_attr(nightly, allow(box_pointers))]
+#![cfg_attr(nightly, allow(box_pointers, single_use_lifetimes))]
 #![cfg_attr(
     nightly,
     deny(
@@ -130,6 +131,7 @@ assert!(!buf.is_empty());
         clashing_extern_declarations,
         coherence_leak_check,
         confusable_idents,
+        const_eval_mutable_ptr_in_final_value,
         const_evaluatable_unchecked,
         const_item_mutation,
         dead_code,
@@ -157,17 +159,16 @@ assert!(!buf.is_empty());
         hidden_glob_reexports,
         improper_ctypes,
         improper_ctypes_definitions,
-        incomplete_features,
         indirect_structural_match,
         inline_no_sanitize,
         internal_features,
-        invalid_doc_attributes,
         invalid_from_utf8,
         invalid_macro_export_arguments,
         invalid_nan_comparisons,
         invalid_value,
         irrefutable_let_patterns,
-        keyword_idents,
+        keyword_idents_2018,
+        keyword_idents_2024,
         large_assignments,
         late_bound_lifetime_arguments,
         legacy_derive_helpers,
@@ -181,10 +182,13 @@ assert!(!buf.is_empty());
         missing_docs,
         mixed_script_confusables,
         named_arguments_used_positionally,
+        never_type_fallback_flowing_into_unsafe,
         no_mangle_generic_items,
         non_ascii_idents,
         non_camel_case_types,
+        non_contiguous_range_endpoints,
         non_fmt_panics,
+        non_local_definitions,
         non_shorthand_field_patterns,
         non_snake_case,
         non_upper_case_globals,
@@ -195,8 +199,10 @@ assert!(!buf.is_empty());
         pointer_structural_match,
         private_bounds,
         private_interfaces,
+        redundant_lifetimes,
         redundant_semicolons,
-        refining_impl_trait,
+        refining_impl_trait_internal,
+        refining_impl_trait_reachable,
         renamed_and_removed_lints,
         repr_transparent_external_private_fields,
         rust_2021_incompatible_closure_captures,
@@ -204,7 +210,6 @@ assert!(!buf.is_empty());
         rust_2021_prefixes_incompatible_syntax,
         rust_2021_prelude_collisions,
         semicolon_in_expressions_from_macros,
-        single_use_lifetimes,
         special_module_name,
         stable_features,
         static_mut_refs,
@@ -217,13 +222,16 @@ assert!(!buf.is_empty());
         tyvar_behind_raw_pointer,
         uncommon_codepoints,
         unconditional_recursion,
+        uncovered_param_in_projection,
         undefined_naked_function_abi,
         unexpected_cfgs,
         ungated_async_fn_track_caller,
         uninhabited_static,
         unit_bindings,
         unknown_lints,
+        unknown_or_malformed_diagnostic_attributes,
         unnameable_test_items,
+        unnameable_types,
         unreachable_code,
         unreachable_patterns,
         unreachable_pub,
@@ -257,27 +265,33 @@ assert!(!buf.is_empty());
         unused_variables,
         useless_ptr_null_checks,
         variant_size_differences,
+        wasm_c_abi,
         where_clauses_object_safety,
         while_true,
         writes_through_immutable_pointer,
     )
 )]
-// If nightly and unstable, allow `unstable_features`
-#![cfg_attr(all(feature = "unstable", nightly), allow(unstable_features))]
-// If nightly and not unstable, deny `unstable_features`
-#![cfg_attr(all(not(feature = "unstable"), nightly), deny(unstable_features))]
+// If nightly and unstable, allow `incomplete_features` and `unstable_features`
+#![cfg_attr(
+    all(feature = "unstable", nightly),
+    allow(incomplete_features, unstable_features)
+)]
+// If nightly and not unstable, deny `incomplete_features` and `unstable_features`
+#![cfg_attr(
+    all(not(feature = "unstable"), nightly),
+    deny(incomplete_features, unstable_features)
+)]
 // The unstable lints
 #![cfg_attr(
     all(feature = "unstable", nightly),
     deny(
+        dereferencing_mut_binding,
         fuzzy_provenance_casts,
         lossy_provenance_casts,
         multiple_supertrait_upcastable,
         must_not_suspend,
         non_exhaustive_omitted_patterns,
         unfulfilled_lint_expectations,
-        // unknown_or_malformed_diagnostic_attributes,
-        unnameable_types,
     )
 )]
 // clippy lints
