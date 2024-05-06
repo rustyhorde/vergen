@@ -53,7 +53,7 @@ rustversion = "1.0.14"
 [dev-dependencies]
 lazy_static = "1.4.0"
 regex = "1.9.1"
-test_util = { path = "../test_util" }
+test_util = { path = "../test_util", features = ["unstable"] }
 serial_test = "3.0.0"
 temp-env = "0.3.6"
 

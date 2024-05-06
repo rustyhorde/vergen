@@ -51,7 +51,7 @@ lazy_static = "1.4.0"
 regex = "1.10.3"
 serial_test = "3.0.0"
 temp-env = "0.3.6"
-test_util = { path = "../test_util", features = ["repo"] }
+test_util = { path = "../test_util", features = ["repo", "unstable"] }
 
 [package.metadata.docs.rs]
 features = ["build", "cargo", "emit_and_set", "rustc", "si"]
