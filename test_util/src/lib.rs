@@ -252,7 +252,6 @@ the [`TestRepos`] struct to creat temporary git repositories useful for `vergen-
 #![cfg_attr(
     all(feature = "unstable", nightly),
     deny(
-        dereferencing_mut_binding,
         fuzzy_provenance_casts,
         lossy_provenance_casts,
         multiple_supertrait_upcastable,
