@@ -167,3 +167,7 @@ jobs:
   call-vergen-lib:
     needs: [coverage-linux, coverage-macos, coverage-windows]
     uses: ./.github/workflows/vergen_lib.yml
+
+  call-vergen-pretty:
+    needs: [call-vergen-lib]
+    uses: ./.github/workflows/vergen_pretty.yml
