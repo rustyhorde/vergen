@@ -1,8 +1,5 @@
 on:
-  workflow_run:
-    workflows: [🦀 vergen-lib 🦀]
-    types:
-      - completed
+  workflow_call:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}

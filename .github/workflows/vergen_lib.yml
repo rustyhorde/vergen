@@ -1,8 +1,5 @@
 on:
-  workflow_run:
-    workflows: [🦀 vergen 🦀]
-    types:
-      - completed
+  workflow_call:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -156,3 +153,7 @@ jobs:
       html: true
       run_cmd: ${{ vars.VERGEN_LIB_RUN_CMD }}
     secrets: inherit
+
+  call-vergen-pretty:
+    needs: [coverage-linux, coverage-macos, coverage-windows]
+    uses: ./.github/workflows/vergen_pretty.yml
