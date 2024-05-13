@@ -165,9 +165,13 @@ jobs:
     secrets: inherit
 
   call-vergen-lib:
+    name: vergen-lib
     needs: [coverage-linux, coverage-macos, coverage-windows]
     uses: ./.github/workflows/vergen_lib.yml
+    secrets: inherit
 
   call-vergen-pretty:
+    name: vergen-pretty
     needs: [call-vergen-lib]
     uses: ./.github/workflows/vergen_pretty.yml
+    secrets: inherit
