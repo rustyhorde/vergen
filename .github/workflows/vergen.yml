@@ -175,15 +175,9 @@ jobs:
     needs: [call-vergen-lib]
     uses: ./.github/workflows/vergen_gix.yml
     secrets: inherit
-
-  call-vergen-git2:
-    name: vergen-git2
+  
+  call-vergen-pretty:
+    name: vergen-pretty
     needs: [call-vergen-gix]
-    uses: ./.github/workflows/vergen_git2.yml
-    secrets: inherit
-
-  call-vergen-gitcl:
-    name: vergen-gitcl
-    needs: [call-vergen-git2]
-    uses: ./.github/workflows/vergen_gitcl.yml
+    uses: ./.github/workflows/vergen_pretty.yml
     secrets: inherit
