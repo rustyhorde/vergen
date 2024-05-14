@@ -163,3 +163,21 @@ jobs:
       html: true
       run_cmd: ${{ vars.VERGEN_RUN_CMD }}
     secrets: inherit
+
+  call-vergen-lib:
+    name: vergen-lib
+    needs: [coverage-linux, coverage-macos, coverage-windows]
+    uses: ./.github/workflows/vergen_lib.yml
+    secrets: inherit
+
+  call-vergen-gix:
+    name: vergen-gix
+    needs: [call-vergen-lib]
+    uses: ./.github/workflows/vergen_gix.yml
+    secrets: inherit
+  
+  call-vergen-pretty:
+    name: vergen-pretty
+    needs: [call-vergen-gix]
+    uses: ./.github/workflows/vergen_pretty.yml
+    secrets: inherit

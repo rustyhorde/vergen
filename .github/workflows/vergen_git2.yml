@@ -1,20 +1,20 @@
 on:
   workflow_call:
-
+  
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
-
+  
 env:
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-
-name: 🦀 vergen-lib 🦀
-
+  
+name: 🦀 vergen-git2 🦀
+  
 jobs:
   rustfmt:
     name: 📌 Formatting 📌
     uses: rustyhorde/workflows/.github/workflows/rustfmt.yml@main
-
+  
   lints-linux:
     name: 🕳️ Clippy (Linux) 🕳️
     needs: rustfmt
@@ -24,8 +24,8 @@ jobs:
       channel: nightly
       target: x86_64-unknown-linux-gnu
       update: true
-      project: vergen-lib
-
+      project: vergen-git2
+  
   lints-macos:
     name: 🕳️ Clippy (MacOS) 🕳️
     needs: rustfmt
@@ -35,8 +35,8 @@ jobs:
       channel: nightly
       target: x86_64-apple-darwin
       update: true
-      project: vergen-lib
-
+      project: vergen-git2
+  
   lints-windows:
     name: 🕳️ Clippy (Windows) 🕳️
     needs: rustfmt
@@ -46,8 +46,8 @@ jobs:
       channel: nightly
       target: x86_64-pc-windows-gnu
       update: true
-      project: vergen-lib
-
+      project: vergen-git2
+  
   test-linux:
     name: 🧪 Test (Linux) 🧪
     needs: lints-linux
@@ -62,8 +62,8 @@ jobs:
       channel: ${{ matrix.channel }}
       target: ${{ matrix.target }}
       update: true
-      project: vergen-lib
-
+      project: vergen-git2
+  
   test-macos:
     name: 🧪 Test (MacOS) 🧪
     needs: lints-macos
@@ -78,7 +78,7 @@ jobs:
       channel: ${{ matrix.channel }}
       target: ${{ matrix.target }}
       update: true
-      project: vergen-lib
+      project: vergen-git2
 
   test-windows-gnu:
     name: 🧪 Test (Windows - GNU) 🧪
@@ -94,7 +94,7 @@ jobs:
       channel: ${{ matrix.channel }}
       target: ${{ matrix.target }}
       update: true
-      project: vergen-lib
+      project: vergen-git2
 
   test-windows-msvc:
     name: 🧪 Test (Windows - MSVC) 🧪
@@ -110,7 +110,7 @@ jobs:
       channel: ${{ matrix.channel }}
       target: ${{ matrix.target }}
       update: true
-      project: vergen-lib
+      project: vergen-git2
 
   coverage-linux:
     name: 🧱 Coverage (Linux) 🧱
@@ -122,7 +122,7 @@ jobs:
       target: x86_64-unknown-linux-gnu
       lcov: true
       html: true
-      run_cmd: ${{ vars.VERGEN_LIB_RUN_CMD }}
+      run_cmd: ${{ vars.VERGEN_GIT2_RUN_CMD }}
     secrets: inherit
 
   coverage-macos:
@@ -135,7 +135,7 @@ jobs:
       target: x86_64-apple-darwin
       lcov: true
       html: true
-      run_cmd: ${{ vars.VERGEN_LIB_RUN_CMD }}
+      run_cmd: ${{ vars.VERGEN_GIT2_RUN_CMD }}
     secrets: inherit
 
   coverage-windows:
@@ -151,5 +151,5 @@ jobs:
       target: ${{ matrix.target }}
       lcov: true
       html: true
-      run_cmd: ${{ vars.VERGEN_LIB_RUN_CMD }}
+      run_cmd: ${{ vars.VERGEN_GIT2_RUN_CMD }}
     secrets: inherit
