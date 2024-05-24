@@ -10,16 +10,16 @@
 //! `vergen`, when used in conjunction with cargo [build scripts] can emit the following:
 //!
 //! - Will emit [`cargo:rustc-env=VAR=VALUE`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#cargorustc-envvarvalue)
-//! for each feature you have enabled.  These can be referenced with the [`env`!](std::env!) or [`option_env`!](std::option_env!) macro in your code.
+//!   for each feature you have enabled.  These can be referenced with the [`env`!](std::env!) or [`option_env`!](std::option_env!) macro in your code.
 //! - Can emit [`cargo:warning`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#cargo-warning) outputs if the
-//! [`fail_on_error`](Emitter::fail_on_error) feature is not enabled and the requested variable is defaulted through error or
-//! the [`idempotent`](Emitter::idempotent) flag.
+//!   [`fail_on_error`](Emitter::fail_on_error) feature is not enabled and the requested variable is defaulted through error or
+//!   the [`idempotent`](Emitter::idempotent) flag.
 //! - Will emit [`cargo:rerun-if-changed=build.rs`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed)
-//! to rerun instruction emission if the `build.rs` file changed.
+//!   to rerun instruction emission if the `build.rs` file changed.
 //! - Will emit [`cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed)
-//! to rerun instruction emission if the `VERGEN_IDEMPOTENT` environment variable has changed.
+//!   to rerun instruction emission if the `VERGEN_IDEMPOTENT` environment variable has changed.
 //! - Will emit [`cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed)
-//! to rerun instruction emission if the `SOURCE_DATE_EPOCH` environment variable has changed.
+//!   to rerun instruction emission if the `SOURCE_DATE_EPOCH` environment variable has changed.
 //! - Will emit custom instructions via the [`AddCustomEntries`] and the [`add_custom_instructions`](Emitter::add_custom_instructions) function.
 //!
 //! ## Usage
@@ -47,8 +47,8 @@
 //! ```
 //!
 //! 3. Create a `build.rs` file that uses `vergen` to emit cargo instructions.  Configuration
-//! starts with [`Emitter`].  Eventually you will call [`emit`](Emitter::emit) to output the
-//! cargo instructions. See the [`emit`](Emitter::emit) documentation for more robust examples.
+//!    starts with [`Emitter`].  Eventually you will call [`emit`](Emitter::emit) to output the
+//!    cargo instructions. See the [`emit`](Emitter::emit) documentation for more robust examples.
 //!
 //! #### Generate all output
 //!
@@ -234,26 +234,26 @@ let build = BuildBuilder::default().build_timestamp(true).build()?;"##
 //!
 //! #### Minimize the tool footprint
 //! - Adopt an opt-in, rather than opt-out strategy for the features.  The default feature set is empty
-//! and no instructions will be emitted.
+//!   and no instructions will be emitted.
 //! - The instructions you have configured **will** be emitted.  If there are errors or idempotentcy
-//! has been configured, some of those instructions may be defaulted.
+//!   has been configured, some of those instructions may be defaulted.
 //! - Allow overriding configurtion set in `build.rs` through environment variables.  This will allow package
-//! maintainers to force sane defaults when packaging rust binaries for distribution.
+//!   maintainers to force sane defaults when packaging rust binaries for distribution.
 //!
 //! #### Minimize the compile time impact
 //! - I've removed some extraneous libraries.  Any libraries added in the future will be checked against
-//! the current standard compile times to ensure the impact is not too great.
+//!   the current standard compile times to ensure the impact is not too great.
 //! - `vergen` should compile and test from a source tarball.
 //!
 //! #### Support deterministic output
 //! Compilations run from the same source oftentimes need to generate identical binaries.  `vergen` now supports
 //! this determinism in a few ways.
 //! - An [`idempotent`](Emitter::idempotent) configuration option has been added.  When this is enabled in a
-//! build script, each build via cargo against the same source code should generate identical binaries. Instructions
-//! that output information that may change between builds (i.e. timestamps, sysinfo) will be defaulted.
+//!   build script, each build via cargo against the same source code should generate identical binaries. Instructions
+//!   that output information that may change between builds (i.e. timestamps, sysinfo) will be defaulted.
 //! - Recognize common environment variables that support deterministic builds (i.e. [`SOURCE_DATE_EPOCH`](https://reproducible-builds.org/docs/source-date-epoch/))
 //! - Allow `build.rs` configuration overrides though environment variables to allow users building a binary, but
-//! not controlling the source to generate deterministic binaries.
+//!   not controlling the source to generate deterministic binaries.
 //!
 //! # Use Cases
 //! I generally use vergen for the following two cases

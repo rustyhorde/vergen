@@ -12,20 +12,20 @@
 //! `vergen-gitcl`, when used in conjunction with cargo [build scripts] can emit the following:
 //!
 //! - Will emit [`cargo:rustc-env=VAR=VALUE`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#cargorustc-envvarvalue)
-//! for each feature you have enabled.  These can be referenced with the [`env`!](std::env!) or [`option_env`!](std::option_env!) macro in your code.
+//!   for each feature you have enabled.  These can be referenced with the [`env`!](std::env!) or [`option_env`!](std::option_env!) macro in your code.
 //! - Can emit [`cargo:warning`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#cargo-warning) outputs if the
-//! [`fail_on_error`](Emitter::fail_on_error) feature is not enabled and the requested variable is defaulted through error or
-//! the [`idempotent`](Emitter::idempotent) flag.
+//!   [`fail_on_error`](Emitter::fail_on_error) feature is not enabled and the requested variable is defaulted through error or
+//!   the [`idempotent`](Emitter::idempotent) flag.
 //! - Will emit [`cargo:rerun-if-changed=.git/HEAD`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed)
-//! if git instructions are emitted.  This is done to ensure any git instructions are regenerated when commits are made.
+//!   if git instructions are emitted.  This is done to ensure any git instructions are regenerated when commits are made.
 //! - Will emit [`cargo:rerun-if-changed=.git/<path_to_ref>`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed)
-//! if git instructions are emitted.  This is done to ensure any git instructions are regenerated when commits are made.
+//!   if git instructions are emitted.  This is done to ensure any git instructions are regenerated when commits are made.
 //! - Will emit [`cargo:rerun-if-changed=build.rs`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed)
-//! to rerun instruction emission if the `build.rs` file changed.
+//!   to rerun instruction emission if the `build.rs` file changed.
 //! - Will emit [`cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed)
-//! to rerun instruction emission if the `VERGEN_IDEMPOTENT` environment variable has changed.
+//!   to rerun instruction emission if the `VERGEN_IDEMPOTENT` environment variable has changed.
 //! - Will emit [`cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed)
-//! to rerun instruction emission if the `SOURCE_DATE_EPOCH` environment variable has changed.
+//!   to rerun instruction emission if the `SOURCE_DATE_EPOCH` environment variable has changed.
 //!
 //! ## Usage
 //!
@@ -52,8 +52,8 @@
 //! ```
 //!
 //! 3. Create a `build.rs` file that uses `vergen-gitcl` to emit cargo instructions.  Configuration
-//! starts with [`Emitter`].  Eventually you will call [`emit`](Emitter::emit) to output the
-//! cargo instructions. See the [`emit`](Emitter::emit) documentation for more robust examples.
+//!    starts with [`Emitter`].  Eventually you will call [`emit`](Emitter::emit) to output the
+//!    cargo instructions. See the [`emit`](Emitter::emit) documentation for more robust examples.
 //!
 //! #### Generate all output
 //!

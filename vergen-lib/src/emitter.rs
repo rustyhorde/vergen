@@ -300,8 +300,8 @@ impl Emitter {
     /// - Will emit [`cargo:rustc-env=VAR=VALUE`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#cargorustc-envvarvalue) for each feature you have enabled.
     /// - Will emit [`cargo:rerun-if-changed=PATH`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed) if the git feature is enabled.  This is done to ensure any git variables are regenerated when commits are made.
     /// - Can emit [`cargo:warning`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#cargo-warning) outputs if the
-    /// [`fail_on_error`](Self::fail_on_error) feature is not enabled and the requested variable is defaulted through error or
-    /// the [`idempotent`](Self::idempotent) flag.
+    ///   [`fail_on_error`](Self::fail_on_error) feature is not enabled and the requested variable is defaulted through error or
+    ///   the [`idempotent`](Self::idempotent) flag.
     ///
     /// # Errors
     /// * The [`writeln!`](std::writeln!) macro can throw a [`std::io::Error`]
@@ -371,8 +371,8 @@ impl Emitter {
     /// - Will emit [`cargo:rustc-env=VAR=VALUE`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#cargorustc-envvarvalue) for each feature you have enabled.
     /// - Will emit [`cargo:rerun-if-changed=PATH`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed) if the git feature is enabled.  This is done to ensure any git variables are regenerated when commits are made.
     /// - Can emit [`cargo:warning`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#cargo-warning) outputs if the
-    /// [`fail_on_error`](Self::fail_on_error) feature is not enabled and the requested variable is defaulted through error or
-    /// the [`idempotent`](Self::idempotent) flag.
+    ///   [`fail_on_error`](Self::fail_on_error) feature is not enabled and the requested variable is defaulted through error or
+    ///   the [`idempotent`](Self::idempotent) flag.
     ///
     /// # Errors
     /// * The [`writeln!`](std::writeln!) macro can throw a [`std::io::Error`]
