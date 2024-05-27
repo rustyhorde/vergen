@@ -30,7 +30,7 @@ repo = ["gix", "rand"]
 
 [dependencies]
 anyhow = { version = "1.0.79" }
-gix = { version = "0.62.0", default-features = false, features = [
+gix = { version = "0.63.0", default-features = false, features = [
     "revision",
     "worktree-mutation",
     "blocking-network-client",
