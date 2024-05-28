@@ -44,7 +44,7 @@ gix = { version = "0.63.0", default-features = false, features = [
     "revision",
     "interrupt",
 ] }
-time = { version = "0.3.23", features = [
+time = { version = "0.3.36", features = [
     "formatting",
     "local-offset",
     "parsing",
