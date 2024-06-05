@@ -263,7 +263,6 @@ assert!(!buf.is_empty());
         useless_ptr_null_checks,
         variant_size_differences,
         wasm_c_abi,
-        where_clauses_object_safety,
         while_true,
         writes_through_immutable_pointer,
     )
