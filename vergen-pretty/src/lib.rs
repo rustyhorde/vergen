@@ -106,7 +106,6 @@ assert!(!buf.is_empty());
         lint_reasons,
         multiple_supertrait_upcastable,
         must_not_suspend,
-        mut_preserve_binding_mode_2024,
         non_exhaustive_omitted_patterns_lint,
         rustdoc_missing_doc_code_examples,
         strict_provenance,
