@@ -868,11 +868,7 @@ impl AddEntries for Gitcl {
         cargo_warning: &mut CargoWarning,
     ) -> Result<()> {
         if self.any() {
-            let git_cmd = if let Some(cmd) = self.git_cmd {
-                cmd
-            } else {
-                "git --version"
-            };
+            let git_cmd = self.git_cmd.unwrap_or("git --version");
             Self::check_git(git_cmd)
                 .and_then(|()| Self::check_inside_git_worktree(&self.repo_path))?;
             self.inner_add_git_map_entries(
