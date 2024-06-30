@@ -251,7 +251,6 @@ let build = BuildBuilder::default().build_timestamp(true).build()?;"##
 #![cfg_attr(
     all(feature = "unstable", nightly),
     feature(
-        lint_reasons,
         multiple_supertrait_upcastable,
         must_not_suspend,
         non_exhaustive_omitted_patterns_lint,

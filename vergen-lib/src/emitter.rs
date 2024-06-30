@@ -278,11 +278,7 @@ impl Emitter {
 
         // Emit the 'cargo:rerun-if-changed' instructions
         if !self.cargo_rustc_env_map.is_empty() || !self.cargo_warning.is_empty() {
-            let buildrs = if let Some(path) = self.custom_buildrs {
-                path
-            } else {
-                "build.rs"
-            };
+            let buildrs = self.custom_buildrs.unwrap_or("build.rs");
             let sanitized_output = Self::filter_newlines(buildrs);
             writeln!(stdout, "cargo:rerun-if-changed={sanitized_output}")?;
             writeln!(stdout, "cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT")?;
