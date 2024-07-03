@@ -29,18 +29,18 @@ unstable = []
 repo = ["gix", "rand"]
 
 [dependencies]
-anyhow = { version = "1.0.79" }
+anyhow = { version = "1.0.86" }
 gix = { version = "0.63.0", default-features = false, features = [
     "revision",
     "worktree-mutation",
     "blocking-network-client",
 ], optional = true}
-lazy_static = "1.4.0"
+lazy_static = "1.5.0"
 rand = { version = "0.8.5", optional = true }
 temp-env = "0.3.6"
 
 [dev-dependencies]
-serial_test = "3.0.0"
+serial_test = "3.1.1"
 
 [build-dependencies]
-rustversion = "1.0.14"
+rustversion = "1.0.17"
