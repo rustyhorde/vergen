@@ -1,7 +1,7 @@
 # vergen
 ### `vergen`, `vergen-git2`, `vergen-gitcl`, `vergen-gix`, `vergen-pretty`
 The `vergen` suite of tools allow you to embed environment variables generated at build time into your code.  For example,
-say I care about the last git commit number and need to reference it in my code.  You can configure one of the `vergen` git tools in cargo [build scripts](https://doc.rust-lang.org/cargo/reference/build-scripts.html) and can emit a `VERGEN_GIT_SHA` environment variable for use in your code.
+I may care about the last git commit number and need to reference it in my code.  You can configure one of the `vergen` git tools in cargo [build scripts](https://doc.rust-lang.org/cargo/reference/build-scripts.html) and can emit a `VERGEN_GIT_SHA` environment variable for use in your code.
 
 The `vergen` suite of tools can emit the following [output]((https://doc.rust-lang.org/cargo/reference/build-scripts.html#outputs-of-the-build-script)):
 
