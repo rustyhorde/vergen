@@ -42,7 +42,7 @@ time = { version = "0.3.36", features = [
     "parsing",
 ] }
 vergen = { version = "9.0.0", path = "../vergen", default-features = false }
-vergen-lib = { version = "0.1.2", path = "../vergen-lib", features = ["git"] }
+vergen-lib = { version = "0.1.3", path = "../vergen-lib", features = ["git"] }
 
 [build-dependencies]
 rustversion = "1.0.17"

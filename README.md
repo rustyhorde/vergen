@@ -1,6 +1,9 @@
-# vergen - A suite of libraries for generating cargo instructions from a Cargo build script
-### `vergen`, `vergen-git2`, `vergen-gitcl`, `vergen-gix`. `vergen-pretty`
-When used in conjunction with cargo [build scripts](https://doc.rust-lang.org/cargo/reference/build-scripts.html) can emit the following [output]((https://doc.rust-lang.org/cargo/reference/build-scripts.html#outputs-of-the-build-script)):
+# vergen
+### `vergen`, `vergen-git2`, `vergen-gitcl`, `vergen-gix`, `vergen-pretty`
+The `vergen` suite of tools allow you to embed environment variables generated at build time into your code.  For example,
+I may care about the last git commit number and need to reference it in my code.  You can configure one of the `vergen` git tools in cargo [build scripts](https://doc.rust-lang.org/cargo/reference/build-scripts.html) and can emit a `VERGEN_GIT_SHA` environment variable for use in your code.
+
+The `vergen` suite of tools can emit the following [output]((https://doc.rust-lang.org/cargo/reference/build-scripts.html#outputs-of-the-build-script)):
 
 - Will emit [`cargo:rustc-env=VAR=VALUE`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#cargorustc-envvarvalue)
 for each feature you have enabled.  These can be referenced with the [`env!`](https://doc.rust-lang.org/std/macro.env.html) or [`option_env!`](https://doc.rust-lang.org/std/macro.option_env.html) macro in your code.
@@ -25,7 +28,7 @@ to rerun instruction emission if the `SOURCE_DATE_EPOCH` environment variable ha
 [![Crates.io](https://img.shields.io/crates/l/vergen.svg)](https://crates.io/crates/vergen)
 [![Crates.io](https://img.shields.io/crates/d/vergen.svg)](https://crates.io/crates/vergen)
 [![codecov](https://codecov.io/gh/rustyhorde/vergen/branch/master/graph/badge.svg?token=cBXro7o2UN)](https://codecov.io/gh/rustyhorde/vergen)
-[![CI](https://github.com/rustyhorde/vergen/actions/workflows/main.yml/badge.svg)](https://github.com/rustyhorde/vergen/actions)
+[![CI](https://github.com/rustyhorde/vergen/actions/workflows/vergen.yml/badge.svg)](https://github.com/rustyhorde/vergen/actions)
 [![sponsor](https://img.shields.io/github/sponsors/crazysacx?logo=github-sponsors)](https://github.com/sponsors/CraZySacX)
 
 ### vergen-git2
