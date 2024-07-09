@@ -39,15 +39,15 @@ unstable = []
 si = []
 
 [dependencies]
-anyhow = "1.0.79"
+anyhow = "1.0.86"
 derive_builder = "0.20.0"
 getset = "0.1.2"
 
 [build-dependencies]
-rustversion = "1.0.14"
+rustversion = "1.0.17"
 
 [dev-dependencies]
-serial_test = "3.0.0"
+serial_test = "3.1.1"
 temp-env = "0.3.6"
 test_util = { path = "../test_util", features = ["unstable"] }
 
