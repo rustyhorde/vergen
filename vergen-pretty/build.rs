@@ -4,11 +4,11 @@ use std::env;
 use vergen::EmitBuilder;
 
 fn main() -> Result<()> {
+    println!("cargo:rerun-if-changed=build.rs");
+    println!("cargo:rustc-check-cfg=cfg(coverage_nightly)");
     nightly();
     beta();
     stable();
-    msrv();
-    lints_fix();
     setup_env()
 }
 
@@ -38,40 +38,33 @@ fn emit() -> Result<()> {
 
 #[rustversion::nightly]
 fn nightly() {
+    println!("cargo:rustc-check-cfg=cfg(nightly)");
     println!("cargo:rustc-cfg=nightly");
 }
 
 #[rustversion::not(nightly)]
-fn nightly() {}
+fn nightly() {
+    println!("cargo:rustc-check-cfg=cfg(nightly)");
+}
 
 #[rustversion::beta]
 fn beta() {
+    println!("cargo:rustc-check-cfg=cfg(beta)");
     println!("cargo:rustc-cfg=beta");
 }
 
 #[rustversion::not(beta)]
-fn beta() {}
+fn beta() {
+    println!("cargo:rustc-check-cfg=cfg(beta)");
+}
 
 #[rustversion::stable]
 fn stable() {
+    println!("cargo:rustc-check-cfg=cfg(stable)");
     println!("cargo:rustc-cfg=stable");
 }
 
 #[rustversion::not(stable)]
-fn stable() {}
-
-#[rustversion::before(1.70)]
-fn msrv() {}
-
-#[rustversion::since(1.70)]
-fn msrv() {
-    println!("cargo:rustc-cfg=msrv");
-}
-
-#[rustversion::before(1.75)]
-fn lints_fix() {}
-
-#[rustversion::since(1.75)]
-fn lints_fix() {
-    println!("cargo:rustc-cfg=lints_fix")
+fn stable() {
+    println!("cargo:rustc-check-cfg=cfg(stable)");
 }

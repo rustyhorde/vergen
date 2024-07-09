@@ -123,7 +123,7 @@ impl TestRepos {
             )?;
 
             // Create a second commit
-            let mut second_tree = git::objs::Tree::empty();
+            let mut second_tree = Tree::empty();
             let _second_commit_id = Self::create_commit(
                 &mut second_tree,
                 &committer,

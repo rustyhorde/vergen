@@ -302,11 +302,7 @@ impl Emitter {
 
         // Emit the 'cargo:rerun-if-changed' instructions
         if !self.cargo_rustc_env_map.is_empty() || !self.warnings.is_empty() {
-            let buildrs = if let Some(path) = custom_buildrs {
-                path
-            } else {
-                "build.rs"
-            };
+            let buildrs = custom_buildrs.unwrap_or("build.rs");
             let output = Self::filter_newlines(buildrs);
             writeln!(stdout, "cargo:rerun-if-changed={output}")?;
             writeln!(stdout, "cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT")?;
@@ -673,8 +669,8 @@ is enabled.  This is done to ensure any git variables are regenerated when commi
 "##
     )]
     /// - Can emit [`cargo:warning`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#cargo-warning) outputs if the
-    /// [`fail_on_error`](Self::fail_on_error) feature is not enabled and the requested variable is defaulted through error or
-    /// the [`idempotent`](Self::idempotent) flag.
+    ///   [`fail_on_error`](Self::fail_on_error) feature is not enabled and the requested variable is defaulted through error or
+    ///   the [`idempotent`](Self::idempotent) flag.
     ///
     /// # Errors
     /// * The [`writeln!`](std::writeln!) macro can throw a [`std::io::Error`]
@@ -777,8 +773,8 @@ is enabled.  This is done to ensure any git variables are regenerated when commi
 "##
     )]
     /// - Can emit [`cargo:warning`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#cargo-warning) outputs if the
-    /// [`fail_on_error`](Self::fail_on_error) feature is not enabled and the requested variable is defaulted through error or
-    /// the [`idempotent`](Self::idempotent) flag.
+    ///   [`fail_on_error`](Self::fail_on_error) feature is not enabled and the requested variable is defaulted through error or
+    ///   the [`idempotent`](Self::idempotent) flag.
     ///
     /// # Errors
     /// * The [`writeln!`](std::writeln!) macro can throw a [`std::io::Error`]

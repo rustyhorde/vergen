@@ -498,7 +498,7 @@ impl EmitBuilder {
                 true,
                 OffsetDateTime::from_unix_timestamp(i64::from_str(&v)?)?,
             ),
-            Err(std::env::VarError::NotPresent) => {
+            Err(env::VarError::NotPresent) => {
                 let no_offset = OffsetDateTime::from_unix_timestamp(commit.time()?.seconds)?;
                 if self.git_config.use_local {
                     let local = UtcOffset::local_offset_at(no_offset)?;

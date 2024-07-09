@@ -10,20 +10,20 @@
 //! `vergen`, when used in conjunction with cargo [build scripts] can emit the following:
 //!
 //! - Will emit [`cargo:rustc-env=VAR=VALUE`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#cargorustc-envvarvalue)
-//! for each feature you have enabled.  These can be referenced with the [env!](std::env!) macro in your code.
+//!   for each feature you have enabled.  These can be referenced with the [env!](std::env!) macro in your code.
 //! - Will emit [`cargo:rerun-if-changed=.git/HEAD`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed)
-//! if the git feature is enabled.  This is done to ensure any git instructions are regenerated when commits are made.
+//!   if the git feature is enabled.  This is done to ensure any git instructions are regenerated when commits are made.
 //! - Will emit [`cargo:rerun-if-changed=.git/<path_to_ref>`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed)
-//! if the git feature is enabled.  This is done to ensure any git instructions are regenerated when commits are made.
+//!   if the git feature is enabled.  This is done to ensure any git instructions are regenerated when commits are made.
 //! - Can emit [`cargo:warning`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#cargo-warning) outputs if the
-//! [`fail_on_error`](EmitBuilder::fail_on_error) feature is not enabled and the requested variable is defaulted through error or
-//! the [`idempotent`](EmitBuilder::idempotent) flag.
+//!   [`fail_on_error`](EmitBuilder::fail_on_error) feature is not enabled and the requested variable is defaulted through error or
+//!   the [`idempotent`](EmitBuilder::idempotent) flag.
 //! - Will emit [`cargo:rerun-if-changed=build.rs`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed)
-//! to rerun instruction emission if the `build.rs` file changed.
+//!   to rerun instruction emission if the `build.rs` file changed.
 //! - Will emit [`cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed)
-//! to rerun instruction emission if the `VERGEN_IDEMPOTENT` environment variable has changed.
+//!   to rerun instruction emission if the `VERGEN_IDEMPOTENT` environment variable has changed.
 //! - Will emit [`cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed)
-//! to rerun instruction emission if the `SOURCE_DATE_EPOCH` environment variable has changed.
+//!   to rerun instruction emission if the `SOURCE_DATE_EPOCH` environment variable has changed.
 //!
 //! ## Usage
 //!
@@ -50,8 +50,8 @@
 //! ```
 //!
 //! 3. Create a `build.rs` file that uses `vergen` to emit cargo instructions.  Configuration
-//! starts with [`EmitBuilder`].  Eventually you will call [`emit`](EmitBuilder::emit) to output the
-//! cargo instructions. See the [`emit`](EmitBuilder::emit) documentation for more robust examples.
+//!    starts with [`EmitBuilder`].  Eventually you will call [`emit`](EmitBuilder::emit) to output the
+//!    cargo instructions. See the [`emit`](EmitBuilder::emit) documentation for more robust examples.
 //!
 //! #### Generate all output
 //!
@@ -230,28 +230,28 @@
 //!
 //! #### Minimize the tool footprint
 //! - Adopt an opt-in, rather than opt-out strategy for the features.  The default feature set is empty
-//! and no instructions will be emitted.
+//!   and no instructions will be emitted.
 //! - The instructions you have configured **will** be emitted.  If there are errors or idempotentcy
-//! has been configured, some of those instructions may be defaulted.
+//!   has been configured, some of those instructions may be defaulted.
 //! - Allow overriding configurtion set in `build.rs` through environment variables.  This will allow package
-//! maintainers to force sane defaults when packaging rust binaries for distribution.
+//!   maintainers to force sane defaults when packaging rust binaries for distribution.
 //!
 //! #### Minimize the compile time impact
 //! - `git2` and `gitoxide` are large features.  These are opt-in now.  I've also added back support for
-//! generating git instructions via the `git` binary.
+//!   generating git instructions via the `git` binary.
 //! - I've removed some extraneous libraries.   Any libraries added in the future will be checked against
-//! the current standard compile times to ensure the impact is not too great.
+//!   the current standard compile times to ensure the impact is not too great.
 //! - `vergen` should compile and test from a source tarball.
 //!
 //! #### Support deterministic output
 //! Compilations run from the same source oftentimes need to generate identical binaries.  `vergen` now supports
 //! this determinism in a few ways.
 //! - An [`idempotent`](EmitBuilder::idempotent) configuration option has been added.  When this is enabled in a
-//! build script, each build via cargo against the same source code should generate identical binaries. Instructions
-//! that output information that may change between builds (i.e. timestamps, sysinfo) will be defaulted.
+//!   build script, each build via cargo against the same source code should generate identical binaries. Instructions
+//!   that output information that may change between builds (i.e. timestamps, sysinfo) will be defaulted.
 //! - Recognize common environment variables that support deterministic builds (i.e. [`SOURCE_DATE_EPOCH`](https://reproducible-builds.org/docs/source-date-epoch/))
 //! - Allow `build.rs` configuration overrides though environment variables to allow users building a binary, but
-//! not controlling the source to generate deterministic binaries.
+//!   not controlling the source to generate deterministic binaries.
 //!
 //! # Use Cases
 //! I generally use vergen for the following two cases
@@ -301,31 +301,35 @@
 
 // rustc lints
 #![cfg_attr(
-    all(msrv, feature = "unstable", nightly),
+    all(feature = "unstable", nightly),
     feature(
-        lint_reasons,
         multiple_supertrait_upcastable,
         must_not_suspend,
         non_exhaustive_omitted_patterns_lint,
-        strict_provenance,
-        type_privacy_lints,
         rustdoc_missing_doc_code_examples,
+        strict_provenance,
     )
 )]
+#![cfg_attr(nightly, allow(single_use_lifetimes, unexpected_cfgs))]
 #![cfg_attr(
-    msrv,
+    nightly,
     deny(
         absolute_paths_not_starting_with_crate,
+        ambiguous_glob_imports,
+        ambiguous_glob_reexports,
+        ambiguous_wide_pointer_comparisons,
         anonymous_parameters,
         array_into_iter,
         asm_sub_register,
+        async_fn_in_trait,
         bad_asm_style,
         bare_trait_objects,
-        // box_pointers,
         break_with_label_and_loop,
+        byte_slice_in_packed_struct_with_derive,
         clashing_extern_declarations,
         coherence_leak_check,
         confusable_idents,
+        const_eval_mutable_ptr_in_final_value,
         const_evaluatable_unchecked,
         const_item_mutation,
         dead_code,
@@ -335,30 +339,39 @@
         deref_into_dyn_supertrait,
         deref_nullptr,
         drop_bounds,
+        dropping_copy_types,
+        dropping_references,
         duplicate_macro_attributes,
         dyn_drop,
+        elided_lifetimes_in_associated_constant,
         elided_lifetimes_in_paths,
         ellipsis_inclusive_range_patterns,
         explicit_outlives_requirements,
         exported_private_dependencies,
+        ffi_unwind_calls,
         forbidden_lint_groups,
+        forgetting_copy_types,
+        forgetting_references,
         for_loops_over_fallibles,
         function_item_references,
-        illegal_floating_point_literal_pattern,
+        hidden_glob_reexports,
         improper_ctypes,
         improper_ctypes_definitions,
-        incomplete_features,
-        indirect_structural_match,
         inline_no_sanitize,
-        invalid_doc_attributes,
+        internal_features,
+        invalid_from_utf8,
+        invalid_macro_export_arguments,
+        invalid_nan_comparisons,
         invalid_value,
         irrefutable_let_patterns,
-        keyword_idents,
+        keyword_idents_2018,
+        keyword_idents_2024,
         large_assignments,
         late_bound_lifetime_arguments,
         legacy_derive_helpers,
         let_underscore_drop,
         macro_use_extern_crate,
+        map_unit_fn,
         meta_variable_misuse,
         missing_abi,
         missing_copy_implementations,
@@ -366,20 +379,26 @@
         missing_docs,
         mixed_script_confusables,
         named_arguments_used_positionally,
+        never_type_fallback_flowing_into_unsafe,
         no_mangle_generic_items,
         non_ascii_idents,
         non_camel_case_types,
+        non_contiguous_range_endpoints,
         non_fmt_panics,
+        non_local_definitions,
         non_shorthand_field_patterns,
         non_snake_case,
-        nontrivial_structural_match,
         non_upper_case_globals,
         noop_method_call,
         opaque_hidden_inferred_bound,
         overlapping_range_endpoints,
         path_statements,
-        pointer_structural_match,
+        private_bounds,
+        private_interfaces,
+        redundant_lifetimes,
         redundant_semicolons,
+        refining_impl_trait_internal,
+        refining_impl_trait_reachable,
         renamed_and_removed_lints,
         repr_transparent_external_private_fields,
         rust_2021_incompatible_closure_captures,
@@ -387,10 +406,10 @@
         rust_2021_prefixes_incompatible_syntax,
         rust_2021_prelude_collisions,
         semicolon_in_expressions_from_macros,
-        single_use_lifetimes,
         special_module_name,
         stable_features,
-        suspicious_auto_trait_impls,
+        static_mut_refs,
+        suspicious_double_ref_op,
         temporary_cstring_as_ptr,
         trivial_bounds,
         trivial_casts,
@@ -399,22 +418,26 @@
         tyvar_behind_raw_pointer,
         uncommon_codepoints,
         unconditional_recursion,
-        unexpected_cfgs,
+        uncovered_param_in_projection,
+        undefined_naked_function_abi,
         ungated_async_fn_track_caller,
         uninhabited_static,
+        unit_bindings,
         unknown_lints,
+        unknown_or_malformed_diagnostic_attributes,
         unnameable_test_items,
+        unnameable_types,
         unreachable_code,
         unreachable_patterns,
         unreachable_pub,
         unsafe_code,
         unsafe_op_in_unsafe_fn,
-        unstable_features,
         unstable_name_collisions,
         unstable_syntax_pre_expansion,
         unsupported_calling_conventions,
         unused_allocation,
         unused_assignments,
+        unused_associated_type_bounds,
         unused_attributes,
         unused_braces,
         unused_comparisons,
@@ -435,75 +458,38 @@
         unused_results,
         unused_unsafe,
         unused_variables,
+        useless_ptr_null_checks,
         variant_size_differences,
-        where_clauses_object_safety,
+        wasm_c_abi,
         while_true,
+        writes_through_immutable_pointer,
     )
 )]
-#![cfg_attr(msrv, allow(single_use_lifetimes))]
-// If nightly or beta and unstable, allow `unstable_features`
+#![cfg_attr(all(nightly), allow(unstable_features))]
+// If nightly and unstable, allow `incomplete_features` and `unstable_features`
+#![cfg_attr(all(feature = "unstable", nightly), allow(incomplete_features))]
+// If nightly and not unstable, deny `incomplete_features` and `unstable_features`
 #![cfg_attr(
-    all(msrv, feature = "unstable", any(nightly, beta)),
-    allow(unstable_features)
+    all(not(feature = "unstable"), nightly),
+    deny(incomplete_features, unstable_features)
 )]
 // The unstable lints
 #![cfg_attr(
-    all(msrv, feature = "unstable", nightly),
+    all(feature = "unstable", nightly),
     deny(
-        ffi_unwind_calls,
         fuzzy_provenance_casts,
         lossy_provenance_casts,
         multiple_supertrait_upcastable,
         must_not_suspend,
         non_exhaustive_omitted_patterns,
-        private_bounds,
-        private_interfaces,
         unfulfilled_lint_expectations,
-        unnameable_types,
     )
-)]
-// If nightly and not unstable, deny `unstable_features`
-#![cfg_attr(all(msrv, not(feature = "unstable"), nightly), deny(unstable_features))]
-// nightly only lints
-#![cfg_attr(
-    all(msrv, nightly),
-    deny(ambiguous_glob_imports, invalid_reference_casting)
-)]
-// nightly or beta only lints
-#![cfg_attr(
-    all(msrv, any(beta, nightly)),
-    deny(
-        ambiguous_glob_reexports,
-        byte_slice_in_packed_struct_with_derive,
-        dropping_copy_types,
-        dropping_references,
-        forgetting_copy_types,
-        forgetting_references,
-        hidden_glob_reexports,
-        invalid_from_utf8,
-        invalid_macro_export_arguments,
-        invalid_nan_comparisons,
-        map_unit_fn,
-        suspicious_double_ref_op,
-        undefined_naked_function_abi,
-        unused_associated_type_bounds,
-    )
-)]
-// beta only lints
-// #![cfg_attr( all(msrv, beta), deny())]
-// beta or stable only lints
-#![cfg_attr(all(msrv, any(beta, stable)), deny(unused_tuple_struct_fields))]
-// stable only lints
-#![cfg_attr(
-    all(msrv, stable),
-    deny(bindings_with_variant_name, implied_bounds_entailment)
 )]
 // clippy lints
-#![cfg_attr(msrv, deny(clippy::all, clippy::pedantic))]
-#![cfg_attr(all(msrv, lints_fix), allow(clippy::struct_field_names))]
+#![cfg_attr(nightly, deny(clippy::all, clippy::pedantic))]
 // rustdoc lints
 #![cfg_attr(
-    msrv,
+    nightly,
     deny(
         rustdoc::bare_urls,
         rustdoc::broken_intra_doc_links,
@@ -515,11 +501,12 @@
     )
 )]
 #![cfg_attr(
-    all(msrv, feature = "unstable", nightly),
+    all(nightly, feature = "unstable"),
     deny(rustdoc::missing_doc_code_examples)
 )]
 #![cfg_attr(all(doc, nightly), feature(doc_auto_cfg))]
 #![cfg_attr(all(docsrs, nightly), feature(doc_cfg))]
+#![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
 mod constants;
 mod emitter;

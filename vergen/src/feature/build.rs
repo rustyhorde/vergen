@@ -206,7 +206,7 @@ impl EmitBuilder {
                 true,
                 OffsetDateTime::from_unix_timestamp(i64::from_str(&v)?)?,
             ),
-            Err(std::env::VarError::NotPresent) => {
+            Err(env::VarError::NotPresent) => {
                 if self.build_config.use_local {
                     (false, OffsetDateTime::now_local()?)
                 } else {

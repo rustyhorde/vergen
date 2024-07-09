@@ -20,7 +20,7 @@ use std::env;
 use sysinfo::{get_current_pid, Cpu, Pid, Process, RefreshKind, System, User, Users};
 
 #[derive(Clone, Copy, Debug, Default)]
-#[allow(clippy::struct_excessive_bools)]
+#[allow(clippy::struct_excessive_bools, clippy::struct_field_names)]
 pub(crate) struct Config {
     pub(crate) si_refresh_kind: Option<RefreshKind>,
     pub(crate) si_name: bool,

@@ -534,11 +534,7 @@ impl EmitBuilder {
         rerun_if_changed: &mut Vec<String>,
     ) -> Result<()> {
         if self.any() {
-            let git_cmd = if let Some(cmd) = self.git_config.git_cmd {
-                cmd
-            } else {
-                "git --version"
-            };
+            let git_cmd = self.git_config.git_cmd.unwrap_or("git --version");
             check_git(git_cmd).and_then(|()| check_inside_git_worktree(&path))?;
             self.inner_add_git_map_entries(path, idempotent, map, warnings, rerun_if_changed)?;
         }
@@ -698,7 +694,7 @@ impl EmitBuilder {
                     true,
                     OffsetDateTime::from_unix_timestamp(i64::from_str(&v)?)?,
                 ),
-                Err(std::env::VarError::NotPresent) => {
+                Err(env::VarError::NotPresent) => {
                     let no_offset = OffsetDateTime::parse(&stdout, &Rfc3339)?;
                     if self.git_config.use_local {
                         let local = UtcOffset::local_offset_at(no_offset)?;

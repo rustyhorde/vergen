@@ -20,7 +20,7 @@ use regex::Regex;
 use std::env;
 
 #[derive(Clone, Copy, Debug, Default)]
-#[allow(clippy::struct_excessive_bools)]
+#[allow(clippy::struct_excessive_bools, clippy::struct_field_names)]
 pub(crate) struct Config {
     pub(crate) cargo_debug: bool,
     pub(crate) cargo_features: bool,
