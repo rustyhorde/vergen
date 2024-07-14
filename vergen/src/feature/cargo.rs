@@ -9,7 +9,6 @@
 use anyhow::{anyhow, Error, Result};
 use cargo_metadata::{DepKindInfo, DependencyKind, MetadataCommand, Package, PackageId};
 use derive_builder::Builder as DeriveBuilder;
-use getset::Setters;
 use regex::Regex;
 use std::env;
 use vergen_lib::{
@@ -105,7 +104,7 @@ use vergen_lib::{
 /// # }
 /// ```
 ///
-#[derive(Clone, Copy, Debug, DeriveBuilder, PartialEq, Setters)]
+#[derive(Clone, Copy, Debug, DeriveBuilder, PartialEq)]
 #[allow(clippy::struct_excessive_bools)]
 pub struct Cargo {
     /// Emit the DEBUG value set by cargo
@@ -155,7 +154,6 @@ pub struct Cargo {
     /// ```
     ///
     #[builder(default = "None", setter(into))]
-    #[getset(set = "pub")]
     name_filter: Option<&'static str>,
     /// Add a [`DependencyKind`](cargo_metadata::DependencyKind) filter for cargo dependencies
     ///
@@ -164,7 +162,6 @@ pub struct Cargo {
     /// ```
     ///
     #[builder(default = "None", setter(into))]
-    #[getset(set = "pub")]
     dep_kind_filter: Option<DependencyKind>,
 }
 
@@ -265,6 +262,29 @@ impl Cargo {
             .map(|package| format!("{} {}", package.name, package.version))
             .collect();
         Ok(results.join(","))
+    }
+
+    /// Add a name [`Regex`](regex::Regex) filter for cargo dependencies
+    ///
+    /// ```text
+    /// cargo:rustc-env=VERGEN_CARGO_DEPENDENCIES=<deps_filtered_by_name>
+    /// ```
+    ///
+    #[inline(always)]
+    pub fn set_name_filter(&mut self, val: Option<&'static str>) -> &mut Self {
+        self.name_filter = val;
+        self
+    }
+    /// Add a [`DependencyKind`](cargo_metadata::DependencyKind) filter for cargo dependencies
+    ///
+    /// ```text
+    /// cargo:rustc-env=VERGEN_CARGO_DEPENDENCIES=<deps_filtered_by_kind>
+    /// ```
+    ///
+    #[inline(always)]
+    pub fn set_dep_kind_filter(&mut self, val: Option<DependencyKind>) -> &mut Self {
+        self.dep_kind_filter = val;
+        self
     }
 }
 
