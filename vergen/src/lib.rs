@@ -210,7 +210,7 @@ let build = BuildBuilder::default().build_timestamp(true).build()?;"##
 //! |      si      | `VERGEN_SYSINFO_*` instructions |
 #![cfg_attr(
     feature = "emit_and_set",
-    doc = r##"| emit_and_set | Enable the `[`emit_and_set`](Emitter::emit_and_set)` function |"##
+    doc = r##"| emit_and_set | Enable the [`emit_and_set`](Emitter::emit_and_set) function |"##
 )]
 //!
 //! ## Environment Variables
