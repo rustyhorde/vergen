@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.79"
-gix = { version = "0.57.1", default-features = false, features = [
+gix = { version = "0.64.0", default-features = false, features = [
     "revision",
     "worktree-mutation",
     "blocking-network-client",
@@ -13,8 +13,8 @@ gix = { version = "0.57.1", default-features = false, features = [
 rand = "0.8.5"
 
 [dev-dependencies]
-serial_test = "3.0.0"
+serial_test = "3.1.1"
 temp-env = "0.3.6"
 
 [build-dependencies]
-rustversion = "1.0.14"
+rustversion = "1.0.17"
