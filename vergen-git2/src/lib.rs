@@ -273,7 +273,6 @@ let build = BuildBuilder::default().build_timestamp(true).build()?;"##
         bad_asm_style,
         bare_trait_objects,
         break_with_label_and_loop,
-        byte_slice_in_packed_struct_with_derive,
         clashing_extern_declarations,
         coherence_leak_check,
         confusable_idents,
