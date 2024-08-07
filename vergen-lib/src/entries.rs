@@ -1,7 +1,6 @@
 use crate::VergenKey;
 
 use anyhow::{Error, Result};
-use getset::Getters;
 use std::collections::BTreeMap;
 
 /// The map used to emit `cargo:rustc-env=NAME=VALUE` cargo instructions
@@ -12,8 +11,7 @@ pub type CargoRerunIfChanged = Vec<String>;
 pub type CargoWarning = Vec<String>;
 
 /// The default configuration to use when an issue has occured generating instructions
-#[derive(Debug, Getters)]
-#[getset(get = "pub")]
+#[derive(Debug)]
 pub struct DefaultConfig {
     /// Should we fail if an error occurs or output idempotent values on error?
     fail_on_error: bool,
@@ -29,6 +27,16 @@ impl DefaultConfig {
             fail_on_error,
             error,
         }
+    }
+    /// Should we fail if an error occurs or output idempotent values on error?
+    #[inline(always)]
+    pub fn fail_on_error(&self) -> &bool {
+        &self.fail_on_error
+    }
+    /// The error that caused us to try default instruction output.
+    #[inline(always)]
+    pub fn error(&self) -> &Error {
+        &self.error
     }
 }
 

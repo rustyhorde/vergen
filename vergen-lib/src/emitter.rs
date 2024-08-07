@@ -8,7 +8,6 @@
 
 use crate::{AddCustomEntries, AddEntries, CargoRustcEnvMap, DefaultConfig};
 use anyhow::Result;
-use getset::Getters;
 use std::{
     collections::BTreeMap,
     env,
@@ -17,22 +16,18 @@ use std::{
 
 /// The `Emitter` will emit cargo instructions (i.e. cargo:rustc-env=NAME=VALUE)
 /// base on the configuration you enable.
-#[derive(Clone, Debug, Getters, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Emitter {
     idempotent: bool,
     fail_on_error: bool,
     quiet: bool,
     custom_buildrs: Option<&'static str>,
-    #[getset(get = "pub")]
     #[doc(hidden)]
     cargo_rustc_env_map: CargoRustcEnvMap,
-    #[getset(get = "pub")]
     #[doc(hidden)]
     cargo_rustc_env_map_custom: BTreeMap<String, String>,
-    #[getset(get = "pub")]
     #[doc(hidden)]
     cargo_rerun_if_changed: Vec<String>,
-    #[getset(get = "pub")]
     #[doc(hidden)]
     cargo_warning: Vec<String>,
 }
@@ -44,6 +39,27 @@ impl Default for Emitter {
 }
 
 impl Emitter {
+    #[doc(hidden)]
+    #[inline(always)]
+    pub fn cargo_rustc_env_map(&self) -> &CargoRustcEnvMap {
+        &self.cargo_rustc_env_map
+    }
+    #[doc(hidden)]
+    #[inline(always)]
+    pub fn cargo_rustc_env_map_custom(&self) -> &BTreeMap<String, String> {
+        &self.cargo_rustc_env_map_custom
+    }
+    #[doc(hidden)]
+    #[inline(always)]
+    pub fn cargo_rerun_if_changed(&self) -> &Vec<String> {
+        &self.cargo_rerun_if_changed
+    }
+    #[doc(hidden)]
+    #[inline(always)]
+    pub fn cargo_warning(&self) -> &Vec<String> {
+        &self.cargo_warning
+    }
+
     /// Instantiate the builder to configure the cargo instruction emits
     #[must_use]
     pub fn new() -> Self {
