@@ -8,7 +8,7 @@
 
 use anyhow::{anyhow, Error, Result};
 use derive_builder::Builder as DeriveBuilder;
-use gix::{discover, head::Kind, Commit, Head, Id, Repository};
+use gix::{commit::describe::SelectRef, discover, head::Kind, Commit, Head, Id, Repository};
 use std::{
     env::{self, VarError},
     path::{Path, PathBuf},
@@ -408,14 +408,20 @@ impl Gix {
             if let Ok(_value) = env::var(GIT_DESCRIBE_NAME) {
                 add_default_map_entry(VergenKey::GitDescribe, cargo_rustc_env, cargo_warning);
             } else {
-                let describe = if let Some(mut fmt) = commit.describe().try_format()? {
-                    if fmt.depth > 0 && self.describe_dirty {
-                        fmt.dirty_suffix = Some("dirty".to_string());
-                    }
-                    fmt.to_string()
+                let describe_refs = if self.describe_tags {
+                    SelectRef::AllTags
                 } else {
-                    String::new()
+                    SelectRef::AnnotatedTags
                 };
+                let describe =
+                    if let Some(mut fmt) = commit.describe().names(describe_refs).try_format()? {
+                        if fmt.depth > 0 && self.describe_dirty {
+                            fmt.dirty_suffix = Some("dirty".to_string());
+                        }
+                        fmt.to_string()
+                    } else {
+                        String::new()
+                    };
                 add_map_entry(VergenKey::GitDescribe, describe, cargo_rustc_env);
             }
         }
