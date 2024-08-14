@@ -151,7 +151,7 @@ impl TestRepos {
                 initial_commit_id.into(),
             )?;
 
-            // Tag the previous commit
+            // Create an annotated tag against the first commit
             let _tag_id = committer.tag(
                 "0.1.0",
                 first_commit_id,
@@ -163,13 +163,31 @@ impl TestRepos {
 
             // Create a second commit
             let mut second_tree = Tree::empty();
-            let _second_commit_id = Self::create_commit(
+            let second_commit_id = Self::create_commit(
                 &mut second_tree,
                 &committer,
                 b"Hello, World!",
                 "foo.txt",
                 "such bad casing",
                 first_commit_id.into(),
+            )?;
+
+            // Create a lightweight tag against the second commit
+            let _tag_id = committer.tag_reference(
+                "0.2.0-rc1",
+                second_commit_id,
+                PreviousValue::MustNotExist,
+            )?;
+
+            // Create a third commit
+            let mut third_tree = Tree::empty();
+            let _third_commit_id = Self::create_commit(
+                &mut third_tree,
+                &committer,
+                b"this is my third commit",
+                "foo.txt",
+                "third commit",
+                second_commit_id.into(),
             )?;
         }
 
