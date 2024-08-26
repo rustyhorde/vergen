@@ -261,7 +261,6 @@ assert!(!buf.is_empty());
         variant_size_differences,
         wasm_c_abi,
         while_true,
-        writes_through_immutable_pointer,
     )
 )]
 #![cfg_attr(all(nightly), allow(unstable_features))]
