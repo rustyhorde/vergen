@@ -520,7 +520,7 @@ impl Git2 {
                 let path = ref_path.join(name);
                 // Check whether the path exists in the filesystem before emitting it
                 if path.exists() {
-                    cargo_rerun_if_changed.push(format!("{}", ref_path.display()));
+                    cargo_rerun_if_changed.push(format!("{}", path.display()));
                 }
             }
         }
