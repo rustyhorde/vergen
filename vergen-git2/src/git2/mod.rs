@@ -191,6 +191,7 @@ pub struct Git2 {
     #[builder(default = "false")]
     use_local: bool,
     #[cfg(test)]
+    /// Fail
     #[builder(default = "false")]
     fail: bool,
 }
