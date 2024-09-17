@@ -7,11 +7,11 @@ edition = "2021"
 homepage = "https://github.com/rustyhorde/vergen"
 keywords = ["cargo", "instructions", "build", "tool"]
 license = "MIT OR Apache-2.0"
-rust-version = "1.73.0"
+rust-version = "1.74.0"
 name = "vergen"
 readme = "README.md"
 repository = "https://github.com/rustyhorde/vergen"
-version = "9.0.0"
+version = "9.0.1"
 
 [package.metadata.cargo-matrix]
 [[package.metadata.cargo-matrix.channel]]
@@ -33,25 +33,25 @@ unstable = ["vergen-lib/unstable"]
 emit_and_set = ["vergen-lib/emit_and_set"]
 
 [dependencies]
-anyhow = "1.0.86"
+anyhow = "1.0.89"
 cargo_metadata = { version = "0.18.1", optional = true }
-derive_builder = "0.20.0"
-regex = { version = "1.10.5", optional = true }
+derive_builder = "0.20.1"
+regex = { version = "1.10.6", optional = true }
 rustc_version = { version = "0.4.0", optional = true }
-sysinfo = { version = "0.30.13", optional = true, default-features = false }
+sysinfo = { version = "0.31.4", optional = true }
 time = { version = "0.3.36", features = [
     "formatting",
     "local-offset",
     "parsing",
 ], optional = true }
-vergen-lib = { version = "0.1.3", path = "../vergen-lib" }
+vergen-lib = { version = "0.1.4", path = "../vergen-lib" }
 
 [build-dependencies]
 rustversion = "1.0.17"
 
 [dev-dependencies]
 lazy_static = "1.5.0"
-regex = "1.10.5"
+regex = "1.10.6"
 test_util = { path = "../test_util", features = ["unstable"] }
 serial_test = "3.1.1"
 temp-env = "0.3.6"
