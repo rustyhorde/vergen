@@ -40,22 +40,22 @@ impl Default for Emitter {
 
 impl Emitter {
     #[doc(hidden)]
-    #[inline(always)]
+    #[must_use]
     pub fn cargo_rustc_env_map(&self) -> &CargoRustcEnvMap {
         &self.cargo_rustc_env_map
     }
     #[doc(hidden)]
-    #[inline(always)]
+    #[must_use]
     pub fn cargo_rustc_env_map_custom(&self) -> &BTreeMap<String, String> {
         &self.cargo_rustc_env_map_custom
     }
     #[doc(hidden)]
-    #[inline(always)]
+    #[must_use]
     pub fn cargo_rerun_if_changed(&self) -> &Vec<String> {
         &self.cargo_rerun_if_changed
     }
     #[doc(hidden)]
-    #[inline(always)]
+    #[must_use]
     pub fn cargo_warning(&self) -> &Vec<String> {
         &self.cargo_warning
     }

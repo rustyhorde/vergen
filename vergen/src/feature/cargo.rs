@@ -270,7 +270,6 @@ impl Cargo {
     /// cargo:rustc-env=VERGEN_CARGO_DEPENDENCIES=<deps_filtered_by_name>
     /// ```
     ///
-    #[inline(always)]
     pub fn set_name_filter(&mut self, val: Option<&'static str>) -> &mut Self {
         self.name_filter = val;
         self
@@ -281,7 +280,6 @@ impl Cargo {
     /// cargo:rustc-env=VERGEN_CARGO_DEPENDENCIES=<deps_filtered_by_kind>
     /// ```
     ///
-    #[inline(always)]
     pub fn set_dep_kind_filter(&mut self, val: Option<DependencyKind>) -> &mut Self {
         self.dep_kind_filter = val;
         self

@@ -29,12 +29,12 @@ impl DefaultConfig {
         }
     }
     /// Should we fail if an error occurs or output idempotent values on error?
-    #[inline(always)]
+    #[must_use]
     pub fn fail_on_error(&self) -> &bool {
         &self.fail_on_error
     }
     /// The error that caused us to try default instruction output.
-    #[inline(always)]
+    #[must_use]
     pub fn error(&self) -> &Error {
         &self.error
     }
