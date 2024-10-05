@@ -168,7 +168,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
         let mut stdout_buf = vec![];
         let failed = EmitBuilder::builder()
             .all_git()
-            .emit_to_at(&mut stdout_buf, Some(env::temp_dir()))?;
+            .emit_to_at(&mut stdout_buf, Some(&env::temp_dir()))?;
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(failed);
         assert!(ALL_IDEM_OUTPUT.is_match(&output));
@@ -196,7 +196,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             .all_git()
             .git_describe(true, true, Some("0.1*"))
             .git_sha(true)
-            .emit_to_at(&mut stdout_buf, Some(repo.path()))?;
+            .emit_to_at(&mut stdout_buf, Some(&repo.path()))?;
         assert!(!failed);
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(GIT_REGEX_SHORT_INST.is_match(&output));
@@ -214,7 +214,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             .git_sha(true)
             .use_local_git()
             .fail_on_error()
-            .emit_to_at(&mut stdout_buf, Some(repo.path()));
+            .emit_to_at(&mut stdout_buf, Some(&repo.path()));
         check_local_result(result, &stdout_buf);
         Ok(())
     }
@@ -239,7 +239,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
         let failed = EmitBuilder::builder()
             .all_git()
             .git_describe(true, true, Some("0.1*"))
-            .emit_to_at(&mut stdout_buf, Some(repo.path()))?;
+            .emit_to_at(&mut stdout_buf, Some(&repo.path()))?;
         assert!(!failed);
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(GIT_REGEX_INST.is_match(&output));
@@ -267,7 +267,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             .all_git()
             .git_describe(true, true, None)
             .git_sha(true)
-            .emit_at(repo.path())
+            .emit_at(&repo.path())
             .is_ok());
         Ok(())
     }
@@ -302,7 +302,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             let mut stdout_buf = vec![];
             EmitBuilder::builder()
                 .git_dirty(false)
-                .emit_to_at(&mut stdout_buf, Some(repo.path()))?;
+                .emit_to_at(&mut stdout_buf, Some(&repo.path()))?;
 
             let output = String::from_utf8_lossy(&stdout_buf);
             let stripped_output = strip_reruns(&output);
@@ -320,7 +320,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             let mut stdout_buf = vec![];
             EmitBuilder::builder()
                 .git_dirty(true)
-                .emit_to_at(&mut stdout_buf, Some(repo.path()))?;
+                .emit_to_at(&mut stdout_buf, Some(&repo.path()))?;
 
             let output = String::from_utf8_lossy(&stdout_buf);
             let stripped_output = strip_reruns(&output);
@@ -338,7 +338,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             let mut stdout_buf = vec![];
             EmitBuilder::builder()
                 .git_dirty(false)
-                .emit_to_at(&mut stdout_buf, Some(repo.path()))?;
+                .emit_to_at(&mut stdout_buf, Some(&repo.path()))?;
 
             let output = String::from_utf8_lossy(&stdout_buf);
             let stripped_output = strip_reruns(&output);
@@ -356,7 +356,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             let mut stdout_buf = vec![];
             EmitBuilder::builder()
                 .git_dirty(true)
-                .emit_to_at(&mut stdout_buf, Some(repo.path()))?;
+                .emit_to_at(&mut stdout_buf, Some(&repo.path()))?;
 
             let output = String::from_utf8_lossy(&stdout_buf);
             let stripped_output = strip_reruns(&output);
@@ -374,7 +374,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             let mut stdout_buf = vec![];
             EmitBuilder::builder()
                 .git_dirty(false)
-                .emit_to_at(&mut stdout_buf, Some(repo.path()))?;
+                .emit_to_at(&mut stdout_buf, Some(&repo.path()))?;
 
             let output = String::from_utf8_lossy(&stdout_buf);
             let stripped_output = strip_reruns(&output);
@@ -392,7 +392,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             let mut stdout_buf = vec![];
             EmitBuilder::builder()
                 .git_dirty(true)
-                .emit_to_at(&mut stdout_buf, Some(repo.path()))?;
+                .emit_to_at(&mut stdout_buf, Some(&repo.path()))?;
 
             let output = String::from_utf8_lossy(&stdout_buf);
             let stripped_output = strip_reruns(&output);
@@ -410,7 +410,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             let mut stdout_buf = vec![];
             EmitBuilder::builder()
                 .git_dirty(false)
-                .emit_to_at(&mut stdout_buf, Some(repo.path()))?;
+                .emit_to_at(&mut stdout_buf, Some(&repo.path()))?;
 
             let output = String::from_utf8_lossy(&stdout_buf);
             let stripped_output = strip_reruns(&output);
@@ -428,7 +428,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             let mut stdout_buf = vec![];
             EmitBuilder::builder()
                 .git_dirty(true)
-                .emit_to_at(&mut stdout_buf, Some(repo.path()))?;
+                .emit_to_at(&mut stdout_buf, Some(&repo.path()))?;
 
             let output = String::from_utf8_lossy(&stdout_buf);
             let stripped_output = strip_reruns(&output);

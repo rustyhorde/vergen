@@ -327,7 +327,7 @@ impl EmitBuilder {
     #[cfg(not(test))]
     pub(crate) fn add_git_map_entries(
         &self,
-        path: Option<PathBuf>,
+        path: Option<&PathBuf>,
         idempotent: bool,
         map: &mut RustcEnvMap,
         warnings: &mut Vec<String>,
@@ -342,7 +342,7 @@ impl EmitBuilder {
     #[cfg(test)]
     pub(crate) fn add_git_map_entries(
         &self,
-        path: Option<PathBuf>,
+        path: Option<&PathBuf>,
         idempotent: bool,
         map: &mut RustcEnvMap,
         warnings: &mut Vec<String>,
@@ -360,7 +360,7 @@ impl EmitBuilder {
     #[allow(clippy::too_many_lines)]
     fn inner_add_git_map_entries(
         &self,
-        path: Option<PathBuf>,
+        path: Option<&PathBuf>,
         idempotent: bool,
         map: &mut RustcEnvMap,
         warnings: &mut Vec<String>,
@@ -369,7 +369,7 @@ impl EmitBuilder {
         let curr_dir = if let Some(path) = path {
             path
         } else {
-            env::current_dir()?
+            &env::current_dir()?
         };
         let repo = Repository::discover(curr_dir)?;
         let ref_head = repo.find_reference("HEAD")?;
@@ -751,7 +751,7 @@ mod test {
         let repo = TestRepos::new(false, false, true)?;
         let emitter = EmitBuilder::builder()
             .all_git()
-            .test_emit_at(Some(repo.path()))?;
+            .test_emit_at(Some(&repo.path()))?;
         assert_eq!(10, emitter.cargo_rustc_env_map.len());
         assert_eq!(0, count_idempotent(&emitter.cargo_rustc_env_map));
         assert_eq!(0, emitter.warnings.len());

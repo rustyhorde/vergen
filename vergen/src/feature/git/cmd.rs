@@ -527,7 +527,7 @@ impl EmitBuilder {
 
     pub(crate) fn add_git_map_entries(
         &self,
-        path: Option<PathBuf>,
+        path: Option<&PathBuf>,
         idempotent: bool,
         map: &mut RustcEnvMap,
         warnings: &mut Vec<String>,
@@ -535,7 +535,7 @@ impl EmitBuilder {
     ) -> Result<()> {
         if self.any() {
             let git_cmd = self.git_config.git_cmd.unwrap_or("git --version");
-            check_git(git_cmd).and_then(|()| check_inside_git_worktree(&path))?;
+            check_git(git_cmd).and_then(|()| check_inside_git_worktree(path))?;
             self.inner_add_git_map_entries(path, idempotent, map, warnings, rerun_if_changed)?;
         }
         Ok(())
@@ -544,21 +544,21 @@ impl EmitBuilder {
     #[allow(clippy::needless_pass_by_value)]
     fn inner_add_git_map_entries(
         &self,
-        path: Option<PathBuf>,
+        path: Option<&PathBuf>,
         idempotent: bool,
         map: &mut RustcEnvMap,
         warnings: &mut Vec<String>,
         rerun_if_changed: &mut Vec<String>,
     ) -> Result<()> {
         if !idempotent && self.any() {
-            add_rerun_if_changed(rerun_if_changed, &path)?;
+            add_rerun_if_changed(rerun_if_changed, path)?;
         }
 
         if self.git_config.git_branch {
             if let Ok(value) = env::var(GIT_BRANCH_NAME) {
                 add_map_entry(VergenKey::GitBranch, value, map);
             } else {
-                add_git_cmd_entry(BRANCH_CMD, &path, VergenKey::GitBranch, map)?;
+                add_git_cmd_entry(BRANCH_CMD, path, VergenKey::GitBranch, map)?;
             }
         }
 
@@ -568,7 +568,7 @@ impl EmitBuilder {
             } else {
                 add_git_cmd_entry(
                     COMMIT_AUTHOR_EMAIL,
-                    &path,
+                    path,
                     VergenKey::GitCommitAuthorEmail,
                     map,
                 )?;
@@ -581,7 +581,7 @@ impl EmitBuilder {
             } else {
                 add_git_cmd_entry(
                     COMMIT_AUTHOR_NAME,
-                    &path,
+                    path,
                     VergenKey::GitCommitAuthorName,
                     map,
                 )?;
@@ -592,17 +592,17 @@ impl EmitBuilder {
             if let Ok(value) = env::var(GIT_COMMIT_COUNT) {
                 add_map_entry(VergenKey::GitCommitCount, value, map);
             } else {
-                add_git_cmd_entry(COMMIT_COUNT, &path, VergenKey::GitCommitCount, map)?;
+                add_git_cmd_entry(COMMIT_COUNT, path, VergenKey::GitCommitCount, map)?;
             }
         }
 
-        self.add_git_timestamp_entries(COMMIT_TIMESTAMP, &path, idempotent, map, warnings)?;
+        self.add_git_timestamp_entries(COMMIT_TIMESTAMP, path, idempotent, map, warnings)?;
 
         if self.git_config.git_commit_message {
             if let Ok(value) = env::var(GIT_COMMIT_MESSAGE) {
                 add_map_entry(VergenKey::GitCommitMessage, value, map);
             } else {
-                add_git_cmd_entry(COMMIT_MESSAGE, &path, VergenKey::GitCommitMessage, map)?;
+                add_git_cmd_entry(COMMIT_MESSAGE, path, VergenKey::GitCommitMessage, map)?;
             }
         }
 
@@ -622,7 +622,7 @@ impl EmitBuilder {
                     describe_cmd.push_str(pattern);
                     describe_cmd.push('\"');
                 }
-                add_git_cmd_entry(&describe_cmd, &path, VergenKey::GitDescribe, map)?;
+                add_git_cmd_entry(&describe_cmd, path, VergenKey::GitDescribe, map)?;
             }
         }
 
@@ -635,7 +635,7 @@ impl EmitBuilder {
                     sha_cmd.push_str(" --short");
                 }
                 sha_cmd.push_str(" HEAD");
-                add_git_cmd_entry(&sha_cmd, &path, VergenKey::GitSha, map)?;
+                add_git_cmd_entry(&sha_cmd, path, VergenKey::GitSha, map)?;
             }
         }
 
@@ -647,7 +647,7 @@ impl EmitBuilder {
                 if !self.git_config.git_dirty_include_untracked {
                     dirty_cmd.push_str(" --untracked-files=no");
                 }
-                let output = run_cmd(&dirty_cmd, &path)?;
+                let output = run_cmd(&dirty_cmd, path)?;
                 if output.stdout.is_empty() {
                     add_map_entry(VergenKey::GitDirty, "false", map);
                 } else {
@@ -662,7 +662,7 @@ impl EmitBuilder {
     fn add_git_timestamp_entries(
         &self,
         cmd: &str,
-        path: &Option<PathBuf>,
+        path: Option<&PathBuf>,
         idempotent: bool,
         map: &mut RustcEnvMap,
         warnings: &mut Vec<String>,
@@ -751,7 +751,7 @@ fn check_git(cmd: &str) -> Result<()> {
     }
 }
 
-fn check_inside_git_worktree(path: &Option<PathBuf>) -> Result<()> {
+fn check_inside_git_worktree(path: Option<&PathBuf>) -> Result<()> {
     if inside_git_worktree(path) {
         Ok(())
     } else {
@@ -760,12 +760,12 @@ fn check_inside_git_worktree(path: &Option<PathBuf>) -> Result<()> {
 }
 
 fn git_cmd_exists(cmd: &str) -> bool {
-    run_cmd(cmd, &None)
+    run_cmd(cmd, None)
         .map(|output| output.status.success())
         .unwrap_or(false)
 }
 
-fn inside_git_worktree(path: &Option<PathBuf>) -> bool {
+fn inside_git_worktree(path: Option<&PathBuf>) -> bool {
     run_cmd("git rev-parse --is-inside-work-tree", path)
         .map(|output| {
             let stdout = String::from_utf8_lossy(&output.stdout);
@@ -775,7 +775,7 @@ fn inside_git_worktree(path: &Option<PathBuf>) -> bool {
 }
 
 #[cfg(not(target_env = "msvc"))]
-fn run_cmd(command: &str, path_opt: &Option<PathBuf>) -> Result<Output> {
+fn run_cmd(command: &str, path_opt: Option<&PathBuf>) -> Result<Output> {
     let shell = if let Some(shell_path) = env::var_os("SHELL") {
         shell_path.to_string_lossy().into_owned()
     } else {
@@ -794,7 +794,7 @@ fn run_cmd(command: &str, path_opt: &Option<PathBuf>) -> Result<Output> {
 }
 
 #[cfg(target_env = "msvc")]
-fn run_cmd(command: &str, path_opt: &Option<PathBuf>) -> Result<Output> {
+fn run_cmd(command: &str, path_opt: Option<&PathBuf>) -> Result<Output> {
     let mut cmd = Command::new("cmd");
     if let Some(path) = path_opt {
         _ = cmd.current_dir(path);
@@ -808,7 +808,7 @@ fn run_cmd(command: &str, path_opt: &Option<PathBuf>) -> Result<Output> {
 
 fn add_git_cmd_entry(
     cmd: &str,
-    path: &Option<PathBuf>,
+    path: Option<&PathBuf>,
     key: VergenKey,
     map: &mut RustcEnvMap,
 ) -> Result<()> {
@@ -826,7 +826,7 @@ fn add_git_cmd_entry(
     Ok(())
 }
 
-fn add_rerun_if_changed(rerun_if_changed: &mut Vec<String>, path: &Option<PathBuf>) -> Result<()> {
+fn add_rerun_if_changed(rerun_if_changed: &mut Vec<String>, path: Option<&PathBuf>) -> Result<()> {
     let git_path = run_cmd("git rev-parse --git-dir", path)?;
     if git_path.status.success() {
         let git_path_str = String::from_utf8_lossy(&git_path.stdout).trim().to_string();
@@ -855,17 +855,17 @@ fn add_rerun_if_changed(rerun_if_changed: &mut Vec<String>, path: &Option<PathBu
 }
 
 #[cfg(not(test))]
-fn setup_ref_path(path: &Option<PathBuf>) -> Result<Output> {
+fn setup_ref_path(path: Option<&PathBuf>) -> Result<Output> {
     run_cmd("git symbolic-ref HEAD", path)
 }
 
 #[cfg(all(test, not(target_os = "windows")))]
-fn setup_ref_path(path: &Option<PathBuf>) -> Result<Output> {
+fn setup_ref_path(path: Option<&PathBuf>) -> Result<Output> {
     run_cmd("pwd", path)
 }
 
 #[cfg(all(test, target_os = "windows"))]
-fn setup_ref_path(path: &Option<PathBuf>) -> Result<Output> {
+fn setup_ref_path(path: Option<&PathBuf>) -> Result<Output> {
     run_cmd("cd", path)
 }
 
@@ -883,7 +883,7 @@ mod test {
         let mut map = BTreeMap::new();
         assert!(add_git_cmd_entry(
             "such_a_terrible_cmd",
-            &None,
+            None,
             VergenKey::GitCommitMessage,
             &mut map
         )
@@ -894,7 +894,7 @@ mod test {
     #[test]
     #[serial_test::serial]
     fn non_working_tree_is_error() -> Result<()> {
-        assert!(check_inside_git_worktree(&Some(env::temp_dir())).is_err());
+        assert!(check_inside_git_worktree(Some(&env::temp_dir())).is_err());
         Ok(())
     }
 
@@ -912,7 +912,7 @@ mod test {
         temp_env::with_var("SHELL", Some("bash"), || {
             let mut map = BTreeMap::new();
             assert!(
-                add_git_cmd_entry("git -v", &None, VergenKey::GitCommitMessage, &mut map).is_ok()
+                add_git_cmd_entry("git -v", None, VergenKey::GitCommitMessage, &mut map).is_ok()
             );
         });
         Ok(())
@@ -951,7 +951,7 @@ mod test {
         let repo = TestRepos::new(false, false, false)?;
         let config = EmitBuilder::builder()
             .all_git()
-            .test_emit_at(Some(repo.path()))?;
+            .test_emit_at(Some(&repo.path()))?;
         assert_eq!(10, config.cargo_rustc_env_map.len());
         assert_eq!(0, count_idempotent(&config.cargo_rustc_env_map));
         assert_eq!(0, config.warnings.len());
@@ -974,7 +974,7 @@ mod test {
         let repo = TestRepos::new(false, false, true)?;
         let emitter = EmitBuilder::builder()
             .all_git()
-            .test_emit_at(Some(repo.path()))?;
+            .test_emit_at(Some(&repo.path()))?;
         assert_eq!(10, emitter.cargo_rustc_env_map.len());
         assert_eq!(0, count_idempotent(&emitter.cargo_rustc_env_map));
         assert_eq!(0, emitter.warnings.len());
@@ -1030,7 +1030,7 @@ mod test {
         assert!(config
             .add_git_timestamp_entries(
                 "this_is_not_a_git_cmd",
-                &None,
+                None,
                 false,
                 &mut map,
                 &mut warnings

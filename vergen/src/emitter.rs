@@ -133,7 +133,11 @@ impl Emitter {
         feature = "git",
         any(feature = "git2", feature = "gitcl", feature = "gix")
     ))]
-    fn add_git_entries(&mut self, builder: &EmitBuilder, repo_path: Option<PathBuf>) -> Result<()> {
+    fn add_git_entries(
+        &mut self,
+        builder: &EmitBuilder,
+        repo_path: Option<&PathBuf>,
+    ) -> Result<()> {
         let idem = builder.idempotent;
         let fail_on_error = builder.fail_on_error;
         let mut empty_cargo_rustc_env_map = BTreeMap::new();
@@ -182,7 +186,7 @@ impl Emitter {
         clippy::unused_self,
         clippy::needless_pass_by_value
     )]
-    fn add_git_entries(&mut self, _builder: &EmitBuilder, _path: Option<PathBuf>) -> Result<()> {
+    fn add_git_entries(&mut self, _builder: &EmitBuilder, _path: Option<&PathBuf>) -> Result<()> {
         Ok(())
     }
 
@@ -848,7 +852,7 @@ EmitBuilder::builder()
         feature = "git",
         any(feature = "gitcl", feature = "git2", feature = "gix")
     ))]
-    pub fn emit_at(self, repo_path: PathBuf) -> Result<()> {
+    pub fn emit_at(self, repo_path: &PathBuf) -> Result<()> {
         self.inner_emit(Some(repo_path))
             .and_then(|x| x.emit_output(self.quiet, self.custom_buildrs, &mut io::stdout()))
     }
@@ -877,7 +881,7 @@ EmitBuilder::builder()
             any(feature = "gitcl", feature = "git2", feature = "gix")
         ),
     ))]
-    pub(crate) fn test_emit_at(self, repo_path: Option<PathBuf>) -> Result<Emitter> {
+    pub(crate) fn test_emit_at(self, repo_path: Option<&PathBuf>) -> Result<Emitter> {
         self.inner_emit(repo_path)
     }
 
@@ -910,7 +914,7 @@ EmitBuilder::builder()
     /// # Errors
     /// * The [`writeln!`](std::writeln!) macro can throw a [`std::io::Error`]
     ///
-    pub fn emit_to_at<T>(self, stdout: &mut T, path: Option<PathBuf>) -> Result<bool>
+    pub fn emit_to_at<T>(self, stdout: &mut T, path: Option<&PathBuf>) -> Result<bool>
     where
         T: Write,
     {
@@ -920,7 +924,7 @@ EmitBuilder::builder()
         })
     }
 
-    fn inner_emit(self, path: Option<PathBuf>) -> Result<Emitter> {
+    fn inner_emit(self, path: Option<&PathBuf>) -> Result<Emitter> {
         let mut config = Emitter::default();
         config.add_build_entries(&self)?;
         config.add_cargo_entries(&self)?;
