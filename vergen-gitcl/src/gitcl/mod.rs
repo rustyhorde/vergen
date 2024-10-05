@@ -478,7 +478,7 @@ impl Gitcl {
         }
     }
 
-    fn check_inside_git_worktree(path: &Option<PathBuf>) -> Result<()> {
+    fn check_inside_git_worktree(path: Option<&PathBuf>) -> Result<()> {
         if Self::inside_git_worktree(path) {
             Ok(())
         } else {
@@ -487,12 +487,12 @@ impl Gitcl {
     }
 
     fn git_cmd_exists(cmd: &str) -> bool {
-        Self::run_cmd(cmd, &None)
+        Self::run_cmd(cmd, None)
             .map(|output| output.status.success())
             .unwrap_or(false)
     }
 
-    fn inside_git_worktree(path: &Option<PathBuf>) -> bool {
+    fn inside_git_worktree(path: Option<&PathBuf>) -> bool {
         Self::run_cmd("git rev-parse --is-inside-work-tree", path)
             .map(|output| {
                 let stdout = String::from_utf8_lossy(&output.stdout);
@@ -502,7 +502,7 @@ impl Gitcl {
     }
 
     #[cfg(not(target_env = "msvc"))]
-    fn run_cmd(command: &str, path_opt: &Option<PathBuf>) -> Result<Output> {
+    fn run_cmd(command: &str, path_opt: Option<&PathBuf>) -> Result<Output> {
         let shell = if let Some(shell_path) = env::var_os("SHELL") {
             shell_path.to_string_lossy().into_owned()
         } else {
@@ -521,7 +521,7 @@ impl Gitcl {
     }
 
     #[cfg(target_env = "msvc")]
-    fn run_cmd(command: &str, path_opt: &Option<PathBuf>) -> Result<Output> {
+    fn run_cmd(command: &str, path_opt: Option<&PathBuf>) -> Result<Output> {
         let mut cmd = Command::new("cmd");
         if let Some(path) = path_opt {
             _ = cmd.current_dir(path);
@@ -542,7 +542,7 @@ impl Gitcl {
         cargo_warning: &mut CargoWarning,
     ) -> Result<()> {
         if !idempotent && self.any() {
-            Self::add_rerun_if_changed(cargo_rerun_if_changed, &self.repo_path)?;
+            Self::add_rerun_if_changed(cargo_rerun_if_changed, self.repo_path.as_ref())?;
         }
 
         if self.branch {
@@ -551,7 +551,7 @@ impl Gitcl {
             } else {
                 Self::add_git_cmd_entry(
                     BRANCH_CMD,
-                    &self.repo_path,
+                    self.repo_path.as_ref(),
                     VergenKey::GitBranch,
                     cargo_rustc_env,
                 )?;
@@ -568,7 +568,7 @@ impl Gitcl {
             } else {
                 Self::add_git_cmd_entry(
                     COMMIT_AUTHOR_EMAIL,
-                    &self.repo_path,
+                    self.repo_path.as_ref(),
                     VergenKey::GitCommitAuthorEmail,
                     cargo_rustc_env,
                 )?;
@@ -585,7 +585,7 @@ impl Gitcl {
             } else {
                 Self::add_git_cmd_entry(
                     COMMIT_AUTHOR_NAME,
-                    &self.repo_path,
+                    self.repo_path.as_ref(),
                     VergenKey::GitCommitAuthorName,
                     cargo_rustc_env,
                 )?;
@@ -598,7 +598,7 @@ impl Gitcl {
             } else {
                 Self::add_git_cmd_entry(
                     COMMIT_COUNT,
-                    &self.repo_path,
+                    self.repo_path.as_ref(),
                     VergenKey::GitCommitCount,
                     cargo_rustc_env,
                 )?;
@@ -607,7 +607,7 @@ impl Gitcl {
 
         self.add_git_timestamp_entries(
             COMMIT_TIMESTAMP,
-            &self.repo_path,
+            self.repo_path.as_ref(),
             idempotent,
             cargo_rustc_env,
             cargo_warning,
@@ -619,7 +619,7 @@ impl Gitcl {
             } else {
                 Self::add_git_cmd_entry(
                     COMMIT_MESSAGE,
-                    &self.repo_path,
+                    self.repo_path.as_ref(),
                     VergenKey::GitCommitMessage,
                     cargo_rustc_env,
                 )?;
@@ -644,7 +644,7 @@ impl Gitcl {
                 }
                 Self::add_git_cmd_entry(
                     &describe_cmd,
-                    &self.repo_path,
+                    self.repo_path.as_ref(),
                     VergenKey::GitDescribe,
                     cargo_rustc_env,
                 )?;
@@ -662,7 +662,7 @@ impl Gitcl {
                 sha_cmd.push_str(" HEAD");
                 Self::add_git_cmd_entry(
                     &sha_cmd,
-                    &self.repo_path,
+                    self.repo_path.as_ref(),
                     VergenKey::GitSha,
                     cargo_rustc_env,
                 )?;
@@ -677,7 +677,7 @@ impl Gitcl {
                 if !self.dirty_include_untracked {
                     dirty_cmd.push_str(" --untracked-files=no");
                 }
-                let output = Self::run_cmd(&dirty_cmd, &self.repo_path)?;
+                let output = Self::run_cmd(&dirty_cmd, self.repo_path.as_ref())?;
                 if output.stdout.is_empty() {
                     add_map_entry(VergenKey::GitDirty, "false", cargo_rustc_env);
                 } else {
@@ -691,7 +691,7 @@ impl Gitcl {
 
     fn add_rerun_if_changed(
         rerun_if_changed: &mut Vec<String>,
-        path: &Option<PathBuf>,
+        path: Option<&PathBuf>,
     ) -> Result<()> {
         let git_path = Self::run_cmd("git rev-parse --git-dir", path)?;
         if git_path.status.success() {
@@ -721,23 +721,23 @@ impl Gitcl {
     }
 
     #[cfg(not(test))]
-    fn setup_ref_path(path: &Option<PathBuf>) -> Result<Output> {
+    fn setup_ref_path(path: Option<&PathBuf>) -> Result<Output> {
         Self::run_cmd("git symbolic-ref HEAD", path)
     }
 
     #[cfg(all(test, not(target_os = "windows")))]
-    fn setup_ref_path(path: &Option<PathBuf>) -> Result<Output> {
+    fn setup_ref_path(path: Option<&PathBuf>) -> Result<Output> {
         Self::run_cmd("pwd", path)
     }
 
     #[cfg(all(test, target_os = "windows"))]
-    fn setup_ref_path(path: &Option<PathBuf>) -> Result<Output> {
+    fn setup_ref_path(path: Option<&PathBuf>) -> Result<Output> {
         Self::run_cmd("cd", path)
     }
 
     fn add_git_cmd_entry(
         cmd: &str,
-        path: &Option<PathBuf>,
+        path: Option<&PathBuf>,
         key: VergenKey,
         cargo_rustc_env: &mut CargoRustcEnvMap,
     ) -> Result<()> {
@@ -758,7 +758,7 @@ impl Gitcl {
     fn add_git_timestamp_entries(
         &self,
         cmd: &str,
-        path: &Option<PathBuf>,
+        path: Option<&PathBuf>,
         idempotent: bool,
         cargo_rustc_env: &mut CargoRustcEnvMap,
         cargo_warning: &mut CargoWarning,
@@ -870,7 +870,7 @@ impl AddEntries for Gitcl {
         if self.any() {
             let git_cmd = self.git_cmd.unwrap_or("git --version");
             Self::check_git(git_cmd)
-                .and_then(|()| Self::check_inside_git_worktree(&self.repo_path))?;
+                .and_then(|()| Self::check_inside_git_worktree(self.repo_path.as_ref()))?;
             self.inner_add_git_map_entries(
                 idempotent,
                 cargo_rustc_env,
@@ -1001,7 +1001,7 @@ mod test {
         let mut map = BTreeMap::new();
         assert!(Gitcl::add_git_cmd_entry(
             "such_a_terrible_cmd",
-            &None,
+            None,
             VergenKey::GitCommitMessage,
             &mut map
         )
@@ -1012,7 +1012,7 @@ mod test {
     #[test]
     #[serial]
     fn non_working_tree_is_error() -> Result<()> {
-        assert!(Gitcl::check_inside_git_worktree(&Some(temp_dir())).is_err());
+        assert!(Gitcl::check_inside_git_worktree(Some(&temp_dir())).is_err());
         Ok(())
     }
 
@@ -1031,7 +1031,7 @@ mod test {
             let mut map = BTreeMap::new();
             assert!(Gitcl::add_git_cmd_entry(
                 "git -v",
-                &None,
+                None,
                 VergenKey::GitCommitMessage,
                 &mut map
             )
@@ -1154,7 +1154,7 @@ mod test {
         assert!(gitcl
             .add_git_timestamp_entries(
                 "this_is_not_a_git_cmd",
-                &None,
+                None,
                 false,
                 &mut map,
                 &mut warnings
