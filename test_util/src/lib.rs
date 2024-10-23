@@ -75,7 +75,7 @@ the [`TestRepos`] struct to creat temporary git repositories useful for `vergen-
         must_not_suspend,
         non_exhaustive_omitted_patterns_lint,
         rustdoc_missing_doc_code_examples,
-        strict_provenance,
+        strict_provenance_lints,
     )
 )]
 #![cfg_attr(nightly, allow(single_use_lifetimes, unexpected_cfgs))]
@@ -200,7 +200,6 @@ the [`TestRepos`] struct to creat temporary git repositories useful for `vergen-
         unsafe_op_in_unsafe_fn,
         unstable_name_collisions,
         unstable_syntax_pre_expansion,
-        unsupported_calling_conventions,
         unused_allocation,
         unused_assignments,
         unused_associated_type_bounds,
