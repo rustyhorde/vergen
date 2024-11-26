@@ -11,7 +11,7 @@ rust-version = "1.75.0"
 name = "vergen-pretty"
 readme = "README.md"
 repository = "https://github.com/rustyhorde/vergen"
-version = "0.3.5"
+version = "0.3.6"
 
 [package.metadata.cargo-matrix]
 [[package.metadata.cargo-matrix.channel]]
