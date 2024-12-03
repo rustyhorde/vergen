@@ -215,6 +215,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             .use_local_git()
             .fail_on_error()
             .emit_to_at(&mut stdout_buf, Some(&repo.path()));
+        eprintln!("result: {result:?}");
         check_local_result(result, &stdout_buf);
         Ok(())
     }
@@ -227,8 +228,10 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
     }
 
     #[cfg(any(target_os = "linux", target_os = "macos"))]
-    fn check_local_result(result: Result<bool>, _stdout_buf: &[u8]) {
-        assert!(result.is_err());
+    fn check_local_result(result: Result<bool>, stdout_buf: &[u8]) {
+        assert!(result.is_ok());
+        let output = String::from_utf8_lossy(stdout_buf);
+        assert!(GIT_REGEX_SHORT_INST.is_match(&output));
     }
 
     #[test]
