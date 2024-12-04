@@ -818,10 +818,13 @@ mod test {
             .commit_date(true)
             .use_local(true)
             .build()?;
-        assert!(Emitter::default()
+        let emitter = Emitter::default()
             .fail_on_error()
-            .add_instructions(&gix)
-            .is_err());
+            .add_instructions(&gix)?
+            .test_emit();
+        assert_eq!(1, emitter.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(0, emitter.cargo_warning().len());
         Ok(())
     }
 
