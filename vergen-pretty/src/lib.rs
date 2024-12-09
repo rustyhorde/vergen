@@ -52,30 +52,30 @@
 //!
 #![cfg_attr(
     feature = "header",
-    doc = r##"If you enable the header feature, you can also use the [`header()`] function
+    doc = r"If you enable the header feature, you can also use the [`header()`] function
 with the associated [`Config`] as a convenience wrapper around [`Pretty`].
 
 # Example
 ```
 # use anyhow::Result;
-# use vergen_pretty::{ConfigBuilder, header, vergen_pretty_env};"##
+# use vergen_pretty::{ConfigBuilder, header, vergen_pretty_env};"
 )]
-#![cfg_attr(feature = "color", doc = r##"# use vergen_pretty::Style;"##)]
+#![cfg_attr(feature = "color", doc = r"# use vergen_pretty::Style;")]
 #![cfg_attr(
     feature = "header",
-    doc = r##"
+    doc = r"
 #
 # pub fn main() -> Result<()> {
 let mut buf = vec![];
-let config = ConfigBuilder::default()"##
+let config = ConfigBuilder::default()"
 )]
 #![cfg_attr(
     all(feature = "color", feature = "header"),
-    doc = r##"    .style(Style::new().green())"##
+    doc = r"    .style(Style::new().green())"
 )]
 #![cfg_attr(
     feature = "header",
-    doc = r##"
+    doc = r#"
     .prefix("HEADER_PREFIX")
     .env(vergen_pretty_env!())
     .suffix("HEADER_SUFFIX")
@@ -85,7 +85,7 @@ assert!(!buf.is_empty());
 #     Ok(())
 # }
 ```
-"##
+"#
 )]
 //!
 //! ## Features
