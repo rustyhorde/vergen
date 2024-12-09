@@ -42,7 +42,7 @@
 //!
 #![cfg_attr(
     feature = "repo",
-    doc = r##"## `vergen` - Test git repositories (`repo` feature)
+    doc = r"## `vergen` - Test git repositories (`repo` feature)
 
 If you enable the `repo` feature of `test_util` you can also use
 the [`TestRepos`] struct to creat temporary git repositories useful for `vergen-gi*` testing
@@ -65,7 +65,7 @@ the [`TestRepos`] struct to creat temporary git repositories useful for `vergen-
  #     Ok(())
  # }
  ```
-"##
+"
 )]
 // rustc lints
 #![cfg_attr(

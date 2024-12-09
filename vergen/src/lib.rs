@@ -55,42 +55,33 @@
 //! ```
 //! # use anyhow::Result;
 //! # use vergen::Emitter;
-#![cfg_attr(feature = "build", doc = r##"# use vergen::BuildBuilder;"##)]
-#![cfg_attr(feature = "cargo", doc = r##"# use vergen::CargoBuilder;"##)]
-#![cfg_attr(feature = "rustc", doc = r##"# use vergen::RustcBuilder;"##)]
-#![cfg_attr(feature = "si", doc = r##"# use vergen::SysinfoBuilder;"##)]
-#![cfg_attr(feature = "cargo", doc = r##"# use test_util::with_cargo_vars;"##)]
+#![cfg_attr(feature = "build", doc = r"# use vergen::BuildBuilder;")]
+#![cfg_attr(feature = "cargo", doc = r"# use vergen::CargoBuilder;")]
+#![cfg_attr(feature = "rustc", doc = r"# use vergen::RustcBuilder;")]
+#![cfg_attr(feature = "si", doc = r"# use vergen::SysinfoBuilder;")]
+#![cfg_attr(feature = "cargo", doc = r"# use test_util::with_cargo_vars;")]
 //! #
 //! # pub fn main() -> Result<()> {
-#![cfg_attr(feature = "cargo", doc = r##"# let result = with_cargo_vars(|| {"##)]
+#![cfg_attr(feature = "cargo", doc = r"# let result = with_cargo_vars(|| {")]
 //! // NOTE: This will output everything, and requires all features enabled.
 //! // NOTE: See the specific builder documentation for configuration options.
-#![cfg_attr(
-    feature = "build",
-    doc = r##"let build = BuildBuilder::all_build()?;"##
-)]
-#![cfg_attr(
-    feature = "cargo",
-    doc = r##"let cargo = CargoBuilder::all_cargo()?;"##
-)]
-#![cfg_attr(
-    feature = "rustc",
-    doc = r##"let rustc = RustcBuilder::all_rustc()?;"##
-)]
-#![cfg_attr(feature = "si", doc = r##"let si = SysinfoBuilder::all_sysinfo()?;"##)]
+#![cfg_attr(feature = "build", doc = r"let build = BuildBuilder::all_build()?;")]
+#![cfg_attr(feature = "cargo", doc = r"let cargo = CargoBuilder::all_cargo()?;")]
+#![cfg_attr(feature = "rustc", doc = r"let rustc = RustcBuilder::all_rustc()?;")]
+#![cfg_attr(feature = "si", doc = r"let si = SysinfoBuilder::all_sysinfo()?;")]
 //!
 //! Emitter::default()
-#![cfg_attr(feature = "build", doc = r##"    .add_instructions(&build)?"##)]
-#![cfg_attr(feature = "cargo", doc = r##"    .add_instructions(&cargo)?"##)]
-#![cfg_attr(feature = "rustc", doc = r##"    .add_instructions(&rustc)?"##)]
-#![cfg_attr(feature = "si", doc = r##"    .add_instructions(&si)?"##)]
+#![cfg_attr(feature = "build", doc = r"    .add_instructions(&build)?")]
+#![cfg_attr(feature = "cargo", doc = r"    .add_instructions(&cargo)?")]
+#![cfg_attr(feature = "rustc", doc = r"    .add_instructions(&rustc)?")]
+#![cfg_attr(feature = "si", doc = r"    .add_instructions(&si)?")]
 //!     .emit()?;
 #![cfg_attr(
     feature = "cargo",
-    doc = r##"
+    doc = r"
 # Ok(())
 # });
-# assert!(result.is_ok());"##
+# assert!(result.is_ok());"
 )]
 //! #    Ok(())
 //! # }
@@ -129,45 +120,45 @@
 //! ```
 //! # use anyhow::Result;
 //! # use vergen::Emitter;
-#![cfg_attr(feature = "build", doc = r##"# use vergen::BuildBuilder;"##)]
-#![cfg_attr(feature = "cargo", doc = r##"# use vergen::CargoBuilder;"##)]
-#![cfg_attr(feature = "rustc", doc = r##"# use vergen::RustcBuilder;"##)]
-#![cfg_attr(feature = "si", doc = r##"# use vergen::SysinfoBuilder;"##)]
-#![cfg_attr(feature = "cargo", doc = r##"# use test_util::with_cargo_vars;"##)]
+#![cfg_attr(feature = "build", doc = r"# use vergen::BuildBuilder;")]
+#![cfg_attr(feature = "cargo", doc = r"# use vergen::CargoBuilder;")]
+#![cfg_attr(feature = "rustc", doc = r"# use vergen::RustcBuilder;")]
+#![cfg_attr(feature = "si", doc = r"# use vergen::SysinfoBuilder;")]
+#![cfg_attr(feature = "cargo", doc = r"# use test_util::with_cargo_vars;")]
 //! #
 //! # pub fn main() -> Result<()> {
-#![cfg_attr(feature = "cargo", doc = r##"# let result = with_cargo_vars(|| {"##)]
+#![cfg_attr(feature = "cargo", doc = r"# let result = with_cargo_vars(|| {")]
 #![cfg_attr(
     feature = "build",
-    doc = r##"// NOTE: This will output only the instructions specified.
+    doc = r"// NOTE: This will output only the instructions specified.
 // NOTE: See the specific builder documentation for configuration options. 
-let build = BuildBuilder::default().build_timestamp(true).build()?;"##
+let build = BuildBuilder::default().build_timestamp(true).build()?;"
 )]
 #![cfg_attr(
     feature = "cargo",
-    doc = r##"let cargo = CargoBuilder::default().opt_level(true).build()?;"##
+    doc = r"let cargo = CargoBuilder::default().opt_level(true).build()?;"
 )]
 #![cfg_attr(
     feature = "rustc",
-    doc = r##"let rustc = RustcBuilder::default().semver(true).build()?;"##
+    doc = r"let rustc = RustcBuilder::default().semver(true).build()?;"
 )]
 #![cfg_attr(
     feature = "si",
-    doc = r##"let si = SysinfoBuilder::default().cpu_core_count(true).build()?;"##
+    doc = r"let si = SysinfoBuilder::default().cpu_core_count(true).build()?;"
 )]
 //!
 //! Emitter::default()
-#![cfg_attr(feature = "build", doc = r##"    .add_instructions(&build)?"##)]
-#![cfg_attr(feature = "cargo", doc = r##"    .add_instructions(&cargo)?"##)]
-#![cfg_attr(feature = "rustc", doc = r##"    .add_instructions(&rustc)?"##)]
-#![cfg_attr(feature = "si", doc = r##"    .add_instructions(&si)?"##)]
+#![cfg_attr(feature = "build", doc = r"    .add_instructions(&build)?")]
+#![cfg_attr(feature = "cargo", doc = r"    .add_instructions(&cargo)?")]
+#![cfg_attr(feature = "rustc", doc = r"    .add_instructions(&rustc)?")]
+#![cfg_attr(feature = "si", doc = r"    .add_instructions(&si)?")]
 //!     .emit()?;
 #![cfg_attr(
     feature = "cargo",
-    doc = r##"
+    doc = r"
 #   Ok(())
 # });
-#    assert!(result.is_ok());"##
+#    assert!(result.is_ok());"
 )]
 //! #   Ok(())
 //! # }
@@ -199,7 +190,7 @@ let build = BuildBuilder::default().build_timestamp(true).build()?;"##
 //! You **must** specifically enable the features you wish to use.  
 #![cfg_attr(
     feature = "emit_and_set",
-    doc = r##"There is also a toggle for the [`emit_and_set`](Emitter::emit_and_set) function.  This version of emit will also set the instructions you requests as environment variables for use in `build.rs`"##
+    doc = r"There is also a toggle for the [`emit_and_set`](Emitter::emit_and_set) function.  This version of emit will also set the instructions you requests as environment variables for use in `build.rs`"
 )]
 //!
 //! |    Feature   | Enables                       |
@@ -210,7 +201,7 @@ let build = BuildBuilder::default().build_timestamp(true).build()?;"##
 //! |      si      | `VERGEN_SYSINFO_*` instructions |
 #![cfg_attr(
     feature = "emit_and_set",
-    doc = r##"| emit_and_set | Enable the [`emit_and_set`](Emitter::emit_and_set) function |"##
+    doc = r"| emit_and_set | Enable the [`emit_and_set`](Emitter::emit_and_set) function |"
 )]
 //!
 //! ## Environment Variables

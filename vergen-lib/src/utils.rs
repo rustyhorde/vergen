@@ -14,9 +14,9 @@ use std::env;
 ///     let mut warning: CargoWarning = vec![];
 #[cfg_attr(
     feature = "build",
-    doc = r##"    add_default_map_entry(VergenKey::BuildDate, &mut map, &mut warning);
+    doc = r"    add_default_map_entry(VergenKey::BuildDate, &mut map, &mut warning);
 assert_eq!(1, map.len());
-assert_eq!(1, warning.len());"##
+assert_eq!(1, warning.len());"
 )]
 /// });
 /// ```
@@ -44,8 +44,8 @@ pub fn add_default_map_entry(
 /// let mut map: CargoRustcEnvMap = BTreeMap::new();
 #[cfg_attr(
     feature = "build",
-    doc = r##"add_map_entry(VergenKey::BuildDate, "test", &mut map);
-assert_eq!(1, map.len());"##
+    doc = r#"add_map_entry(VergenKey::BuildDate, "test", &mut map);
+assert_eq!(1, map.len());"#
 )]
 /// ```
 ///
@@ -70,9 +70,9 @@ where
 /// assert_eq!(0, count_idempotent(&map));
 #[cfg_attr(
     feature = "build",
-    doc = r##"_ = map.insert(VergenKey::BuildDate, VERGEN_IDEMPOTENT_DEFAULT.to_string());"##
+    doc = r"_ = map.insert(VergenKey::BuildDate, VERGEN_IDEMPOTENT_DEFAULT.to_string());"
 )]
-#[cfg_attr(feature = "build", doc = r##"assert_eq!(1, count_idempotent(&map));"##)]
+#[cfg_attr(feature = "build", doc = r"assert_eq!(1, count_idempotent(&map));")]
 /// ```
 ///
 #[must_use]
