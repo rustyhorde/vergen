@@ -117,9 +117,9 @@ impl Config {
 /// # fn main() -> Result<()> {
 #[cfg_attr(
     feature = "sysinfo",
-    doc = r##"
+    doc = r"
 EmitBuilder::builder().idempotent().all_sysinfo().emit()?;
-"##
+"
 )]
 /// #   Ok(())
 /// # }
@@ -182,7 +182,7 @@ impl EmitBuilder {
     /// # pub fn main() -> Result<()> {
     #[cfg_attr(
         feature = "si",
-        doc = r##"
+        doc = r"
 let refresh_kind = RefreshKind::new();
 let cpu_refresh_kind = CpuRefreshKind::everything()
     .without_cpu_usage()
@@ -191,7 +191,7 @@ let config = EmitBuilder::builder()
     .sysinfo_refresh_kind(Some(refresh_kind.with_cpu(cpu_refresh_kind)))
     .sysinfo_cpu_brand()
     .emit()?;
-"##
+"
     )]
     /// #    Ok(())
     /// # }

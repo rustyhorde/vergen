@@ -194,9 +194,9 @@ const DIRTY: &str = dirty!();
 /// env::set_var("SOURCE_DATE_EPOCH", "1671809360");
 #[cfg_attr(
     all(feature = "git", feature = "gitcl"),
-    doc = r##"
+    doc = r"
 EmitBuilder::builder().all_git().emit()?;
-"##
+"
 )]
 /// # env::remove_var("SOURCE_DATE_EPOCH");
 /// #   Ok(())
@@ -229,9 +229,9 @@ EmitBuilder::builder().all_git().emit()?;
 /// # fn main() -> Result<()> {
 #[cfg_attr(
     all(feature = "git", feature = "gitcl"),
-    doc = r##"
+    doc = r"
 EmitBuilder::builder().idempotent().all_git().emit()?;
-"##
+"
 )]
 /// #   Ok(())
 /// # }

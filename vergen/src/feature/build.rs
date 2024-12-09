@@ -85,9 +85,9 @@ impl Config {
 /// env::set_var("SOURCE_DATE_EPOCH", "1671809360");
 #[cfg_attr(
     feature = "build",
-    doc = r##"
+    doc = r"
 EmitBuilder::builder().all_build().emit()?;
-"##
+"
 )]
 /// # env::remove_var("SOURCE_DATE_EPOCH");
 /// #   Ok(())
@@ -116,9 +116,7 @@ EmitBuilder::builder().all_build().emit()?;
 /// # fn main() -> Result<()> {
 #[cfg_attr(
     feature = "build",
-    doc = r##"
-EmitBuilder::builder().idempotent().all_build().emit()?;
-"##
+    doc = r"EmitBuilder::builder().idempotent().all_build().emit()?;"
 )]
 /// #   Ok(())
 /// # }

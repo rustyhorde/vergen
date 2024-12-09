@@ -432,17 +432,17 @@ impl EmitBuilder {
     /// # fn main() -> Result<()> {
     #[cfg_attr(
         feature = "build",
-        doc = r##"
+        doc = r"
 EmitBuilder::builder().idempotent().all_build().emit()?;
-"##
+"
     )]
     /// // or
     /// env::set_var("VERGEN_IDEMPOTENT", "true");
     #[cfg_attr(
         feature = "build",
-        doc = r##"
+        doc = r"
 EmitBuilder::builder().all_build().emit()?;
-"##
+"
     )]
     /// # env::remove_var("VERGEN_IDEMPOTENT");
     /// #   Ok(())
@@ -476,9 +476,9 @@ EmitBuilder::builder().all_build().emit()?;
     /// # fn main() -> Result<()> {
     #[cfg_attr(
         feature = "build",
-        doc = r##"
+        doc = r"
 EmitBuilder::builder().fail_on_error().all_build().emit()?;
-"##
+"
     )]
     /// #   Ok(())
     /// # }
@@ -503,9 +503,9 @@ EmitBuilder::builder().fail_on_error().all_build().emit()?;
     /// # fn main() -> Result<()> {
     #[cfg_attr(
         feature = "build",
-        doc = r##"
+        doc = r#"
 EmitBuilder::builder().custom_build_rs("my/custom/build.rs").all_build().emit()?;
-"##
+"#
     )]
     /// #   Ok(())
     /// # }
@@ -528,9 +528,9 @@ EmitBuilder::builder().custom_build_rs("my/custom/build.rs").all_build().emit()?
     /// # fn main() -> Result<()> {
     #[cfg_attr(
         feature = "build",
-        doc = r##"
+        doc = r"
 EmitBuilder::builder().quiet().all_build().emit()?;
-"##
+"
     )]
     /// #   Ok(())
     /// # }
@@ -551,9 +551,9 @@ EmitBuilder::builder().quiet().all_build().emit()?;
     /// # fn main() -> Result<()> {
     #[cfg_attr(
         feature = "build",
-        doc = r##"
+        doc = r"
 EmitBuilder::builder().all_build().disable_build().emit()?;
-"##
+"
     )]
     /// #   Ok(())
     /// # }
@@ -575,9 +575,9 @@ EmitBuilder::builder().all_build().disable_build().emit()?;
     /// # fn main() -> Result<()> {
     #[cfg_attr(
         feature = "cargo",
-        doc = r##"
+        doc = r"
 EmitBuilder::builder().all_cargo().disable_cargo().emit()?;
-"##
+"
     )]
     /// #   Ok(())
     /// # }
@@ -599,9 +599,9 @@ EmitBuilder::builder().all_cargo().disable_cargo().emit()?;
     /// # fn main() -> Result<()> {
     #[cfg_attr(
         feature = "git",
-        doc = r##"
+        doc = r"
 EmitBuilder::builder().all_git().disable_git().emit()?;
-"##
+"
     )]
     /// #   Ok(())
     /// # }
@@ -626,9 +626,9 @@ EmitBuilder::builder().all_git().disable_git().emit()?;
     /// # fn main() -> Result<()> {
     #[cfg_attr(
         feature = "rustc",
-        doc = r##"
+        doc = r"
 EmitBuilder::builder().all_rustc().disable_rustc().emit()?;
-"##
+"
     )]
     /// #   Ok(())
     /// # }
@@ -650,9 +650,9 @@ EmitBuilder::builder().all_rustc().disable_rustc().emit()?;
     /// # fn main() -> Result<()> {
     #[cfg_attr(
         feature = "si",
-        doc = r##"
+        doc = r"
 EmitBuilder::builder().all_sysinfo().disable_sysinfo().emit()?;
-"##
+"
     )]
     /// #   Ok(())
     /// # }
@@ -668,9 +668,9 @@ EmitBuilder::builder().all_sysinfo().disable_sysinfo().emit()?;
     /// - Will emit [`cargo:rustc-env=VAR=VALUE`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#cargorustc-envvarvalue) for each feature you have enabled.
     #[cfg_attr(
         feature = "git",
-        doc = r##" - Will emit [`cargo:rerun-if-changed=PATH`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed) if the git feature
+        doc = r" - Will emit [`cargo:rerun-if-changed=PATH`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed) if the git feature
 is enabled.  This is done to ensure any git variables are regenerated when commits are made.
-"##
+"
     )]
     /// - Can emit [`cargo:warning`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#cargo-warning) outputs if the
     ///   [`fail_on_error`](Self::fail_on_error) feature is not enabled and the requested variable is defaulted through error or
@@ -695,7 +695,7 @@ is enabled.  This is done to ensure any git variables are regenerated when commi
             feature = "rustc",
             feature = "si"
         ),
-        doc = r##"
+        doc = r#"
 # env::set_var("CARGO_FEATURE_BUILD", "build");
 # env::set_var("CARGO_FEATURE_GIT", "git");
 # env::set_var("DEBUG", "true");
@@ -713,7 +713,7 @@ EmitBuilder::builder()
 # env::remove_var("DEBUG");
 # env::remove_var("OPT_LEVEL");
 # env::remove_var("TARGET");
-"##
+"#
     )]
     /// #   Ok(())
     /// # }
@@ -772,9 +772,9 @@ EmitBuilder::builder()
     /// - Will emit [`cargo:rustc-env=VAR=VALUE`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#cargorustc-envvarvalue) for each feature you have enabled.
     #[cfg_attr(
         feature = "git",
-        doc = r##" - Will emit [`cargo:rerun-if-changed=PATH`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed) if the git feature
+        doc = r" - Will emit [`cargo:rerun-if-changed=PATH`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed) if the git feature
 is enabled.  This is done to ensure any git variables are regenerated when commits are made.
-"##
+"
     )]
     /// - Can emit [`cargo:warning`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#cargo-warning) outputs if the
     ///   [`fail_on_error`](Self::fail_on_error) feature is not enabled and the requested variable is defaulted through error or
@@ -799,7 +799,7 @@ is enabled.  This is done to ensure any git variables are regenerated when commi
             feature = "rustc",
             feature = "si"
         ),
-        doc = r##"
+        doc = r#"
 # env::set_var("CARGO_FEATURE_BUILD", "build");
 # env::set_var("CARGO_FEATURE_GIT", "git");
 # env::set_var("DEBUG", "true");
@@ -817,7 +817,7 @@ EmitBuilder::builder()
 # env::remove_var("DEBUG");
 # env::remove_var("OPT_LEVEL");
 # env::remove_var("TARGET");
-"##
+"#
     )]
     /// #   Ok(())
     /// # }

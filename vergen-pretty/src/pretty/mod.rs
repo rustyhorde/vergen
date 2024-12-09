@@ -41,7 +41,7 @@ pub(crate) mod suffix;
 ///
 #[cfg_attr(
     feature = "trace",
-    doc = r##"
+    doc = r"
 # Trace
 
 Generate [`tracing`] output
@@ -58,7 +58,7 @@ PrettyBuilder::default()
 #     Ok(())
 # }
 ```
-"##
+"
 )]
 ///
 /// # Output a prefix/suffix
@@ -94,7 +94,7 @@ PrettyBuilder::default()
 ///
 #[cfg_attr(
     feature = "color",
-    doc = r##"
+    doc = r"
 # Customize Colorized Output
 
 Uses [`Style`](console::Style) to colorize output
@@ -116,7 +116,7 @@ PrettyBuilder::default()
 #     Ok(())
 # }
 ```
-"##
+"
 )]
 ///
 #[derive(Clone, Builder, Debug)]

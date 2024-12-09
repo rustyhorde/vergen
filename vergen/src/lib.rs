@@ -69,7 +69,7 @@
         feature = "rustc",
         feature = "si"
     ),
-    doc = r##"
+    doc = r#"
 # env::set_var("CARGO_FEATURE_BUILD", "build");
 # env::set_var("CARGO_FEATURE_GIT", "git");
 # env::set_var("DEBUG", "true");
@@ -89,7 +89,7 @@
 # env::remove_var("DEBUG");
 # env::remove_var("OPT_LEVEL");
 # env::remove_var("TARGET");
-"##
+"#
 )]
 //!     Ok(())
 //! }
@@ -105,7 +105,7 @@
 //! pub fn main() -> Result<()> {
 #![cfg_attr(
     all(feature = "build", all(feature = "git", feature = "gitcl"),),
-    doc = r##"
+    doc = r"
     // NOTE: This will output only a build timestamp and long SHA from git.
     // NOTE: This set requires the build and git features.
     // NOTE: See the EmitBuilder documentation for configuration options.
@@ -113,7 +113,7 @@
         .build_timestamp()
         .git_sha(false)
         .emit()?;
-"##
+"
 )]
 //!     Ok(())
 //! }
