@@ -40,12 +40,12 @@ pub type Env = BTreeMap<&'static str, Option<&'static str>>;
 /// ```
 /// # use anyhow::Result;
 /// # use vergen_pretty::{ConfigBuilder, header, vergen_pretty_env};
-#[cfg_attr(feature = "color", doc = r##"use vergen_pretty::Style;"##)]
+#[cfg_attr(feature = "color", doc = r"use vergen_pretty::Style;")]
 /// #
 /// # pub fn main() -> Result<()> {
 /// let mut buf = vec![];
 /// let config = ConfigBuilder::default()
-#[cfg_attr(feature = "color", doc = r##"    .style(Style::new().green())"##)]
+#[cfg_attr(feature = "color", doc = r"    .style(Style::new().green())")]
 ///     .prefix("HEADER_PREFIX")
 ///     .env(vergen_pretty_env!())
 ///     .suffix("HEADER_SUFFIX")
