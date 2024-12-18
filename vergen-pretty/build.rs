@@ -13,7 +13,6 @@ use {
 
 fn main() -> Result<()> {
     println!("cargo:rerun-if-changed=build.rs");
-    println!("cargo:rustc-check-cfg=cfg(coverage_nightly)");
     nightly();
     beta();
     stable();
