@@ -11,7 +11,7 @@ rust-version = "1.81.0"
 name = "vergen-pretty"
 readme = "README.md"
 repository = "https://github.com/rustyhorde/vergen"
-version = "0.3.6"
+version = "0.3.7"
 
 [package.metadata.cargo-matrix]
 [[package.metadata.cargo-matrix.channel]]
@@ -39,22 +39,22 @@ __vergen_test = ["vergen-gix", "vergen-gix/unstable"]
 __vergen_empty_test = ["vergen-gix", "vergen-gix/unstable"]
 
 [dependencies]
-anyhow = "1.0.93"
-console = { version = "0.15.8", optional = true }
+anyhow = "1.0.95"
+console = { version = "0.15.10", optional = true }
 convert_case = "0.6.0"
 derive_builder = "0.20.2"
 lazy_static = { version = "1.5.0", optional = true }
 rand = { version = "0.8.5", optional = true }
-serde = { version = "1.0.215", features = ["derive"], optional = true }
-tracing = { version = "0.1.40", features = [
+serde = { version = "1.0.217", features = ["derive"], optional = true }
+tracing = { version = "0.1.41", features = [
     "max_level_trace",
     "release_max_level_trace",
 ], optional = true }
 
 [build-dependencies]
-anyhow = "1.0.93"
-rustversion = "1.0.18"
-vergen-gix = { version = "1.0.3", path = "../vergen-gix", features = [
+anyhow = "1.0.95"
+rustversion = "1.0.19"
+vergen-gix = { version = "1.0.4", path = "../vergen-gix", features = [
     "build",
     "cargo",
     "rustc",
@@ -64,8 +64,8 @@ vergen-gix = { version = "1.0.3", path = "../vergen-gix", features = [
 [dev-dependencies]
 lazy_static = "1.5.0"
 regex = "1.11.1"
-serde_json = "1.0.133"
-tracing-subscriber = { version = "0.3.18", features = ["fmt"] }
+serde_json = "1.0.135"
+tracing-subscriber = { version = "0.3.19", features = ["fmt"] }
 
 [package.metadata.docs.rs]
 features = ["color", "header", "serde", "trace"]

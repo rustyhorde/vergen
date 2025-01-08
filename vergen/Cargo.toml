@@ -11,7 +11,7 @@ rust-version = "1.81.0"
 name = "vergen"
 readme = "README.md"
 repository = "https://github.com/rustyhorde/vergen"
-version = "9.0.2"
+version = "9.0.3"
 
 [package.metadata.cargo-matrix]
 [[package.metadata.cargo-matrix.channel]]
@@ -33,13 +33,13 @@ unstable = ["vergen-lib/unstable"]
 emit_and_set = ["vergen-lib/emit_and_set"]
 
 [dependencies]
-anyhow = "1.0.93"
-cargo_metadata = { version = "0.19.0", optional = true }
+anyhow = "1.0.95"
+cargo_metadata = { version = "0.19.1", optional = true }
 derive_builder = "0.20.2"
 regex = { version = "1.11.1", optional = true }
 rustc_version = { version = "0.4.1", optional = true }
-sysinfo = { version = "0.32.1", optional = true }
-time = { version = "0.3.36", features = [
+sysinfo = { version = "0.33.1", optional = true }
+time = { version = "0.3.37", features = [
     "formatting",
     "local-offset",
     "parsing",
@@ -47,7 +47,7 @@ time = { version = "0.3.36", features = [
 vergen-lib = { version = "0.1.5", path = "../vergen-lib" }
 
 [build-dependencies]
-rustversion = "1.0.18"
+rustversion = "1.0.19"
 
 [dev-dependencies]
 lazy_static = "1.5.0"
