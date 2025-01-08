@@ -11,7 +11,7 @@ rust-version = "1.81.0"
 name = "vergen-lib"
 readme = "README.md"
 repository = "https://github.com/rustyhorde/vergen"
-version = "0.1.5"
+version = "0.1.6"
 
 [package.metadata.cargo-matrix]
 [[package.metadata.cargo-matrix.channel]]
@@ -39,11 +39,11 @@ unstable = []
 si = []
 
 [dependencies]
-anyhow = "1.0.93"
+anyhow = "1.0.95"
 derive_builder = "0.20.2"
 
 [build-dependencies]
-rustversion = "1.0.18"
+rustversion = "1.0.19"
 
 [dev-dependencies]
 serial_test = "3.2.0"

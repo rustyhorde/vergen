@@ -110,7 +110,7 @@ use vergen_lib::{
 /// # use vergen::SysinfoBuilder;
 /// #
 /// # pub fn main() -> Result<()> {
-/// let refresh_kind = RefreshKind::new();
+/// let refresh_kind = RefreshKind::nothing();
 /// let cpu_refresh_kind = CpuRefreshKind::everything()
 ///     .without_cpu_usage()
 ///     .without_frequency();
@@ -743,7 +743,7 @@ mod test {
     #[test]
     #[serial_test::serial]
     fn sysinfo_refresh_kind() -> Result<()> {
-        let refresh_kind = RefreshKind::new();
+        let refresh_kind = RefreshKind::nothing();
         let cpu_refresh_kind = CpuRefreshKind::everything()
             .without_cpu_usage()
             .without_frequency();
