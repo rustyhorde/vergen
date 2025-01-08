@@ -34,8 +34,8 @@ emit_and_set = ["vergen-lib/emit_and_set"]
 
 [dependencies]
 anyhow = "1.0.95"
+bon = "3.3.2"
 cargo_metadata = { version = "0.19.1", optional = true }
-derive_builder = "0.20.2"
 regex = { version = "1.11.1", optional = true }
 rustc_version = { version = "0.4.1", optional = true }
 sysinfo = { version = "0.33.1", optional = true }
@@ -59,3 +59,6 @@ temp-env = "0.3.6"
 [package.metadata.docs.rs]
 features = ["build", "cargo", "emit_and_set", "rustc", "si"]
 rustdoc-args = ["--cfg", "docsrs"]
+
+[lints]
+workspace = true

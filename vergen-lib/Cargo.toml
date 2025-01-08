@@ -53,3 +53,6 @@ test_util = { path = "../test_util", features = ["unstable"] }
 [package.metadata.docs.rs]
 features = ["build", "cargo", "git", "rustc", "si"]
 rustdoc-args = ["--cfg", "docsrs"]
+
+[lints]
+workspace = true

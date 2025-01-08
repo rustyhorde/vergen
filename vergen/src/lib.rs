@@ -131,7 +131,7 @@
 #![cfg_attr(
     feature = "build",
     doc = r"// NOTE: This will output only the instructions specified.
-// NOTE: See the specific builder documentation for configuration options. 
+// NOTE: See the specific builder documentation for configuration options.
 let build = BuildBuilder::default().build_timestamp(true).build()?;"
 )]
 #![cfg_attr(
@@ -186,8 +186,8 @@ let build = BuildBuilder::default().build_timestamp(true).build()?;"
 //! ```
 //!
 //! ## Features
-//! `vergen` has four main feature toggles allowing you to customize your output. No features are enabled by default.  
-//! You **must** specifically enable the features you wish to use.  
+//! `vergen` has four main feature toggles allowing you to customize your output. No features are enabled by default.
+//! You **must** specifically enable the features you wish to use.
 #![cfg_attr(
     feature = "emit_and_set",
     doc = r"There is also a toggle for the [`emit_and_set`](Emitter::emit_and_set) function.  This version of emit will also set the instructions you requests as environment variables for use in `build.rs`"
@@ -220,7 +220,7 @@ let build = BuildBuilder::default().build_timestamp(true).build()?;"
 //! ## Goals
 //! I initially wrote `vergen` (**ver**sion **gen**erator, so original) so I could embed a some git information in my
 //! personal projects.  Now, usage has grown to the point that `vergen` needs to fit better in the rust ecosystem.
-//!   
+//!
 //! The current goals are as follows:
 //!
 //! #### Minimize the tool footprint
@@ -498,7 +498,7 @@ mod feature;
     feature = "rustc",
     feature = "si"
 )))]
-use {anyhow as _, derive_builder as _};
+use {anyhow as _, bon as _};
 #[cfg(test)]
 use {lazy_static as _, regex as _, serial_test as _, temp_env as _, test_util as _};
 

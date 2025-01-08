@@ -5,7 +5,7 @@ mod test_cargo {
     use regex::Regex;
     use serial_test::serial;
     use test_util::with_cargo_vars;
-    use vergen::CargoBuilder;
+    use vergen::Cargo;
     use vergen::Emitter;
 
     lazy_static! {
@@ -55,7 +55,7 @@ mod test_cargo {
     fn cargo_all_output() {
         let result = with_cargo_vars(|| {
             let mut stdout_buf = vec![];
-            let cargo = CargoBuilder::all_cargo()?;
+            let cargo = Cargo::all_cargo();
             Emitter::default()
                 .add_instructions(&cargo)?
                 .emit_to(&mut stdout_buf)?;
@@ -71,7 +71,7 @@ mod test_cargo {
     fn cargo_all_idempotent_output() {
         let result = with_cargo_vars(|| {
             let mut stdout_buf = vec![];
-            let cargo = CargoBuilder::all_cargo()?;
+            let cargo = Cargo::all_cargo();
             Emitter::default()
                 .idempotent()
                 .add_instructions(&cargo)?
@@ -88,7 +88,7 @@ mod test_cargo {
     fn cargo_all_name_filter_none_output() {
         let result = with_cargo_vars(|| {
             let mut stdout_buf = vec![];
-            let mut cargo = CargoBuilder::all_cargo()?;
+            let mut cargo = Cargo::all_cargo();
             cargo.set_name_filter(Some("blah"));
             Emitter::default()
                 .add_instructions(&cargo)?
@@ -105,7 +105,7 @@ mod test_cargo {
     fn cargo_all_name_filter_some_output() {
         let result = with_cargo_vars(|| {
             let mut stdout_buf = vec![];
-            let mut cargo = CargoBuilder::all_cargo()?;
+            let mut cargo = Cargo::all_cargo();
             cargo.set_name_filter(Some("anyhow"));
             Emitter::default()
                 .add_instructions(&cargo)?
@@ -123,7 +123,7 @@ mod test_cargo {
     fn cargo_all_dep_kind_filter_output() {
         let result = with_cargo_vars(|| {
             let mut stdout_buf = vec![];
-            let mut cargo = CargoBuilder::all_cargo()?;
+            let mut cargo = Cargo::all_cargo();
             cargo.set_dep_kind_filter(Some(DependencyKind::Build));
             Emitter::default()
                 .add_instructions(&cargo)?
@@ -141,7 +141,7 @@ mod test_cargo {
     fn cargo_all_dep_kind_filter_with_name_filter_output() {
         let result = with_cargo_vars(|| {
             let mut stdout_buf = vec![];
-            let mut cargo = CargoBuilder::all_cargo()?;
+            let mut cargo = Cargo::all_cargo();
             cargo.set_dep_kind_filter(Some(DependencyKind::Development));
             cargo.set_name_filter(Some("regex"));
             Emitter::default()

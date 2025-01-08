@@ -10,7 +10,7 @@ pub type CargoRerunIfChanged = Vec<String>;
 /// The vector of strings used to emit `cargo:warning=VALUE` cargo instructions
 pub type CargoWarning = Vec<String>;
 
-/// The default configuration to use when an issue has occured generating instructions
+/// The default configuration to use when an issue has occurred generating instructions
 #[derive(Debug)]
 pub struct DefaultConfig {
     /// Should we fail if an error occurs or output idempotent values on error?
@@ -62,7 +62,7 @@ pub trait Add {
         cargo_warning: &mut CargoWarning,
     ) -> Result<()>;
 
-    /// Based on the given configuration, emit either default idempotent output or generate a failue.
+    /// Based on the given configuration, emit either default idempotent output or generate a failure.
     ///
     /// * Write to the `cargo_rustc_env` map to emit 'cargo:rustc-env=NAME=VALUE' instructions.
     /// * Write to the `cargo_rerun_if_changed` vector to emit 'cargo:rerun-if-changed=VALUE' instructions.
@@ -152,7 +152,7 @@ pub trait AddCustom<K: Into<String> + Ord, V: Into<String>> {
         cargo_warning: &mut CargoWarning,
     ) -> Result<()>;
 
-    /// Based on the given configuration, emit either default idempotent output or generate a failue.
+    /// Based on the given configuration, emit either default idempotent output or generate a failure.
     ///
     /// * Write to the `cargo_rustc_env` map to emit 'cargo:rustc-env=NAME=VALUE' instructions.
     /// * Write to the `cargo_rerun_if_changed` vector to emit 'cargo:rerun-if-changed=VALUE' instructions.

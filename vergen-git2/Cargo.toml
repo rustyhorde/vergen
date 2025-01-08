@@ -34,7 +34,7 @@ si = ["vergen/si"]
 
 [dependencies]
 anyhow = "1.0.93"
-derive_builder = "0.20.2"
+bon = "3.3.2"
 git2-rs = { version = "0.20.0", package = "git2", default-features = false }
 time = { version = "0.3.36", features = [
     "formatting",
@@ -57,3 +57,6 @@ test_util = { path = "../test_util", features = ["repo", "unstable"] }
 [package.metadata.docs.rs]
 features = ["build", "cargo", "emit_and_set", "rustc", "si"]
 rustdoc-args = ["--cfg", "docsrs"]
+
+[lints]
+workspace = true
