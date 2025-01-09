@@ -11,8 +11,8 @@
 use crate::{Prefix, Pretty, Suffix};
 
 use anyhow::Result;
-use console::Style;
 use bon::Builder;
+use console::Style;
 #[cfg(feature = "color")]
 use rand::Rng;
 use std::{collections::BTreeMap, io::Write};
@@ -309,10 +309,7 @@ mod test {
         assert!(header(&config, Some(&mut buf)).is_ok());
         assert!(!buf.is_empty());
         let header_str = String::from_utf8_lossy(&buf);
-        assert!(
-            BUILD_TIMESTAMP.is_match(&header_str),
-            "header: '{header_str}'"
-        );
+        assert!(BUILD_TIMESTAMP.is_match(&header_str));
         assert!(BUILD_SEMVER.is_match(&header_str));
         assert!(GIT_BRANCH.is_match(&header_str));
         Ok(())
