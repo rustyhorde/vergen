@@ -34,7 +34,7 @@ use vergen_lib::{
 /// ```
 /// # use anyhow::Result;
 /// # use vergen::Emitter;
-/// # use vergen::BuildBuilder;
+/// # use vergen::Build;
 /// #
 /// # fn main() -> Result<()> {
 /// let build = Build::all_build();
@@ -48,7 +48,7 @@ use vergen_lib::{
 /// ```
 /// # use anyhow::Result;
 /// # use vergen::Emitter;
-/// # use vergen::BuildBuilder;
+/// # use vergen::Build;
 /// #
 /// # fn main() -> Result<()> {
 /// let build = Build::builder().build_timestamp(true).build();
@@ -63,7 +63,7 @@ use vergen_lib::{
 /// # use anyhow::Result;
 /// # use std::env;
 /// # use vergen::Emitter;
-/// # use vergen::BuildBuilder;
+/// # use vergen::Build;
 /// #
 /// # fn main() -> Result<()> {
 /// temp_env::with_var("VERGEN_BUILD_DATE", Some("01/01/2023"), || {
@@ -87,7 +87,7 @@ use vergen_lib::{
 /// # use anyhow::Result;
 /// # use std::env;
 /// # use vergen::Emitter;
-/// # use vergen::BuildBuilder;
+/// # use vergen::Build;
 /// #
 /// # fn main() -> Result<()> {
 /// temp_env::with_var("SOURCE_DATE_EPOCH", Some("1671809360"), || {
@@ -119,7 +119,7 @@ use vergen_lib::{
 /// ```
 /// # use anyhow::Result;
 /// # use vergen::Emitter;
-/// # use vergen::BuildBuilder;
+/// # use vergen::Build;
 /// #
 /// # fn main() -> Result<()> {
 /// let build = Build::builder().build();

@@ -40,7 +40,7 @@ si = []
 
 [dependencies]
 anyhow = "1.0.95"
-derive_builder = "0.20.2"
+bon = "3.3.2"
 
 [build-dependencies]
 rustversion = "1.0.19"

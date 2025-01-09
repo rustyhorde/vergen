@@ -38,7 +38,7 @@ use vergen_lib::{
 /// ```
 /// # use anyhow::Result;
 /// # use vergen::Emitter;
-/// # use vergen::SysinfoBuilder;
+/// # use vergen::Sysinfo;
 /// #
 /// # fn main() -> Result<()> {
 /// let si = Sysinfo::all_sysinfo();
@@ -52,7 +52,7 @@ use vergen_lib::{
 /// ```
 /// # use anyhow::Result;
 /// # use vergen::Emitter;
-/// # use vergen::SysinfoBuilder;
+/// # use vergen::Sysinfo;
 /// #
 /// # fn main() -> Result<()> {
 /// let si = Sysinfo::builder().os_version(true).cpu_core_count(true).build();
@@ -69,7 +69,7 @@ use vergen_lib::{
 /// # use anyhow::Result;
 /// # use std::env;
 /// # use vergen::Emitter;
-/// # use vergen::SysinfoBuilder;
+/// # use vergen::Sysinfo;
 /// #
 /// # fn main() -> Result<()> {
 /// temp_env::with_var("VERGEN_SYSINFO_NAME", Some("this is the name I want output"), || {
@@ -90,7 +90,7 @@ use vergen_lib::{
 /// ```
 /// # use anyhow::Result;
 /// # use vergen::Emitter;
-/// # use vergen::SysinfoBuilder;
+/// # use vergen::Sysinfo;
 /// #
 /// # fn main() -> Result<()> {
 /// let si = Sysinfo::all_sysinfo();
@@ -106,7 +106,7 @@ use vergen_lib::{
 /// # use anyhow::Result;
 /// # use sysinfo::{CpuRefreshKind, RefreshKind};
 /// # use vergen::Emitter;
-/// # use vergen::SysinfoBuilder;
+/// # use vergen::Sysinfo;
 /// #
 /// # pub fn main() -> Result<()> {
 /// let refresh_kind = RefreshKind::nothing();

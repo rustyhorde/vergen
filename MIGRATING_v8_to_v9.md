@@ -21,10 +21,10 @@ use vergen::{
 
 pub fn main() -> Result<()> {
     Emitter::default()
-        .add_instructions(&BuildBuilder::all_build()?)?
-        .add_instructions(&CargoBuilder::all_cargo()?)?
-        .add_instructions(&RustcBuilder::all_rustc()?)?
-        .add_instructions(&SysinfoBuilder::all_sysinfo()?)?
+        .add_instructions(&Build::all_build()?)
+        .add_instructions(&Cargo::all_cargo()?)
+        .add_instructions(&Rustc::all_rustc()?)
+        .add_instructions(&Sysinfo::all_sysinfo()?)
         .emit()
 }
 ```
@@ -54,11 +54,11 @@ use vergen_gix::{
 
 pub fn main() -> Result<()> {
     Emitter::default()
-        .add_instructions(&BuildBuilder::all_build()?)?
-        .add_instructions(&CargoBuilder::all_cargo()?)?
-        .add_instructions(&GixBuilder::all_git()?)?
-        .add_instructions(&RustcBuilder::all_rustc()?)?
-        .add_instructions(&SysinfoBuilder::all_sysinfo()?)?
+        .add_instructions(&Build::all_build()?)
+        .add_instructions(&Cargo::all_cargo()?)
+        .add_instructions(&Gix::all_git()?)
+        .add_instructions(&Rustc::all_rustc()?)
+        .add_instructions(&Sysinfo::all_sysinfo()?)
         .emit()
 }
 ```
@@ -87,11 +87,11 @@ use vergen_gitcl::{
 
 pub fn main() -> Result<()> {
     Emitter::default()
-        .add_instructions(&BuildBuilder::all_build()?)?
-        .add_instructions(&CargoBuilder::all_cargo()?)?
-        .add_instructions(&GitclBuilder::all_git()?)?
-        .add_instructions(&RustcBuilder::all_rustc()?)?
-        .add_instructions(&SysinfoBuilder::all_sysinfo()?)?
+        .add_instructions(&Build::all_build()?)
+        .add_instructions(&Cargo::all_cargo()?)
+        .add_instructions(&Gitcl::all_git()?)
+        .add_instructions(&Rustc::all_rustc()?)
+        .add_instructions(&Sysinfo::all_sysinfo()?)
         .emit()
 }
 ```
@@ -120,11 +120,11 @@ use vergen_git2::{
 
 pub fn main() -> Result<()> {
     Emitter::default()
-        .add_instructions(&BuildBuilder::all_build()?)?
-        .add_instructions(&CargoBuilder::all_cargo()?)?
-        .add_instructions(&Git2Builder::all_git()?)?
-        .add_instructions(&RustcBuilder::all_rustc()?)?
-        .add_instructions(&SysinfoBuilder::all_sysinfo()?)?
+        .add_instructions(&Build::all_build()?)
+        .add_instructions(&Cargo::all_cargo()?)
+        .add_instructions(&Git2::all_git()?)
+        .add_instructions(&Rustc::all_rustc()?)
+        .add_instructions(&Sysinfo::all_sysinfo()?)
         .emit()
 }
 ```

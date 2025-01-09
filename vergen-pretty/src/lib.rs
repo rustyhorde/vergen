@@ -17,7 +17,7 @@
 //! ```
 //! # use anyhow::Result;
 //! # use std::{collections::BTreeMap, io::Write};
-//! # use vergen_pretty::{vergen_pretty_env, PrettyBuilder};
+//! # use vergen_pretty::{vergen_pretty_env, Pretty};
 //! # fn has_value(
 //! #     tuple: (&&'static str, &Option<&'static str>),
 //! # ) -> Option<(&'static str, &'static str)> {
@@ -35,9 +35,9 @@
 //! let mut stdout = vec![];
 //! # let map = vergen_pretty_env!();
 //! # let empty = is_empty(&map);
-//! PrettyBuilder::default()
+//! Pretty::builder()
 //!     .env(vergen_pretty_env!())
-//!     .build()?
+//!     .build()
 //!     .display(&mut stdout)?;
 //! # if empty {
 //! #    assert!(stdout.is_empty());
@@ -58,7 +58,7 @@ with the associated [`Config`] as a convenience wrapper around [`Pretty`].
 # Example
 ```
 # use anyhow::Result;
-# use vergen_pretty::{ConfigBuilder, header, vergen_pretty_env};"
+# use vergen_pretty::{Config, header, vergen_pretty_env};"
 )]
 #![cfg_attr(feature = "color", doc = r"# use vergen_pretty::Style;")]
 #![cfg_attr(
@@ -67,7 +67,7 @@ with the associated [`Config`] as a convenience wrapper around [`Pretty`].
 #
 # pub fn main() -> Result<()> {
 let mut buf = vec![];
-let config = ConfigBuilder::default()"
+let config = Config::builder()"
 )]
 #![cfg_attr(
     all(feature = "color", feature = "header"),
@@ -79,7 +79,7 @@ let config = ConfigBuilder::default()"
     .prefix("HEADER_PREFIX")
     .env(vergen_pretty_env!())
     .suffix("HEADER_SUFFIX")
-    .build()?;
+    .build();
 assert!(header(&config, Some(&mut buf)).is_ok());
 assert!(!buf.is_empty());
 #     Ok(())
@@ -89,7 +89,7 @@ assert!(!buf.is_empty());
 )]
 //!
 //! ## Features
-//! `vergen-pretty` has two feature toggles allowing you to customize your output. No features are enabled by default.  
+//! `vergen-pretty` has two feature toggles allowing you to customize your output. No features are enabled by default.
 //! You **must** specifically enable the features you wish to use.
 //!
 //! | Feature | Enables |
@@ -326,7 +326,6 @@ pub use pretty::suffix::Suffix;
 pub use pretty::suffix::SuffixBuilder;
 pub use pretty::Pretty;
 pub use pretty::PrettyBuilder;
-pub use pretty::PrettyBuilderError;
 #[cfg(feature = "trace")]
 #[doc(inline)]
 pub use tracing::Level;
@@ -352,13 +351,13 @@ use tracing_subscriber as _;
 /// ```
 /// # use anyhow::Result;
 /// # use std::{collections::BTreeMap, io::Write};
-/// # use vergen_pretty::{vergen_pretty_env, PrettyBuilder};
+/// # use vergen_pretty::{vergen_pretty_env, Pretty};
 /// #
 /// # fn main() -> Result<()> {
 /// let mut stdout = vec![];
-/// PrettyBuilder::default()
+/// Pretty::builder()
 ///     .env(vergen_pretty_env!())
-///     .build()?
+///     .build()
 ///     .display(&mut stdout)?;
 /// #     Ok(())
 /// # }

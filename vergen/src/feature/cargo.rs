@@ -38,7 +38,7 @@ use vergen_lib::{
 /// # use anyhow::Result;
 /// # use std::env;
 /// # use vergen::Emitter;
-/// # use vergen::CargoBuilder;
+/// # use vergen::Cargo;
 /// #
 /// fn main() -> Result<()> {
 ///     temp_env::with_vars([
@@ -61,7 +61,7 @@ use vergen_lib::{
 /// ```
 /// # use anyhow::Result;
 /// # use vergen::Emitter;
-/// # use vergen::CargoBuilder;
+/// # use vergen::Cargo;
 /// #
 /// # fn main() -> Result<()> {
 ///     temp_env::with_vars([
@@ -84,7 +84,7 @@ use vergen_lib::{
 /// # use anyhow::Result;
 /// # use std::env;
 /// # use vergen::Emitter;
-/// # use vergen::CargoBuilder;
+/// # use vergen::Cargo;
 /// #
 /// fn main() -> Result<()> {
 ///     temp_env::with_vars([
@@ -535,10 +535,7 @@ mod test {
     #[serial]
     fn dependencies_bad_name_filter() {
         let result = with_cargo_vars(|| {
-            let cargo = Cargo::builder()
-                .dependencies(true)
-                .name_filter("(")
-                .build();
+            let cargo = Cargo::builder().dependencies(true).name_filter("(").build();
             let config = Emitter::default().add_instructions(&cargo)?.test_emit();
             assert_eq!(1, config.cargo_rustc_env_map().len());
             assert_eq!(0, count_idempotent(config.cargo_rustc_env_map()));

@@ -6,7 +6,7 @@ mod test_build {
     use serial_test::serial;
     use vergen::Build;
     use vergen::Emitter;
-    use vergen_lib::{CustomInsGen, CustomInsGenBuilder};
+    use vergen_lib::CustomInsGen;
 
     lazy_static! {
         static ref DATE_RE_STR: &'static str =
@@ -125,7 +125,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     #[serial]
     fn build_all_with_custom_fail() -> Result<()> {
         let build = Build::all_build();
-        let cust_gen = CustomInsGenBuilder::default().fail(true).build()?;
+        let cust_gen = CustomInsGen::builder().fail(true).build();
         assert!(Emitter::new()
             .fail_on_error()
             .add_instructions(&build)?
@@ -139,7 +139,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     fn build_all_with_custom_default() -> Result<()> {
         let mut stdout_buf = vec![];
         let build = Build::all_build();
-        let cust_gen = CustomInsGenBuilder::default().fail(true).build()?;
+        let cust_gen = CustomInsGen::builder().fail(true).build();
         Emitter::new()
             .add_instructions(&build)?
             .add_custom_instructions(&cust_gen)?

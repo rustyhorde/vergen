@@ -220,6 +220,7 @@ use {temp_env as _, test_util as _};
 pub mod constants;
 mod emitter;
 mod entries;
+pub mod git_config;
 mod keys;
 mod utils;
 

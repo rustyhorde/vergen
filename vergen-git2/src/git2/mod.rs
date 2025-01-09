@@ -22,6 +22,7 @@ use time::{
     format_description::{self, well_known::Iso8601},
     OffsetDateTime, UtcOffset,
 };
+use vergen_lib::git_config::{Describe, Dirty, Sha};
 use vergen_lib::{
     add_default_map_entry, add_map_entry,
     constants::{
@@ -51,7 +52,7 @@ use vergen_lib::{
 ///
 /// ```
 /// # use anyhow::Result;
-/// # use vergen_git2::{Emitter, Git2Builder};
+/// # use vergen_git2::{Emitter, Git2};
 /// #
 /// # fn main() -> Result<()> {
 /// let git2 = Git2::all_git();
@@ -64,7 +65,7 @@ use vergen_lib::{
 ///
 /// ```
 /// # use anyhow::Result;
-/// # use vergen_git2::{Emitter, Git2Builder};
+/// # use vergen_git2::{Emitter, Git2};
 /// #
 /// # fn main() -> Result<()> {
 /// temp_env::with_var("VERGEN_GIT_BRANCH", Some("this is the branch I want output"), || {
@@ -82,6 +83,11 @@ use vergen_lib::{
 #[derive(Clone, Debug, bon::Builder, PartialEq)]
 #[allow(clippy::struct_excessive_bools)]
 pub struct Git2 {
+    /// Configures the default values.
+    /// If set to `true` all defaults are in "enabled" state.
+    /// If set to `false` all defaults are in "disabled" state.
+    #[builder(field)]
+    all: bool,
     /// An optional path to a repository.
     repo_path: Option<PathBuf>,
     /// Emit the current git branch
@@ -90,7 +96,7 @@ pub struct Git2 {
     /// cargo:rustc-env=VERGEN_GIT_BRANCH=<BRANCH_NAME>
     /// ```
     ///
-    #[builder(default)]
+    #[builder(default = all)]
     branch: bool,
     /// Emit the author email of the most recent commit
     ///
@@ -98,7 +104,7 @@ pub struct Git2 {
     /// cargo:rustc-env=VERGEN_GIT_COMMIT_AUTHOR_EMAIL=<AUTHOR_EMAIL>
     /// ```
     ///
-    #[builder(default)]
+    #[builder(default = all)]
     commit_author_name: bool,
     /// Emit the author name of the most recent commit
     ///
@@ -106,14 +112,14 @@ pub struct Git2 {
     /// cargo:rustc-env=VERGEN_GIT_COMMIT_AUTHOR_NAME=<AUTHOR_NAME>
     /// ```
     ///
-    #[builder(default)]
+    #[builder(default = all)]
     commit_author_email: bool,
     /// Emit the total commit count to HEAD
     ///
     /// ```text
     /// cargo:rustc-env=VERGEN_GIT_COMMIT_COUNT=<COUNT>
     /// ```
-    #[builder(default)]
+    #[builder(default = all)]
     commit_count: bool,
     /// Emit the commit message of the latest commit
     ///
@@ -121,7 +127,7 @@ pub struct Git2 {
     /// cargo:rustc-env=VERGEN_GIT_COMMIT_MESSAGE=<MESSAGE>
     /// ```
     ///
-    #[builder(default)]
+    #[builder(default = all)]
     commit_message: bool,
     /// Emit the commit date of the latest commit
     ///
@@ -129,7 +135,7 @@ pub struct Git2 {
     /// cargo:rustc-env=VERGEN_GIT_COMMIT_DATE=<YYYY-MM-DD>
     /// ```
     ///
-    #[builder(default)]
+    #[builder(default = all)]
     commit_date: bool,
     /// Emit the commit timestamp of the latest commit
     ///
@@ -137,7 +143,7 @@ pub struct Git2 {
     /// cargo:rustc-env=VERGEN_GIT_COMMIT_TIMESTAMP=<YYYY-MM-DDThh:mm:ssZ>
     /// ```
     ///
-    #[builder(default)]
+    #[builder(default = all)]
     commit_timestamp: bool,
     /// Emit the describe output
     ///
@@ -156,10 +162,14 @@ pub struct Git2 {
     ///
     /// ## `match_pattern`
     /// Only consider tags matching the given glob pattern, excluding the "refs/tags/" prefix.
-    #[builder(with = |tags: bool, dirty: bool, match_pattern: Option<&'static str>| {
-        Git2Describe { tags, dirty, match_pattern }
-    })]
-    describe: Option<Git2Describe>,
+    #[builder(
+        required,
+        default = all.then(Describe::default),
+        with = |tags: bool, dirty: bool, match_pattern: Option<&'static str>| {
+            Some(Describe { tags, dirty, match_pattern })
+        }
+    )]
+    describe: Option<Describe>,
     /// Emit the SHA of the latest commit
     ///
     /// ```text
@@ -171,9 +181,12 @@ pub struct Git2 {
     ///
     /// ## `short`
     /// Shortens the object name to a unique prefix
-    ///
-    #[builder(with = |short: bool| Git2Sha { short })]
-    sha: Option<Git2Sha>,
+    #[builder(
+        required,
+        default = all.then(Sha::default),
+        with = |short: bool| Some(Sha { short })
+    )]
+    sha: Option<Sha>,
     /// Emit the dirty state of the git repository
     /// ```text
     /// cargo:rustc-env=VERGEN_GIT_DIRTY=(true|false)
@@ -183,8 +196,12 @@ pub struct Git2 {
     ///
     /// # `include_tracked`
     /// Should we include/ignore untracked files in deciding whether the repository is dirty.
-    #[builder(with = |include_untracked: bool| Git2Dirty { include_untracked })]
-    dirty: Option<Git2Dirty>,
+    #[builder(
+        required,
+        default = all.then(Dirty::default),
+        with = |include_untracked: bool| Some(Dirty { include_untracked })
+    )]
+    dirty: Option<Dirty>,
     /// Enable local offset date/timestamp output
     #[builder(default)]
     use_local: bool,
@@ -194,104 +211,23 @@ pub struct Git2 {
     fail: bool,
 }
 
-#[derive(Clone, Debug, PartialEq)]
-struct Git2Describe {
-    tags: bool,
-    dirty: bool,
-    match_pattern: Option<&'static str>,
+impl Git2Builder {
+    /// Convenience method that switches the defaults of [`Git2Builder`]
+    /// to enable all of the `VERGEN_GIT_*` instructions. It can only be
+    /// called at the start of the building process, i.e. when no config
+    /// has been set yet to avoid overwrites.
+    pub fn all(mut self) -> Self {
+        self.all = true;
+        self
+    }
 }
 
-#[derive(Clone, Debug, PartialEq)]
-struct Git2Dirty {
-    include_untracked: bool,
-}
-
-#[derive(Clone, Debug, PartialEq)]
-struct Git2Sha {
-    short: bool,
-}
-
-#[bon::bon]
 impl Git2 {
     /// Emit all of the `VERGEN_GIT_*` instructions
-    ///
-    /// # Errors
-    /// The underlying build function can error
-    ///
     pub fn all_git() -> Self {
-        Self::builder()
-            .branch(true)
-            .commit_author_email(true)
-            .commit_author_name(true)
-            .commit_count(true)
-            .commit_date(true)
-            .commit_message(true)
-            .commit_timestamp(true)
-            .describe(false, false, None)
-            .sha(false)
-            .dirty(false)
-            .build()
+        Self::builder().all().build()
     }
 
-    /// Convenience method to setup the [`Git2Builder`] with all of the `VERGEN_GIT_*` instructions on
-    #[builder(builder_type = Git2AllBuilder, finish_fn = build)]
-    pub fn all_builder(
-        repo_path: Option<PathBuf>,
-        #[builder(default = true)] branch: bool,
-        #[builder(default = true)] commit_author_name: bool,
-        #[builder(default = true)] commit_author_email: bool,
-        #[builder(default = true)] commit_count: bool,
-        #[builder(default = true)] commit_message: bool,
-        #[builder(default = true)] commit_date: bool,
-        #[builder(default = true)] commit_timestamp: bool,
-
-        #[builder(
-            with = |tags: bool, dirty: bool, match_pattern: Option<&'static str>| {
-                Git2Describe { tags, dirty, match_pattern }
-            },
-            default = Git2Describe { tags: false, dirty: false, match_pattern: None }
-        )]
-        describe: Git2Describe,
-
-        #[builder(
-            with = |short: bool| Git2Sha { short },
-            default = Git2Sha { short: false }
-        )]
-        sha: Git2Sha,
-
-        #[builder(
-            with = |include_untracked: bool| Git2Dirty { include_untracked },
-            default = Git2Dirty { include_untracked: false }
-        )]
-        dirty: Git2Dirty,
-
-        #[builder(default)] use_local: bool,
-
-        #[cfg(test)]
-        #[builder(default)]
-        fail: bool,
-    ) -> Self {
-        Self {
-            repo_path,
-            branch,
-            commit_author_email,
-            commit_author_name,
-            commit_count,
-            commit_date,
-            commit_message,
-            commit_timestamp,
-            describe: Some(describe),
-            sha: Some(sha),
-            dirty: Some(dirty),
-            use_local,
-
-            #[cfg(test)]
-            fail,
-        }
-    }
-}
-
-impl Git2 {
     fn any(&self) -> bool {
         self.branch
             || self.commit_author_email

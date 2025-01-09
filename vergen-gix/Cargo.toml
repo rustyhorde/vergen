@@ -39,7 +39,7 @@ si = ["vergen/si"]
 
 [dependencies]
 anyhow = "1.0.95"
-derive_builder = "0.20.2"
+bon = "3.3.2"
 gix = { version = "0.69.1", default-features = false, features = [
     "revision",
     "interrupt",

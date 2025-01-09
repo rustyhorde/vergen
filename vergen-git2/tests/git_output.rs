@@ -174,7 +174,8 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
     fn git_all_flags_test_repo() -> Result<()> {
         let repo = TestRepos::new(true, false, false)?;
         let mut stdout_buf = vec![];
-        let mut git2 = Git2::all_builder()
+        let mut git2 = Git2::builder()
+            .all()
             .describe(true, false, None)
             .sha(true)
             .build();
@@ -194,7 +195,8 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
     fn git_all_flags_test_repo_local() -> Result<()> {
         let repo = TestRepos::new(true, false, false)?;
         let mut stdout_buf = vec![];
-        let mut git2 = Git2::all_builder()
+        let mut git2 = Git2::builder()
+            .all()
             .describe(true, false, None)
             .sha(true)
             .use_local(true)
@@ -231,7 +233,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
     fn git_all_output_test_repo() -> Result<()> {
         let repo = TestRepos::new(true, true, false)?;
         let mut stdout_buf = vec![];
-        let mut git2 = Git2::all_builder().describe(true, false, None).build();
+        let mut git2 = Git2::builder().all().describe(true, false, None).build();
         let _ = git2.at_path(repo.path());
         let failed = Emitter::default()
             .add_instructions(&git2)?
@@ -247,7 +249,8 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
     fn git_all_describe_all_test_repo() -> Result<()> {
         let repo = TestRepos::new(true, true, false)?;
         let mut stdout_buf = vec![];
-        let mut git2 = Git2::all_builder()
+        let mut git2 = Git2::builder()
+            .all()
             .describe(true, true, Some("0.1.0"))
             .build();
         let _ = git2.at_path(repo.path());
@@ -264,7 +267,8 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
     #[serial]
     fn git_emit_at_test_repo() -> Result<()> {
         let repo = TestRepos::new(true, false, false)?;
-        let mut git2 = Git2::all_builder()
+        let mut git2 = Git2::builder()
+            .all()
             .describe(true, false, None)
             .sha(true)
             .build();

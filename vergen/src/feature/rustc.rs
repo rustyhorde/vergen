@@ -39,7 +39,7 @@ use vergen_lib::{
 /// ```
 /// # use anyhow::Result;
 /// # use vergen::Emitter;
-/// # use vergen::RustcBuilder;
+/// # use vergen::Rustc;
 /// #
 /// # fn main() -> Result<()> {
 /// let rustc = Rustc::all_rustc();
@@ -53,7 +53,7 @@ use vergen_lib::{
 /// ```
 /// # use anyhow::Result;
 /// # use vergen::Emitter;
-/// # use vergen::RustcBuilder;
+/// # use vergen::Rustc;
 /// #
 /// # fn main() -> Result<()> {
 /// let rustc = Rustc::builder().channel(true).semver(true).build();
@@ -68,7 +68,7 @@ use vergen_lib::{
 /// # use anyhow::Result;
 /// # use std::env;
 /// # use vergen::Emitter;
-/// # use vergen::RustcBuilder;
+/// # use vergen::Rustc;
 /// #
 /// # fn main() -> Result<()> {
 /// temp_env::with_var("VERGEN_RUSTC_CHANNEL", Some("this is the channel I want output"), || {
