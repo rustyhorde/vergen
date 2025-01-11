@@ -103,7 +103,6 @@ assert!(!buf.is_empty());
 #![cfg_attr(
     all(feature = "unstable", nightly),
     feature(
-        coverage_attribute,
         multiple_supertrait_upcastable,
         must_not_suspend,
         non_exhaustive_omitted_patterns_lint,
@@ -303,6 +302,7 @@ assert!(!buf.is_empty());
 )]
 #![cfg_attr(all(doc, nightly), feature(doc_auto_cfg))]
 #![cfg_attr(all(docsrs, nightly), feature(doc_cfg))]
+#![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
 #[cfg(feature = "header")]
 mod header;
