@@ -4,7 +4,7 @@ mod test_sysinfo {
     use lazy_static::lazy_static;
     use regex::Regex;
     use serial_test::serial;
-    use vergen::{Emitter, SysinfoBuilder};
+    use vergen::{Emitter, Sysinfo};
 
     lazy_static! {
         static ref NAME_RE_STR: &'static str = r"cargo:rustc-env=VERGEN_SYSINFO_NAME=.*";
@@ -84,7 +84,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     #[serial]
     fn sysinfo_all_output() -> Result<()> {
         let mut stdout_buf = vec![];
-        let si = SysinfoBuilder::all_sysinfo()?;
+        let si = Sysinfo::all_sysinfo();
         Emitter::default()
             .add_instructions(&si)?
             .emit_to(&mut stdout_buf)?;
@@ -96,7 +96,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     #[test]
     fn sysinfo_all_idempotent_output() -> Result<()> {
         let mut stdout_buf = vec![];
-        let si = SysinfoBuilder::all_sysinfo()?;
+        let si = Sysinfo::all_sysinfo();
         Emitter::default()
             .idempotent()
             .add_instructions(&si)?
@@ -109,7 +109,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     #[test]
     fn sysinfo_all_idempotent_quiet_output() -> Result<()> {
         let mut stdout_buf = vec![];
-        let si = SysinfoBuilder::all_sysinfo()?;
+        let si = Sysinfo::all_sysinfo();
         Emitter::default()
             .idempotent()
             .quiet()

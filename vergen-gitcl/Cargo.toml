@@ -34,7 +34,7 @@ si = ["vergen/si"]
 
 [dependencies]
 anyhow = "1.0.95"
-derive_builder = "0.20.2"
+bon = "3.3.2"
 time = { version = "0.3.37", features = [
     "formatting",
     "local-offset",
@@ -56,3 +56,6 @@ test_util = { path = "../test_util", features = ["repo", "unstable"] }
 [package.metadata.docs.rs]
 features = ["build", "cargo", "emit_and_set", "rustc", "si"]
 rustdoc-args = ["--cfg", "docsrs"]
+
+[lints]
+workspace = true
