@@ -396,7 +396,6 @@ let build = BuildBuilder::default().build_timestamp(true).build()?;"
         unused_variables,
         useless_ptr_null_checks,
         variant_size_differences,
-        wasm_c_abi,
         while_true,
     )
 )]
