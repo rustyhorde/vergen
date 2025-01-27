@@ -218,7 +218,6 @@
         unused_variables,
         useless_ptr_null_checks,
         variant_size_differences,
-        wasm_c_abi,
         while_true,
     )
 )]
