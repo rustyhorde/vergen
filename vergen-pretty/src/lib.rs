@@ -330,7 +330,6 @@ pub use pretty::PrettyBuilderError;
 #[doc(inline)]
 pub use tracing::Level;
 
-
 #[cfg(all(feature = "header", not(feature = "color")))]
 use rand as _;
 #[cfg(test)]
