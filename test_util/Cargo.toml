@@ -35,7 +35,6 @@ gix = { version = "0.70.0", default-features = false, features = [
     "worktree-mutation",
     "blocking-network-client",
 ], optional = true}
-lazy_static = "1.5.0"
 rand = { version = "0.8.5", optional = true }
 temp-env = "0.3.6"
 

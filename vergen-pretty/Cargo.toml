@@ -32,7 +32,7 @@ always_include = ["__vergen_empty_test", "unstable"]
 [features]
 default = []
 unstable = ["vergen-gix/unstable"]
-color = ["console", "lazy_static"]
+color = ["console"]
 header = ["console", "rand"]
 trace = ["tracing"]
 __vergen_test = ["vergen-gix", "vergen-gix/unstable"]
@@ -43,7 +43,6 @@ anyhow = "1.0.95"
 console = { version = "0.15.10", optional = true }
 convert_case = "0.7.1"
 derive_builder = "0.20.2"
-lazy_static = { version = "1.5.0", optional = true }
 rand = { version = "0.8.5", optional = true }
 serde = { version = "1.0.217", features = ["derive"], optional = true }
 tracing = { version = "0.1.41", features = [
@@ -62,7 +61,6 @@ vergen-gix = { version = "1.0.7", path = "../vergen-gix", features = [
 ], optional = true }
 
 [dev-dependencies]
-lazy_static = "1.5.0"
 regex = "1.11.1"
 serde_json = "1.0.137"
 tracing-subscriber = { version = "0.3.19", features = ["fmt"] }
