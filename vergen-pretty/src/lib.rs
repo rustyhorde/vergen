@@ -330,11 +330,10 @@ pub use pretty::PrettyBuilderError;
 #[doc(inline)]
 pub use tracing::Level;
 
-#[cfg(all(test, not(feature = "header")))]
-use lazy_static as _;
+
 #[cfg(all(feature = "header", not(feature = "color")))]
 use rand as _;
-#[cfg(all(test, not(feature = "header")))]
+#[cfg(test)]
 use regex as _;
 #[cfg(all(test, not(feature = "serde")))]
 use serde_json as _;

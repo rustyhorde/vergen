@@ -9,13 +9,10 @@
 use crate::{pretty::Pretty, Prefix, Suffix};
 use anyhow::Result;
 use console::Style;
-use lazy_static::lazy_static;
-use std::io::Write;
+use std::{io::Write, sync::LazyLock};
 
-lazy_static! {
-    pub(crate) static ref BOLD_BLUE: Style = Style::new().bold().blue();
-    pub(crate) static ref BOLD_GREEN: Style = Style::new().bold().green();
-}
+pub(crate) static BOLD_BLUE: LazyLock<Style> = LazyLock::new(|| Style::new().bold().blue());
+pub(crate) static BOLD_GREEN: LazyLock<Style> = LazyLock::new(|| Style::new().bold().green());
 
 impl Pretty {
     #[cfg_attr(docsrs, doc(cfg(feature = "color")))]

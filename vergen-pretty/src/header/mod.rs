@@ -245,9 +245,11 @@ mod test {
     use anyhow::Result;
     #[cfg(feature = "color")]
     use console::Style;
-    use lazy_static::lazy_static;
+    #[cfg(feature = "__vergen_test")]
     use regex::Regex;
     use std::io::Write;
+    #[cfg(feature = "__vergen_test")]
+    use std::sync::LazyLock;
 
     #[cfg(feature = "__vergen_test")]
     const HEADER_PREFIX: &str = r"██████╗ ██╗   ██╗██████╗ ██╗    ██╗
@@ -265,11 +267,15 @@ mod test {
 4a61736f6e204f7a696173
 ";
 
-    lazy_static! {
-        static ref BUILD_TIMESTAMP: Regex = Regex::new(r"Timestamp \(  build\)").unwrap();
-        static ref BUILD_SEMVER: Regex = Regex::new(r"Semver \(  rustc\)").unwrap();
-        static ref GIT_BRANCH: Regex = Regex::new(r"Branch \(    git\)").unwrap();
-    }
+    #[cfg(feature = "__vergen_test")]
+    static BUILD_TIMESTAMP: LazyLock<Regex> =
+        LazyLock::new(|| Regex::new(r"Timestamp \(  build\)").unwrap());
+    #[cfg(feature = "__vergen_test")]
+    static BUILD_SEMVER: LazyLock<Regex> =
+        LazyLock::new(|| Regex::new(r"Semver \(  rustc\)").unwrap());
+    #[cfg(feature = "__vergen_test")]
+    static GIT_BRANCH: LazyLock<Regex> =
+        LazyLock::new(|| Regex::new(r"Branch \(    git\)").unwrap());
 
     #[test]
     #[allow(clippy::clone_on_copy, clippy::redundant_clone)]

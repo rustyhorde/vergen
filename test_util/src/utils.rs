@@ -1,16 +1,17 @@
+use std::sync::LazyLock;
+
 use anyhow::Result;
-use lazy_static::lazy_static;
 use temp_env::with_vars;
 
-lazy_static! {
-    static ref DEFAULT_KVS: Vec<(&'static str, Option<&'static str>)> = vec![
+static DEFAULT_KVS: LazyLock<Vec<(&'static str, Option<&'static str>)>> = LazyLock::new(|| {
+    vec![
         ("CARGO_FEATURE_BUILD", Some("build")),
         ("CARGO_FEATURE_GIT", Some("git")),
         ("DEBUG", Some("true")),
         ("OPT_LEVEL", Some("1")),
         ("TARGET", Some("x86_64-unknown-linux-gnu")),
-    ];
-}
+    ]
+});
 
 /// Wrap a closure with cargo environment variables to use within a test
 ///
