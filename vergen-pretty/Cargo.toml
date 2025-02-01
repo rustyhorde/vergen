@@ -18,7 +18,7 @@ denylist = ["console", "lazy_static", "serde", "tracing", "unstable", "vergen", 
 [features]
 default = []
 unstable = []
-color = ["console", "lazy_static"]
+color = ["console"]
 header = ["console", "rand"]
 trace = ["tracing"]
 __vergen_test = ["vergen"]
@@ -28,7 +28,6 @@ anyhow = "1.0.86"
 console = { version = "0.15.8", optional = true }
 convert_case = "0.6.0"
 derive_builder = "0.20.0"
-lazy_static = { version = "1.5.0", optional = true }
 rand = { version = "0.8.5", optional = true }
 serde = { version = "1.0.204", features = ["derive"], optional = true }
 tracing = { version = "0.1.40", features = [
@@ -49,7 +48,6 @@ vergen = { version = "8.3.3", path = "../vergen", features = [
 ], optional = true }
 
 [dev-dependencies]
-lazy_static = "1.5.0"
 regex = "1.10.5"
 serde_json = "1.0.121"
 tracing-subscriber = { version = "0.3.18", features = ["fmt"] }

@@ -297,6 +297,8 @@ use lazy_static as _;
 use rand as _;
 #[cfg(all(test, not(feature = "header")))]
 use regex as _;
+#[cfg(all(test, not(feature = "__vergen_test")))]
+use regex as _;
 #[cfg(all(test, not(feature = "serde")))]
 use serde_json as _;
 #[cfg(all(test, not(feature = "trace")))]
