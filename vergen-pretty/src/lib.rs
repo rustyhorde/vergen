@@ -291,8 +291,6 @@ pub use pretty::PrettyBuilderError;
 #[doc(inline)]
 pub use tracing::Level;
 
-#[cfg(all(test, not(feature = "header")))]
-use lazy_static as _;
 #[cfg(all(feature = "header", not(feature = "color")))]
 use rand as _;
 #[cfg(all(test, not(feature = "header")))]
