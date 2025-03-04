@@ -780,7 +780,7 @@ mod test {
     use anyhow::Result;
     use git2_rs::Repository;
     use serial_test::serial;
-    use std::{collections::BTreeMap, env::current_dir, io::Write};
+    use std::{collections::BTreeMap, env::current_dir, io, io::Write};
     use test_util::TestRepos;
     use vergen::Emitter;
     use vergen_lib::{count_idempotent, VergenKey};
@@ -1062,5 +1062,25 @@ mod test {
             }();
             assert!(result.is_ok());
         });
+    }
+
+    #[test]
+    #[serial]
+    fn git_no_index_update() -> Result<()> {
+        let repo = TestRepos::new(true, true, false)?;
+        repo.set_index_magic_mtime();
+
+        let mut git2 = Git2Builder::default()
+            .all()
+            .describe(true, true, None)
+            .build()?;
+        let _ = git2.at_path(repo.path());
+        let failed = Emitter::default()
+            .add_instructions(&git2)?
+            .emit_to(&mut io::stdout())?;
+        assert!(!failed);
+
+        repo.assert_is_index_magic_mtime();
+        Ok(())
     }
 }
