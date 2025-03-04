@@ -513,6 +513,8 @@ impl Gitcl {
         if let Some(path) = path_opt {
             _ = cmd.current_dir(path);
         }
+        // https://git-scm.com/docs/git-status#_background_refresh
+        _ = cmd.env("GIT_OPTIONAL_LOCKS", "0");
         _ = cmd.arg("-c");
         _ = cmd.arg(command);
         _ = cmd.stdout(Stdio::piped());
@@ -534,6 +536,8 @@ impl Gitcl {
         if let Some(path) = path_opt {
             _ = cmd.current_dir(path);
         }
+        // https://git-scm.com/docs/git-status#_background_refresh
+        _ = cmd.env("GIT_OPTIONAL_LOCKS", "0");
         _ = cmd.arg("/c");
         _ = cmd.arg(command);
         _ = cmd.stdout(Stdio::piped());
@@ -547,6 +551,16 @@ impl Gitcl {
         }
 
         Ok(output)
+    }
+
+    fn run_cmd_checked(command: &str, path_opt: Option<&PathBuf>) -> Result<Vec<u8>> {
+        let output = Self::run_cmd(command, path_opt)?;
+        if output.status.success() {
+            Ok(output.stdout)
+        } else {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            Err(anyhow!("Failed to run '{command}'!  {stderr}"))
+        }
     }
 
     #[allow(clippy::too_many_lines)]
@@ -642,14 +656,32 @@ impl Gitcl {
             }
         }
 
+        let mut dirty_cache = None; // attempt to re-use dirty status later if possible
+        if self.dirty {
+            if let Ok(_value) = env::var(GIT_DIRTY_NAME) {
+                add_default_map_entry(VergenKey::GitDirty, cargo_rustc_env, cargo_warning);
+            } else {
+                let dirty = self.compute_dirty(self.dirty_include_untracked)?;
+                if !self.dirty_include_untracked {
+                    dirty_cache = Some(dirty);
+                }
+                add_map_entry(
+                    VergenKey::GitDirty,
+                    bool::to_string(&dirty),
+                    cargo_rustc_env,
+                );
+            }
+        }
+
         if self.describe {
+            // `git describe --dirty` does not support `GIT_OPTIONAL_LOCKS=0`
+            // (see https://github.com/gitgitgadget/git/pull/1872)
+            //
+            // Instead, always compute the dirty status with `git status`
             if let Ok(_value) = env::var(GIT_DESCRIBE_NAME) {
                 add_default_map_entry(VergenKey::GitDescribe, cargo_rustc_env, cargo_warning);
             } else {
                 let mut describe_cmd = String::from(DESCRIBE);
-                if self.describe_dirty {
-                    describe_cmd.push_str(" --dirty");
-                }
                 if self.describe_tags {
                     describe_cmd.push_str(" --tags");
                 }
@@ -658,12 +690,14 @@ impl Gitcl {
                     describe_cmd.push_str(pattern);
                     describe_cmd.push('\"');
                 }
-                Self::add_git_cmd_entry(
-                    &describe_cmd,
-                    self.repo_path.as_ref(),
-                    VergenKey::GitDescribe,
-                    cargo_rustc_env,
-                )?;
+                let stdout = Self::run_cmd_checked(&describe_cmd, self.repo_path.as_ref())?;
+                let mut describe_value = String::from_utf8_lossy(&stdout).trim().to_string();
+                if self.describe_dirty
+                    && (dirty_cache.is_some_and(|dirty| dirty) || self.compute_dirty(false)?)
+                {
+                    describe_value.push_str("-dirty");
+                }
+                add_map_entry(VergenKey::GitDescribe, describe_value, cargo_rustc_env);
             }
         }
 
@@ -682,23 +716,6 @@ impl Gitcl {
                     VergenKey::GitSha,
                     cargo_rustc_env,
                 )?;
-            }
-        }
-
-        if self.dirty {
-            if let Ok(_value) = env::var(GIT_DIRTY_NAME) {
-                add_default_map_entry(VergenKey::GitDirty, cargo_rustc_env, cargo_warning);
-            } else {
-                let mut dirty_cmd = String::from(DIRTY);
-                if !self.dirty_include_untracked {
-                    dirty_cmd.push_str(" --untracked-files=no");
-                }
-                let output = Self::run_cmd(&dirty_cmd, self.repo_path.as_ref())?;
-                if output.stdout.is_empty() {
-                    add_map_entry(VergenKey::GitDirty, "false", cargo_rustc_env);
-                } else {
-                    add_map_entry(VergenKey::GitDirty, "true", cargo_rustc_env);
-                }
             }
         }
 
@@ -757,17 +774,12 @@ impl Gitcl {
         key: VergenKey,
         cargo_rustc_env: &mut CargoRustcEnvMap,
     ) -> Result<()> {
-        let output = Self::run_cmd(cmd, path)?;
-        if output.status.success() {
-            let stdout = String::from_utf8_lossy(&output.stdout)
-                .trim()
-                .trim_matches('\'')
-                .to_string();
-            add_map_entry(key, stdout, cargo_rustc_env);
-        } else {
-            let stderr = String::from_utf8_lossy(&output.stderr);
-            return Err(anyhow!("Failed to run '{cmd}'!  {stderr}"));
-        }
+        let stdout = Self::run_cmd_checked(cmd, path)?;
+        let stdout = String::from_utf8_lossy(&stdout)
+            .trim()
+            .trim_matches('\'')
+            .to_string();
+        add_map_entry(key, stdout, cargo_rustc_env);
         Ok(())
     }
 
@@ -873,6 +885,15 @@ impl Gitcl {
             Ok((false, no_offset))
         }
     }
+
+    fn compute_dirty(&self, include_untracked: bool) -> Result<bool> {
+        let mut dirty_cmd = String::from(DIRTY);
+        if !include_untracked {
+            dirty_cmd.push_str(" --untracked-files=no");
+        }
+        let stdout = Self::run_cmd_checked(&dirty_cmd, self.repo_path.as_ref())?;
+        Ok(!stdout.is_empty())
+    }
 }
 
 impl AddEntries for Gitcl {
@@ -976,7 +997,11 @@ mod test {
     use crate::Emitter;
     use anyhow::Result;
     use serial_test::serial;
-    use std::{collections::BTreeMap, env::temp_dir, io::Write};
+    use std::{
+        collections::BTreeMap,
+        env::temp_dir,
+        io::{self, Write},
+    };
     use test_util::TestRepos;
     use vergen_lib::{count_idempotent, VergenKey};
 
@@ -1302,5 +1327,26 @@ mod test {
             }();
             assert!(result.is_ok());
         });
+    }
+
+    #[test]
+    #[serial]
+    fn git_no_index_update() -> Result<()> {
+        let repo = TestRepos::new(true, true, false)?;
+        repo.set_index_magic_mtime();
+
+        // The GIT_OPTIONAL_LOCKS=0 environment variable should prevent modifications to the index
+        let mut gitcl = GitclBuilder::default()
+            .all()
+            .describe(true, true, None)
+            .build()?;
+        let _ = gitcl.at_path(repo.path());
+        let failed = Emitter::default()
+            .add_instructions(&gitcl)?
+            .emit_to(&mut io::stdout())?;
+        assert!(!failed);
+
+        repo.assert_is_index_magic_mtime();
+        Ok(())
     }
 }
