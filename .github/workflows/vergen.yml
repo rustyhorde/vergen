@@ -39,7 +39,7 @@ jobs:
     with:
       os: macos-latest
       channel: nightly
-      target: x86_64-apple-darwin
+      target: apple-darwin
       update: true
       project: vergen
 
@@ -77,7 +77,7 @@ jobs:
       matrix:
         os: [macos-latest]
         channel: ["1.81.0", "stable", "beta", "nightly"]
-        target: [x86_64-apple-darwin]
+        target: [apple-darwin]
     uses: rustyhorde/workflows/.github/workflows/test-all-features.yml@main
     with:
       os: ${{ matrix.os }}
@@ -138,7 +138,7 @@ jobs:
     with:
       os: macos-latest
       channel: nightly
-      target: x86_64-apple-darwin
+      target: apple-darwin
       lcov: true
       html: true
       run_cmd: ${{ vars.VERGEN_RUN_CMD }}

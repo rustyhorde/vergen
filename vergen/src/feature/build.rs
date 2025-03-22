@@ -144,6 +144,7 @@ use vergen_lib::{
 /// ```
 ///
 #[derive(Clone, Copy, Debug, DeriveBuilder, PartialEq)]
+#[allow(clippy::struct_field_names)]
 pub struct Build {
     /// Enable the `VERGEN_BUILD_DATE` date output
     #[builder(default = "false")]
