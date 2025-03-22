@@ -127,7 +127,7 @@
 //! ```
 //!
 //! ## Features
-//! `vergen` has five main feature toggles allowing you to customize your output. No features are enabled by default.  
+//! `vergen` has five main feature toggles allowing you to customize your output. No features are enabled by default.
 //! You **must** specifically enable the features you wish to use.
 //!
 //! | Feature | Enables |

@@ -51,7 +51,7 @@
 //! See the [`Pretty`] documentation for more examples
 //!
 //! ## Features
-//! `vergen-pretty` has two feature toggles allowing you to customize your output. No features are enabled by default.  
+//! `vergen-pretty` has two feature toggles allowing you to customize your output. No features are enabled by default.
 //! You **must** specifically enable the features you wish to use.
 //!
 //! | Feature | Enables |
