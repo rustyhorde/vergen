@@ -30,7 +30,7 @@ use vergen_lib::{
 /// | `VERGEN_RUSTC_CHANNEL` | nightly |
 /// | `VERGEN_RUSTC_COMMIT_DATE` | 2021-02-24 |
 /// | `VERGEN_RUSTC_COMMIT_HASH` | a8486b64b0c87dabd045453b6c81500015d122d6 |
-/// | `VERGEN_RUSTC_HOST_TRIPLE` | x86_64-apple-darwin |
+/// | `VERGEN_RUSTC_HOST_TRIPLE` | apple-darwin |
 /// | `VERGEN_RUSTC_LLVM_VERSION` | 11.0 |
 /// | `VERGEN_RUSTC_SEMVER` | 1.52.0-nightly |
 ///
