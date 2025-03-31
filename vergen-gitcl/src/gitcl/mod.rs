@@ -517,7 +517,15 @@ impl Gitcl {
         _ = cmd.arg(command);
         _ = cmd.stdout(Stdio::piped());
         _ = cmd.stderr(Stdio::piped());
-        Ok(cmd.output()?)
+
+        let output = cmd.output()?;
+        if !output.status.success() {
+            eprintln!("Command failed: `{command}`");
+            eprintln!("--- stdout:\n{}\n", String::from_utf8_lossy(&output.stdout));
+            eprintln!("--- stderr:\n{}\n", String::from_utf8_lossy(&output.stderr));
+        }
+
+        Ok(output)
     }
 
     #[cfg(target_env = "msvc")]
@@ -530,7 +538,15 @@ impl Gitcl {
         _ = cmd.arg(command);
         _ = cmd.stdout(Stdio::piped());
         _ = cmd.stderr(Stdio::piped());
-        Ok(cmd.output()?)
+
+        let output = cmd.output()?;
+        if !output.status.success() {
+            eprintln!("Command failed: `{command}`");
+            eprintln!("--- stdout:\n{}\n", String::from_utf8_lossy(&output.stdout));
+            eprintln!("--- stderr:\n{}\n", String::from_utf8_lossy(&output.stderr));
+        }
+
+        Ok(output)
     }
 
     #[allow(clippy::too_many_lines)]
