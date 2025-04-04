@@ -11,7 +11,7 @@ rust-version = "1.81.0"
 name = "vergen-pretty"
 readme = "README.md"
 repository = "https://github.com/rustyhorde/vergen"
-version = "1.0.0"
+version = "1.0.1"
 
 [package.metadata.cargo-matrix]
 [[package.metadata.cargo-matrix.channel]]
@@ -53,7 +53,7 @@ tracing = { version = "0.1.41", features = [
 [build-dependencies]
 anyhow = "1.0.95"
 rustversion = "1.0.19"
-vergen-gix = { version = "1.0.7", path = "../vergen-gix", features = [
+vergen-gix = { version = "1.0.8", path = "../vergen-gix", features = [
     "build",
     "cargo",
     "rustc",
