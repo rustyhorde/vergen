@@ -8,7 +8,14 @@
 
 use anyhow::{anyhow, Error, Result};
 use derive_builder::Builder as DeriveBuilder;
-use gix::{commit::describe::SelectRef, discover, head::Kind, Commit, Head, Id, Repository};
+use gix::{
+    commit::describe::SelectRef,
+    dir::{entry::Status, walk::EmissionMode},
+    discover,
+    head::Kind,
+    progress::Discard,
+    Commit, Head, Id, Repository,
+};
 use std::{
     env::{self, VarError},
     path::{Path, PathBuf},
@@ -432,11 +439,22 @@ impl Gix {
             if let Ok(_value) = env::var(GIT_DIRTY_NAME) {
                 add_default_map_entry(VergenKey::GitDirty, cargo_rustc_env, cargo_warning);
             } else {
-                add_map_entry(
-                    VergenKey::GitDirty,
-                    format!("{}", repo.is_dirty()?),
-                    cargo_rustc_env,
-                );
+                let mut dirty = repo.is_dirty()?;
+
+                if !dirty && self.dirty_include_untracked {
+                    let index = repo.index_or_load_from_head_or_empty()?;
+                    let patterns: [String; 0] = [];
+                    let options = repo
+                        .dirwalk_options()?
+                        .emit_tracked(false)
+                        .emit_empty_directories(false)
+                        .emit_untracked(EmissionMode::Matching);
+                    dirty |= repo
+                        .dirwalk_iter(index, patterns, Default::default(), options)?
+                        .any(|i| matches!(i, Ok(i) if i.entry.status == Status::Untracked));
+                }
+
+                add_map_entry(VergenKey::GitDirty, format!("{}", dirty), cargo_rustc_env);
             }
         }
 
