@@ -23,7 +23,7 @@ use vergen_lib::{
     constants::{
         GIT_BRANCH_NAME, GIT_COMMIT_AUTHOR_EMAIL, GIT_COMMIT_AUTHOR_NAME, GIT_COMMIT_COUNT,
         GIT_COMMIT_DATE_NAME, GIT_COMMIT_MESSAGE, GIT_COMMIT_TIMESTAMP_NAME, GIT_DESCRIBE_NAME,
-        GIT_SHA_NAME,
+        GIT_DIRTY_NAME, GIT_SHA_NAME,
     },
     AddEntries, CargoRerunIfChanged, CargoRustcEnvMap, CargoWarning, DefaultConfig, VergenKey,
 };
@@ -41,6 +41,7 @@ use vergen_lib::{
 /// | `VERGEN_GIT_COMMIT_TIMESTAMP` | 2021-02-24T20:55:21+00:00 |
 /// | `VERGEN_GIT_DESCRIBE` | 5.0.0-2-gf49246c |
 /// | `VERGEN_GIT_SHA` | f49246ce334567bff9f950bfd0f3078184a2738a |
+/// | `VERGEN_GIT_DIRTY` | true |
 ///
 /// # Example
 ///
@@ -284,6 +285,7 @@ impl Gix {
             || self.commit_timestamp
             || self.describe
             || self.sha
+            || self.dirty
     }
 
     /// Run at the given path
@@ -423,6 +425,18 @@ impl Gix {
                         String::new()
                     };
                 add_map_entry(VergenKey::GitDescribe, describe, cargo_rustc_env);
+            }
+        }
+
+        if self.dirty {
+            if let Ok(_value) = env::var(GIT_DIRTY_NAME) {
+                add_default_map_entry(VergenKey::GitDirty, cargo_rustc_env, cargo_warning);
+            } else {
+                add_map_entry(
+                    VergenKey::GitDirty,
+                    format!("{}", repo.is_dirty()?),
+                    cargo_rustc_env,
+                );
             }
         }
 
@@ -656,6 +670,9 @@ impl AddEntries for Gix {
             if self.sha {
                 add_default_map_entry(VergenKey::GitSha, cargo_rustc_env_map, cargo_warning);
             }
+            if self.dirty {
+                add_default_map_entry(VergenKey::GitDirty, cargo_rustc_env_map, cargo_warning);
+            }
             Ok(())
         }
     }
@@ -714,7 +731,7 @@ mod test {
             .idempotent()
             .add_instructions(&gix)?
             .test_emit();
-        assert_eq!(9, emitter.cargo_rustc_env_map().len());
+        assert_eq!(10, emitter.cargo_rustc_env_map().len());
         assert_eq!(2, count_idempotent(emitter.cargo_rustc_env_map()));
         assert_eq!(2, emitter.cargo_warning().len());
         Ok(())
@@ -729,7 +746,7 @@ mod test {
             .quiet()
             .add_instructions(&gix)?
             .test_emit();
-        assert_eq!(9, emitter.cargo_rustc_env_map().len());
+        assert_eq!(10, emitter.cargo_rustc_env_map().len());
         assert_eq!(2, count_idempotent(emitter.cargo_rustc_env_map()));
         assert_eq!(2, emitter.cargo_warning().len());
         Ok(())
@@ -740,7 +757,7 @@ mod test {
     fn git_all() -> Result<()> {
         let gix = GixBuilder::all_git()?;
         let emitter = Emitter::default().add_instructions(&gix)?.test_emit();
-        assert_eq!(9, emitter.cargo_rustc_env_map().len());
+        assert_eq!(10, emitter.cargo_rustc_env_map().len());
         assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
         assert_eq!(0, emitter.cargo_warning().len());
         Ok(())
@@ -870,7 +887,7 @@ mod test {
         let mut gix = GixBuilder::all_git()?;
         let _ = gix.at_path(repo.path());
         let emitter = Emitter::default().add_instructions(&gix)?.test_emit();
-        assert_eq!(9, emitter.cargo_rustc_env_map().len());
+        assert_eq!(10, emitter.cargo_rustc_env_map().len());
         assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
         assert_eq!(0, emitter.cargo_warning().len());
         Ok(())
@@ -883,7 +900,7 @@ mod test {
         let mut gix = GixBuilder::all_git()?;
         let _ = gix.at_path(repo.path());
         let emitter = Emitter::default().add_instructions(&gix)?.test_emit();
-        assert_eq!(9, emitter.cargo_rustc_env_map().len());
+        assert_eq!(10, emitter.cargo_rustc_env_map().len());
         assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
         assert_eq!(0, emitter.cargo_warning().len());
         Ok(())
@@ -907,9 +924,9 @@ mod test {
         let mut gix = GixBuilder::all_git()?;
         let _ = gix.at_path(temp_dir());
         let emitter = Emitter::default().add_instructions(&gix)?.test_emit();
-        assert_eq!(9, emitter.cargo_rustc_env_map().len());
-        assert_eq!(9, count_idempotent(emitter.cargo_rustc_env_map()));
-        assert_eq!(10, emitter.cargo_warning().len());
+        assert_eq!(10, emitter.cargo_rustc_env_map().len());
+        assert_eq!(10, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(11, emitter.cargo_warning().len());
         Ok(())
     }
 
