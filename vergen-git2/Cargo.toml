@@ -35,7 +35,7 @@ si = ["vergen/si"]
 [dependencies]
 anyhow = "1.0.95"
 derive_builder = "0.20.2"
-git2-rs = { version = "0.20.0", package = "git2", default-features = false }
+git2-rs = { version = "0.20.1", package = "git2", default-features = false }
 time = { version = "0.3.37", features = [
     "formatting",
     "local-offset",
