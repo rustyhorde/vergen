@@ -1331,6 +1331,7 @@ mod test {
 
     #[test]
     #[serial]
+    #[cfg(unix)]
     fn git_no_index_update() -> Result<()> {
         let repo = TestRepos::new(true, true, false)?;
         repo.set_index_magic_mtime()?;
