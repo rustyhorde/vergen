@@ -663,13 +663,15 @@ impl AddEntries for Gix {
 
 #[cfg(test)]
 mod test {
-    use std::{env::temp_dir, io};
-
     use super::GixBuilder;
     use anyhow::Result;
     use serial_test::serial;
-    use std::io::Write;
+    #[cfg(unix)]
+    use std::io::stdout;
+    use std::{env::temp_dir, io::Write};
     use test_util::TestRepos;
+    #[cfg(unix)]
+    use test_util::TEST_MTIME;
     use vergen::Emitter;
     use vergen_lib::count_idempotent;
 
@@ -1035,9 +1037,10 @@ mod test {
 
     #[test]
     #[serial]
+    #[cfg(unix)]
     fn git_no_index_update() -> Result<()> {
         let repo = TestRepos::new(true, true, false)?;
-        repo.set_index_magic_mtime();
+        repo.set_index_magic_mtime()?;
 
         let mut gix = GixBuilder::default()
             .all()
@@ -1046,10 +1049,10 @@ mod test {
         let _ = gix.at_path(repo.path());
         let failed = Emitter::default()
             .add_instructions(&gix)?
-            .emit_to(&mut io::stdout())?;
+            .emit_to(&mut stdout())?;
         assert!(!failed);
 
-        repo.assert_is_index_magic_mtime();
+        assert_eq!(*TEST_MTIME, repo.get_index_magic_mtime()?);
         Ok(())
     }
 }
