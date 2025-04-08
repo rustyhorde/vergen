@@ -669,7 +669,9 @@ mod test {
     #[cfg(unix)]
     use std::io::stdout;
     use std::{env::temp_dir, io::Write};
-    use test_util::{TestRepos, TEST_MTIME};
+    use test_util::TestRepos;
+    #[cfg(unix)]
+    use test_util::TEST_MTIME;
     use vergen::Emitter;
     use vergen_lib::count_idempotent;
 
