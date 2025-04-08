@@ -663,7 +663,7 @@ impl AddEntries for Gix {
 
 #[cfg(test)]
 mod test {
-    use std::env::temp_dir;
+    use std::{env::temp_dir, io};
 
     use super::GixBuilder;
     use anyhow::Result;
@@ -1031,5 +1031,25 @@ mod test {
             }();
             assert!(result.is_ok());
         });
+    }
+
+    #[test]
+    #[serial]
+    fn git_no_index_update() -> Result<()> {
+        let repo = TestRepos::new(true, true, false)?;
+        repo.set_index_magic_mtime();
+
+        let mut gix = GixBuilder::default()
+            .all()
+            .describe(true, true, None)
+            .build()?;
+        let _ = gix.at_path(repo.path());
+        let failed = Emitter::default()
+            .add_instructions(&gix)?
+            .emit_to(&mut io::stdout())?;
+        assert!(!failed);
+
+        repo.assert_is_index_magic_mtime();
+        Ok(())
     }
 }

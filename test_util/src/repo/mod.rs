@@ -20,9 +20,10 @@ use gix as git;
 use rand::{distr::Alphanumeric, rng, Rng};
 use std::{
     env,
-    fs::{self, OpenOptions},
+    fs::{self, FileTimes, OpenOptions},
     io::{BufWriter, Write},
     path::PathBuf,
+    time::{Duration, UNIX_EPOCH},
 };
 use std::{fs::File, num::NonZeroU32};
 
@@ -30,6 +31,7 @@ const BARE_REPO_PREFIX: &str = "vergen_tmp";
 const BARE_REPO_SUFFIX: &str = ".git";
 const CLONE_NAME_PREFIX: &str = "vergen_tmp";
 const RUNNER_TEMP_ENV: &str = "RUNNER_TEMP";
+const MAGIC_MTIME: u64 = 1234567890;
 
 /// Utility to create a temporary bare repository and a repository cloned from the
 /// bare repository.
@@ -318,6 +320,29 @@ impl TestRepos {
         let temp_path = Self::temp_path();
         let rand_clone_path = format!("{CLONE_NAME_PREFIX}_{}", Self::rand_five());
         temp_path.join(rand_clone_path)
+    }
+
+    pub fn set_index_magic_mtime(&self) {
+        let index_path = self.path().join(".git").join("index");
+        let magic_mtime = UNIX_EPOCH + Duration::from_secs(MAGIC_MTIME);
+        File::open(&index_path)
+            .unwrap()
+            .set_times(FileTimes::new().set_modified(magic_mtime))
+            .unwrap();
+    }
+
+    pub fn assert_is_index_magic_mtime(&self) {
+        let index_path = self.path().join(".git").join("index");
+        let magic_mtime = UNIX_EPOCH + Duration::from_secs(MAGIC_MTIME);
+        assert_eq!(
+            File::open(&index_path)
+                .unwrap()
+                .metadata()
+                .unwrap()
+                .modified()
+                .unwrap(),
+            magic_mtime
+        );
     }
 }
 
