@@ -11,7 +11,7 @@ rust-version = "1.81.0"
 name = "vergen"
 readme = "README.md"
 repository = "https://github.com/rustyhorde/vergen"
-version = "9.0.5"
+version = "9.0.6"
 
 [package.metadata.cargo-matrix]
 [[package.metadata.cargo-matrix.channel]]
@@ -38,7 +38,7 @@ cargo_metadata = { version = "0.19.1", optional = true }
 derive_builder = "0.20.2"
 regex = { version = "1.11.1", optional = true }
 rustc_version = { version = "0.4.1", optional = true }
-sysinfo = { version = "0.33.1", optional = true }
+sysinfo = { version = "0.34.2", optional = true }
 time = { version = "0.3.37", features = [
     "formatting",
     "local-offset",

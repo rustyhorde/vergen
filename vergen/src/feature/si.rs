@@ -430,7 +430,6 @@ impl Sysinfo {
 
     fn add_sysinfo_cpu_core_count(
         &self,
-        system: &System,
         idempotent: bool,
         cargo_rustc_env: &mut CargoRustcEnvMap,
         cargo_warning: &mut CargoWarning,
@@ -442,7 +441,7 @@ impl Sysinfo {
                 Self::add_sysinfo_map_entry(
                     VergenKey::SysinfoCpuCoreCount,
                     idempotent,
-                    system.physical_core_count().as_ref().map(usize::to_string),
+                    System::physical_core_count().as_ref().map(usize::to_string),
                     cargo_rustc_env,
                     cargo_warning,
                 );
@@ -546,7 +545,7 @@ impl AddEntries for Sysinfo {
             self.add_sysinfo_user(&system, idempotent, cargo_rustc_env, cargo_warning);
             self.add_sysinfo_total_memory(&system, idempotent, cargo_rustc_env, cargo_warning);
             self.add_sysinfo_cpu_vendor(&system, idempotent, cargo_rustc_env, cargo_warning);
-            self.add_sysinfo_cpu_core_count(&system, idempotent, cargo_rustc_env, cargo_warning);
+            self.add_sysinfo_cpu_core_count(idempotent, cargo_rustc_env, cargo_warning);
             self.add_sysinfo_cpu_name(&system, idempotent, cargo_rustc_env, cargo_warning);
             self.add_sysinfo_cpu_brand(&system, idempotent, cargo_rustc_env, cargo_warning);
             self.add_sysinfo_cpu_frequency(&system, idempotent, cargo_rustc_env, cargo_warning);
