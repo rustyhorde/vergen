@@ -997,11 +997,9 @@ mod test {
     use crate::Emitter;
     use anyhow::Result;
     use serial_test::serial;
-    use std::{
-        collections::BTreeMap,
-        env::temp_dir,
-        io::{self, Write},
-    };
+    #[cfg(unix)]
+    use std::io::stdout;
+    use std::{collections::BTreeMap, env::temp_dir, io::Write};
     use test_util::{TestRepos, TEST_MTIME};
     use vergen_lib::{count_idempotent, VergenKey};
 
@@ -1344,7 +1342,7 @@ mod test {
         let _ = gitcl.at_path(repo.path());
         let failed = Emitter::default()
             .add_instructions(&gitcl)?
-            .emit_to(&mut io::stdout())?;
+            .emit_to(&mut stdout())?;
         assert!(!failed);
 
         assert_eq!(*TEST_MTIME, repo.get_index_magic_mtime()?);
