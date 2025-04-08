@@ -23,7 +23,8 @@ use std::{
     fs::{self, FileTimes, OpenOptions},
     io::{BufWriter, Write},
     path::PathBuf,
-    time::{Duration, UNIX_EPOCH},
+    sync::LazyLock,
+    time::{Duration, SystemTime, UNIX_EPOCH},
 };
 use std::{fs::File, num::NonZeroU32};
 
@@ -31,7 +32,11 @@ const BARE_REPO_PREFIX: &str = "vergen_tmp";
 const BARE_REPO_SUFFIX: &str = ".git";
 const CLONE_NAME_PREFIX: &str = "vergen_tmp";
 const RUNNER_TEMP_ENV: &str = "RUNNER_TEMP";
-const MAGIC_MTIME: u64 = 1234567890;
+const MAGIC_MTIME: u64 = 1_234_567_890;
+
+/// mtime to use for testing
+pub static TEST_MTIME: LazyLock<SystemTime> =
+    LazyLock::new(|| UNIX_EPOCH + Duration::from_secs(MAGIC_MTIME));
 
 /// Utility to create a temporary bare repository and a repository cloned from the
 /// bare repository.
@@ -322,27 +327,25 @@ impl TestRepos {
         temp_path.join(rand_clone_path)
     }
 
-    pub fn set_index_magic_mtime(&self) {
+    /// Set mtime on .git index file
+    ///
+    /// # Errors
+    /// * File open and modifiy errors
+    ///
+    pub fn set_index_magic_mtime(&self) -> Result<()> {
         let index_path = self.path().join(".git").join("index");
-        let magic_mtime = UNIX_EPOCH + Duration::from_secs(MAGIC_MTIME);
-        File::open(&index_path)
-            .unwrap()
-            .set_times(FileTimes::new().set_modified(magic_mtime))
-            .unwrap();
+        File::open(&index_path)?.set_times(FileTimes::new().set_modified(*TEST_MTIME))?;
+        Ok(())
     }
 
-    pub fn assert_is_index_magic_mtime(&self) {
+    /// Get mtime on the .git index file
+    ///
+    /// # Errors
+    /// * File open and modifiy errors
+    ///
+    pub fn get_index_magic_mtime(&self) -> Result<SystemTime> {
         let index_path = self.path().join(".git").join("index");
-        let magic_mtime = UNIX_EPOCH + Duration::from_secs(MAGIC_MTIME);
-        assert_eq!(
-            File::open(&index_path)
-                .unwrap()
-                .metadata()
-                .unwrap()
-                .modified()
-                .unwrap(),
-            magic_mtime
-        );
+        Ok(File::open(&index_path)?.metadata()?.modified()?)
     }
 }
 

@@ -1002,7 +1002,7 @@ mod test {
         env::temp_dir,
         io::{self, Write},
     };
-    use test_util::TestRepos;
+    use test_util::{TestRepos, TEST_MTIME};
     use vergen_lib::{count_idempotent, VergenKey};
 
     #[test]
@@ -1333,7 +1333,7 @@ mod test {
     #[serial]
     fn git_no_index_update() -> Result<()> {
         let repo = TestRepos::new(true, true, false)?;
-        repo.set_index_magic_mtime();
+        repo.set_index_magic_mtime()?;
 
         // The GIT_OPTIONAL_LOCKS=0 environment variable should prevent modifications to the index
         let mut gitcl = GitclBuilder::default()
@@ -1346,7 +1346,7 @@ mod test {
             .emit_to(&mut io::stdout())?;
         assert!(!failed);
 
-        repo.assert_is_index_magic_mtime();
+        assert_eq!(*TEST_MTIME, repo.get_index_magic_mtime()?);
         Ok(())
     }
 }

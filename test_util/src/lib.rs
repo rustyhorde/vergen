@@ -281,5 +281,7 @@ mod utils;
 
 #[cfg(feature = "repo")]
 pub use repo::TestRepos;
+#[cfg(feature = "repo")]
+pub use repo::TEST_MTIME;
 pub use utils::with_cargo_vars;
 pub use utils::with_cargo_vars_ext;
