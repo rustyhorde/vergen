@@ -686,9 +686,7 @@ impl Gitcl {
                     describe_cmd.push_str(" --tags");
                 }
                 if let Some(pattern) = self.describe_match_pattern {
-                    describe_cmd.push_str(" --match \"");
-                    describe_cmd.push_str(pattern);
-                    describe_cmd.push('\"');
+                    Self::match_pattern_cmd_str(&mut describe_cmd, pattern);
                 }
                 let stdout = Self::run_cmd_checked(&describe_cmd, self.repo_path.as_ref())?;
                 let mut describe_value = String::from_utf8_lossy(&stdout).trim().to_string();
@@ -751,6 +749,19 @@ impl Gitcl {
             }
         }
         Ok(())
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    fn match_pattern_cmd_str(describe_cmd: &mut String, pattern: &str) {
+        describe_cmd.push_str(" --match \"");
+        describe_cmd.push_str(pattern);
+        describe_cmd.push('\"');
+    }
+
+    #[cfg(target_os = "windows")]
+    fn match_pattern_cmd_str(describe_cmd: &mut String, pattern: &str) {
+        describe_cmd.push_str(" --match ");
+        describe_cmd.push_str(pattern);
     }
 
     #[cfg(not(test))]
