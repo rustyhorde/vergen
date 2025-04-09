@@ -160,6 +160,10 @@ pub struct Gix {
     #[builder(default = "false", private)]
     describe_dirty: bool,
     /// Only consider tags matching the given glob pattern, excluding the "refs/tags/" prefix.
+    /// 
+    /// *NOTE*: This is not implemented in `vergen-gix` currently as there is no easy way to accomplish this.
+    /// I'm waiting on `gix` to implement this feature, or may try and get a PR up myself, but for now do not
+    /// use this.
     #[builder(default = "None", private)]
     describe_match_pattern: Option<&'static str>,
     /// Emit the SHA of the latest commit
@@ -421,12 +425,15 @@ impl Gix {
                 } else {
                     SelectRef::AnnotatedTags
                 };
+
                 let describe =
-                    if let Some(mut fmt) = commit.describe().names(describe_refs).try_format()? {
-                        if fmt.depth > 0 && self.describe_dirty {
-                            fmt.dirty_suffix = Some("dirty".to_string());
+                    if let Some(res) = commit.describe().names(describe_refs).try_resolve()? {
+                        if self.describe_dirty {
+                            let fmt = res.format_with_dirty_suffix(Some("dirty".to_string()))?;
+                            fmt.to_string()
+                        } else {
+                            res.format()?.to_string()
                         }
-                        fmt.to_string()
                     } else {
                         String::new()
                     };
