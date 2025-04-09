@@ -13,7 +13,6 @@ use gix::{
     dir::{entry::Status, walk::EmissionMode},
     discover,
     head::Kind,
-    progress::Discard,
     Commit, Head, Id, Repository,
 };
 use std::{
@@ -319,7 +318,7 @@ impl Gix {
         Ok(())
     }
 
-    #[allow(clippy::too_many_lines)]
+    #[allow(clippy::too_many_lines, clippy::default_trait_access)]
     fn inner_add_git_map_entries(
         &self,
         idempotent: bool,
@@ -454,7 +453,7 @@ impl Gix {
                         .any(|i| matches!(i, Ok(i) if i.entry.status == Status::Untracked));
                 }
 
-                add_map_entry(VergenKey::GitDirty, format!("{}", dirty), cargo_rustc_env);
+                add_map_entry(VergenKey::GitDirty, format!("{dirty}"), cargo_rustc_env);
             }
         }
 
