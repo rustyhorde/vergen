@@ -43,6 +43,8 @@ derive_builder = "0.20.2"
 gix = { version = "0.71.0", default-features = false, features = [
     "revision",
     "interrupt",
+    "status",
+    "dirwalk",
 ] }
 time = { version = "0.3.37", features = [
     "formatting",
