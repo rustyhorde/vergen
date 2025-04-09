@@ -160,7 +160,7 @@ pub struct Gix {
     #[builder(default = "false", private)]
     describe_dirty: bool,
     /// Only consider tags matching the given glob pattern, excluding the "refs/tags/" prefix.
-    /// 
+    ///
     /// *NOTE*: This is not implemented in `vergen-gix` currently as there is no easy way to accomplish this.
     /// I'm waiting on `gix` to implement this feature, or may try and get a PR up myself, but for now do not
     /// use this.
