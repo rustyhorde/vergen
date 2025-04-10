@@ -496,7 +496,7 @@ impl Gitcl {
         Self::run_cmd("git rev-parse --is-inside-work-tree", path)
             .map(|output| {
                 let stdout = String::from_utf8_lossy(&output.stdout);
-                output.status.success() && stdout.trim() == "true"
+                output.status.success() && stdout.contains("true")
             })
             .unwrap_or(false)
     }
