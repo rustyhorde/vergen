@@ -61,7 +61,7 @@
 //! # use anyhow::Result;
 //! # use vergen_gix::{Emitter, GixBuilder};
 #![cfg_attr(feature = "build", doc = r"# use vergen_gix::Build;")]
-#![cfg_attr(feature = "cargo", doc = r"# use vergen_gix::CargoBuilder;")]
+#![cfg_attr(feature = "cargo", doc = r"# use vergen_gix::Cargo;")]
 #![cfg_attr(feature = "rustc", doc = r"# use vergen_gix::RustcBuilder;")]
 #![cfg_attr(feature = "si", doc = r"# use vergen_gix::SysinfoBuilder;")]
 #![cfg_attr(feature = "cargo", doc = r"# use test_util::with_cargo_vars;")]
@@ -71,7 +71,7 @@
 //! // NOTE: This will output everything, and requires all features enabled.
 //! // NOTE: See the specific builder documentation for configuration options.
 #![cfg_attr(feature = "build", doc = r"let build = Build::all_build();")]
-#![cfg_attr(feature = "cargo", doc = r"let cargo = CargoBuilder::all_cargo()?;")]
+#![cfg_attr(feature = "cargo", doc = r"let cargo = Cargo::all_cargo();")]
 //! let gitcl = GixBuilder::all_git()?;
 #![cfg_attr(feature = "rustc", doc = r"let rustc = RustcBuilder::all_rustc()?;")]
 #![cfg_attr(feature = "si", doc = r"let si = SysinfoBuilder::all_sysinfo()?;")]
@@ -139,7 +139,7 @@
 //! # use anyhow::Result;
 //! # use vergen_gix::{Emitter, GixBuilder};
 #![cfg_attr(feature = "build", doc = r"# use vergen_gix::Build;")]
-#![cfg_attr(feature = "cargo", doc = r"# use vergen_gix::CargoBuilder;")]
+#![cfg_attr(feature = "cargo", doc = r"# use vergen_gix::Cargo;")]
 #![cfg_attr(feature = "rustc", doc = r"# use vergen_gix::RustcBuilder;")]
 #![cfg_attr(feature = "si", doc = r"# use vergen_gix::SysinfoBuilder;")]
 #![cfg_attr(feature = "cargo", doc = r"# use test_util::with_cargo_vars;")]
@@ -154,7 +154,7 @@ let build = Build::builder().build_timestamp(true).build();"
 )]
 #![cfg_attr(
     feature = "cargo",
-    doc = r"let cargo = CargoBuilder::default().opt_level(true).build()?;"
+    doc = r"let cargo = Cargo::builder().opt_level(true).build();"
 )]
 //! let gitcl = GixBuilder::default().commit_timestamp(true).build()?;
 #![cfg_attr(
@@ -460,7 +460,7 @@ pub use crate::gix::GixBuilder;
 #[cfg(feature = "build")]
 pub use vergen::Build;
 #[cfg(feature = "cargo")]
-pub use vergen::CargoBuilder;
+pub use vergen::Cargo;
 #[cfg(feature = "si")]
 pub use vergen::CpuRefreshKind;
 #[cfg(feature = "cargo")]

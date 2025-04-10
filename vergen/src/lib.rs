@@ -56,7 +56,7 @@
 //! # use anyhow::Result;
 //! # use vergen::Emitter;
 #![cfg_attr(feature = "build", doc = r"# use vergen::Build;")]
-#![cfg_attr(feature = "cargo", doc = r"# use vergen::CargoBuilder;")]
+#![cfg_attr(feature = "cargo", doc = r"# use vergen::Cargo;")]
 #![cfg_attr(feature = "rustc", doc = r"# use vergen::RustcBuilder;")]
 #![cfg_attr(feature = "si", doc = r"# use vergen::SysinfoBuilder;")]
 #![cfg_attr(feature = "cargo", doc = r"# use test_util::with_cargo_vars;")]
@@ -66,7 +66,7 @@
 //! // NOTE: This will output everything, and requires all features enabled.
 //! // NOTE: See the specific builder documentation for configuration options.
 #![cfg_attr(feature = "build", doc = r"let build = Build::all_build();")]
-#![cfg_attr(feature = "cargo", doc = r"let cargo = CargoBuilder::all_cargo()?;")]
+#![cfg_attr(feature = "cargo", doc = r"let cargo = Cargo::all_cargo();")]
 #![cfg_attr(feature = "rustc", doc = r"let rustc = RustcBuilder::all_rustc()?;")]
 #![cfg_attr(feature = "si", doc = r"let si = SysinfoBuilder::all_sysinfo()?;")]
 //!
@@ -121,7 +121,7 @@
 //! # use anyhow::Result;
 //! # use vergen::Emitter;
 #![cfg_attr(feature = "build", doc = r"# use vergen::Build;")]
-#![cfg_attr(feature = "cargo", doc = r"# use vergen::CargoBuilder;")]
+#![cfg_attr(feature = "cargo", doc = r"# use vergen::Cargo;")]
 #![cfg_attr(feature = "rustc", doc = r"# use vergen::RustcBuilder;")]
 #![cfg_attr(feature = "si", doc = r"# use vergen::SysinfoBuilder;")]
 #![cfg_attr(feature = "cargo", doc = r"# use test_util::with_cargo_vars;")]
@@ -136,7 +136,7 @@ let build = Build::builder().build_timestamp(true).build();"
 )]
 #![cfg_attr(
     feature = "cargo",
-    doc = r"let cargo = CargoBuilder::default().opt_level(true).build()?;"
+    doc = r"let cargo = Cargo::builder().opt_level(true).build();"
 )]
 #![cfg_attr(
     feature = "rustc",
@@ -491,11 +491,11 @@ let build = Build::builder().build_timestamp(true).build();"
 mod feature;
 
 // This is here to appease the `unused_crate_dependencies` lint
-#[cfg(not(feature = "build"))]
+#[cfg(not(any(feature = "build", feature = "cargo")))]
 use bon as _;
 #[cfg(all(
-    feature = "build",
-    not(any(feature = "cargo", feature = "rustc", feature = "si"))
+    any(feature = "build", feature = "cargo"),
+    not(any(feature = "rustc", feature = "si"))
 ))]
 use derive_builder as _;
 #[cfg(not(any(
@@ -514,8 +514,6 @@ pub use cargo_metadata::DependencyKind;
 pub use feature::build::Build;
 #[cfg(feature = "cargo")]
 pub use feature::cargo::Cargo;
-#[cfg(feature = "cargo")]
-pub use feature::cargo::CargoBuilder;
 #[cfg(feature = "rustc")]
 pub use feature::rustc::Rustc;
 #[cfg(feature = "rustc")]
