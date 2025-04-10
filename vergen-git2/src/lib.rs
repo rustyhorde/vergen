@@ -62,7 +62,7 @@
 //! # use vergen_git2::{Emitter, Git2Builder};
 #![cfg_attr(feature = "build", doc = r"# use vergen_git2::Build;")]
 #![cfg_attr(feature = "cargo", doc = r"# use vergen_git2::Cargo;")]
-#![cfg_attr(feature = "rustc", doc = r"# use vergen_git2::RustcBuilder;")]
+#![cfg_attr(feature = "rustc", doc = r"# use vergen_git2::Rustc;")]
 #![cfg_attr(feature = "si", doc = r"# use vergen_git2::SysinfoBuilder;")]
 #![cfg_attr(feature = "cargo", doc = r"# use test_util::with_cargo_vars;")]
 //! #
@@ -73,7 +73,7 @@
 #![cfg_attr(feature = "build", doc = r"let build = Build::all_build();")]
 #![cfg_attr(feature = "cargo", doc = r"let cargo = Cargo::all_cargo();")]
 //! let git2 = Git2Builder::all_git()?;
-#![cfg_attr(feature = "rustc", doc = r"let rustc = RustcBuilder::all_rustc()?;")]
+#![cfg_attr(feature = "rustc", doc = r"let rustc = Rustc::all_rustc();")]
 #![cfg_attr(feature = "si", doc = r"let si = SysinfoBuilder::all_sysinfo()?;")]
 //!
 //! Emitter::default()
@@ -140,7 +140,7 @@
 //! # use vergen_git2::{Emitter, Git2Builder};
 #![cfg_attr(feature = "build", doc = r"# use vergen_git2::Build;")]
 #![cfg_attr(feature = "cargo", doc = r"# use vergen_git2::Cargo;")]
-#![cfg_attr(feature = "rustc", doc = r"# use vergen_git2::RustcBuilder;")]
+#![cfg_attr(feature = "rustc", doc = r"# use vergen_git2::Rustc;")]
 #![cfg_attr(feature = "si", doc = r"# use vergen_git2::SysinfoBuilder;")]
 #![cfg_attr(feature = "cargo", doc = r"# use test_util::with_cargo_vars;")]
 //! #
@@ -159,7 +159,7 @@ let build = Build::builder().build_timestamp(true).build();"
 //! let git2 = Git2Builder::default().commit_timestamp(true).build()?;
 #![cfg_attr(
     feature = "rustc",
-    doc = r"let rustc = RustcBuilder::default().semver(true).build()?;"
+    doc = r"let rustc = Rustc::builder().semver(true).build();"
 )]
 #![cfg_attr(
     feature = "si",
@@ -472,7 +472,7 @@ pub use vergen::ProcessRefreshKind;
 #[cfg(feature = "si")]
 pub use vergen::RefreshKind;
 #[cfg(feature = "rustc")]
-pub use vergen::RustcBuilder;
+pub use vergen::Rustc;
 #[cfg(feature = "si")]
 pub use vergen::SysinfoBuilder;
 pub use vergen_lib::AddCustomEntries;

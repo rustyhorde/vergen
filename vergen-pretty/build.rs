@@ -7,7 +7,7 @@ use {
     std::collections::BTreeMap,
     vergen_gix::{
         AddCustomEntries, Build, Cargo, CargoRerunIfChanged, CargoWarning, DefaultConfig, Emitter,
-        GixBuilder, RustcBuilder, SysinfoBuilder,
+        GixBuilder, Rustc, SysinfoBuilder,
     },
 };
 
@@ -71,7 +71,7 @@ fn emit() -> Result<()> {
     let build = Build::all_build();
     let cargo = Cargo::all_cargo();
     let gix = GixBuilder::all_git()?;
-    let rustc = RustcBuilder::all_rustc()?;
+    let rustc = Rustc::all_rustc();
     let si = SysinfoBuilder::all_sysinfo()?;
     Emitter::default()
         .add_instructions(&build)?
