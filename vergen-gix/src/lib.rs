@@ -60,7 +60,7 @@
 //! ```
 //! # use anyhow::Result;
 //! # use vergen_gix::{Emitter, GixBuilder};
-#![cfg_attr(feature = "build", doc = r"# use vergen_gix::BuildBuilder;")]
+#![cfg_attr(feature = "build", doc = r"# use vergen_gix::Build;")]
 #![cfg_attr(feature = "cargo", doc = r"# use vergen_gix::CargoBuilder;")]
 #![cfg_attr(feature = "rustc", doc = r"# use vergen_gix::RustcBuilder;")]
 #![cfg_attr(feature = "si", doc = r"# use vergen_gix::SysinfoBuilder;")]
@@ -70,7 +70,7 @@
 #![cfg_attr(feature = "cargo", doc = r"# let result = with_cargo_vars(|| {")]
 //! // NOTE: This will output everything, and requires all features enabled.
 //! // NOTE: See the specific builder documentation for configuration options.
-#![cfg_attr(feature = "build", doc = r"let build = BuildBuilder::all_build()?;")]
+#![cfg_attr(feature = "build", doc = r"let build = Build::all_build();")]
 #![cfg_attr(feature = "cargo", doc = r"let cargo = CargoBuilder::all_cargo()?;")]
 //! let gitcl = GixBuilder::all_git()?;
 #![cfg_attr(feature = "rustc", doc = r"let rustc = RustcBuilder::all_rustc()?;")]
@@ -138,7 +138,7 @@
 //! ```
 //! # use anyhow::Result;
 //! # use vergen_gix::{Emitter, GixBuilder};
-#![cfg_attr(feature = "build", doc = r"# use vergen_gix::BuildBuilder;")]
+#![cfg_attr(feature = "build", doc = r"# use vergen_gix::Build;")]
 #![cfg_attr(feature = "cargo", doc = r"# use vergen_gix::CargoBuilder;")]
 #![cfg_attr(feature = "rustc", doc = r"# use vergen_gix::RustcBuilder;")]
 #![cfg_attr(feature = "si", doc = r"# use vergen_gix::SysinfoBuilder;")]
@@ -150,7 +150,7 @@
     feature = "build",
     doc = r"// NOTE: This will output only the instructions specified.
 // NOTE: See the specific builder documentation for configuration options. 
-let build = BuildBuilder::default().build_timestamp(true).build()?;"
+let build = Build::builder().build_timestamp(true).build();"
 )]
 #![cfg_attr(
     feature = "cargo",
@@ -458,7 +458,7 @@ mod gix;
 pub use crate::gix::Gix;
 pub use crate::gix::GixBuilder;
 #[cfg(feature = "build")]
-pub use vergen::BuildBuilder;
+pub use vergen::Build;
 #[cfg(feature = "cargo")]
 pub use vergen::CargoBuilder;
 #[cfg(feature = "si")]

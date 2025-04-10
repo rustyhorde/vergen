@@ -34,6 +34,7 @@ emit_and_set = ["vergen-lib/emit_and_set"]
 
 [dependencies]
 anyhow = "1.0.95"
+bon = "3.5.2"
 cargo_metadata = { version = "0.19.1", optional = true }
 derive_builder = "0.20.2"
 regex = { version = "1.11.1", optional = true }

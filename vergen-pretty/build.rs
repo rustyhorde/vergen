@@ -6,7 +6,7 @@ use vergen_gix::Emitter;
 use {
     std::collections::BTreeMap,
     vergen_gix::{
-        AddCustomEntries, BuildBuilder, CargoBuilder, CargoRerunIfChanged, CargoWarning,
+        AddCustomEntries, Build, CargoBuilder, CargoRerunIfChanged, CargoWarning,
         DefaultConfig, Emitter, GixBuilder, RustcBuilder, SysinfoBuilder,
     },
 };
@@ -68,7 +68,7 @@ impl AddCustomEntries<&str, &str> for Custom {
 #[cfg(all(feature = "__vergen_test", not(feature = "__vergen_empty_test")))]
 fn emit() -> Result<()> {
     println!("cargo:warning=VERGEN TEST ENABLED!");
-    let build = BuildBuilder::all_build()?;
+    let build = Build::all_build();
     let cargo = CargoBuilder::all_cargo()?;
     let gix = GixBuilder::all_git()?;
     let rustc = RustcBuilder::all_rustc()?;
