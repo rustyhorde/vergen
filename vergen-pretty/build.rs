@@ -6,8 +6,8 @@ use vergen_gix::Emitter;
 use {
     std::collections::BTreeMap,
     vergen_gix::{
-        AddCustomEntries, Build, CargoBuilder, CargoRerunIfChanged, CargoWarning,
-        DefaultConfig, Emitter, GixBuilder, RustcBuilder, SysinfoBuilder,
+        AddCustomEntries, Build, CargoBuilder, CargoRerunIfChanged, CargoWarning, DefaultConfig,
+        Emitter, GixBuilder, RustcBuilder, SysinfoBuilder,
     },
 };
 
