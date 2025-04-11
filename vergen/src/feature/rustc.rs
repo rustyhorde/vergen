@@ -87,41 +87,50 @@ use vergen_lib::{
 #[derive(Builder, Clone, Copy, Debug, PartialEq)]
 #[allow(clippy::struct_excessive_bools)]
 pub struct Rustc {
+    /// Configures the default values.
+    /// If set to `true` all defaults are in "enabled" state.
+    /// If set to `false` all defaults are in "disabled" state.
+    #[builder(field)]
+    all: bool,
     #[cfg(test)]
     #[builder(field)]
     str_to_test: Option<&'static str>,
     /// Enable the rustc channel
-    #[builder(default = false)]
+    #[builder(default = all)]
     channel: bool,
     /// Enable the rustc commit date
-    #[builder(default = false)]
+    #[builder(default = all)]
     commit_date: bool,
     /// Enable the rustc SHA
-    #[builder(default = false)]
+    #[builder(default = all)]
     commit_hash: bool,
     /// Enable rustc host triple
-    #[builder(default = false)]
+    #[builder(default = all)]
     host_triple: bool,
     /// Enable rustc LLVM version
-    #[builder(default = false)]
+    #[builder(default = all)]
     llvm_version: bool,
     /// Enable the rustc semver
-    #[builder(default = false)]
+    #[builder(default = all)]
     semver: bool,
+}
+
+impl<S: rustc_builder::State> RustcBuilder<S> {
+    /// Convenience method that switches the defaults of [`RustcBuilder`]
+    /// to enable all of the `VERGEN_RUSTC_*` instructions. It can only be
+    /// called at the start of the building process, i.e. when no config
+    /// has been set yet to avoid overwrites.
+    fn all(mut self) -> Self {
+        self.all = true;
+        self
+    }
 }
 
 impl Rustc {
     /// Enable all of the `VERGEN_RUSTC_*` options
     #[must_use]
     pub fn all_rustc() -> Self {
-        Self::builder()
-            .channel(true)
-            .commit_date(true)
-            .commit_hash(true)
-            .host_triple(true)
-            .llvm_version(true)
-            .semver(true)
-            .build()
+        Self::builder().all().build()
     }
 
     fn any(self) -> bool {

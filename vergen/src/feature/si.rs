@@ -154,6 +154,11 @@ use vergen_lib::{
 #[derive(Builder, Clone, Copy, Debug, PartialEq)]
 #[allow(clippy::struct_excessive_bools)]
 pub struct Sysinfo {
+    /// Configures the default values.
+    /// If set to `true` all defaults are in "enabled" state.
+    /// If set to `false` all defaults are in "disabled" state.
+    #[builder(field)]
+    all: bool,
     #[cfg(test)]
     #[builder(field)]
     fail_pid: bool,
@@ -164,49 +169,50 @@ pub struct Sysinfo {
     #[builder(into)]
     refresh_kind: Option<RefreshKind>,
     /// Enable the sysinfo name
-    #[builder(default = false)]
+    #[builder(default = all)]
     name: bool,
     /// Enable the sysinfo OS version
-    #[builder(default = false)]
+    #[builder(default = all)]
     os_version: bool,
     /// Enable sysinfo user
-    #[builder(default = false)]
+    #[builder(default = all)]
     user: bool,
     /// Enable sysinfo memory
-    #[builder(default = false)]
+    #[builder(default = all)]
     memory: bool,
     /// Enable sysinfo cpu vendor
-    #[builder(default = false)]
+    #[builder(default = all)]
     cpu_vendor: bool,
     /// Enable sysinfo cpu core count
-    #[builder(default = false)]
+    #[builder(default = all)]
     cpu_core_count: bool,
     /// Enable sysinfo cpu name
-    #[builder(default = false)]
+    #[builder(default = all)]
     cpu_name: bool,
     /// Enable sysinfo cpu brand
-    #[builder(default = false)]
+    #[builder(default = all)]
     cpu_brand: bool,
     /// Enable sysinfo cpu frequency
-    #[builder(default = false)]
+    #[builder(default = all)]
     cpu_frequency: bool,
+}
+
+impl<S: sysinfo_builder::State> SysinfoBuilder<S> {
+    /// Convenience method that switches the defaults of [`SysinfoBuilder`]
+    /// to enable all of the `VERGEN_SYSINFO_*` instructions. It can only be
+    /// called at the start of the building process, i.e. when no config
+    /// has been set yet to avoid overwrites.
+    fn all(mut self) -> Self {
+        self.all = true;
+        self
+    }
 }
 
 impl Sysinfo {
     /// Enable all of the `VERGEN_SYSINFO_*` options
     #[must_use]
     pub fn all_sysinfo() -> Sysinfo {
-        Self::builder()
-            .name(true)
-            .os_version(true)
-            .user(true)
-            .memory(true)
-            .cpu_vendor(true)
-            .cpu_core_count(true)
-            .cpu_name(true)
-            .cpu_brand(true)
-            .cpu_frequency(true)
-            .build()
+        Self::builder().all().build()
     }
 
     fn any(&self) -> bool {

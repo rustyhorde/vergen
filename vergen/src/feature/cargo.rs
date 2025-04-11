@@ -108,13 +108,18 @@ use vergen_lib::{
 #[derive(Builder, Clone, Copy, Debug, PartialEq)]
 #[allow(clippy::struct_excessive_bools)]
 pub struct Cargo {
+    /// Configures the default values.
+    /// If set to `true` all defaults are in "enabled" state.
+    /// If set to `false` all defaults are in "disabled" state.
+    #[builder(field)]
+    all: bool,
     /// Emit the DEBUG value set by cargo
     ///
     /// ```text
     /// cargo:rustc-env=VERGEN_CARGO_DEBUG=true|false
     /// ```
     ///
-    #[builder(default = false)]
+    #[builder(default = all)]
     debug: bool,
     /// Emit the `CARGO_FEATURE_*` values set by cargo
     ///
@@ -122,7 +127,7 @@ pub struct Cargo {
     /// cargo:rustc-env=VERGEN_CARGO_FEATURES=<features>
     /// ```
     ///
-    #[builder(default = false)]
+    #[builder(default = all)]
     features: bool,
     /// Emit the `OPT_LEVEL` value set by cargo
     ///
@@ -130,7 +135,7 @@ pub struct Cargo {
     /// cargo:rustc-env=VERGEN_CARGO_OPT_LEVEL=<opt_level>
     /// ```
     ///
-    #[builder(default = false)]
+    #[builder(default = all)]
     opt_level: bool,
     /// Emit the TARGET value set by cargo
     ///
@@ -138,7 +143,7 @@ pub struct Cargo {
     /// cargo:rustc-env=VERGEN_CARGO_TARGET_TRIPLE=<target_triple>
     /// ```
     ///
-    #[builder(default = false)]
+    #[builder(default = all)]
     target_triple: bool,
     /// Emit the dependencies value derived from `Cargo.toml`
     ///
@@ -146,7 +151,7 @@ pub struct Cargo {
     /// cargo:rustc-env=VERGEN_CARGO_DEPENDENCIES=<dependencies>
     /// ```
     ///
-    #[builder(default = false)]
+    #[builder(default = all)]
     dependencies: bool,
     /// Add a name [`Regex`](regex::Regex) filter for cargo dependencies
     ///
@@ -166,17 +171,22 @@ pub struct Cargo {
     dep_kind_filter: Option<DependencyKind>,
 }
 
+impl<S: cargo_builder::State> CargoBuilder<S> {
+    /// Convenience method that switches the defaults of [`CargoBuilder`]
+    /// to enable all of the `VERGEN_CARGO_*` instructions. It can only be
+    /// called at the start of the building process, i.e. when no config
+    /// has been set yet to avoid overwrites.
+    fn all(mut self) -> Self {
+        self.all = true;
+        self
+    }
+}
+
 impl Cargo {
     /// Emit all of the `VERGEN_CARGO_*` instructions
     #[must_use]
     pub fn all_cargo() -> Self {
-        Self::builder()
-            .debug(true)
-            .features(true)
-            .opt_level(true)
-            .target_triple(true)
-            .dependencies(true)
-            .build()
+        Self::builder().all().build()
     }
 
     /// Emit all of the `VERGEN_CARGO_*` instructions and return the builder

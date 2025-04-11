@@ -144,17 +144,33 @@ use vergen_lib::{
 /// ```
 ///
 #[derive(Clone, Copy, Debug, Builder, PartialEq)]
-#[allow(clippy::struct_field_names)]
+#[allow(clippy::struct_excessive_bools, clippy::struct_field_names)]
 pub struct Build {
+    /// Configures the default values.
+    /// If set to `true` all defaults are in "enabled" state.
+    /// If set to `false` all defaults are in "disabled" state.
+    #[builder(field)]
+    all: bool,
     /// Enable the `VERGEN_BUILD_DATE` date output
-    #[builder(default = false)]
+    #[builder(default = all)]
     build_date: bool,
     /// Enable the `VERGEN_BUILD_TIMESTAMP` date output
-    #[builder(default = false)]
+    #[builder(default = all)]
     build_timestamp: bool,
     /// Enable local offset date/timestamp output
     #[builder(default = false)]
     use_local: bool,
+}
+
+impl<S: build_builder::State> BuildBuilder<S> {
+    /// Convenience method that switches the defaults of [`BuildBuilder`]
+    /// to enable all of the `VERGEN_BUILD_*` instructions. It can only be
+    /// called at the start of the building process, i.e. when no config
+    /// has been set yet to avoid overwrites.
+    fn all(mut self) -> Self {
+        self.all = true;
+        self
+    }
 }
 
 impl Build {
@@ -165,10 +181,7 @@ impl Build {
     ///
     #[must_use]
     pub fn all_build() -> Self {
-        Self::builder()
-            .build_date(true)
-            .build_timestamp(true)
-            .build()
+        Self::builder().all().build()
     }
 
     fn any(self) -> bool {
