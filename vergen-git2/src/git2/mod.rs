@@ -6,11 +6,11 @@
 // option. All files in the project carrying such notice may not be copied,
 // modified, or distributed except according to those terms.
 
+use self::git2_builder::Empty;
 #[cfg(test)]
 use anyhow::anyhow;
 use anyhow::{Error, Result};
 use bon::Builder;
-use git2_builder::Empty;
 use git2_rs::{
     BranchType, Commit, DescribeFormatOptions, DescribeOptions, Reference, Repository,
     StatusOptions,

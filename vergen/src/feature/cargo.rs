@@ -6,9 +6,9 @@
 // option. All files in the project carrying such notice may not be copied,
 // modified, or distributed except according to those terms.
 
+use self::cargo_builder::{SetDebug, SetDependencies, SetFeatures, SetOptLevel, SetTargetTriple};
 use anyhow::{anyhow, Error, Result};
 use bon::Builder;
-use cargo_builder::{SetDebug, SetDependencies, SetFeatures, SetOptLevel, SetTargetTriple};
 use cargo_metadata::{DepKindInfo, DependencyKind, MetadataCommand, Package, PackageId};
 use regex::Regex;
 use std::env;
