@@ -173,10 +173,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
     fn git_all_flags_test_repo() -> Result<()> {
         let repo = TestRepos::new(true, false, false)?;
         let mut stdout_buf = vec![];
-        let mut gix = Gix::all()
-            .describe(true, false, None)
-            .sha(true)
-            .build();
+        let mut gix = Gix::all().describe(true, false, None).sha(true).build();
         let _ = gix.at_path(repo.path());
         let failed = Emitter::default()
             .add_instructions(&gix)?
@@ -279,10 +276,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
     #[serial]
     fn git_emit_at_test_repo() -> Result<()> {
         let repo = TestRepos::new(true, false, false)?;
-        let mut gix = Gix::all()
-            .describe(true, false, None)
-            .sha(true)
-            .build();
+        let mut gix = Gix::all().describe(true, false, None).sha(true).build();
         let _ = gix.at_path(repo.path());
         assert!(Emitter::default().add_instructions(&gix)?.emit().is_ok());
         Ok(())

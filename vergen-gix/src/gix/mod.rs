@@ -9,7 +9,11 @@
 use anyhow::{anyhow, Error, Result};
 use bon::Builder;
 use gix::{
-    commit::describe::SelectRef, dir::{entry::Status, walk::EmissionMode}, discover, head::Kind, Commit, Head, Id, Repository
+    commit::describe::SelectRef,
+    dir::{entry::Status, walk::EmissionMode},
+    discover,
+    head::Kind,
+    Commit, Head, Id, Repository,
 };
 use gix_builder::Empty;
 use std::{
@@ -22,11 +26,14 @@ use time::{
     OffsetDateTime, UtcOffset,
 };
 use vergen_lib::{
-    add_default_map_entry, add_map_entry, constants::{
+    add_default_map_entry, add_map_entry,
+    constants::{
         GIT_BRANCH_NAME, GIT_COMMIT_AUTHOR_EMAIL, GIT_COMMIT_AUTHOR_NAME, GIT_COMMIT_COUNT,
         GIT_COMMIT_DATE_NAME, GIT_COMMIT_MESSAGE, GIT_COMMIT_TIMESTAMP_NAME, GIT_DESCRIBE_NAME,
         GIT_DIRTY_NAME, GIT_SHA_NAME,
-    }, AddEntries, CargoRerunIfChanged, CargoRustcEnvMap, CargoWarning, DefaultConfig, Describe, Dirty, Sha, VergenKey
+    },
+    AddEntries, CargoRerunIfChanged, CargoRustcEnvMap, CargoWarning, DefaultConfig, Describe,
+    Dirty, Sha, VergenKey,
 };
 
 /// The `VERGEN_GIT_*` configuration features
@@ -662,7 +669,7 @@ mod test {
     #[serial]
     #[allow(clippy::clone_on_copy, clippy::redundant_clone)]
     fn gix_clone_works() -> Result<()> {
-        let gix =Gix::all_git();
+        let gix = Gix::all_git();
         let another = gix.clone();
         assert_eq!(another, gix);
         Ok(())
@@ -671,7 +678,7 @@ mod test {
     #[test]
     #[serial]
     fn gix_debug_works() -> Result<()> {
-        let gix =Gix::all_git();
+        let gix = Gix::all_git();
         let mut buf = vec![];
         write!(buf, "{gix:?}")?;
         assert!(!buf.is_empty());
@@ -692,7 +699,7 @@ mod test {
     #[test]
     #[serial]
     fn git_all_idempotent() -> Result<()> {
-        let gix =Gix::all_git();
+        let gix = Gix::all_git();
         let emitter = Emitter::default()
             .idempotent()
             .add_instructions(&gix)?
@@ -706,7 +713,7 @@ mod test {
     #[test]
     #[serial]
     fn git_all_idempotent_no_warn() -> Result<()> {
-        let gix =Gix::all_git();
+        let gix = Gix::all_git();
         let emitter = Emitter::default()
             .idempotent()
             .quiet()
@@ -721,7 +728,7 @@ mod test {
     #[test]
     #[serial]
     fn git_all() -> Result<()> {
-        let gix =Gix::all_git();
+        let gix = Gix::all_git();
         let emitter = Emitter::default().add_instructions(&gix)?.test_emit();
         assert_eq!(10, emitter.cargo_rustc_env_map().len());
         assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
@@ -799,10 +806,7 @@ mod test {
     #[test]
     #[serial]
     fn git_commit_date_local() -> Result<()> {
-        let gix = Gix::builder()
-            .commit_date(true)
-            .use_local(true)
-            .build()?;
+        let gix = Gix::builder().commit_date(true).use_local(true).build()?;
         let emitter = Emitter::default()
             .fail_on_error()
             .add_instructions(&gix)?
@@ -850,7 +854,7 @@ mod test {
     #[serial]
     fn git_all_at_path() -> Result<()> {
         let repo = TestRepos::new(false, false, false)?;
-        let mut gix =Gix::all_git();
+        let mut gix = Gix::all_git();
         let _ = gix.at_path(repo.path());
         let emitter = Emitter::default().add_instructions(&gix)?.test_emit();
         assert_eq!(10, emitter.cargo_rustc_env_map().len());
@@ -863,7 +867,7 @@ mod test {
     #[serial]
     fn git_all_shallow_clone() -> Result<()> {
         let repo = TestRepos::new(false, false, true)?;
-        let mut gix =Gix::all_git();
+        let mut gix = Gix::all_git();
         let _ = gix.at_path(repo.path());
         let emitter = Emitter::default().add_instructions(&gix)?.test_emit();
         assert_eq!(10, emitter.cargo_rustc_env_map().len());
@@ -875,7 +879,7 @@ mod test {
     #[test]
     #[serial]
     fn git_error_fails() -> Result<()> {
-        let mut gix =Gix::all_git();
+        let mut gix = Gix::all_git();
         let _ = gix.at_path(temp_dir());
         assert!(Emitter::default()
             .fail_on_error()
@@ -887,7 +891,7 @@ mod test {
     #[test]
     #[serial]
     fn git_error_defaults() -> Result<()> {
-        let mut gix =Gix::all_git();
+        let mut gix = Gix::all_git();
         let _ = gix.at_path(temp_dir());
         let emitter = Emitter::default().add_instructions(&gix)?.test_emit();
         assert_eq!(10, emitter.cargo_rustc_env_map().len());
@@ -1025,10 +1029,7 @@ mod test {
         let repo = TestRepos::new(true, true, false)?;
         repo.set_index_magic_mtime()?;
 
-        let mut gix = Gix::builder()
-            .all()
-            .describe(true, true, None)
-            .build()?;
+        let mut gix = Gix::builder().all().describe(true, true, None).build()?;
         let _ = gix.at_path(repo.path());
         let failed = Emitter::default()
             .add_instructions(&gix)?

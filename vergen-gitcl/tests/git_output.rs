@@ -171,10 +171,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
     fn git_all_flags_test_repo() -> Result<()> {
         let repo = TestRepos::new(true, false, false)?;
         let mut stdout_buf = vec![];
-        let mut gitcl = Gitcl::all()
-            .describe(true, false, None)
-            .sha(true)
-            .build();
+        let mut gitcl = Gitcl::all().describe(true, false, None).sha(true).build();
         let _ = gitcl.at_path(repo.path());
         let failed = Emitter::default()
             .add_instructions(&gitcl)?
@@ -227,9 +224,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
     fn git_all_output_test_repo() -> Result<()> {
         let repo = TestRepos::new(true, true, false)?;
         let mut stdout_buf = vec![];
-        let mut gitcl = Gitcl::all()
-            .describe(true, false, None)
-            .build();
+        let mut gitcl = Gitcl::all().describe(true, false, None).build();
         let _ = gitcl.at_path(repo.path());
         let failed = Emitter::default()
             .add_instructions(&gitcl)?
@@ -245,9 +240,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
     fn git_all_describe_all_test_repo() -> Result<()> {
         let repo = TestRepos::new(true, true, false)?;
         let mut stdout_buf = vec![];
-        let mut gitcl = Gitcl::all()
-            .describe(true, true, Some("0.1.0"))
-            .build();
+        let mut gitcl = Gitcl::all().describe(true, true, Some("0.1.0")).build();
         let _ = gitcl.at_path(repo.path());
         let failed = Emitter::default()
             .add_instructions(&gitcl)?
@@ -262,10 +255,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
     #[serial]
     fn git_emit_at_test_repo() -> Result<()> {
         let repo = TestRepos::new(true, false, false)?;
-        let mut gitcl = Gitcl::all()
-            .describe(true, false, None)
-            .sha(true)
-            .build();
+        let mut gitcl = Gitcl::all().describe(true, false, None).sha(true).build();
         let _ = gitcl.at_path(repo.path());
         assert!(Emitter::default().add_instructions(&gitcl)?.emit().is_ok());
         Ok(())
