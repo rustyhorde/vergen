@@ -806,7 +806,7 @@ mod test {
     #[test]
     #[serial]
     fn git_commit_date_local() -> Result<()> {
-        let gix = Gix::builder().commit_date(true).use_local(true).build()?;
+        let gix = Gix::builder().commit_date(true).use_local(true).build();
         let emitter = Emitter::default()
             .fail_on_error()
             .add_instructions(&gix)?
@@ -942,7 +942,7 @@ mod test {
         let os_str = OsStr::from_bytes(&source[..]);
         temp_env::with_var("SOURCE_DATE_EPOCH", Some(os_str), || {
             let result = || -> Result<()> {
-                let gix = Gix::builder().commit_date(true).build()?;
+                let gix = Gix::builder().commit_date(true).build();
                 Emitter::new()
                     .idempotent()
                     .fail_on_error()
@@ -965,7 +965,7 @@ mod test {
         temp_env::with_var("SOURCE_DATE_EPOCH", Some(os_str), || {
             let result = || -> Result<bool> {
                 let mut stdout_buf = vec![];
-                let gix = Gix::builder().commit_date(true).build()?;
+                let gix = Gix::builder().commit_date(true).build();
                 Emitter::new()
                     .idempotent()
                     .add_instructions(&gix)?
@@ -1029,7 +1029,7 @@ mod test {
         let repo = TestRepos::new(true, true, false)?;
         repo.set_index_magic_mtime()?;
 
-        let mut gix = Gix::builder().all().describe(true, true, None).build()?;
+        let mut gix = Gix::builder().all().describe(true, true, None).build();
         let _ = gix.at_path(repo.path());
         let failed = Emitter::default()
             .add_instructions(&gix)?
