@@ -58,7 +58,7 @@
 #![cfg_attr(feature = "build", doc = r"# use vergen::Build;")]
 #![cfg_attr(feature = "cargo", doc = r"# use vergen::Cargo;")]
 #![cfg_attr(feature = "rustc", doc = r"# use vergen::Rustc;")]
-#![cfg_attr(feature = "si", doc = r"# use vergen::SysinfoBuilder;")]
+#![cfg_attr(feature = "si", doc = r"# use vergen::Sysinfo;")]
 #![cfg_attr(feature = "cargo", doc = r"# use test_util::with_cargo_vars;")]
 //! #
 //! # pub fn main() -> Result<()> {
@@ -68,7 +68,7 @@
 #![cfg_attr(feature = "build", doc = r"let build = Build::all_build();")]
 #![cfg_attr(feature = "cargo", doc = r"let cargo = Cargo::all_cargo();")]
 #![cfg_attr(feature = "rustc", doc = r"let rustc = Rustc::all_rustc();")]
-#![cfg_attr(feature = "si", doc = r"let si = SysinfoBuilder::all_sysinfo()?;")]
+#![cfg_attr(feature = "si", doc = r"let si = Sysinfo::all_sysinfo();")]
 //!
 //! Emitter::default()
 #![cfg_attr(feature = "build", doc = r"    .add_instructions(&build)?")]
@@ -123,7 +123,7 @@
 #![cfg_attr(feature = "build", doc = r"# use vergen::Build;")]
 #![cfg_attr(feature = "cargo", doc = r"# use vergen::Cargo;")]
 #![cfg_attr(feature = "rustc", doc = r"# use vergen::Rustc;")]
-#![cfg_attr(feature = "si", doc = r"# use vergen::SysinfoBuilder;")]
+#![cfg_attr(feature = "si", doc = r"# use vergen::Sysinfo;")]
 #![cfg_attr(feature = "cargo", doc = r"# use test_util::with_cargo_vars;")]
 //! #
 //! # pub fn main() -> Result<()> {
@@ -144,7 +144,7 @@ let build = Build::builder().build_timestamp(true).build();"
 )]
 #![cfg_attr(
     feature = "si",
-    doc = r"let si = SysinfoBuilder::default().cpu_core_count(true).build()?;"
+    doc = r"let si = Sysinfo::builder().cpu_core_count(true).build();"
 )]
 //!
 //! Emitter::default()
@@ -491,20 +491,13 @@ let build = Build::builder().build_timestamp(true).build();"
 mod feature;
 
 // This is here to appease the `unused_crate_dependencies` lint
-#[cfg(not(any(feature = "build", feature = "cargo", feature = "rustc")))]
-use bon as _;
-#[cfg(all(
-    any(feature = "build", feature = "cargo", feature = "rustc"),
-    not(feature = "si")
-))]
-use derive_builder as _;
 #[cfg(not(any(
     feature = "build",
     feature = "cargo",
     feature = "rustc",
     feature = "si"
 )))]
-use {anyhow as _, derive_builder as _};
+use {anyhow as _, bon as _};
 #[cfg(test)]
 use {lazy_static as _, regex as _, serial_test as _, temp_env as _, test_util as _};
 
@@ -518,8 +511,6 @@ pub use feature::cargo::Cargo;
 pub use feature::rustc::Rustc;
 #[cfg(feature = "si")]
 pub use feature::si::Sysinfo;
-#[cfg(feature = "si")]
-pub use feature::si::SysinfoBuilder;
 #[cfg(feature = "si")]
 pub use sysinfo::CpuRefreshKind;
 #[cfg(feature = "si")]

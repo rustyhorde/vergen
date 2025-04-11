@@ -63,7 +63,7 @@
 #![cfg_attr(feature = "build", doc = r"# use vergen_gix::Build;")]
 #![cfg_attr(feature = "cargo", doc = r"# use vergen_gix::Cargo;")]
 #![cfg_attr(feature = "rustc", doc = r"# use vergen_gix::Rustc;")]
-#![cfg_attr(feature = "si", doc = r"# use vergen_gix::SysinfoBuilder;")]
+#![cfg_attr(feature = "si", doc = r"# use vergen_gix::Sysinfo;")]
 #![cfg_attr(feature = "cargo", doc = r"# use test_util::with_cargo_vars;")]
 //! #
 //! # pub fn main() -> Result<()> {
@@ -74,7 +74,7 @@
 #![cfg_attr(feature = "cargo", doc = r"let cargo = Cargo::all_cargo();")]
 //! let gitcl = GixBuilder::all_git()?;
 #![cfg_attr(feature = "rustc", doc = r"let rustc = Rustc::all_rustc();")]
-#![cfg_attr(feature = "si", doc = r"let si = SysinfoBuilder::all_sysinfo()?;")]
+#![cfg_attr(feature = "si", doc = r"let si = Sysinfo::all_sysinfo();")]
 //!
 //! Emitter::default()
 #![cfg_attr(feature = "build", doc = r"    .add_instructions(&build)?")]
@@ -141,7 +141,7 @@
 #![cfg_attr(feature = "build", doc = r"# use vergen_gix::Build;")]
 #![cfg_attr(feature = "cargo", doc = r"# use vergen_gix::Cargo;")]
 #![cfg_attr(feature = "rustc", doc = r"# use vergen_gix::Rustc;")]
-#![cfg_attr(feature = "si", doc = r"# use vergen_gix::SysinfoBuilder;")]
+#![cfg_attr(feature = "si", doc = r"# use vergen_gix::Sysinfo;")]
 #![cfg_attr(feature = "cargo", doc = r"# use test_util::with_cargo_vars;")]
 //! #
 //! # pub fn main() -> Result<()> {
@@ -163,7 +163,7 @@ let build = Build::builder().build_timestamp(true).build();"
 )]
 #![cfg_attr(
     feature = "si",
-    doc = r"let si = SysinfoBuilder::default().cpu_core_count(true).build()?;"
+    doc = r"let si = Sysinfo::builder().cpu_core_count(true).build();"
 )]
 //!
 //! Emitter::default()
@@ -474,7 +474,7 @@ pub use vergen::RefreshKind;
 #[cfg(feature = "rustc")]
 pub use vergen::Rustc;
 #[cfg(feature = "si")]
-pub use vergen::SysinfoBuilder;
+pub use vergen::Sysinfo;
 pub use vergen_lib::AddCustomEntries;
 pub use vergen_lib::CargoRerunIfChanged;
 pub use vergen_lib::CargoWarning;
