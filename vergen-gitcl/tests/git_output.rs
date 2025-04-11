@@ -5,7 +5,7 @@ mod test_git_git2 {
     use serial_test::serial;
     use std::env::temp_dir;
     use temp_env::with_var;
-    use vergen_gitcl::{Emitter, GitclBuilder};
+    use vergen_gitcl::{Emitter, Gitcl};
 
     use test_util::TestRepos;
 
@@ -140,7 +140,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
     #[serial]
     fn git_all_output_idempotent() -> Result<()> {
         let mut stdout_buf = vec![];
-        let mut gitcl = GitclBuilder::all_git()?;
+        let mut gitcl = Gitcl::all_git();
         let _ = gitcl.at_path(temp_dir());
         let failed = Emitter::default()
             .add_instructions(&gitcl)?
@@ -155,7 +155,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
     #[serial]
     fn git_all_output_default_dir() -> Result<()> {
         let mut stdout_buf = vec![];
-        let gitcl = GitclBuilder::all_git()?;
+        let gitcl = Gitcl::all_git();
         let failed = Emitter::default()
             .add_instructions(&gitcl)?
             .emit_to(&mut stdout_buf)?;
@@ -171,11 +171,10 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
     fn git_all_flags_test_repo() -> Result<()> {
         let repo = TestRepos::new(true, false, false)?;
         let mut stdout_buf = vec![];
-        let mut gitcl = GitclBuilder::default()
-            .all()
+        let mut gitcl = Gitcl::all()
             .describe(true, false, None)
             .sha(true)
-            .build()?;
+            .build();
         let _ = gitcl.at_path(repo.path());
         let failed = Emitter::default()
             .add_instructions(&gitcl)?
@@ -191,12 +190,11 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
     fn git_all_flags_test_repo_local() -> Result<()> {
         let repo = TestRepos::new(true, false, false)?;
         let mut stdout_buf = vec![];
-        let mut gitcl = GitclBuilder::default()
-            .all()
+        let mut gitcl = Gitcl::all()
             .describe(true, false, None)
             .sha(true)
             .use_local(true)
-            .build()?;
+            .build();
         let _ = gitcl.at_path(repo.path());
         let result = || -> Result<bool> {
             let failed = Emitter::default()
@@ -229,10 +227,9 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
     fn git_all_output_test_repo() -> Result<()> {
         let repo = TestRepos::new(true, true, false)?;
         let mut stdout_buf = vec![];
-        let mut gitcl = GitclBuilder::default()
-            .all()
+        let mut gitcl = Gitcl::all()
             .describe(true, false, None)
-            .build()?;
+            .build();
         let _ = gitcl.at_path(repo.path());
         let failed = Emitter::default()
             .add_instructions(&gitcl)?
@@ -248,10 +245,9 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
     fn git_all_describe_all_test_repo() -> Result<()> {
         let repo = TestRepos::new(true, true, false)?;
         let mut stdout_buf = vec![];
-        let mut gitcl = GitclBuilder::default()
-            .all()
+        let mut gitcl = Gitcl::all()
             .describe(true, true, Some("0.1.0"))
-            .build()?;
+            .build();
         let _ = gitcl.at_path(repo.path());
         let failed = Emitter::default()
             .add_instructions(&gitcl)?
@@ -266,11 +262,10 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
     #[serial]
     fn git_emit_at_test_repo() -> Result<()> {
         let repo = TestRepos::new(true, false, false)?;
-        let mut gitcl = GitclBuilder::default()
-            .all()
+        let mut gitcl = Gitcl::all()
             .describe(true, false, None)
             .sha(true)
-            .build()?;
+            .build();
         let _ = gitcl.at_path(repo.path());
         assert!(Emitter::default().add_instructions(&gitcl)?.emit().is_ok());
         Ok(())
@@ -280,7 +275,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
         use anyhow::Result;
         use serial_test::serial;
         use test_util::TestRepos;
-        use vergen_gitcl::{Emitter, GitclBuilder};
+        use vergen_gitcl::{Emitter, Gitcl};
 
         const GIT_DIRTY_TRUE_OUTPUT: &str = r"cargo:rustc-env=VERGEN_GIT_DIRTY=true";
         const GIT_DIRTY_FALSE_OUTPUT: &str = r"cargo:rustc-env=VERGEN_GIT_DIRTY=false";
@@ -302,7 +297,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             let repo = TestRepos::new(false, false, false)?;
 
             let mut stdout_buf = vec![];
-            let mut gitcl = GitclBuilder::default().dirty(false).build()?;
+            let mut gitcl = Gitcl::builder().dirty(false).build();
             let _ = gitcl.at_path(repo.path());
             let _emitter = Emitter::default()
                 .add_instructions(&gitcl)?
@@ -322,7 +317,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             let repo = TestRepos::new(false, false, false)?;
 
             let mut stdout_buf = vec![];
-            let mut gitcl = GitclBuilder::default().dirty(true).build()?;
+            let mut gitcl = Gitcl::builder().dirty(true).build();
             let _ = gitcl.at_path(repo.path());
             let _emitter = Emitter::default()
                 .add_instructions(&gitcl)?
@@ -342,7 +337,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             let repo = TestRepos::new(true, false, false)?;
 
             let mut stdout_buf = vec![];
-            let mut gitcl = GitclBuilder::default().dirty(false).build()?;
+            let mut gitcl = Gitcl::builder().dirty(false).build();
             let _ = gitcl.at_path(repo.path());
             let _emitter = Emitter::default()
                 .add_instructions(&gitcl)?
@@ -362,7 +357,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             let repo = TestRepos::new(true, false, false)?;
 
             let mut stdout_buf = vec![];
-            let mut gitcl = GitclBuilder::default().dirty(true).build()?;
+            let mut gitcl = Gitcl::builder().dirty(true).build();
             let _ = gitcl.at_path(repo.path());
             let _emitter = Emitter::default()
                 .add_instructions(&gitcl)?
@@ -382,7 +377,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             let repo = TestRepos::new(false, true, false)?;
 
             let mut stdout_buf = vec![];
-            let mut gitcl = GitclBuilder::default().dirty(false).build()?;
+            let mut gitcl = Gitcl::builder().dirty(false).build();
             let _ = gitcl.at_path(repo.path());
             let _emitter = Emitter::default()
                 .add_instructions(&gitcl)?
@@ -402,7 +397,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             let repo = TestRepos::new(false, true, false)?;
 
             let mut stdout_buf = vec![];
-            let mut gitcl = GitclBuilder::default().dirty(true).build()?;
+            let mut gitcl = Gitcl::builder().dirty(true).build();
             let _ = gitcl.at_path(repo.path());
             let _emitter = Emitter::default()
                 .add_instructions(&gitcl)?
@@ -422,7 +417,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             let repo = TestRepos::new(true, true, false)?;
 
             let mut stdout_buf = vec![];
-            let mut gitcl = GitclBuilder::default().dirty(false).build()?;
+            let mut gitcl = Gitcl::builder().dirty(false).build();
             let _ = gitcl.at_path(repo.path());
             let _emitter = Emitter::default()
                 .add_instructions(&gitcl)?
@@ -442,7 +437,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             let repo = TestRepos::new(true, true, false)?;
 
             let mut stdout_buf = vec![];
-            let mut gitcl = GitclBuilder::default().dirty(true).build()?;
+            let mut gitcl = Gitcl::builder().dirty(true).build();
             let _ = gitcl.at_path(repo.path());
             let _emitter = Emitter::default()
                 .add_instructions(&gitcl)?
@@ -459,7 +454,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
     #[serial]
     fn git_all_idempotent_output() -> Result<()> {
         let mut stdout_buf = vec![];
-        let gitcl = GitclBuilder::all_git()?;
+        let gitcl = Gitcl::all_git();
         let failed = Emitter::default()
             .idempotent()
             .add_instructions(&gitcl)?
@@ -475,7 +470,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
     #[serial]
     fn git_all_idempotent_output_quiet() -> Result<()> {
         let mut stdout_buf = vec![];
-        let gitcl = GitclBuilder::all_git()?;
+        let gitcl = Gitcl::all_git();
         let failed = Emitter::default()
             .idempotent()
             .quiet()
@@ -494,7 +489,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
         with_var("VERGEN_GIT_BRANCH", Some("this is a bad date"), || {
             let result = || -> Result<()> {
                 let mut stdout_buf = vec![];
-                let gitcl = GitclBuilder::all_git()?;
+                let gitcl = Gitcl::all_git();
                 let _failed = Emitter::default()
                     .add_instructions(&gitcl)?
                     .emit_to(&mut stdout_buf)?;
@@ -516,7 +511,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             || {
                 let result = || -> Result<()> {
                     let mut stdout_buf = vec![];
-                    let gitcl = GitclBuilder::all_git()?;
+                    let gitcl = Gitcl::all_git();
                     let _failed = Emitter::default()
                         .add_instructions(&gitcl)?
                         .emit_to(&mut stdout_buf)?;
@@ -543,7 +538,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             || {
                 let result = || -> Result<()> {
                     let mut stdout_buf = vec![];
-                    let gitcl = GitclBuilder::all_git()?;
+                    let gitcl = Gitcl::all_git();
                     let _failed = Emitter::default()
                         .add_instructions(&gitcl)?
                         .emit_to(&mut stdout_buf)?;
@@ -570,7 +565,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             || {
                 let result = || -> Result<()> {
                     let mut stdout_buf = vec![];
-                    let gitcl = GitclBuilder::all_git()?;
+                    let gitcl = Gitcl::all_git();
                     let _failed = Emitter::default()
                         .add_instructions(&gitcl)?
                         .emit_to(&mut stdout_buf)?;
@@ -591,7 +586,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
         with_var("VERGEN_GIT_COMMIT_DATE", Some("this is a bad date"), || {
             let result = || -> Result<()> {
                 let mut stdout_buf = vec![];
-                let gitcl = GitclBuilder::all_git()?;
+                let gitcl = Gitcl::all_git();
                 let _failed = Emitter::default()
                     .add_instructions(&gitcl)?
                     .emit_to(&mut stdout_buf)?;
@@ -615,7 +610,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             || {
                 let result = || -> Result<()> {
                     let mut stdout_buf = vec![];
-                    let gitcl = GitclBuilder::all_git()?;
+                    let gitcl = Gitcl::all_git();
                     let _failed = Emitter::default()
                         .add_instructions(&gitcl)?
                         .emit_to(&mut stdout_buf)?;
@@ -639,7 +634,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             || {
                 let result = || -> Result<()> {
                     let mut stdout_buf = vec![];
-                    let gitcl = GitclBuilder::all_git()?;
+                    let gitcl = Gitcl::all_git();
                     let _failed = Emitter::default()
                         .add_instructions(&gitcl)?
                         .emit_to(&mut stdout_buf)?;
@@ -661,7 +656,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
         with_var("VERGEN_GIT_DESCRIBE", Some("this is a bad date"), || {
             let result = || -> Result<()> {
                 let mut stdout_buf = vec![];
-                let gitcl = GitclBuilder::all_git()?;
+                let gitcl = Gitcl::all_git();
                 let _failed = Emitter::default()
                     .add_instructions(&gitcl)?
                     .emit_to(&mut stdout_buf)?;
@@ -680,7 +675,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
         with_var("VERGEN_GIT_SHA", Some("this is a bad date"), || {
             let result = || -> Result<()> {
                 let mut stdout_buf = vec![];
-                let gitcl = GitclBuilder::all_git()?;
+                let gitcl = Gitcl::all_git();
                 let _failed = Emitter::default()
                     .add_instructions(&gitcl)?
                     .emit_to(&mut stdout_buf)?;
@@ -699,7 +694,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
         with_var("VERGEN_GIT_DIRTY", Some("this is a bad date"), || {
             let result = || -> Result<()> {
                 let mut stdout_buf = vec![];
-                let gitcl = GitclBuilder::all_git()?;
+                let gitcl = Gitcl::all_git();
                 let _failed = Emitter::default()
                     .add_instructions(&gitcl)?
                     .emit_to(&mut stdout_buf)?;
@@ -716,7 +711,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
     #[serial]
     fn git_cmd_override_works() -> Result<()> {
         let mut stdout_buf = vec![];
-        let mut gitcl = GitclBuilder::all_git()?;
+        let mut gitcl = Gitcl::all_git();
         let _ = gitcl.git_cmd(Some("git -v"));
         let failed = Emitter::default()
             .add_instructions(&gitcl)?

@@ -31,8 +31,8 @@ use vergen_lib::{
         GIT_COMMIT_DATE_NAME, GIT_COMMIT_MESSAGE, GIT_COMMIT_TIMESTAMP_NAME, GIT_DESCRIBE_NAME,
         GIT_DIRTY_NAME, GIT_SHA_NAME,
     },
-    AddEntries, CargoRerunIfChanged, CargoRustcEnvMap, CargoWarning, DefaultConfig, Describe, Dirty, Sha,
-    VergenKey,
+    AddEntries, CargoRerunIfChanged, CargoRustcEnvMap, CargoWarning, DefaultConfig, Describe,
+    Dirty, Sha, VergenKey,
 };
 
 /// The `VERGEN_GIT_*` configuration features

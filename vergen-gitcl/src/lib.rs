@@ -59,7 +59,7 @@
 //!
 //! ```
 //! # use anyhow::Result;
-//! # use vergen_gitcl::{Emitter, GitclBuilder};
+//! # use vergen_gitcl::{Emitter, Gitcl};
 #![cfg_attr(feature = "build", doc = r"# use vergen_gitcl::Build;")]
 #![cfg_attr(feature = "cargo", doc = r"# use vergen_gitcl::Cargo;")]
 #![cfg_attr(feature = "rustc", doc = r"# use vergen_gitcl::Rustc;")]
@@ -72,7 +72,7 @@
 //! // NOTE: See the specific builder documentation for configuration options.
 #![cfg_attr(feature = "build", doc = r"let build = Build::all_build();")]
 #![cfg_attr(feature = "cargo", doc = r"let cargo = Cargo::all_cargo();")]
-//! let gitcl = GitclBuilder::all_git()?;
+//! let gitcl = Gitcl::all_git();
 #![cfg_attr(feature = "rustc", doc = r"let rustc = Rustc::all_rustc();")]
 #![cfg_attr(feature = "si", doc = r"let si = Sysinfo::all_sysinfo();")]
 //!
@@ -137,7 +137,7 @@
 //!
 //! ```
 //! # use anyhow::Result;
-//! # use vergen_gitcl::{Emitter, GitclBuilder};
+//! # use vergen_gitcl::{Emitter, Gitcl};
 #![cfg_attr(feature = "build", doc = r"# use vergen_gitcl::Build;")]
 #![cfg_attr(feature = "cargo", doc = r"# use vergen_gitcl::Cargo;")]
 #![cfg_attr(feature = "rustc", doc = r"# use vergen_gitcl::Rustc;")]
@@ -156,7 +156,7 @@ let build = Build::builder().build_timestamp(true).build();"
     feature = "cargo",
     doc = r"let cargo = Cargo::builder().opt_level(true).build();"
 )]
-//! let gitcl = GitclBuilder::default().commit_timestamp(true).build()?;
+//! let gitcl = Gitcl::builder().commit_timestamp(true).build();
 #![cfg_attr(
     feature = "rustc",
     doc = r"let rustc = Rustc::builder().semver(true).build();"
@@ -456,7 +456,6 @@ use vergen as _;
 mod gitcl;
 
 pub use gitcl::Gitcl;
-pub use gitcl::GitclBuilder;
 #[cfg(feature = "build")]
 pub use vergen::Build;
 #[cfg(feature = "cargo")]
