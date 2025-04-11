@@ -11,7 +11,7 @@ rust-version = "1.81.0"
 name = "vergen-gix"
 readme = "README.md"
 repository = "https://github.com/rustyhorde/vergen"
-version = "1.0.9"
+version = "2.0.0-alpha.1"
 
 [package.metadata.cargo-matrix]
 [[package.metadata.cargo-matrix.channel]]
@@ -39,7 +39,7 @@ si = ["vergen/si"]
 
 [dependencies]
 anyhow = "1.0.95"
-derive_builder = "0.20.2"
+bon = "3.5.2"
 gix = { version = "0.71.0", default-features = false, features = [
     "revision",
     "interrupt",

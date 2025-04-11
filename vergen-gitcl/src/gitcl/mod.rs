@@ -385,7 +385,7 @@ impl Gitcl {
         Self::builder().all().build()
     }
 
-    /// Convenience method to setup the [`Git2Builder`] with all of the `VERGEN_GIT_*` instructions on
+    /// Convenience method to setup the [`GitclBuilder`] with all of the `VERGEN_GIT_*` instructions on
     pub fn all() -> GitclBuilder<Empty> {
         Self::builder().all()
     }

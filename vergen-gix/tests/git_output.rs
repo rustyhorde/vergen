@@ -5,10 +5,9 @@ mod test_git_gix {
     use serial_test::serial;
     use std::env::{self, temp_dir};
     use temp_env::with_var;
-    use vergen::Emitter;
-    use vergen_gix::GixBuilder;
-
     use test_util::TestRepos;
+    use vergen::Emitter;
+    use vergen_gix::Gix;
 
     lazy_static! {
         static ref GIT_BRANCH_RE_STR: &'static str = r"cargo:rustc-env=VERGEN_GIT_BRANCH=.*";
@@ -143,7 +142,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
     #[serial]
     fn git_all_output_idempotent() -> Result<()> {
         let mut stdout_buf = vec![];
-        let mut gix = GixBuilder::all_git()?;
+        let mut gix = Gix::all_git();
         let _ = gix.at_path(temp_dir());
         let failed = Emitter::default()
             .add_instructions(&gix)?
@@ -158,7 +157,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
     #[serial]
     fn git_all_output_default_dir() -> Result<()> {
         let mut stdout_buf = vec![];
-        let gix = GixBuilder::all_git()?;
+        let gix = Gix::all_git();
         let failed = Emitter::default()
             .add_instructions(&gix)?
             .emit_to(&mut stdout_buf)?;
@@ -174,11 +173,10 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
     fn git_all_flags_test_repo() -> Result<()> {
         let repo = TestRepos::new(true, false, false)?;
         let mut stdout_buf = vec![];
-        let mut gix = GixBuilder::default()
-            .all()
+        let mut gix = Gix::all()
             .describe(true, false, None)
             .sha(true)
-            .build()?;
+            .build();
         let _ = gix.at_path(repo.path());
         let failed = Emitter::default()
             .add_instructions(&gix)?
@@ -194,12 +192,11 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
     fn git_all_flags_test_repo_local() -> Result<()> {
         let repo = TestRepos::new(true, false, false)?;
         let mut stdout_buf = vec![];
-        let mut gix = GixBuilder::default()
-            .all()
+        let mut gix = Gix::all()
             .describe(true, false, None)
             .sha(true)
             .use_local(true)
-            .build()?;
+            .build();
         let _ = gix.at_path(repo.path());
         let result = || -> Result<bool> {
             let failed = Emitter::default()
@@ -232,7 +229,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
     fn git_all_output_test_repo() -> Result<()> {
         let repo = TestRepos::new(true, true, false)?;
         let mut stdout_buf = vec![];
-        let mut gix = GixBuilder::all_git()?;
+        let mut gix = Gix::all_git();
         let _ = gix.at_path(repo.path());
         let failed = Emitter::default()
             .add_instructions(&gix)?
@@ -249,10 +246,9 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
         let repo = TestRepos::new(true, true, false)?;
         let mut stdout_buf = vec![];
 
-        let mut gix = GixBuilder::default()
-            .all()
+        let mut gix = Gix::all()
             .describe(false, true, Some("0.1.0")) // Include only annotated tags
-            .build()?;
+            .build();
         let _ = gix.at_path(repo.path());
         let failed = Emitter::default()
             .add_instructions(&gix)?
@@ -264,10 +260,9 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
 
         stdout_buf.clear();
 
-        let mut gix = GixBuilder::default()
-            .all()
+        let mut gix = Gix::all()
             .describe(true, true, Some("0.2.0-rc1")) // Include both annotated and lightweight tags
-            .build()?;
+            .build();
         let _ = gix.at_path(repo.path());
         let failed = Emitter::default()
             .add_instructions(&gix)?
@@ -284,11 +279,10 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
     #[serial]
     fn git_emit_at_test_repo() -> Result<()> {
         let repo = TestRepos::new(true, false, false)?;
-        let mut gix = GixBuilder::default()
-            .all()
+        let mut gix = Gix::all()
             .describe(true, false, None)
             .sha(true)
-            .build()?;
+            .build();
         let _ = gix.at_path(repo.path());
         assert!(Emitter::default().add_instructions(&gix)?.emit().is_ok());
         Ok(())
@@ -298,7 +292,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
         use anyhow::Result;
         use serial_test::serial;
         use test_util::TestRepos;
-        use vergen_gix::{Emitter, GixBuilder};
+        use vergen_gix::{Emitter, Gix};
 
         const GIT_DIRTY_TRUE_OUTPUT: &str = r"cargo:rustc-env=VERGEN_GIT_DIRTY=true";
         const GIT_DIRTY_FALSE_OUTPUT: &str = r"cargo:rustc-env=VERGEN_GIT_DIRTY=false";
@@ -320,7 +314,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             let repo = TestRepos::new(false, false, false)?;
 
             let mut stdout_buf = vec![];
-            let mut gix = GixBuilder::default().dirty(false).build()?;
+            let mut gix = Gix::builder().dirty(false).build();
             let _ = gix.at_path(repo.path());
             let _emitter = Emitter::default()
                 .add_instructions(&gix)?
@@ -340,7 +334,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             let repo = TestRepos::new(false, false, false)?;
 
             let mut stdout_buf = vec![];
-            let mut gix = GixBuilder::default().dirty(true).build()?;
+            let mut gix = Gix::builder().dirty(true).build();
             let _ = gix.at_path(repo.path());
             let _emitter = Emitter::default()
                 .add_instructions(&gix)?
@@ -360,7 +354,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             let repo = TestRepos::new(true, false, false)?;
 
             let mut stdout_buf = vec![];
-            let mut gix = GixBuilder::default().dirty(false).build()?;
+            let mut gix = Gix::builder().dirty(false).build();
             let _ = gix.at_path(repo.path());
             let _emitter = Emitter::default()
                 .add_instructions(&gix)?
@@ -380,7 +374,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             let repo = TestRepos::new(true, false, false)?;
 
             let mut stdout_buf = vec![];
-            let mut gix = GixBuilder::default().dirty(true).build()?;
+            let mut gix = Gix::builder().dirty(true).build();
             let _ = gix.at_path(repo.path());
             let _emitter = Emitter::default()
                 .add_instructions(&gix)?
@@ -400,7 +394,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             let repo = TestRepos::new(false, true, false)?;
 
             let mut stdout_buf = vec![];
-            let mut gix = GixBuilder::default().dirty(false).build()?;
+            let mut gix = Gix::builder().dirty(false).build();
             let _ = gix.at_path(repo.path());
             let _emitter = Emitter::default()
                 .add_instructions(&gix)?
@@ -420,7 +414,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             let repo = TestRepos::new(false, true, false)?;
 
             let mut stdout_buf = vec![];
-            let mut gix = GixBuilder::default().dirty(true).build()?;
+            let mut gix = Gix::builder().dirty(true).build();
             let _ = gix.at_path(repo.path());
             let _emitter = Emitter::default()
                 .add_instructions(&gix)?
@@ -440,7 +434,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             let repo = TestRepos::new(true, true, false)?;
 
             let mut stdout_buf = vec![];
-            let mut gix = GixBuilder::default().dirty(false).build()?;
+            let mut gix = Gix::builder().dirty(false).build();
             let _ = gix.at_path(repo.path());
             let _emitter = Emitter::default()
                 .add_instructions(&gix)?
@@ -460,7 +454,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             let repo = TestRepos::new(true, true, false)?;
 
             let mut stdout_buf = vec![];
-            let mut gix = GixBuilder::default().dirty(true).build()?;
+            let mut gix = Gix::builder().dirty(true).build();
             let _ = gix.at_path(repo.path());
             let _emitter = Emitter::default()
                 .add_instructions(&gix)?
@@ -477,7 +471,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
     #[serial]
     fn git_all_idempotent_output() -> Result<()> {
         let mut stdout_buf = vec![];
-        let gix = GixBuilder::all_git()?;
+        let gix = Gix::all_git();
         let failed = Emitter::default()
             .idempotent()
             .add_instructions(&gix)?
@@ -493,7 +487,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
     #[serial_test::serial]
     fn git_all_idempotent_output_quiet() -> Result<()> {
         let mut stdout_buf = vec![];
-        let gix = GixBuilder::all_git()?;
+        let gix = Gix::all_git();
         let failed = Emitter::default()
             .idempotent()
             .quiet()
@@ -512,7 +506,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
         with_var("VERGEN_GIT_BRANCH", Some("this is a bad date"), || {
             let result = || -> Result<()> {
                 let mut stdout_buf = vec![];
-                let gix = GixBuilder::all_git()?;
+                let gix = Gix::all_git();
                 let _failed = Emitter::default()
                     .add_instructions(&gix)?
                     .emit_to(&mut stdout_buf)?;
@@ -534,7 +528,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             || {
                 let result = || -> Result<()> {
                     let mut stdout_buf = vec![];
-                    let gix = GixBuilder::all_git()?;
+                    let gix = Gix::all_git();
                     let _failed = Emitter::default()
                         .add_instructions(&gix)?
                         .emit_to(&mut stdout_buf)?;
@@ -561,7 +555,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             || {
                 let result = || -> Result<()> {
                     let mut stdout_buf = vec![];
-                    let gix = GixBuilder::all_git()?;
+                    let gix = Gix::all_git();
                     let _failed = Emitter::default()
                         .add_instructions(&gix)?
                         .emit_to(&mut stdout_buf)?;
@@ -588,7 +582,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             || {
                 let result = || -> Result<()> {
                     let mut stdout_buf = vec![];
-                    let gix = GixBuilder::all_git()?;
+                    let gix = Gix::all_git();
                     let _failed = Emitter::default()
                         .add_instructions(&gix)?
                         .emit_to(&mut stdout_buf)?;
@@ -609,7 +603,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
         with_var("VERGEN_GIT_COMMIT_DATE", Some("this is a bad date"), || {
             let result = || -> Result<()> {
                 let mut stdout_buf = vec![];
-                let gix = GixBuilder::all_git()?;
+                let gix = Gix::all_git();
                 let _failed = Emitter::default()
                     .add_instructions(&gix)?
                     .emit_to(&mut stdout_buf)?;
@@ -633,7 +627,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             || {
                 let result = || -> Result<()> {
                     let mut stdout_buf = vec![];
-                    let gix = GixBuilder::all_git()?;
+                    let gix = Gix::all_git();
                     let _failed = Emitter::default()
                         .add_instructions(&gix)?
                         .emit_to(&mut stdout_buf)?;
@@ -657,7 +651,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             || {
                 let result = || -> Result<()> {
                     let mut stdout_buf = vec![];
-                    let gix = GixBuilder::all_git()?;
+                    let gix = Gix::all_git();
                     let _failed = Emitter::default()
                         .add_instructions(&gix)?
                         .emit_to(&mut stdout_buf)?;
@@ -679,7 +673,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
         with_var("VERGEN_GIT_DESCRIBE", Some("this is a bad date"), || {
             let result = || -> Result<()> {
                 let mut stdout_buf = vec![];
-                let gix = GixBuilder::all_git()?;
+                let gix = Gix::all_git();
                 let _failed = Emitter::default()
                     .add_instructions(&gix)?
                     .emit_to(&mut stdout_buf)?;
@@ -698,7 +692,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
         with_var("VERGEN_GIT_SHA", Some("this is a bad date"), || {
             let result = || -> Result<()> {
                 let mut stdout_buf = vec![];
-                let gix = GixBuilder::all_git()?;
+                let gix = Gix::all_git();
                 let _failed = Emitter::default()
                     .add_instructions(&gix)?
                     .emit_to(&mut stdout_buf)?;
@@ -717,7 +711,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
         with_var("VERGEN_GIT_DIRTY", Some("this is a bad date"), || {
             let result = || -> Result<()> {
                 let mut stdout_buf = vec![];
-                let gix = GixBuilder::all_git()?;
+                let gix = Gix::all_git();
                 let _failed = Emitter::default()
                     .add_instructions(&gix)?
                     .emit_to(&mut stdout_buf)?;

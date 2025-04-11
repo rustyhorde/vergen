@@ -59,7 +59,7 @@
 //!
 //! ```
 //! # use anyhow::Result;
-//! # use vergen_gix::{Emitter, GixBuilder};
+//! # use vergen_gix::{Emitter, Gix};
 #![cfg_attr(feature = "build", doc = r"# use vergen_gix::Build;")]
 #![cfg_attr(feature = "cargo", doc = r"# use vergen_gix::Cargo;")]
 #![cfg_attr(feature = "rustc", doc = r"# use vergen_gix::Rustc;")]
@@ -72,7 +72,7 @@
 //! // NOTE: See the specific builder documentation for configuration options.
 #![cfg_attr(feature = "build", doc = r"let build = Build::all_build();")]
 #![cfg_attr(feature = "cargo", doc = r"let cargo = Cargo::all_cargo();")]
-//! let gitcl = GixBuilder::all_git()?;
+//! let gitcl = Gix::all_git();
 #![cfg_attr(feature = "rustc", doc = r"let rustc = Rustc::all_rustc();")]
 #![cfg_attr(feature = "si", doc = r"let si = Sysinfo::all_sysinfo();")]
 //!
@@ -137,7 +137,7 @@
 //!
 //! ```
 //! # use anyhow::Result;
-//! # use vergen_gix::{Emitter, GixBuilder};
+//! # use vergen_gix::{Emitter, Gix};
 #![cfg_attr(feature = "build", doc = r"# use vergen_gix::Build;")]
 #![cfg_attr(feature = "cargo", doc = r"# use vergen_gix::Cargo;")]
 #![cfg_attr(feature = "rustc", doc = r"# use vergen_gix::Rustc;")]
@@ -156,7 +156,7 @@ let build = Build::builder().build_timestamp(true).build();"
     feature = "cargo",
     doc = r"let cargo = Cargo::builder().opt_level(true).build();"
 )]
-//! let gitcl = GixBuilder::default().commit_timestamp(true).build()?;
+//! let gitcl = Gix::builder().commit_timestamp(true).build();
 #![cfg_attr(
     feature = "rustc",
     doc = r"let rustc = Rustc::builder().semver(true).build();"
@@ -456,7 +456,6 @@ use vergen as _;
 mod gix;
 
 pub use crate::gix::Gix;
-pub use crate::gix::GixBuilder;
 #[cfg(feature = "build")]
 pub use vergen::Build;
 #[cfg(feature = "cargo")]
