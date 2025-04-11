@@ -55,20 +55,20 @@
 //! ```
 //! # use anyhow::Result;
 //! # use vergen::Emitter;
-#![cfg_attr(feature = "build", doc = r"# use vergen::BuildBuilder;")]
-#![cfg_attr(feature = "cargo", doc = r"# use vergen::CargoBuilder;")]
-#![cfg_attr(feature = "rustc", doc = r"# use vergen::RustcBuilder;")]
-#![cfg_attr(feature = "si", doc = r"# use vergen::SysinfoBuilder;")]
+#![cfg_attr(feature = "build", doc = r"# use vergen::Build;")]
+#![cfg_attr(feature = "cargo", doc = r"# use vergen::Cargo;")]
+#![cfg_attr(feature = "rustc", doc = r"# use vergen::Rustc;")]
+#![cfg_attr(feature = "si", doc = r"# use vergen::Sysinfo;")]
 #![cfg_attr(feature = "cargo", doc = r"# use test_util::with_cargo_vars;")]
 //! #
 //! # pub fn main() -> Result<()> {
 #![cfg_attr(feature = "cargo", doc = r"# let result = with_cargo_vars(|| {")]
 //! // NOTE: This will output everything, and requires all features enabled.
 //! // NOTE: See the specific builder documentation for configuration options.
-#![cfg_attr(feature = "build", doc = r"let build = BuildBuilder::all_build()?;")]
-#![cfg_attr(feature = "cargo", doc = r"let cargo = CargoBuilder::all_cargo()?;")]
-#![cfg_attr(feature = "rustc", doc = r"let rustc = RustcBuilder::all_rustc()?;")]
-#![cfg_attr(feature = "si", doc = r"let si = SysinfoBuilder::all_sysinfo()?;")]
+#![cfg_attr(feature = "build", doc = r"let build = Build::all_build();")]
+#![cfg_attr(feature = "cargo", doc = r"let cargo = Cargo::all_cargo();")]
+#![cfg_attr(feature = "rustc", doc = r"let rustc = Rustc::all_rustc();")]
+#![cfg_attr(feature = "si", doc = r"let si = Sysinfo::all_sysinfo();")]
 //!
 //! Emitter::default()
 #![cfg_attr(feature = "build", doc = r"    .add_instructions(&build)?")]
@@ -120,10 +120,10 @@
 //! ```
 //! # use anyhow::Result;
 //! # use vergen::Emitter;
-#![cfg_attr(feature = "build", doc = r"# use vergen::BuildBuilder;")]
-#![cfg_attr(feature = "cargo", doc = r"# use vergen::CargoBuilder;")]
-#![cfg_attr(feature = "rustc", doc = r"# use vergen::RustcBuilder;")]
-#![cfg_attr(feature = "si", doc = r"# use vergen::SysinfoBuilder;")]
+#![cfg_attr(feature = "build", doc = r"# use vergen::Build;")]
+#![cfg_attr(feature = "cargo", doc = r"# use vergen::Cargo;")]
+#![cfg_attr(feature = "rustc", doc = r"# use vergen::Rustc;")]
+#![cfg_attr(feature = "si", doc = r"# use vergen::Sysinfo;")]
 #![cfg_attr(feature = "cargo", doc = r"# use test_util::with_cargo_vars;")]
 //! #
 //! # pub fn main() -> Result<()> {
@@ -132,19 +132,19 @@
     feature = "build",
     doc = r"// NOTE: This will output only the instructions specified.
 // NOTE: See the specific builder documentation for configuration options. 
-let build = BuildBuilder::default().build_timestamp(true).build()?;"
+let build = Build::builder().build_timestamp(true).build();"
 )]
 #![cfg_attr(
     feature = "cargo",
-    doc = r"let cargo = CargoBuilder::default().opt_level(true).build()?;"
+    doc = r"let cargo = Cargo::builder().opt_level(true).build();"
 )]
 #![cfg_attr(
     feature = "rustc",
-    doc = r"let rustc = RustcBuilder::default().semver(true).build()?;"
+    doc = r"let rustc = Rustc::builder().semver(true).build();"
 )]
 #![cfg_attr(
     feature = "si",
-    doc = r"let si = SysinfoBuilder::default().cpu_core_count(true).build()?;"
+    doc = r"let si = Sysinfo::builder().cpu_core_count(true).build();"
 )]
 //!
 //! Emitter::default()
@@ -496,7 +496,7 @@ mod feature;
     feature = "rustc",
     feature = "si"
 )))]
-use {anyhow as _, derive_builder as _};
+use {anyhow as _, bon as _};
 #[cfg(test)]
 use {lazy_static as _, regex as _, serial_test as _, temp_env as _, test_util as _};
 
@@ -504,20 +504,12 @@ use {lazy_static as _, regex as _, serial_test as _, temp_env as _, test_util as
 pub use cargo_metadata::DependencyKind;
 #[cfg(feature = "build")]
 pub use feature::build::Build;
-#[cfg(feature = "build")]
-pub use feature::build::BuildBuilder;
 #[cfg(feature = "cargo")]
 pub use feature::cargo::Cargo;
-#[cfg(feature = "cargo")]
-pub use feature::cargo::CargoBuilder;
 #[cfg(feature = "rustc")]
 pub use feature::rustc::Rustc;
-#[cfg(feature = "rustc")]
-pub use feature::rustc::RustcBuilder;
 #[cfg(feature = "si")]
 pub use feature::si::Sysinfo;
-#[cfg(feature = "si")]
-pub use feature::si::SysinfoBuilder;
 #[cfg(feature = "si")]
 pub use sysinfo::CpuRefreshKind;
 #[cfg(feature = "si")]

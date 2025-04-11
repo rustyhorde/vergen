@@ -1,0 +1,1 @@
+cargo fmt --all -- --check && scripts\run_clippy && scripts\run_build && scripts\run_test && scripts\run_code_cov && scripts\run_docs

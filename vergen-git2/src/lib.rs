@@ -59,22 +59,22 @@
 //!
 //! ```
 //! # use anyhow::Result;
-//! # use vergen_git2::{Emitter, Git2Builder};
-#![cfg_attr(feature = "build", doc = r"# use vergen_git2::BuildBuilder;")]
-#![cfg_attr(feature = "cargo", doc = r"# use vergen_git2::CargoBuilder;")]
-#![cfg_attr(feature = "rustc", doc = r"# use vergen_git2::RustcBuilder;")]
-#![cfg_attr(feature = "si", doc = r"# use vergen_git2::SysinfoBuilder;")]
+//! # use vergen_git2::{Emitter, Git2};
+#![cfg_attr(feature = "build", doc = r"# use vergen_git2::Build;")]
+#![cfg_attr(feature = "cargo", doc = r"# use vergen_git2::Cargo;")]
+#![cfg_attr(feature = "rustc", doc = r"# use vergen_git2::Rustc;")]
+#![cfg_attr(feature = "si", doc = r"# use vergen_git2::Sysinfo;")]
 #![cfg_attr(feature = "cargo", doc = r"# use test_util::with_cargo_vars;")]
 //! #
 //! # pub fn main() -> Result<()> {
 #![cfg_attr(feature = "cargo", doc = r"# let result = with_cargo_vars(|| {")]
 //! // NOTE: This will output everything, and requires all features enabled.
 //! // NOTE: See the specific builder documentation for configuration options.
-#![cfg_attr(feature = "build", doc = r"let build = BuildBuilder::all_build()?;")]
-#![cfg_attr(feature = "cargo", doc = r"let cargo = CargoBuilder::all_cargo()?;")]
-//! let git2 = Git2Builder::all_git()?;
-#![cfg_attr(feature = "rustc", doc = r"let rustc = RustcBuilder::all_rustc()?;")]
-#![cfg_attr(feature = "si", doc = r"let si = SysinfoBuilder::all_sysinfo()?;")]
+#![cfg_attr(feature = "build", doc = r"let build = Build::all_build();")]
+#![cfg_attr(feature = "cargo", doc = r"let cargo = Cargo::all_cargo();")]
+//! let git2 = Git2::all_git();
+#![cfg_attr(feature = "rustc", doc = r"let rustc = Rustc::all_rustc();")]
+#![cfg_attr(feature = "si", doc = r"let si = Sysinfo::all_sysinfo();")]
 //!
 //! Emitter::default()
 #![cfg_attr(feature = "build", doc = r"    .add_instructions(&build)?")]
@@ -137,11 +137,11 @@
 //!
 //! ```
 //! # use anyhow::Result;
-//! # use vergen_git2::{Emitter, Git2Builder};
-#![cfg_attr(feature = "build", doc = r"# use vergen_git2::BuildBuilder;")]
-#![cfg_attr(feature = "cargo", doc = r"# use vergen_git2::CargoBuilder;")]
-#![cfg_attr(feature = "rustc", doc = r"# use vergen_git2::RustcBuilder;")]
-#![cfg_attr(feature = "si", doc = r"# use vergen_git2::SysinfoBuilder;")]
+//! # use vergen_git2::{Emitter, Git2};
+#![cfg_attr(feature = "build", doc = r"# use vergen_git2::Build;")]
+#![cfg_attr(feature = "cargo", doc = r"# use vergen_git2::Cargo;")]
+#![cfg_attr(feature = "rustc", doc = r"# use vergen_git2::Rustc;")]
+#![cfg_attr(feature = "si", doc = r"# use vergen_git2::Sysinfo;")]
 #![cfg_attr(feature = "cargo", doc = r"# use test_util::with_cargo_vars;")]
 //! #
 //! # pub fn main() -> Result<()> {
@@ -150,20 +150,20 @@
     feature = "build",
     doc = r"// NOTE: This will output only the instructions specified.
 // NOTE: See the specific builder documentation for configuration options. 
-let build = BuildBuilder::default().build_timestamp(true).build()?;"
+let build = Build::builder().build_timestamp(true).build();"
 )]
 #![cfg_attr(
     feature = "cargo",
-    doc = r"let cargo = CargoBuilder::default().opt_level(true).build()?;"
+    doc = r"let cargo = Cargo::builder().opt_level(true).build();"
 )]
-//! let git2 = Git2Builder::default().commit_timestamp(true).build()?;
+//! let git2 = Git2::builder().commit_timestamp(true).build();
 #![cfg_attr(
     feature = "rustc",
-    doc = r"let rustc = RustcBuilder::default().semver(true).build()?;"
+    doc = r"let rustc = Rustc::builder().semver(true).build();"
 )]
 #![cfg_attr(
     feature = "si",
-    doc = r"let si = SysinfoBuilder::default().cpu_core_count(true).build()?;"
+    doc = r"let si = Sysinfo::builder().cpu_core_count(true).build();"
 )]
 //!
 //! Emitter::default()
@@ -455,11 +455,10 @@ use {lazy_static as _, regex as _, temp_env as _};
 use vergen as _;
 
 pub use crate::git2::Git2;
-pub use crate::git2::Git2Builder;
 #[cfg(feature = "build")]
-pub use vergen::BuildBuilder;
+pub use vergen::Build;
 #[cfg(feature = "cargo")]
-pub use vergen::CargoBuilder;
+pub use vergen::Cargo;
 #[cfg(feature = "si")]
 pub use vergen::CpuRefreshKind;
 #[cfg(feature = "cargo")]
@@ -471,9 +470,9 @@ pub use vergen::ProcessRefreshKind;
 #[cfg(feature = "si")]
 pub use vergen::RefreshKind;
 #[cfg(feature = "rustc")]
-pub use vergen::RustcBuilder;
+pub use vergen::Rustc;
 #[cfg(feature = "si")]
-pub use vergen::SysinfoBuilder;
+pub use vergen::Sysinfo;
 pub use vergen_lib::AddCustomEntries;
 pub use vergen_lib::CargoRerunIfChanged;
 pub use vergen_lib::CargoWarning;
