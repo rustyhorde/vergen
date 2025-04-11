@@ -193,6 +193,7 @@
 )]
 // clippy lints
 #![cfg_attr(nightly, deny(clippy::all, clippy::pedantic))]
+#![cfg_attr(nightly, allow(clippy::ref_option_ref))]
 // rustdoc lints
 #![cfg_attr(
     nightly,
@@ -216,12 +217,16 @@
 #[cfg(test)]
 use {temp_env as _, test_util as _};
 
+mod config;
 pub mod constants;
 mod emitter;
 mod entries;
 mod keys;
 mod utils;
 
+pub use config::Describe;
+pub use config::Dirty;
+pub use config::Sha;
 pub use emitter::Emitter;
 #[doc(hidden)]
 pub use entries::test_gen::CustomInsGen;

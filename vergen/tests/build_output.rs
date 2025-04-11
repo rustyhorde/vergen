@@ -4,8 +4,7 @@ mod test_build {
     use lazy_static::lazy_static;
     use regex::Regex;
     use serial_test::serial;
-    use vergen::BuildBuilder;
-    use vergen::Emitter;
+    use vergen::{Build, Emitter};
     use vergen_lib::{CustomInsGen, CustomInsGenBuilder};
 
     lazy_static! {
@@ -81,7 +80,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     #[serial]
     fn build_all_output() -> Result<()> {
         let mut stdout_buf = vec![];
-        let build = BuildBuilder::all_build()?;
+        let build = Build::all_build();
         Emitter::new()
             .add_instructions(&build)?
             .emit_to(&mut stdout_buf)?;
@@ -94,7 +93,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     #[serial]
     fn build_all_with_custom_output() -> Result<()> {
         let mut stdout_buf = vec![];
-        let build = BuildBuilder::all_build()?;
+        let build = Build::all_build();
         let cust_gen = CustomInsGen::default();
         Emitter::new()
             .add_instructions(&build)?
@@ -109,7 +108,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     #[serial]
     fn build_all_with_custom_idempotent_output() -> Result<()> {
         let mut stdout_buf = vec![];
-        let build = BuildBuilder::all_build()?;
+        let build = Build::all_build();
         let cust_gen = CustomInsGen::default();
         Emitter::new()
             .idempotent()
@@ -124,7 +123,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     #[test]
     #[serial]
     fn build_all_with_custom_fail() -> Result<()> {
-        let build = BuildBuilder::all_build()?;
+        let build = Build::all_build();
         let cust_gen = CustomInsGenBuilder::default().fail(true).build()?;
         assert!(Emitter::new()
             .fail_on_error()
@@ -138,7 +137,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     #[serial]
     fn build_all_with_custom_default() -> Result<()> {
         let mut stdout_buf = vec![];
-        let build = BuildBuilder::all_build()?;
+        let build = Build::all_build();
         let cust_gen = CustomInsGenBuilder::default().fail(true).build()?;
         Emitter::new()
             .add_instructions(&build)?
@@ -155,11 +154,11 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
         temp_env::with_var("SOURCE_DATE_EPOCH", Some("1671809360"), || {
             let result = || -> Result<()> {
                 let mut stdout_buf = vec![];
-                let build = BuildBuilder::default()
+                let build = Build::builder()
                     .build_date(true)
                     .build_timestamp(true)
                     .use_local(true)
-                    .build()?;
+                    .build();
                 let result = Emitter::new()
                     .add_instructions(&build)?
                     .fail_on_error()
@@ -180,7 +179,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
         temp_env::with_var_unset("SOURCE_DATE_EPOCH", || {
             let result = || -> Result<()> {
                 let mut stdout_buf = vec![];
-                let build = BuildBuilder::all_build()?;
+                let build = Build::all_build();
                 Emitter::new()
                     .idempotent()
                     .add_instructions(&build)?
@@ -200,7 +199,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
         temp_env::with_var_unset("SOURCE_DATE_EPOCH", || {
             let result = || -> Result<()> {
                 let mut stdout_buf = vec![];
-                let build = BuildBuilder::all_build()?;
+                let build = Build::all_build();
                 Emitter::new()
                     .idempotent()
                     .custom_build_rs("a/custom_build.rs")
@@ -221,7 +220,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
         temp_env::with_var_unset("SOURCE_DATE_EPOCH", || {
             let result = || -> Result<()> {
                 let mut stdout_buf = vec![];
-                let build = BuildBuilder::all_build()?;
+                let build = Build::all_build();
                 Emitter::new()
                     .idempotent()
                     .quiet()
@@ -242,7 +241,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
         temp_env::with_var("SOURCE_DATE_EPOCH", Some("1671809360"), || {
             let result = || -> Result<()> {
                 let mut stdout_buf = vec![];
-                let build = BuildBuilder::all_build()?;
+                let build = Build::all_build();
                 Emitter::new()
                     .add_instructions(&build)?
                     .emit_to(&mut stdout_buf)?;

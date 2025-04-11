@@ -3,7 +3,7 @@ mod test_rustc {
     use anyhow::Result;
     use lazy_static::lazy_static;
     use regex::Regex;
-    use vergen::{Emitter, RustcBuilder};
+    use vergen::{Emitter, Rustc};
 
     lazy_static! {
         static ref RUSTC_CHANNEL_RE_STR: &'static str = r"cargo:rustc-env=VERGEN_RUSTC_CHANNEL=.*";
@@ -32,7 +32,7 @@ mod test_rustc {
     #[test]
     fn rustc_all_output() -> Result<()> {
         let mut stdout_buf = vec![];
-        let rustc = RustcBuilder::all_rustc()?;
+        let rustc = Rustc::all_rustc();
         Emitter::default()
             .add_instructions(&rustc)?
             .emit_to(&mut stdout_buf)?;
@@ -44,7 +44,7 @@ mod test_rustc {
     #[test]
     fn rustc_all_idempotent_output() -> Result<()> {
         let mut stdout_buf = vec![];
-        let rustc = RustcBuilder::all_rustc()?;
+        let rustc = Rustc::all_rustc();
         Emitter::default()
             .idempotent()
             .add_instructions(&rustc)?
