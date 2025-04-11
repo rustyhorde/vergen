@@ -10,10 +10,7 @@
 use anyhow::anyhow;
 use anyhow::{Error, Result};
 use bon::Builder;
-use git2_builder::{
-    SetBranch, SetCommitAuthorEmail, SetCommitAuthorName, SetCommitCount, SetCommitDate,
-    SetCommitMessage, SetCommitTimestamp,
-};
+use git2_builder::Empty;
 use git2_rs::{
     BranchType, Commit, DescribeFormatOptions, DescribeOptions, Reference, Repository,
     StatusOptions,
@@ -34,7 +31,8 @@ use vergen_lib::{
         GIT_COMMIT_DATE_NAME, GIT_COMMIT_MESSAGE, GIT_COMMIT_TIMESTAMP_NAME, GIT_DESCRIBE_NAME,
         GIT_DIRTY_NAME, GIT_SHA_NAME,
     },
-    AddEntries, CargoRerunIfChanged, CargoRustcEnvMap, CargoWarning, DefaultConfig, VergenKey,
+    AddEntries, CargoRerunIfChanged, CargoRustcEnvMap, CargoWarning, DefaultConfig, Describe, Dirty, Sha,
+    VergenKey,
 };
 
 /// The `VERGEN_GIT_*` configuration features
@@ -87,52 +85,11 @@ use vergen_lib::{
 #[derive(Builder, Clone, Debug, PartialEq)]
 #[allow(clippy::struct_excessive_bools)]
 pub struct Git2 {
-    /// Emit the describe output
-    ///
-    /// ```text
-    /// cargo:rustc-env=VERGEN_GIT_DESCRIBE=<DESCRIBE>
-    /// ```
-    ///
-    /// Optionally, add the `dirty` or `tags` flag to describe.
-    /// See [`git describe`](https://git-scm.com/docs/git-describe#_options) for more details
-    ///
-    #[builder(field = false)]
-    describe: bool,
-    /// Instead of using only the annotated tags, use any tag found in refs/tags namespace.
-    #[builder(field = false)]
-    describe_tags: bool,
-    /// If the working tree has local modification "-dirty" is appended to it.
-    #[builder(field = false)]
-    describe_dirty: bool,
-    /// Only consider tags matching the given glob pattern, excluding the "refs/tags/" prefix.
-    #[builder(field = None)]
-    describe_match_pattern: Option<&'static str>,
-    /// Emit the SHA of the latest commit
-    ///
-    /// ```text
-    /// cargo:rustc-env=VERGEN_GIT_SHA=<SHA>
-    /// ```
-    ///
-    /// Optionally, add the `short` flag to rev-parse.
-    /// See [`git rev-parse`](https://git-scm.com/docs/git-rev-parse#_options_for_output) for more details.
-    ///
-    #[builder(field = false)]
-    sha: bool,
-    /// Shortens the object name to a unique prefix
-    #[builder(field = false)]
-    sha_short: bool,
-    /// Emit the dirty state of the git repository
-    /// ```text
-    /// cargo:rustc-env=VERGEN_GIT_DIRTY=(true|false)
-    /// ```
-    ///
-    /// Optionally, include untracked files when determining the dirty status of the repository.
-    ///
-    #[builder(field = false)]
-    dirty: bool,
-    /// Should we include/ignore untracked files in deciding whether the repository is dirty.
-    #[builder(field = false)]
-    dirty_include_untracked: bool,
+    /// Configures the default values.
+    /// If set to `true` all defaults are in "enabled" state.
+    /// If set to `false` all defaults are in "disabled" state.
+    #[builder(field)]
+    all: bool,
     /// An optional path to a repository.
     #[builder(into)]
     repo_path: Option<PathBuf>,
@@ -142,7 +99,7 @@ pub struct Git2 {
     /// cargo:rustc-env=VERGEN_GIT_BRANCH=<BRANCH_NAME>
     /// ```
     ///
-    #[builder(default = false)]
+    #[builder(default = all)]
     branch: bool,
     /// Emit the author email of the most recent commit
     ///
@@ -150,7 +107,7 @@ pub struct Git2 {
     /// cargo:rustc-env=VERGEN_GIT_COMMIT_AUTHOR_EMAIL=<AUTHOR_EMAIL>
     /// ```
     ///
-    #[builder(default = false)]
+    #[builder(default = all)]
     commit_author_name: bool,
     /// Emit the author name of the most recent commit
     ///
@@ -158,14 +115,14 @@ pub struct Git2 {
     /// cargo:rustc-env=VERGEN_GIT_COMMIT_AUTHOR_NAME=<AUTHOR_NAME>
     /// ```
     ///
-    #[builder(default = false)]
+    #[builder(default = all)]
     commit_author_email: bool,
     /// Emit the total commit count to HEAD
     ///
     /// ```text
     /// cargo:rustc-env=VERGEN_GIT_COMMIT_COUNT=<COUNT>
     /// ```
-    #[builder(default = false)]
+    #[builder(default = all)]
     commit_count: bool,
     /// Emit the commit message of the latest commit
     ///
@@ -173,7 +130,7 @@ pub struct Git2 {
     /// cargo:rustc-env=VERGEN_GIT_COMMIT_MESSAGE=<MESSAGE>
     /// ```
     ///
-    #[builder(default = false)]
+    #[builder(default = all)]
     commit_message: bool,
     /// Emit the commit date of the latest commit
     ///
@@ -181,7 +138,7 @@ pub struct Git2 {
     /// cargo:rustc-env=VERGEN_GIT_COMMIT_DATE=<YYYY-MM-DD>
     /// ```
     ///
-    #[builder(default = false)]
+    #[builder(default = all)]
     commit_date: bool,
     /// Emit the commit timestamp of the latest commit
     ///
@@ -189,8 +146,65 @@ pub struct Git2 {
     /// cargo:rustc-env=VERGEN_GIT_COMMIT_TIMESTAMP=<YYYY-MM-DDThh:mm:ssZ>
     /// ```
     ///
-    #[builder(default = false)]
+    #[builder(default = all)]
     commit_timestamp: bool,
+    /// Emit the describe output
+    ///
+    /// ```text
+    /// cargo:rustc-env=VERGEN_GIT_DESCRIBE=<DESCRIBE>
+    /// ```
+    ///
+    /// Optionally, add the `dirty` or `tags` flag to describe.
+    /// See [`git describe`](https://git-scm.com/docs/git-describe#_options) for more details
+    ///
+    /// ## `tags`
+    /// Instead of using only the annotated tags, use any tag found in refs/tags namespace.
+    ///
+    /// ## `dirty`
+    /// If the working tree has local modification "-dirty" is appended to it.
+    ///
+    /// ## `match_pattern`
+    /// Only consider tags matching the given glob pattern, excluding the "refs/tags/" prefix.
+    #[builder(
+        required,
+        default = all.then(|| Describe::builder().build()),
+        with = |tags: bool, dirty: bool, match_pattern: Option<&'static str>| {
+            Some(Describe::builder().tags(tags).dirty(dirty).maybe_match_pattern(match_pattern).build())
+        }
+    )]
+    describe: Option<Describe>,
+    /// Emit the SHA of the latest commit
+    ///
+    /// ```text
+    /// cargo:rustc-env=VERGEN_GIT_SHA=<SHA>
+    /// ```
+    ///
+    /// Optionally, add the `short` flag to rev-parse.
+    /// See [`git rev-parse`](https://git-scm.com/docs/git-rev-parse#_options_for_output) for more details.
+    ///
+    /// ## `short`
+    /// Shortens the object name to a unique prefix
+    #[builder(
+        required,
+        default = all.then(|| Sha::builder().build()),
+        with = |short: bool| Some(Sha::builder().short(short).build())
+    )]
+    sha: Option<Sha>,
+    /// Emit the dirty state of the git repository
+    /// ```text
+    /// cargo:rustc-env=VERGEN_GIT_DIRTY=(true|false)
+    /// ```
+    ///
+    /// Optionally, include untracked files when determining the dirty status of the repository.
+    ///
+    /// # `include_tracked`
+    /// Should we include/ignore untracked files in deciding whether the repository is dirty.
+    #[builder(
+        required,
+        default = all.then(|| Dirty::builder().build()),
+        with = |include_untracked: bool| Some(Dirty::builder().include_untracked(include_untracked).build())
+    )]
+    dirty: Option<Dirty>,
     /// Enable local offset date/timestamp output
     #[builder(default = false)]
     use_local: bool,
@@ -201,91 +215,26 @@ pub struct Git2 {
 }
 
 impl<S: git2_builder::State> Git2Builder<S> {
-    /// Emit the describe output
-    ///
-    /// ```text
-    /// cargo:rustc-env=VERGEN_GIT_DESCRIBE=<DESCRIBE>
-    /// ```
-    ///
-    /// Optionally, add the `dirty` or `tags` flag to describe.
-    /// See [`git describe`](https://git-scm.com/docs/git-describe#_options) for more details
-    ///
-    pub fn describe(mut self, tags: bool, dirty: bool, matches: Option<&'static str>) -> Self {
-        self.describe = true;
-        self.describe_tags = tags;
-        self.describe_dirty = dirty;
-        self.describe_match_pattern = matches;
-        self
-    }
-
-    /// Emit the dirty state of the git repository
-    /// ```text
-    /// cargo:rustc-env=VERGEN_GIT_DIRTY=(true|false)
-    /// ```
-    ///
-    /// Optionally, include untracked files when determining the dirty status of the repository.
-    ///
-    pub fn dirty(mut self, include_untracked: bool) -> Self {
-        self.dirty = true;
-        self.dirty_include_untracked = include_untracked;
-        self
-    }
-
-    /// Emit the SHA of the latest commit
-    ///
-    /// ```text
-    /// cargo:rustc-env=VERGEN_GIT_SHA=<SHA>
-    /// ```
-    ///
-    /// Optionally, add the `short` flag to rev-parse.
-    /// See [`git rev-parse`](https://git-scm.com/docs/git-rev-parse#_options_for_output) for more details.
-    ///
-    pub fn sha(mut self, short: bool) -> Self {
-        self.sha = true;
-        self.sha_short = short;
+    /// Convenience method that switches the defaults of [`Git2Builder`]
+    /// to enable all of the `VERGEN_GIT_*` instructions. It can only be
+    /// called at the start of the building process, i.e. when no config
+    /// has been set yet to avoid overwrites.
+    fn all(mut self) -> Self {
+        self.all = true;
         self
     }
 }
-
-type Git2BuilderAll = Git2Builder<
-    SetCommitTimestamp<
-        SetCommitMessage<
-            SetCommitDate<SetCommitCount<SetCommitAuthorName<SetCommitAuthorEmail<SetBranch>>>>,
-        >,
-    >,
->;
 
 impl Git2 {
     /// Emit all of the `VERGEN_GIT_*` instructions
     #[must_use]
     pub fn all_git() -> Git2 {
-        Self::builder()
-            .branch(true)
-            .commit_author_email(true)
-            .commit_author_name(true)
-            .commit_count(true)
-            .commit_date(true)
-            .commit_message(true)
-            .commit_timestamp(true)
-            .describe(false, false, None)
-            .sha(false)
-            .dirty(false)
-            .build()
+        Self::builder().all().build()
     }
 
     /// Convenience method to setup the [`Git2Builder`] with all of the `VERGEN_GIT_*` instructions on
-    pub fn all() -> Git2BuilderAll {
-        Self::builder()
-            .branch(true)
-            .commit_author_email(true)
-            .commit_author_name(true)
-            .commit_count(true)
-            .commit_date(true)
-            .commit_message(true)
-            .commit_timestamp(true)
-            .describe(false, false, None)
-            .sha(false)
-            .dirty(false)
+    pub fn all() -> Git2Builder<Empty> {
+        Self::builder().all()
     }
 
     fn any(&self) -> bool {
@@ -296,9 +245,9 @@ impl Git2 {
             || self.commit_date
             || self.commit_message
             || self.commit_timestamp
-            || self.describe
-            || self.sha
-            || self.dirty
+            || self.describe.is_some()
+            || self.sha.is_some()
+            || self.dirty.is_some()
     }
 
     /// Use the repository location at the given path to determine the git instruction output.
@@ -435,10 +384,10 @@ impl Git2 {
             }
         }
 
-        if self.sha {
+        if let Some(sha) = self.sha {
             if let Ok(_value) = env::var(GIT_SHA_NAME) {
                 add_default_map_entry(VergenKey::GitSha, cargo_rustc_env, cargo_warning);
-            } else if self.sha_short {
+            } else if sha.short() {
                 let obj = repo.revparse_single("HEAD")?;
                 Self::add_opt_value(
                     obj.short_id()?.as_str(),
@@ -451,13 +400,13 @@ impl Git2 {
             }
         }
 
-        if self.dirty {
+        if let Some(dirty) = self.dirty {
             if let Ok(_value) = env::var(GIT_DIRTY_NAME) {
                 add_default_map_entry(VergenKey::GitDirty, cargo_rustc_env, cargo_warning);
             } else {
                 let mut status_options = StatusOptions::new();
 
-                _ = status_options.include_untracked(self.dirty_include_untracked);
+                _ = status_options.include_untracked(dirty.include_untracked());
                 let statuses = repo.statuses(Some(&mut status_options))?;
 
                 let n_dirty = statuses
@@ -473,7 +422,7 @@ impl Git2 {
             }
         }
 
-        if self.describe {
+        if let Some(describe) = self.describe {
             if let Ok(_value) = env::var(GIT_DESCRIBE_NAME) {
                 add_default_map_entry(VergenKey::GitDescribe, cargo_rustc_env, cargo_warning);
             } else {
@@ -482,15 +431,15 @@ impl Git2 {
 
                 _ = describe_opts.show_commit_oid_as_fallback(true);
 
-                if self.describe_dirty {
+                if describe.dirty() {
                     _ = format_opts.dirty_suffix("-dirty");
                 }
 
-                if self.describe_tags {
+                if describe.tags() {
                     _ = describe_opts.describe_tags();
                 }
 
-                if let Some(pattern) = self.describe_match_pattern {
+                if let Some(pattern) = *describe.match_pattern() {
                     _ = describe_opts.pattern(pattern);
                 }
 
@@ -764,13 +713,13 @@ impl AddEntries for Git2 {
                     cargo_warning,
                 );
             }
-            if self.describe {
+            if self.describe.is_some() {
                 add_default_map_entry(VergenKey::GitDescribe, cargo_rustc_env_map, cargo_warning);
             }
-            if self.sha {
+            if self.sha.is_some() {
                 add_default_map_entry(VergenKey::GitSha, cargo_rustc_env_map, cargo_warning);
             }
-            if self.dirty {
+            if self.dirty.is_some() {
                 add_default_map_entry(VergenKey::GitDirty, cargo_rustc_env_map, cargo_warning);
             }
             Ok(())
