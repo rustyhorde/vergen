@@ -174,13 +174,14 @@ pub trait AddCustom<K: Into<String> + Ord, V: Into<String>> {
 #[doc(hidden)]
 pub(crate) mod test_gen {
     use crate::{AddCustomEntries, CargoRerunIfChanged, CargoWarning};
-    use anyhow::{anyhow, Result};
-    use derive_builder::Builder;
+    use anyhow::{Result, anyhow};
+    use bon::Builder;
     use std::collections::BTreeMap;
 
     #[doc(hidden)]
     #[derive(Builder, Clone, Copy, Debug, Default)]
     pub struct CustomInsGen {
+        #[builder(default = false)]
         fail: bool,
     }
 
@@ -225,7 +226,7 @@ pub(crate) mod test_gen {
 #[cfg(test)]
 mod test {
     use super::DefaultConfig;
-    use anyhow::{anyhow, Result};
+    use anyhow::{Result, anyhow};
     use std::io::Write;
 
     #[test]

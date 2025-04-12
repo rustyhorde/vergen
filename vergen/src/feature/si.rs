@@ -6,17 +6,17 @@
 // option. All files in the project carrying such notice may not be copied,
 // modified, or distributed except according to those terms.
 
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use bon::Builder;
 use std::env;
-use sysinfo::{get_current_pid, Cpu, Pid, Process, RefreshKind, System, User, Users};
+use sysinfo::{Cpu, Pid, Process, RefreshKind, System, User, Users, get_current_pid};
 use vergen_lib::{
+    AddEntries, CargoRerunIfChanged, CargoRustcEnvMap, CargoWarning, DefaultConfig, VergenKey,
     add_default_map_entry, add_map_entry,
     constants::{
         SYSINFO_CPU_BRAND, SYSINFO_CPU_CORE_COUNT, SYSINFO_CPU_FREQUENCY, SYSINFO_CPU_NAME,
         SYSINFO_CPU_VENDOR, SYSINFO_MEMORY, SYSINFO_NAME, SYSINFO_OS_VERSION, SYSINFO_USER,
     },
-    AddEntries, CargoRerunIfChanged, CargoRustcEnvMap, CargoWarning, DefaultConfig, VergenKey,
 };
 
 /// The `VERGEN_SYSINFO_*` configuration features
@@ -576,7 +576,7 @@ mod test {
     use std::{collections::BTreeMap, io::Write};
     use sysinfo::{CpuRefreshKind, RefreshKind};
     use temp_env::with_var;
-    use vergen_lib::{count_idempotent, VergenKey};
+    use vergen_lib::{VergenKey, count_idempotent};
 
     const IDEM_COUNT: usize = 0;
     const SYSINFO_COUNT: usize = 9;
@@ -830,17 +830,19 @@ mod test {
             "VERGEN_SYSINFO_OS_VERSION",
             Some("this is a bad date"),
             || {
-                let result = || -> Result<()> {
-                    let mut stdout_buf = vec![];
-                    let si = Sysinfo::all_sysinfo();
-                    let _failed = Emitter::default()
-                        .add_instructions(&si)?
-                        .emit_to(&mut stdout_buf)?;
-                    let output = String::from_utf8_lossy(&stdout_buf);
-                    assert!(output
-                        .contains("cargo:rustc-env=VERGEN_SYSINFO_OS_VERSION=this is a bad date"));
-                    Ok(())
-                }();
+                let result =
+                    || -> Result<()> {
+                        let mut stdout_buf = vec![];
+                        let si = Sysinfo::all_sysinfo();
+                        let _failed = Emitter::default()
+                            .add_instructions(&si)?
+                            .emit_to(&mut stdout_buf)?;
+                        let output = String::from_utf8_lossy(&stdout_buf);
+                        assert!(output.contains(
+                            "cargo:rustc-env=VERGEN_SYSINFO_OS_VERSION=this is a bad date"
+                        ));
+                        Ok(())
+                    }();
                 assert!(result.is_ok());
             },
         );
@@ -895,17 +897,19 @@ mod test {
             "VERGEN_SYSINFO_CPU_VENDOR",
             Some("this is a bad date"),
             || {
-                let result = || -> Result<()> {
-                    let mut stdout_buf = vec![];
-                    let si = Sysinfo::all_sysinfo();
-                    let _failed = Emitter::default()
-                        .add_instructions(&si)?
-                        .emit_to(&mut stdout_buf)?;
-                    let output = String::from_utf8_lossy(&stdout_buf);
-                    assert!(output
-                        .contains("cargo:rustc-env=VERGEN_SYSINFO_CPU_VENDOR=this is a bad date"));
-                    Ok(())
-                }();
+                let result =
+                    || -> Result<()> {
+                        let mut stdout_buf = vec![];
+                        let si = Sysinfo::all_sysinfo();
+                        let _failed = Emitter::default()
+                            .add_instructions(&si)?
+                            .emit_to(&mut stdout_buf)?;
+                        let output = String::from_utf8_lossy(&stdout_buf);
+                        assert!(output.contains(
+                            "cargo:rustc-env=VERGEN_SYSINFO_CPU_VENDOR=this is a bad date"
+                        ));
+                        Ok(())
+                    }();
                 assert!(result.is_ok());
             },
         );
@@ -949,8 +953,10 @@ mod test {
                         .add_instructions(&si)?
                         .emit_to(&mut stdout_buf)?;
                     let output = String::from_utf8_lossy(&stdout_buf);
-                    assert!(output
-                        .contains("cargo:rustc-env=VERGEN_SYSINFO_CPU_NAME=this is a bad date"));
+                    assert!(
+                        output
+                            .contains("cargo:rustc-env=VERGEN_SYSINFO_CPU_NAME=this is a bad date")
+                    );
                     Ok(())
                 }();
                 assert!(result.is_ok());
@@ -965,17 +971,19 @@ mod test {
             "VERGEN_SYSINFO_CPU_BRAND",
             Some("this is a bad date"),
             || {
-                let result = || -> Result<()> {
-                    let mut stdout_buf = vec![];
-                    let si = Sysinfo::all_sysinfo();
-                    let _failed = Emitter::default()
-                        .add_instructions(&si)?
-                        .emit_to(&mut stdout_buf)?;
-                    let output = String::from_utf8_lossy(&stdout_buf);
-                    assert!(output
-                        .contains("cargo:rustc-env=VERGEN_SYSINFO_CPU_BRAND=this is a bad date"));
-                    Ok(())
-                }();
+                let result =
+                    || -> Result<()> {
+                        let mut stdout_buf = vec![];
+                        let si = Sysinfo::all_sysinfo();
+                        let _failed = Emitter::default()
+                            .add_instructions(&si)?
+                            .emit_to(&mut stdout_buf)?;
+                        let output = String::from_utf8_lossy(&stdout_buf);
+                        assert!(output.contains(
+                            "cargo:rustc-env=VERGEN_SYSINFO_CPU_BRAND=this is a bad date"
+                        ));
+                        Ok(())
+                    }();
                 assert!(result.is_ok());
             },
         );

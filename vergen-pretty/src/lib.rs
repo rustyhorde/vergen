@@ -17,7 +17,7 @@
 //! ```
 //! # use anyhow::Result;
 //! # use std::{collections::BTreeMap, io::Write};
-//! # use vergen_pretty::{vergen_pretty_env, PrettyBuilder};
+//! # use vergen_pretty::{vergen_pretty_env, Pretty};
 //! # fn has_value(
 //! #     tuple: (&&'static str, &Option<&'static str>),
 //! # ) -> Option<(&'static str, &'static str)> {
@@ -35,9 +35,9 @@
 //! let mut stdout = vec![];
 //! # let map = vergen_pretty_env!();
 //! # let empty = is_empty(&map);
-//! PrettyBuilder::default()
+//! Pretty::builder()
 //!     .env(vergen_pretty_env!())
-//!     .build()?
+//!     .build()
 //!     .display(&mut stdout)?;
 //! # if empty {
 //! #    assert!(stdout.is_empty());
@@ -58,7 +58,7 @@ with the associated [`Config`] as a convenience wrapper around [`Pretty`].
 # Example
 ```
 # use anyhow::Result;
-# use vergen_pretty::{ConfigBuilder, header, vergen_pretty_env};"
+# use vergen_pretty::{Config, header, vergen_pretty_env};"
 )]
 #![cfg_attr(feature = "color", doc = r"# use vergen_pretty::Style;")]
 #![cfg_attr(
@@ -67,7 +67,7 @@ with the associated [`Config`] as a convenience wrapper around [`Pretty`].
 #
 # pub fn main() -> Result<()> {
 let mut buf = vec![];
-let config = ConfigBuilder::default()"
+let config = Config::builder()"
 )]
 #![cfg_attr(
     all(feature = "color", feature = "header"),
@@ -79,7 +79,7 @@ let config = ConfigBuilder::default()"
     .prefix("HEADER_PREFIX")
     .env(vergen_pretty_env!())
     .suffix("HEADER_SUFFIX")
-    .build()?;
+    .build();
 assert!(header(&config, Some(&mut buf)).is_ok());
 assert!(!buf.is_empty());
 #     Ok(())
@@ -342,20 +342,14 @@ mod pretty;
 mod utils;
 
 #[cfg(feature = "header")]
-pub use self::header::header;
-#[cfg(feature = "header")]
 pub use self::header::Config;
 #[cfg(feature = "header")]
-pub use self::header::ConfigBuilder;
-#[cfg(feature = "header")]
 pub use self::header::Env;
-pub use self::pretty::prefix::Prefix;
-pub use self::pretty::prefix::PrefixBuilder;
-pub use self::pretty::suffix::Suffix;
-pub use self::pretty::suffix::SuffixBuilder;
+#[cfg(feature = "header")]
+pub use self::header::header;
 pub use self::pretty::Pretty;
-pub use self::pretty::PrettyBuilder;
-pub use self::pretty::PrettyBuilderError;
+pub use self::pretty::prefix::Prefix;
+pub use self::pretty::suffix::Suffix;
 #[cfg(feature = "color")]
 #[doc(inline)]
 pub use console::Style;
@@ -372,7 +366,7 @@ use serde_json as _;
 #[cfg(all(test, not(feature = "trace")))]
 use tracing_subscriber as _;
 
-/// Used to initialize `env` in [`PrettyBuilder`](self::PrettyBuilder)
+/// Used to initialize `env` in [`Pretty`](self::Pretty)
 ///
 /// Because `cargo` doesn't pass compile time environment variables to dependencies,
 /// this macro embeds a map of all the possible `vergen` environment variables with
@@ -382,13 +376,13 @@ use tracing_subscriber as _;
 /// ```
 /// # use anyhow::Result;
 /// # use std::{collections::BTreeMap, io::Write};
-/// # use vergen_pretty::{vergen_pretty_env, PrettyBuilder};
+/// # use vergen_pretty::{vergen_pretty_env, Pretty};
 /// #
 /// # fn main() -> Result<()> {
 /// let mut stdout = vec![];
-/// PrettyBuilder::default()
+/// Pretty::builder()
 ///     .env(vergen_pretty_env!())
-///     .build()?
+///     .build()
 ///     .display(&mut stdout)?;
 /// #     Ok(())
 /// # }

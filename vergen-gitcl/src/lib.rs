@@ -475,7 +475,7 @@ let build = Build::builder().build_timestamp(true).build();"
 #![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
 #[cfg(test)]
-use {lazy_static as _, regex as _, temp_env as _};
+use {regex as _, temp_env as _};
 // This is here to appease the `unused_crate_dependencies` lint
 #[cfg(not(any(
     feature = "build",
