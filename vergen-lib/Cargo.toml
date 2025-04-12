@@ -55,3 +55,6 @@ test_util = { path = "../test_util", features = ["unstable"] }
 [package.metadata.docs.rs]
 features = ["build", "cargo", "git", "rustc", "si"]
 rustdoc-args = ["--cfg", "docsrs"]
+
+[lints.rust]
+unexpected_cfgs = { level = "allow", check-cfg = ['cfg(coverage,coverage_nightly)'] }

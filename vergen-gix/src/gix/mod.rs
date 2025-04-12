@@ -6,6 +6,7 @@
 // option. All files in the project carrying such notice may not be copied,
 // modified, or distributed except according to those terms.
 
+use self::gix_builder::Empty;
 use anyhow::{anyhow, Error, Result};
 use bon::Builder;
 use gix::{
@@ -15,7 +16,6 @@ use gix::{
     head::Kind,
     Commit, Head, Id, Repository,
 };
-use gix_builder::Empty;
 use std::{
     env::{self, VarError},
     path::{Path, PathBuf},
@@ -375,17 +375,17 @@ impl Gix {
                     SelectRef::AnnotatedTags
                 };
 
-                let describe =
-                    if let Some(res) = commit.describe().names(describe_refs).try_resolve()? {
+                let describe = match commit.describe().names(describe_refs).try_resolve()? {
+                    Some(res) => {
                         if describe.dirty() {
                             let fmt = res.format_with_dirty_suffix(Some("dirty".to_string()))?;
                             fmt.to_string()
                         } else {
                             res.format()?.to_string()
                         }
-                    } else {
-                        String::new()
-                    };
+                    }
+                    _ => String::new(),
+                };
                 add_map_entry(VergenKey::GitDescribe, describe, cargo_rustc_env);
             }
         }
