@@ -151,6 +151,7 @@
         unconditional_recursion,
         uncovered_param_in_projection,
         undefined_naked_function_abi,
+        unexpected_cfgs,
         unfulfilled_lint_expectations,
         ungated_async_fn_track_caller,
         uninhabited_static,
@@ -246,6 +247,7 @@
 )]
 #![cfg_attr(all(doc, nightly), feature(doc_auto_cfg))]
 #![cfg_attr(all(docsrs, nightly), feature(doc_cfg))]
+#![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
 #[cfg(test)]
 use {temp_env as _, test_util as _};
