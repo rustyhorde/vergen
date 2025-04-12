@@ -29,6 +29,11 @@ jobs:
     steps:
       - name: ✅ Checkout ✅
         uses: actions/checkout@v3
+      - name: 🧰 Toolchain 🧰
+        run: |
+          rustup toolchain remove nightly
+          rustup toolchain install nightly --profile minimal --no-self-update
+          rustup default nightly
       - name: 💣 Audit 💣
         id: audit
         uses: rustyhorde/audit-check@v1
