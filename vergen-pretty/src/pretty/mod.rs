@@ -66,7 +66,7 @@ Pretty::builder()
 ///
 /// ```
 /// # use anyhow::Result;
-/// # use vergen_pretty::{vergen_pretty_env, Pretty, PrefixBuilder, SuffixBuilder};
+/// # use vergen_pretty::{vergen_pretty_env, Pretty, Prefix, Suffix};
 /// #
 /// const TEST_PREFIX: &str = r#"A wonderful introduction
 /// "#;
@@ -74,12 +74,12 @@ Pretty::builder()
 ///
 /// # pub fn main() -> Result<()> {
 /// let mut stdout = vec![];
-/// let prefix = PrefixBuilder::default()
+/// let prefix = Prefix::builder()
 ///     .lines(TEST_PREFIX.lines().map(str::to_string).collect())
-///     .build()?;
-/// let suffix = SuffixBuilder::default()
+///     .build();
+/// let suffix = Suffix::builder()
 ///     .lines(TEST_SUFFIX.lines().map(str::to_string).collect())
-///     .build()?;
+///     .build();
 /// Pretty::builder()
 ///     .env(vergen_pretty_env!())
 ///     .prefix(prefix)

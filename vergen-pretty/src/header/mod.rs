@@ -39,17 +39,17 @@ pub type Env = BTreeMap<&'static str, Option<&'static str>>;
 /// # Example
 /// ```
 /// # use anyhow::Result;
-/// # use vergen_pretty::{ConfigBuilder, header, vergen_pretty_env};
+/// # use vergen_pretty::{Config, header, vergen_pretty_env};
 #[cfg_attr(feature = "color", doc = r"use vergen_pretty::Style;")]
 /// #
 /// # pub fn main() -> Result<()> {
 /// let mut buf = vec![];
-/// let config = ConfigBuilder::default()
+/// let config = Config::builder()
 #[cfg_attr(feature = "color", doc = r"    .style(Style::new().green())")]
 ///     .prefix("HEADER_PREFIX")
 ///     .env(vergen_pretty_env!())
 ///     .suffix("HEADER_SUFFIX")
-///     .build()?;
+///     .build();
 /// assert!(header(&config, Some(&mut buf)).is_ok());
 /// assert!(!buf.is_empty());
 /// #     Ok(())
@@ -80,15 +80,15 @@ pub struct Config {
 /// # Example
 /// ```
 /// # use anyhow::Result;
-/// # use vergen_pretty::{ConfigBuilder, header, vergen_pretty_env};
+/// # use vergen_pretty::{Config, header, vergen_pretty_env};
 /// #
 /// # pub fn main() -> Result<()> {
 /// let mut buf = vec![];
-/// let config = ConfigBuilder::default()
+/// let config = Config::builder()
 ///     .prefix("HEADER_PREFIX")
 ///     .env(vergen_pretty_env!())
 ///     .suffix("HEADER_SUFFIX")
-///     .build()?;
+///     .build();
 /// assert!(header(&config, Some(&mut buf)).is_ok());
 /// assert!(!buf.is_empty());
 /// #     Ok(())
