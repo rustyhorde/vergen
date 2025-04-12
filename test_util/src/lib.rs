@@ -312,8 +312,8 @@ mod repo;
 mod utils;
 
 #[cfg(feature = "repo")]
-pub use self::repo::TestRepos;
-#[cfg(feature = "repo")]
 pub use self::repo::TEST_MTIME;
+#[cfg(feature = "repo")]
+pub use self::repo::TestRepos;
 pub use self::utils::with_cargo_vars;
 pub use self::utils::with_cargo_vars_ext;

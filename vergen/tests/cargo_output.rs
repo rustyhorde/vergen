@@ -1,54 +1,59 @@
 #[cfg(feature = "cargo")]
 mod test_cargo {
+    use std::sync::LazyLock;
+
     use cargo_metadata::DependencyKind;
-    use lazy_static::lazy_static;
     use regex::Regex;
     use serial_test::serial;
     use test_util::with_cargo_vars;
     use vergen::Cargo;
     use vergen::Emitter;
 
-    lazy_static! {
-        static ref CARGO_DEBUG_RE_STR: &'static str =
-            r"cargo:rustc-env=VERGEN_CARGO_DEBUG=(true|false)";
-        static ref CARGO_FEA_RE_STR: &'static str =
-            r"cargo:rustc-env=VERGEN_CARGO_FEATURES=[a-zA-Z0-9-_]+,[a-zA-Z0-9-_]+";
-        static ref CARGO_OPT_LEVEL_RE_STR: &'static str =
-            r"cargo:rustc-env=VERGEN_CARGO_OPT_LEVEL=\d{1}";
-        static ref CARGO_TT_RE_STR: &'static str =
-            r"cargo:rustc-env=VERGEN_CARGO_TARGET_TRIPLE=[a-zA-Z0-9-_]+";
-        static ref CARGO_DEP_RE_STR: &'static str = r"cargo:rustc-env=VERGEN_CARGO_DEPENDENCIES=.*";
-        static ref CARGO_DEP_NAME_RE_STR: &'static str =
-            r"(?m)^cargo:rustc-env=VERGEN_CARGO_DEPENDENCIES=anyhow 1\.0\.[0-9]{2,}$";
-        static ref CARGO_DEP_DK_RE_STR: &'static str =
-            r"(?m)^cargo:rustc-env=VERGEN_CARGO_DEPENDENCIES=regex 1\.[0-9]{1,}\.[0-9]{1,}$";
-        static ref CARGO_DEP_RV_RE_STR: &'static str =
-            r"(?m)^cargo:rustc-env=VERGEN_CARGO_DEPENDENCIES=rustversion 1\.0\.[0-9]{2,}$";
-        static ref CARGO_REGEX: Regex = {
-            let re_str = [
-                *CARGO_DEBUG_RE_STR,
-                *CARGO_FEA_RE_STR,
-                *CARGO_OPT_LEVEL_RE_STR,
-                *CARGO_TT_RE_STR,
-                *CARGO_DEP_RE_STR,
-            ]
-            .join("\n");
-            Regex::new(&re_str).unwrap()
-        };
-        static ref CARGO_REGEX_NO_DEP: Regex = {
-            let re_str = [
-                *CARGO_DEBUG_RE_STR,
-                *CARGO_FEA_RE_STR,
-                *CARGO_OPT_LEVEL_RE_STR,
-                *CARGO_TT_RE_STR,
-            ]
-            .join("\n");
-            Regex::new(&re_str).unwrap()
-        };
-        static ref CARGO_REGEX_NAME: Regex = Regex::new(&CARGO_DEP_NAME_RE_STR).unwrap();
-        static ref CARGO_REGEX_DK: Regex = Regex::new(&CARGO_DEP_DK_RE_STR).unwrap();
-        static ref CARGO_REGEX_RV: Regex = Regex::new(&CARGO_DEP_RV_RE_STR).unwrap();
-    }
+    static CARGO_DEBUG_RE_STR: LazyLock<&'static str> =
+        LazyLock::new(|| r"cargo:rustc-env=VERGEN_CARGO_DEBUG=(true|false)");
+    static CARGO_FEA_RE_STR: LazyLock<&'static str> =
+        LazyLock::new(|| r"cargo:rustc-env=VERGEN_CARGO_FEATURES=[a-zA-Z0-9-_]+,[a-zA-Z0-9-_]+");
+    static CARGO_OPT_LEVEL_RE_STR: LazyLock<&'static str> =
+        LazyLock::new(|| r"cargo:rustc-env=VERGEN_CARGO_OPT_LEVEL=\d{1}");
+    static CARGO_TT_RE_STR: LazyLock<&'static str> =
+        LazyLock::new(|| r"cargo:rustc-env=VERGEN_CARGO_TARGET_TRIPLE=[a-zA-Z0-9-_]+");
+    static CARGO_DEP_RE_STR: LazyLock<&'static str> =
+        LazyLock::new(|| r"cargo:rustc-env=VERGEN_CARGO_DEPENDENCIES=.*");
+    static CARGO_DEP_NAME_RE_STR: LazyLock<&'static str> =
+        LazyLock::new(|| r"(?m)^cargo:rustc-env=VERGEN_CARGO_DEPENDENCIES=anyhow 1\.0\.[0-9]{2,}$");
+    static CARGO_DEP_DK_RE_STR: LazyLock<&'static str> = LazyLock::new(
+        || r"(?m)^cargo:rustc-env=VERGEN_CARGO_DEPENDENCIES=regex 1\.[0-9]{1,}\.[0-9]{1,}$",
+    );
+    static CARGO_DEP_RV_RE_STR: LazyLock<&'static str> = LazyLock::new(
+        || r"(?m)^cargo:rustc-env=VERGEN_CARGO_DEPENDENCIES=rustversion 1\.0\.[0-9]{2,}$",
+    );
+    static CARGO_REGEX: LazyLock<Regex> = LazyLock::new(|| {
+        let re_str = [
+            *CARGO_DEBUG_RE_STR,
+            *CARGO_FEA_RE_STR,
+            *CARGO_OPT_LEVEL_RE_STR,
+            *CARGO_TT_RE_STR,
+            *CARGO_DEP_RE_STR,
+        ]
+        .join("\n");
+        Regex::new(&re_str).unwrap()
+    });
+    static CARGO_REGEX_NO_DEP: LazyLock<Regex> = LazyLock::new(|| {
+        let re_str = [
+            *CARGO_DEBUG_RE_STR,
+            *CARGO_FEA_RE_STR,
+            *CARGO_OPT_LEVEL_RE_STR,
+            *CARGO_TT_RE_STR,
+        ]
+        .join("\n");
+        Regex::new(&re_str).unwrap()
+    });
+    static CARGO_REGEX_NAME: LazyLock<Regex> =
+        LazyLock::new(|| Regex::new(&CARGO_DEP_NAME_RE_STR).unwrap());
+    static CARGO_REGEX_DK: LazyLock<Regex> =
+        LazyLock::new(|| Regex::new(&CARGO_DEP_DK_RE_STR).unwrap());
+    static CARGO_REGEX_RV: LazyLock<Regex> =
+        LazyLock::new(|| Regex::new(&CARGO_DEP_RV_RE_STR).unwrap());
 
     #[test]
     #[serial]

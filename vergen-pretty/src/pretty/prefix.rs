@@ -7,9 +7,9 @@
 // modified, or distributed except according to those terms.
 
 use anyhow::Result;
+use bon::Builder;
 #[cfg(feature = "color")]
 use console::Style;
-use derive_builder::Builder;
 #[cfg(feature = "serde")]
 use serde::Serialize;
 use std::io::Write;
@@ -24,12 +24,11 @@ pub struct Prefix {
     pub(crate) lines: Vec<String>,
     /// The [`Style`] to apply to the output lines
     #[cfg(feature = "color")]
-    #[builder(setter(strip_option, into), default)]
     #[cfg_attr(feature = "serde", serde(skip))]
     pub(crate) style: Option<Style>,
     /// The tracing [`Level`] to output the prefix at
     #[cfg(feature = "trace")]
-    #[builder(default = "Level::INFO")]
+    #[builder(default = Level::INFO)]
     #[cfg_attr(feature = "serde", serde(skip))]
     pub(crate) level: Level,
 }
@@ -63,28 +62,25 @@ impl Prefix {
 
 #[cfg(test)]
 mod test {
-    use crate::{
-        utils::test_utils::TEST_PREFIX_SUFFIX, vergen_pretty_env, PrefixBuilder, PrettyBuilder,
-    };
+    use crate::{Prefix, Pretty, utils::test_utils::TEST_PREFIX_SUFFIX, vergen_pretty_env};
     use anyhow::Result;
     use std::io::Write;
 
     #[test]
     #[allow(clippy::clone_on_copy, clippy::redundant_clone)]
-    fn prefix_clone_works() -> Result<()> {
-        let prefix = PrefixBuilder::default()
+    fn prefix_clone_works() {
+        let prefix = Prefix::builder()
             .lines(TEST_PREFIX_SUFFIX.lines().map(str::to_string).collect())
-            .build()?;
+            .build();
         let another = prefix.clone();
         assert_eq!(prefix, another);
-        Ok(())
     }
 
     #[test]
     fn prefix_debug_works() -> Result<()> {
-        let prefix = PrefixBuilder::default()
+        let prefix = Prefix::builder()
             .lines(TEST_PREFIX_SUFFIX.lines().map(str::to_string).collect())
-            .build()?;
+            .build();
         let mut buf = vec![];
         write!(buf, "{prefix:?}")?;
         assert!(!buf.is_empty());
@@ -95,10 +91,10 @@ mod test {
     fn display_prefix_works() -> Result<()> {
         let mut stdout = vec![];
         let map = vergen_pretty_env!();
-        let prefix = PrefixBuilder::default()
+        let prefix = Prefix::builder()
             .lines(TEST_PREFIX_SUFFIX.lines().map(str::to_string).collect())
-            .build()?;
-        let fmt = PrettyBuilder::default().env(map).prefix(prefix).build()?;
+            .build();
+        let fmt = Pretty::builder().env(map).prefix(prefix).build();
         fmt.display(&mut stdout)?;
         assert!(!stdout.is_empty());
         Ok(())

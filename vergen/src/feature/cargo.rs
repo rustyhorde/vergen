@@ -7,17 +7,17 @@
 // modified, or distributed except according to those terms.
 
 use self::cargo_builder::{SetDebug, SetDependencies, SetFeatures, SetOptLevel, SetTargetTriple};
-use anyhow::{anyhow, Error, Result};
+use anyhow::{Error, Result, anyhow};
 use bon::Builder;
 use cargo_metadata::{DepKindInfo, DependencyKind, MetadataCommand, Package, PackageId};
 use regex::Regex;
 use std::env;
 use vergen_lib::{
+    AddEntries, CargoRerunIfChanged, CargoRustcEnvMap, CargoWarning, DefaultConfig, VergenKey,
     add_default_map_entry, add_map_entry,
     constants::{
         CARGO_DEBUG, CARGO_DEPENDENCIES, CARGO_FEATURES, CARGO_OPT_LEVEL, CARGO_TARGET_TRIPLE,
     },
-    AddEntries, CargoRerunIfChanged, CargoRustcEnvMap, CargoWarning, DefaultConfig, VergenKey,
 };
 
 /// Configure the emission of `VERGEN_CARGO_*` instructions
@@ -190,8 +190,8 @@ impl Cargo {
     }
 
     /// Emit all of the `VERGEN_CARGO_*` instructions and return the builder
-    pub fn all_cargo_builder(
-    ) -> CargoBuilder<SetDependencies<SetTargetTriple<SetOptLevel<SetFeatures<SetDebug>>>>> {
+    pub fn all_cargo_builder()
+    -> CargoBuilder<SetDependencies<SetTargetTriple<SetOptLevel<SetFeatures<SetDebug>>>>> {
         Self::builder()
             .debug(true)
             .features(true)
@@ -570,10 +570,12 @@ mod test {
     #[serial]
     fn bad_env_fails() -> Result<()> {
         let cargo = Cargo::all_cargo();
-        assert!(Emitter::default()
-            .fail_on_error()
-            .add_instructions(&cargo)
-            .is_err());
+        assert!(
+            Emitter::default()
+                .fail_on_error()
+                .add_instructions(&cargo)
+                .is_err()
+        );
         Ok(())
     }
 
@@ -596,10 +598,12 @@ mod test {
             || {
                 let mut stdout_buf = vec![];
                 let cargo = Cargo::all_cargo();
-                assert!(Emitter::default()
-                    .add_instructions(&cargo)?
-                    .emit_to(&mut stdout_buf)
-                    .is_ok());
+                assert!(
+                    Emitter::default()
+                        .add_instructions(&cargo)?
+                        .emit_to(&mut stdout_buf)
+                        .is_ok()
+                );
                 let output = String::from_utf8_lossy(&stdout_buf);
                 assert!(output.contains("cargo:rustc-env=VERGEN_CARGO_DEBUG=this is a bad date"));
                 Ok(())
@@ -616,12 +620,16 @@ mod test {
             || {
                 let mut stdout_buf = vec![];
                 let cargo = Cargo::all_cargo();
-                assert!(Emitter::default()
-                    .add_instructions(&cargo)?
-                    .emit_to(&mut stdout_buf)
-                    .is_ok());
+                assert!(
+                    Emitter::default()
+                        .add_instructions(&cargo)?
+                        .emit_to(&mut stdout_buf)
+                        .is_ok()
+                );
                 let output = String::from_utf8_lossy(&stdout_buf);
-                assert!(output.contains("cargo:rustc-env=VERGEN_CARGO_FEATURES=this is a bad date"));
+                assert!(
+                    output.contains("cargo:rustc-env=VERGEN_CARGO_FEATURES=this is a bad date")
+                );
                 Ok(())
             },
         );
@@ -636,10 +644,12 @@ mod test {
             || {
                 let mut stdout_buf = vec![];
                 let cargo = Cargo::all_cargo();
-                assert!(Emitter::default()
-                    .add_instructions(&cargo)?
-                    .emit_to(&mut stdout_buf)
-                    .is_ok());
+                assert!(
+                    Emitter::default()
+                        .add_instructions(&cargo)?
+                        .emit_to(&mut stdout_buf)
+                        .is_ok()
+                );
                 let output = String::from_utf8_lossy(&stdout_buf);
                 assert!(
                     output.contains("cargo:rustc-env=VERGEN_CARGO_OPT_LEVEL=this is a bad date")
@@ -658,13 +668,17 @@ mod test {
             || {
                 let mut stdout_buf = vec![];
                 let cargo = Cargo::all_cargo();
-                assert!(Emitter::default()
-                    .add_instructions(&cargo)?
-                    .emit_to(&mut stdout_buf)
-                    .is_ok());
+                assert!(
+                    Emitter::default()
+                        .add_instructions(&cargo)?
+                        .emit_to(&mut stdout_buf)
+                        .is_ok()
+                );
                 let output = String::from_utf8_lossy(&stdout_buf);
-                assert!(output
-                    .contains("cargo:rustc-env=VERGEN_CARGO_TARGET_TRIPLE=this is a bad date"));
+                assert!(
+                    output
+                        .contains("cargo:rustc-env=VERGEN_CARGO_TARGET_TRIPLE=this is a bad date")
+                );
                 Ok(())
             },
         );
@@ -679,10 +693,12 @@ mod test {
             || {
                 let mut stdout_buf = vec![];
                 let cargo = Cargo::all_cargo();
-                assert!(Emitter::default()
-                    .add_instructions(&cargo)?
-                    .emit_to(&mut stdout_buf)
-                    .is_ok());
+                assert!(
+                    Emitter::default()
+                        .add_instructions(&cargo)?
+                        .emit_to(&mut stdout_buf)
+                        .is_ok()
+                );
                 let output = String::from_utf8_lossy(&stdout_buf);
                 assert!(
                     output.contains("cargo:rustc-env=VERGEN_CARGO_DEPENDENCIES=this is a bad date")

@@ -1,47 +1,36 @@
 #[cfg(feature = "si")]
 mod test_sysinfo {
+    use std::sync::LazyLock;
+
     use anyhow::Result;
-    use lazy_static::lazy_static;
     use regex::Regex;
     use serial_test::serial;
     use vergen::{Emitter, Sysinfo};
 
-    lazy_static! {
-        static ref NAME_RE_STR: &'static str = r"cargo:rustc-env=VERGEN_SYSINFO_NAME=.*";
-        static ref NAME_IDEM_RE_STR: &'static str =
-            r"cargo:rustc-env=VERGEN_SYSINFO_NAME=VERGEN_IDEMPOTENT_OUTPUT";
-        static ref OS_VERSION_RE_STR: &'static str =
-            r"cargo:rustc-env=VERGEN_SYSINFO_OS_VERSION=.*";
-        static ref OS_VERSION_IDEM_RE_STR: &'static str =
-            r"cargo:rustc-env=VERGEN_SYSINFO_OS_VERSION=VERGEN_IDEMPOTENT_OUTPUT";
-        static ref USER_RE_STR: &'static str = r"cargo:rustc-env=VERGEN_SYSINFO_USER=.*";
-        static ref USER_IDEM_RE_STR: &'static str =
-            r"cargo:rustc-env=VERGEN_SYSINFO_USER=VERGEN_IDEMPOTENT_OUTPUT";
-        static ref TOTAL_MEMORY_RE_STR: &'static str =
-            r"cargo:rustc-env=VERGEN_SYSINFO_TOTAL_MEMORY=.*";
-        static ref TOTAL_MEMORY_IDEM_RE_STR: &'static str =
-            r"cargo:rustc-env=VERGEN_SYSINFO_TOTAL_MEMORY=VERGEN_IDEMPOTENT_OUTPUT";
-        static ref CPU_VENDOR_RE_STR: &'static str =
-            r"cargo:rustc-env=VERGEN_SYSINFO_CPU_VENDOR=.*";
-        static ref CPU_VENDOR_IDEM_RE_STR: &'static str =
-            r"cargo:rustc-env=VERGEN_SYSINFO_CPU_VENDOR=VERGEN_IDEMPOTENT_OUTPUT";
-        static ref CPU_CORE_RE_STR: &'static str =
-            r"cargo:rustc-env=VERGEN_SYSINFO_CPU_CORE_COUNT=.*";
-        static ref CPU_CORE_IDEM_RE_STR: &'static str =
-            r"cargo:rustc-env=VERGEN_SYSINFO_CPU_CORE_COUNT=VERGEN_IDEMPOTENT_OUTPUT";
-        static ref SYSINFO_REGEX_INST: Regex = {
-            let re_str = [
-                *NAME_RE_STR,
-                *OS_VERSION_RE_STR,
-                *USER_RE_STR,
-                *TOTAL_MEMORY_RE_STR,
-                *CPU_VENDOR_RE_STR,
-                *CPU_CORE_RE_STR,
-            ]
-            .join("\n");
-            Regex::new(&re_str).unwrap()
-        };
-    }
+    static NAME_RE_STR: LazyLock<&'static str> =
+        LazyLock::new(|| r"cargo:rustc-env=VERGEN_SYSINFO_NAME=.*");
+    static OS_VERSION_RE_STR: LazyLock<&'static str> =
+        LazyLock::new(|| r"cargo:rustc-env=VERGEN_SYSINFO_OS_VERSION=.*");
+    static USER_RE_STR: LazyLock<&'static str> =
+        LazyLock::new(|| r"cargo:rustc-env=VERGEN_SYSINFO_USER=.*");
+    static TOTAL_MEMORY_RE_STR: LazyLock<&'static str> =
+        LazyLock::new(|| r"cargo:rustc-env=VERGEN_SYSINFO_TOTAL_MEMORY=.*");
+    static CPU_VENDOR_RE_STR: LazyLock<&'static str> =
+        LazyLock::new(|| r"cargo:rustc-env=VERGEN_SYSINFO_CPU_VENDOR=.*");
+    static CPU_CORE_RE_STR: LazyLock<&'static str> =
+        LazyLock::new(|| r"cargo:rustc-env=VERGEN_SYSINFO_CPU_CORE_COUNT=.*");
+    static SYSINFO_REGEX_INST: LazyLock<Regex> = LazyLock::new(|| {
+        let re_str = [
+            *NAME_RE_STR,
+            *OS_VERSION_RE_STR,
+            *USER_RE_STR,
+            *TOTAL_MEMORY_RE_STR,
+            *CPU_VENDOR_RE_STR,
+            *CPU_CORE_RE_STR,
+        ]
+        .join("\n");
+        Regex::new(&re_str).unwrap()
+    });
 
     const IDEM_OUTPUT: &str = r"cargo:rustc-env=VERGEN_SYSINFO_NAME=VERGEN_IDEMPOTENT_OUTPUT
 cargo:rustc-env=VERGEN_SYSINFO_OS_VERSION=VERGEN_IDEMPOTENT_OUTPUT

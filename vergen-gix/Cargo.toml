@@ -3,11 +3,11 @@ authors = ["Jason Ozias <jason.g.ozias@gmail.com>"]
 categories = ["development-tools", "development-tools::build-utils"]
 description = "Generate 'cargo:rustc-env' instructions via 'build.rs' for use in your code via the 'env!' macro"
 documentation = "https://docs.rs/vergen"
-edition = "2021"
+edition = "2024"
 homepage = "https://github.com/rustyhorde/vergen"
 keywords = ["cargo", "instructions", "build", "tool"]
 license = "MIT OR Apache-2.0"
-rust-version = "1.81.0"
+rust-version = "1.85.0"
 name = "vergen-gix"
 readme = "README.md"
 repository = "https://github.com/rustyhorde/vergen"
@@ -38,31 +38,26 @@ unstable = ["vergen/unstable", "vergen-lib/unstable"]
 si = ["vergen/si"]
 
 [dependencies]
-anyhow = "1.0.95"
-bon = "3.5.2"
-gix = { version = "0.71.0", default-features = false, features = [
+anyhow = { workspace = true }
+bon = { workspace = true }
+gix = { workspace = true, features = [
     "revision",
     "interrupt",
     "status",
     "dirwalk",
 ] }
-time = { version = "0.3.37", features = [
-    "formatting",
-    "local-offset",
-    "parsing",
-] }
+time = { workspace = true }
 vergen = { version = "10.0.0-alpha.1", path = "../vergen", default-features = false }
 vergen-lib = { version = "1.0.0-alpha.1", path = "../vergen-lib", features = ["git"] }
 
 [build-dependencies]
-rustversion = "1.0.19"
+rustversion = { workspace = true }
 
 [dev-dependencies]
-lazy_static = "1.5.0"
-regex = "1.11.1"
+regex = { workspace = true }
 test_util = { path = "../test_util", features = ["repo", "unstable"] }
-serial_test = "3.2.0"
-temp-env = "0.3.6"
+serial_test = { workspace =  true }
+temp-env = { workspace = true }
 
 [package.metadata.docs.rs]
 features = ["build", "cargo", "emit_and_set", "rustc", "si"]

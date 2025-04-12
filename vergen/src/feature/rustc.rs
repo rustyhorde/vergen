@@ -8,15 +8,15 @@
 
 use anyhow::{Error, Result};
 use bon::Builder;
-use rustc_version::{version_meta, Channel, VersionMeta};
+use rustc_version::{Channel, VersionMeta, version_meta};
 use std::env;
 use vergen_lib::{
+    AddEntries, CargoRerunIfChanged, CargoRustcEnvMap, CargoWarning, DefaultConfig, VergenKey,
     add_default_map_entry, add_map_entry,
     constants::{
         RUSTC_CHANNEL_NAME, RUSTC_COMMIT_DATE, RUSTC_COMMIT_HASH, RUSTC_HOST_TRIPLE_NAME,
         RUSTC_LLVM_VERSION, RUSTC_SEMVER_NAME,
     },
-    AddEntries, CargoRerunIfChanged, CargoRustcEnvMap, CargoWarning, DefaultConfig, VergenKey,
 };
 
 /// The `VERGEN_RUSTC_*` configuration features
@@ -515,10 +515,12 @@ LLVM version: 15.0.6
     fn rustc_fails_on_bad_input() -> Result<()> {
         let mut rustc = Rustc::all_rustc();
         let _ = rustc.with_rustc_str("a_bad_rustcvv_string");
-        assert!(Emitter::default()
-            .fail_on_error()
-            .add_instructions(&rustc)
-            .is_err());
+        assert!(
+            Emitter::default()
+                .fail_on_error()
+                .add_instructions(&rustc)
+                .is_err()
+        );
         Ok(())
     }
 
@@ -541,10 +543,12 @@ LLVM version: 15.0.6
             let result = || -> Result<()> {
                 let mut stdout_buf = vec![];
                 let rustc = Rustc::all_rustc();
-                assert!(Emitter::default()
-                    .add_instructions(&rustc)?
-                    .emit_to(&mut stdout_buf)
-                    .is_ok());
+                assert!(
+                    Emitter::default()
+                        .add_instructions(&rustc)?
+                        .emit_to(&mut stdout_buf)
+                        .is_ok()
+                );
                 let output = String::from_utf8_lossy(&stdout_buf);
                 assert!(output.contains("cargo:rustc-env=VERGEN_RUSTC_CHANNEL=this is a bad date"));
                 Ok(())
@@ -560,18 +564,22 @@ LLVM version: 15.0.6
             "VERGEN_RUSTC_COMMIT_DATE",
             Some("this is a bad date"),
             || {
-                let result = || -> Result<()> {
-                    let mut stdout_buf = vec![];
-                    let rustc = Rustc::all_rustc();
-                    assert!(Emitter::default()
-                        .add_instructions(&rustc)?
-                        .emit_to(&mut stdout_buf)
-                        .is_ok());
-                    let output = String::from_utf8_lossy(&stdout_buf);
-                    assert!(output
-                        .contains("cargo:rustc-env=VERGEN_RUSTC_COMMIT_DATE=this is a bad date"));
-                    Ok(())
-                }();
+                let result =
+                    || -> Result<()> {
+                        let mut stdout_buf = vec![];
+                        let rustc = Rustc::all_rustc();
+                        assert!(
+                            Emitter::default()
+                                .add_instructions(&rustc)?
+                                .emit_to(&mut stdout_buf)
+                                .is_ok()
+                        );
+                        let output = String::from_utf8_lossy(&stdout_buf);
+                        assert!(output.contains(
+                            "cargo:rustc-env=VERGEN_RUSTC_COMMIT_DATE=this is a bad date"
+                        ));
+                        Ok(())
+                    }();
                 assert!(result.is_ok());
             },
         );
@@ -584,18 +592,22 @@ LLVM version: 15.0.6
             "VERGEN_RUSTC_COMMIT_HASH",
             Some("this is a bad date"),
             || {
-                let result = || -> Result<()> {
-                    let mut stdout_buf = vec![];
-                    let rustc = Rustc::all_rustc();
-                    assert!(Emitter::default()
-                        .add_instructions(&rustc)?
-                        .emit_to(&mut stdout_buf)
-                        .is_ok());
-                    let output = String::from_utf8_lossy(&stdout_buf);
-                    assert!(output
-                        .contains("cargo:rustc-env=VERGEN_RUSTC_COMMIT_HASH=this is a bad date"));
-                    Ok(())
-                }();
+                let result =
+                    || -> Result<()> {
+                        let mut stdout_buf = vec![];
+                        let rustc = Rustc::all_rustc();
+                        assert!(
+                            Emitter::default()
+                                .add_instructions(&rustc)?
+                                .emit_to(&mut stdout_buf)
+                                .is_ok()
+                        );
+                        let output = String::from_utf8_lossy(&stdout_buf);
+                        assert!(output.contains(
+                            "cargo:rustc-env=VERGEN_RUSTC_COMMIT_HASH=this is a bad date"
+                        ));
+                        Ok(())
+                    }();
                 assert!(result.is_ok());
             },
         );
@@ -608,18 +620,22 @@ LLVM version: 15.0.6
             "VERGEN_RUSTC_HOST_TRIPLE",
             Some("this is a bad date"),
             || {
-                let result = || -> Result<()> {
-                    let mut stdout_buf = vec![];
-                    let rustc = Rustc::all_rustc();
-                    assert!(Emitter::default()
-                        .add_instructions(&rustc)?
-                        .emit_to(&mut stdout_buf)
-                        .is_ok());
-                    let output = String::from_utf8_lossy(&stdout_buf);
-                    assert!(output
-                        .contains("cargo:rustc-env=VERGEN_RUSTC_HOST_TRIPLE=this is a bad date"));
-                    Ok(())
-                }();
+                let result =
+                    || -> Result<()> {
+                        let mut stdout_buf = vec![];
+                        let rustc = Rustc::all_rustc();
+                        assert!(
+                            Emitter::default()
+                                .add_instructions(&rustc)?
+                                .emit_to(&mut stdout_buf)
+                                .is_ok()
+                        );
+                        let output = String::from_utf8_lossy(&stdout_buf);
+                        assert!(output.contains(
+                            "cargo:rustc-env=VERGEN_RUSTC_HOST_TRIPLE=this is a bad date"
+                        ));
+                        Ok(())
+                    }();
                 assert!(result.is_ok());
             },
         );
@@ -632,18 +648,22 @@ LLVM version: 15.0.6
             "VERGEN_RUSTC_LLVM_VERSION",
             Some("this is a bad date"),
             || {
-                let result = || -> Result<()> {
-                    let mut stdout_buf = vec![];
-                    let rustc = Rustc::all_rustc();
-                    assert!(Emitter::default()
-                        .add_instructions(&rustc)?
-                        .emit_to(&mut stdout_buf)
-                        .is_ok());
-                    let output = String::from_utf8_lossy(&stdout_buf);
-                    assert!(output
-                        .contains("cargo:rustc-env=VERGEN_RUSTC_LLVM_VERSION=this is a bad date"));
-                    Ok(())
-                }();
+                let result =
+                    || -> Result<()> {
+                        let mut stdout_buf = vec![];
+                        let rustc = Rustc::all_rustc();
+                        assert!(
+                            Emitter::default()
+                                .add_instructions(&rustc)?
+                                .emit_to(&mut stdout_buf)
+                                .is_ok()
+                        );
+                        let output = String::from_utf8_lossy(&stdout_buf);
+                        assert!(output.contains(
+                            "cargo:rustc-env=VERGEN_RUSTC_LLVM_VERSION=this is a bad date"
+                        ));
+                        Ok(())
+                    }();
                 assert!(result.is_ok());
             },
         );
@@ -656,10 +676,12 @@ LLVM version: 15.0.6
             let result = || -> Result<()> {
                 let mut stdout_buf = vec![];
                 let rustc = Rustc::all_rustc();
-                assert!(Emitter::default()
-                    .add_instructions(&rustc)?
-                    .emit_to(&mut stdout_buf)
-                    .is_ok());
+                assert!(
+                    Emitter::default()
+                        .add_instructions(&rustc)?
+                        .emit_to(&mut stdout_buf)
+                        .is_ok()
+                );
                 let output = String::from_utf8_lossy(&stdout_buf);
                 assert!(output.contains("cargo:rustc-env=VERGEN_RUSTC_SEMVER=this is a bad date"));
                 Ok(())

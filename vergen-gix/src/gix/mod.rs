@@ -7,14 +7,14 @@
 // modified, or distributed except according to those terms.
 
 use self::gix_builder::Empty;
-use anyhow::{anyhow, Error, Result};
+use anyhow::{Error, Result, anyhow};
 use bon::Builder;
 use gix::{
+    Commit, Head, Id, Repository,
     commit::describe::SelectRef,
     dir::{entry::Status, walk::EmissionMode},
     discover,
     head::Kind,
-    Commit, Head, Id, Repository,
 };
 use std::{
     env::{self, VarError},
@@ -22,18 +22,17 @@ use std::{
     str::FromStr,
 };
 use time::{
-    format_description::{self, well_known::Iso8601},
     OffsetDateTime, UtcOffset,
+    format_description::{self, well_known::Iso8601},
 };
 use vergen_lib::{
-    add_default_map_entry, add_map_entry,
+    AddEntries, CargoRerunIfChanged, CargoRustcEnvMap, CargoWarning, DefaultConfig, Describe,
+    Dirty, Sha, VergenKey, add_default_map_entry, add_map_entry,
     constants::{
         GIT_BRANCH_NAME, GIT_COMMIT_AUTHOR_EMAIL, GIT_COMMIT_AUTHOR_NAME, GIT_COMMIT_COUNT,
         GIT_COMMIT_DATE_NAME, GIT_COMMIT_MESSAGE, GIT_COMMIT_TIMESTAMP_NAME, GIT_DESCRIBE_NAME,
         GIT_DIRTY_NAME, GIT_SHA_NAME,
     },
-    AddEntries, CargoRerunIfChanged, CargoRustcEnvMap, CargoWarning, DefaultConfig, Describe,
-    Dirty, Sha, VergenKey,
 };
 
 /// The `VERGEN_GIT_*` configuration features
@@ -659,9 +658,9 @@ mod test {
     #[cfg(unix)]
     use std::io::stdout;
     use std::{env::temp_dir, io::Write};
-    use test_util::TestRepos;
     #[cfg(unix)]
     use test_util::TEST_MTIME;
+    use test_util::TestRepos;
     use vergen::Emitter;
     use vergen_lib::count_idempotent;
 
@@ -881,10 +880,12 @@ mod test {
     fn git_error_fails() -> Result<()> {
         let mut gix = Gix::all_git();
         let _ = gix.at_path(temp_dir());
-        assert!(Emitter::default()
-            .fail_on_error()
-            .add_instructions(&gix)
-            .is_err());
+        assert!(
+            Emitter::default()
+                .fail_on_error()
+                .add_instructions(&gix)
+                .is_err()
+        );
         Ok(())
     }
 

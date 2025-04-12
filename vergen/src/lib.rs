@@ -533,7 +533,7 @@ mod feature;
 )))]
 use {anyhow as _, bon as _};
 #[cfg(test)]
-use {lazy_static as _, regex as _, serial_test as _, temp_env as _, test_util as _};
+use {regex as _, serial_test as _, temp_env as _, test_util as _};
 
 #[cfg(feature = "build")]
 pub use self::feature::build::Build;

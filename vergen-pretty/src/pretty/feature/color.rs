@@ -6,7 +6,7 @@
 // option. All files in the project carrying such notice may not be copied,
 // modified, or distributed except according to those terms.
 
-use crate::{pretty::Pretty, Prefix, Suffix};
+use crate::{Prefix, Suffix, pretty::Pretty};
 use anyhow::Result;
 use console::Style;
 use std::{io::Write, sync::LazyLock};
@@ -71,8 +71,9 @@ impl Suffix {
 #[cfg(test)]
 mod test {
     use crate::{
-        utils::test_utils::{is_empty, TEST_PREFIX_SUFFIX},
-        vergen_pretty_env, PrefixBuilder, PrettyBuilder, SuffixBuilder,
+        Prefix, Pretty, Suffix,
+        utils::test_utils::{TEST_PREFIX_SUFFIX, is_empty},
+        vergen_pretty_env,
     };
     use anyhow::Result;
     use console::Style;
@@ -83,10 +84,7 @@ mod test {
         let red_bold = Style::new().bold().red();
         let map = vergen_pretty_env!();
         let empty = is_empty(&map);
-        let fmt = PrettyBuilder::default()
-            .env(map)
-            .key_style(red_bold)
-            .build()?;
+        let fmt = Pretty::builder().env(map).key_style(red_bold).build();
         fmt.display(&mut stdout)?;
         if empty {
             assert!(stdout.is_empty());
@@ -102,10 +100,7 @@ mod test {
         let map = vergen_pretty_env!();
         let empty = is_empty(&map);
         let red_bold = Style::new().bold().red();
-        let fmt = PrettyBuilder::default()
-            .env(map)
-            .value_style(red_bold)
-            .build()?;
+        let fmt = Pretty::builder().env(map).value_style(red_bold).build();
         fmt.display(&mut stdout)?;
         if empty {
             assert!(stdout.is_empty());
@@ -120,11 +115,11 @@ mod test {
         let mut stdout = vec![];
         let map = vergen_pretty_env!();
         let red_bold = Style::new().bold().red();
-        let prefix = PrefixBuilder::default()
+        let prefix = Prefix::builder()
             .lines(TEST_PREFIX_SUFFIX.lines().map(str::to_string).collect())
             .style(red_bold)
-            .build()?;
-        let fmt = PrettyBuilder::default().env(map).prefix(prefix).build()?;
+            .build();
+        let fmt = Pretty::builder().env(map).prefix(prefix).build();
         fmt.display(&mut stdout)?;
         assert!(!stdout.is_empty());
         Ok(())
@@ -135,11 +130,11 @@ mod test {
         let mut stdout = vec![];
         let map = vergen_pretty_env!();
         let red_bold = Style::new().bold().red();
-        let suffix = SuffixBuilder::default()
+        let suffix = Suffix::builder()
             .lines(TEST_PREFIX_SUFFIX.lines().map(str::to_string).collect())
             .style(red_bold)
-            .build()?;
-        let fmt = PrettyBuilder::default().env(map).suffix(suffix).build()?;
+            .build();
+        let fmt = Pretty::builder().env(map).suffix(suffix).build();
         fmt.display(&mut stdout)?;
         assert!(!stdout.is_empty());
         Ok(())
