@@ -1,13 +1,13 @@
 on:
+  workflow_dispatch:
   push:
     branches:
       - master
       - legacy/*
+      - release/*
     tags-ignore:
       - "*"
   pull_request:
-    branches:
-      - "*"
   schedule:
     - cron: "13 4 * * *"
 
