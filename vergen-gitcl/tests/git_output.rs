@@ -54,7 +54,7 @@ mod test_git_git2 {
     static GIT_COMMIT_TIMESTAMP_IDEM_RE_STR: LazyLock<&'static str> =
         LazyLock::new(|| r"cargo:rustc-env=VERGEN_GIT_COMMIT_TIMESTAMP=VERGEN_IDEMPOTENT_OUTPUT");
     static GIT_DESCRIBE_IDEM_RE_STR: LazyLock<&'static str> =
-        LazyLock::new(|| r"cargo:rustc-env=VERGEN_GIT_DESCRIBE=VERGEN_IDEMPOTENT_OUTPUT})");
+        LazyLock::new(|| r"cargo:rustc-env=VERGEN_GIT_DESCRIBE=VERGEN_IDEMPOTENT_OUTPUT");
     static GIT_SHA_IDEM_RE_STR: LazyLock<&'static str> =
         LazyLock::new(|| r"cargo:rustc-env=VERGEN_GIT_SHA=VERGEN_IDEMPOTENT_OUTPUT");
     static GIT_DIRTY_IDEM_RE_STR: LazyLock<&'static str> =
