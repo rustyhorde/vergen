@@ -183,7 +183,7 @@ impl EmitBuilder {
     #[cfg_attr(
         feature = "si",
         doc = r"
-let refresh_kind = RefreshKind::new();
+let refresh_kind = RefreshKind::everything();
 let cpu_refresh_kind = CpuRefreshKind::everything()
     .without_cpu_usage()
     .without_frequency();

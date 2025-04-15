@@ -20,7 +20,7 @@ mod test_build {
         static ref CARGO_DEP_NAME_RE_STR: &'static str =
             r"(?m)^cargo:rustc-env=VERGEN_CARGO_DEPENDENCIES=anyhow 1\.0\.[0-9]{2,}$";
         static ref CARGO_DEP_DK_RE_STR: &'static str =
-            r"(?m)^cargo:rustc-env=VERGEN_CARGO_DEPENDENCIES=gix 0\.64\.[0-9]{1,}$";
+            r"(?m)^cargo:rustc-env=VERGEN_CARGO_DEPENDENCIES=gix 0\.71\.[0-9]{1,}$";
         static ref CARGO_DEP_RV_RE_STR: &'static str =
             r"(?m)^cargo:rustc-env=VERGEN_CARGO_DEPENDENCIES=rustversion 1\.0\.[0-9]{2,}$";
         static ref CARGO_REGEX: Regex = {
@@ -169,6 +169,7 @@ mod test_build {
             .cargo_dependencies_dep_kind_filter(Some(DependencyKind::Development))
             .emit_to(&mut stdout_buf)?;
         let output = String::from_utf8_lossy(&stdout_buf);
+        eprintln!("output: {output}");
         assert!(CARGO_REGEX.is_match(&output));
         assert!(CARGO_REGEX_DK.is_match(&output));
         teardown();

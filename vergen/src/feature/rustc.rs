@@ -86,9 +86,9 @@ impl Config {
 /// # use vergen::EmitBuilder;
 /// #
 /// # fn main() -> Result<()> {
-/// unsafe {  env::set_var("VERGEN_RUSTC_CHANNEL", "this is the channel I want output");
+/// unsafe {  env::set_var("VERGEN_RUSTC_CHANNEL", "this is the channel I want output"); }
 /// EmitBuilder::builder().all_rustc().emit()?;
-/// # unsafe {  env::remove_var("VERGEN_BUILD_CHANNEL");
+/// # unsafe {  env::remove_var("VERGEN_BUILD_CHANNEL"); }
 /// #   Ok(())
 /// # }
 /// ```
