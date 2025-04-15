@@ -217,7 +217,6 @@ assert!(!buf.is_empty());
         uncommon_codepoints,
         unconditional_recursion,
         uncovered_param_in_projection,
-        undefined_naked_function_abi,
         ungated_async_fn_track_caller,
         uninhabited_static,
         unit_bindings,
