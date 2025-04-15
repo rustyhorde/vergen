@@ -132,8 +132,8 @@ fn trace(_config: &Config) -> Result<()> {
 #[cfg(feature = "color")]
 fn get_style(random_style: bool, style_opt: Option<Style>) -> Style {
     if random_style {
-        let mut rng = rand::thread_rng();
-        from_u8(rng.gen_range(0..7))
+        let mut rng = rand::rng();
+        from_u8(rng.random_range(0..7))
     } else if let Some(style) = style_opt {
         style
     } else {

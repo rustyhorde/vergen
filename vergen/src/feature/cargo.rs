@@ -317,7 +317,8 @@ impl EmitBuilder {
             .iter()
             .filter_map(|(package, dep_kind_info)| {
                 if let Some(name_regex) = name_filter {
-                    if let Ok(regex) = Regex::new(name_regex) {
+                    let reg_res = Regex::new(name_regex);
+                    if let Ok(regex) = reg_res {
                         if regex.is_match(&package.name) {
                             Some((package, dep_kind_info))
                         } else {
@@ -423,7 +424,9 @@ mod test {
     #[serial_test::serial]
     fn cargo_debug_override_works() -> Result<()> {
         setup();
-        env::set_var("VERGEN_CARGO_DEBUG", "this is a bad date");
+        unsafe {
+            env::set_var("VERGEN_CARGO_DEBUG", "this is a bad date");
+        }
         let mut stdout_buf = vec![];
         assert!(EmitBuilder::builder()
             .all_cargo()
@@ -431,7 +434,9 @@ mod test {
             .is_ok());
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(output.contains("cargo:rustc-env=VERGEN_CARGO_DEBUG=this is a bad date"));
-        env::remove_var("VERGEN_CARGO_DEBUG");
+        unsafe {
+            env::remove_var("VERGEN_CARGO_DEBUG");
+        }
         teardown();
         Ok(())
     }
@@ -440,7 +445,9 @@ mod test {
     #[serial_test::serial]
     fn cargo_features_override_works() -> Result<()> {
         setup();
-        env::set_var("VERGEN_CARGO_FEATURES", "this is a bad date");
+        unsafe {
+            env::set_var("VERGEN_CARGO_FEATURES", "this is a bad date");
+        }
         let mut stdout_buf = vec![];
         assert!(EmitBuilder::builder()
             .all_cargo()
@@ -448,7 +455,9 @@ mod test {
             .is_ok());
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(output.contains("cargo:rustc-env=VERGEN_CARGO_FEATURES=this is a bad date"));
-        env::remove_var("VERGEN_CARGO_FEATURES");
+        unsafe {
+            env::remove_var("VERGEN_CARGO_FEATURES");
+        }
         teardown();
         Ok(())
     }
@@ -457,7 +466,9 @@ mod test {
     #[serial_test::serial]
     fn cargo_opt_level_override_works() -> Result<()> {
         setup();
-        env::set_var("VERGEN_CARGO_OPT_LEVEL", "this is a bad date");
+        unsafe {
+            env::set_var("VERGEN_CARGO_OPT_LEVEL", "this is a bad date");
+        }
         let mut stdout_buf = vec![];
         assert!(EmitBuilder::builder()
             .all_cargo()
@@ -465,7 +476,9 @@ mod test {
             .is_ok());
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(output.contains("cargo:rustc-env=VERGEN_CARGO_OPT_LEVEL=this is a bad date"));
-        env::remove_var("VERGEN_CARGO_OPT_LEVEL");
+        unsafe {
+            env::remove_var("VERGEN_CARGO_OPT_LEVEL");
+        }
         teardown();
         Ok(())
     }
@@ -474,7 +487,9 @@ mod test {
     #[serial_test::serial]
     fn cargo_target_triple_override_works() -> Result<()> {
         setup();
-        env::set_var("VERGEN_CARGO_TARGET_TRIPLE", "this is a bad date");
+        unsafe {
+            env::set_var("VERGEN_CARGO_TARGET_TRIPLE", "this is a bad date");
+        }
         let mut stdout_buf = vec![];
         assert!(EmitBuilder::builder()
             .all_cargo()
@@ -482,7 +497,9 @@ mod test {
             .is_ok());
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(output.contains("cargo:rustc-env=VERGEN_CARGO_TARGET_TRIPLE=this is a bad date"));
-        env::remove_var("VERGEN_CARGO_TARGET_TRIPLE");
+        unsafe {
+            env::remove_var("VERGEN_CARGO_TARGET_TRIPLE");
+        }
         teardown();
         Ok(())
     }
@@ -491,7 +508,9 @@ mod test {
     #[serial_test::serial]
     fn cargo_dependencies_override_works() -> Result<()> {
         setup();
-        env::set_var("VERGEN_CARGO_DEPENDENCIES", "this is a bad some dep");
+        unsafe {
+            env::set_var("VERGEN_CARGO_DEPENDENCIES", "this is a bad some dep");
+        }
         let mut stdout_buf = vec![];
         assert!(EmitBuilder::builder()
             .all_cargo()
@@ -499,7 +518,9 @@ mod test {
             .is_ok());
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(output.contains("cargo:rustc-env=VERGEN_CARGO_DEPENDENCIES=this is a bad some dep"));
-        env::remove_var("VERGEN_CARGO_DEPENDENCIES");
+        unsafe {
+            env::remove_var("VERGEN_CARGO_DEPENDENCIES");
+        }
         teardown();
         Ok(())
     }

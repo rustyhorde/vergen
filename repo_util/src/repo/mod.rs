@@ -17,7 +17,7 @@ use git::{
     Id, ObjectId,
 };
 use gix as git;
-use rand::{distributions::Alphanumeric, thread_rng, Rng};
+use rand::{distr::Alphanumeric, rng, Rng};
 use std::{
     env,
     fs::{self, OpenOptions},
@@ -232,7 +232,7 @@ impl TestRepos {
     }
 
     fn rand_five() -> String {
-        thread_rng()
+        rng()
             .sample_iter(&Alphanumeric)
             .take(5)
             .map(char::from)

@@ -86,9 +86,9 @@ impl Config {
 /// # use vergen::EmitBuilder;
 /// #
 /// # fn main() -> Result<()> {
-/// env::set_var("VERGEN_RUSTC_CHANNEL", "this is the channel I want output");
+/// unsafe {  env::set_var("VERGEN_RUSTC_CHANNEL", "this is the channel I want output");
 /// EmitBuilder::builder().all_rustc().emit()?;
-/// # env::remove_var("VERGEN_BUILD_CHANNEL");
+/// # unsafe {  env::remove_var("VERGEN_BUILD_CHANNEL");
 /// #   Ok(())
 /// # }
 /// ```
@@ -401,7 +401,9 @@ LLVM version: 15.0.6
     #[test]
     #[serial_test::serial]
     fn rustc_channel_override_works() -> Result<()> {
-        env::set_var("VERGEN_RUSTC_CHANNEL", "this is a bad date");
+        unsafe {
+            env::set_var("VERGEN_RUSTC_CHANNEL", "this is a bad date");
+        }
         let mut stdout_buf = vec![];
         assert!(EmitBuilder::builder()
             .all_rustc()
@@ -409,14 +411,18 @@ LLVM version: 15.0.6
             .is_ok());
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(output.contains("cargo:rustc-env=VERGEN_RUSTC_CHANNEL=this is a bad date"));
-        env::remove_var("VERGEN_RUSTC_CHANNEL");
+        unsafe {
+            env::remove_var("VERGEN_RUSTC_CHANNEL");
+        }
         Ok(())
     }
 
     #[test]
     #[serial_test::serial]
     fn rustc_commit_date_override_works() -> Result<()> {
-        env::set_var("VERGEN_RUSTC_COMMIT_DATE", "this is a bad date");
+        unsafe {
+            env::set_var("VERGEN_RUSTC_COMMIT_DATE", "this is a bad date");
+        }
         let mut stdout_buf = vec![];
         assert!(EmitBuilder::builder()
             .all_rustc()
@@ -424,14 +430,18 @@ LLVM version: 15.0.6
             .is_ok());
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(output.contains("cargo:rustc-env=VERGEN_RUSTC_COMMIT_DATE=this is a bad date"));
-        env::remove_var("VERGEN_RUSTC_COMMIT_DATE");
+        unsafe {
+            env::remove_var("VERGEN_RUSTC_COMMIT_DATE");
+        }
         Ok(())
     }
 
     #[test]
     #[serial_test::serial]
     fn rustc_commit_hash_override_works() -> Result<()> {
-        env::set_var("VERGEN_RUSTC_COMMIT_HASH", "this is a bad date");
+        unsafe {
+            env::set_var("VERGEN_RUSTC_COMMIT_HASH", "this is a bad date");
+        }
         let mut stdout_buf = vec![];
         assert!(EmitBuilder::builder()
             .all_rustc()
@@ -439,14 +449,18 @@ LLVM version: 15.0.6
             .is_ok());
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(output.contains("cargo:rustc-env=VERGEN_RUSTC_COMMIT_HASH=this is a bad date"));
-        env::remove_var("VERGEN_RUSTC_COMMIT_HASH");
+        unsafe {
+            env::remove_var("VERGEN_RUSTC_COMMIT_HASH");
+        }
         Ok(())
     }
 
     #[test]
     #[serial_test::serial]
     fn rustc_host_triple_override_works() -> Result<()> {
-        env::set_var("VERGEN_RUSTC_HOST_TRIPLE", "this is a bad date");
+        unsafe {
+            env::set_var("VERGEN_RUSTC_HOST_TRIPLE", "this is a bad date");
+        }
         let mut stdout_buf = vec![];
         assert!(EmitBuilder::builder()
             .all_rustc()
@@ -454,14 +468,18 @@ LLVM version: 15.0.6
             .is_ok());
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(output.contains("cargo:rustc-env=VERGEN_RUSTC_HOST_TRIPLE=this is a bad date"));
-        env::remove_var("VERGEN_RUSTC_HOST_TRIPLE");
+        unsafe {
+            env::remove_var("VERGEN_RUSTC_HOST_TRIPLE");
+        }
         Ok(())
     }
 
     #[test]
     #[serial_test::serial]
     fn rustc_llvm_version_override_works() -> Result<()> {
-        env::set_var("VERGEN_RUSTC_LLVM_VERSION", "this is a bad date");
+        unsafe {
+            env::set_var("VERGEN_RUSTC_LLVM_VERSION", "this is a bad date");
+        }
         let mut stdout_buf = vec![];
         assert!(EmitBuilder::builder()
             .all_rustc()
@@ -469,14 +487,18 @@ LLVM version: 15.0.6
             .is_ok());
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(output.contains("cargo:rustc-env=VERGEN_RUSTC_LLVM_VERSION=this is a bad date"));
-        env::remove_var("VERGEN_RUSTC_LLVM_VERSION");
+        unsafe {
+            env::remove_var("VERGEN_RUSTC_LLVM_VERSION");
+        }
         Ok(())
     }
 
     #[test]
     #[serial_test::serial]
     fn rustc_semver_override_works() -> Result<()> {
-        env::set_var("VERGEN_RUSTC_SEMVER", "this is a bad date");
+        unsafe {
+            env::set_var("VERGEN_RUSTC_SEMVER", "this is a bad date");
+        }
         let mut stdout_buf = vec![];
         assert!(EmitBuilder::builder()
             .all_rustc()
@@ -484,7 +506,9 @@ LLVM version: 15.0.6
             .is_ok());
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(output.contains("cargo:rustc-env=VERGEN_RUSTC_SEMVER=this is a bad date"));
-        env::remove_var("VERGEN_RUSTC_SEMVER");
+        unsafe {
+            env::remove_var("VERGEN_RUSTC_SEMVER");
+        }
         Ok(())
     }
 }

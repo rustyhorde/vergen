@@ -838,7 +838,9 @@ EmitBuilder::builder()
             .map(|x| {
                 for (k, v) in &x.cargo_rustc_env_map {
                     if env::var(k.name()).is_err() {
-                        env::set_var(k.name(), v);
+                        unsafe {
+                            env::set_var(k.name(), v);
+                        }
                     }
                 }
             })

@@ -297,7 +297,9 @@ mod test {
     #[test]
     #[serial_test::serial]
     fn source_date_epoch_works() -> Result<()> {
-        env::set_var("SOURCE_DATE_EPOCH", "1671809360");
+        unsafe {
+            env::set_var("SOURCE_DATE_EPOCH", "1671809360");
+        }
         let mut stdout_buf = vec![];
         _ = EmitBuilder::builder()
             .idempotent()
@@ -314,7 +316,9 @@ mod test {
                 );
             }
         }
-        env::remove_var("SOURCE_DATE_EPOCH");
+        unsafe {
+            env::remove_var("SOURCE_DATE_EPOCH");
+        }
         Ok(())
     }
 
@@ -327,7 +331,9 @@ mod test {
 
         let source = [0x66, 0x6f, 0x80, 0x6f];
         let os_str = OsStr::from_bytes(&source[..]);
-        env::set_var("SOURCE_DATE_EPOCH", os_str);
+        unsafe {
+            env::set_var("SOURCE_DATE_EPOCH", os_str);
+        }
 
         let mut stdout_buf = vec![];
         assert!(EmitBuilder::builder()
@@ -336,7 +342,9 @@ mod test {
             .all_build()
             .emit_to(&mut stdout_buf)
             .is_err());
-        env::remove_var("SOURCE_DATE_EPOCH");
+        unsafe {
+            env::remove_var("SOURCE_DATE_EPOCH");
+        }
         Ok(())
     }
 
@@ -349,7 +357,9 @@ mod test {
 
         let source = [0x66, 0x6f, 0x80, 0x6f];
         let os_str = OsStr::from_bytes(&source[..]);
-        env::set_var("SOURCE_DATE_EPOCH", os_str);
+        unsafe {
+            env::set_var("SOURCE_DATE_EPOCH", os_str);
+        }
 
         let mut stdout_buf = vec![];
         assert!(EmitBuilder::builder()
@@ -357,7 +367,9 @@ mod test {
             .all_build()
             .emit_to(&mut stdout_buf)
             .is_ok());
-        env::remove_var("SOURCE_DATE_EPOCH");
+        unsafe {
+            env::remove_var("SOURCE_DATE_EPOCH");
+        }
         Ok(())
     }
 
@@ -409,7 +421,9 @@ mod test {
     #[test]
     #[serial_test::serial]
     fn build_date_override_works() -> Result<()> {
-        env::set_var("VERGEN_BUILD_DATE", "this is a bad date");
+        unsafe {
+            env::set_var("VERGEN_BUILD_DATE", "this is a bad date");
+        }
         let mut stdout_buf = vec![];
         assert!(EmitBuilder::builder()
             .all_build()
@@ -417,14 +431,18 @@ mod test {
             .is_ok());
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(output.contains("cargo:rustc-env=VERGEN_BUILD_DATE=this is a bad date"));
-        env::remove_var("VERGEN_BUILD_DATE");
+        unsafe {
+            env::remove_var("VERGEN_BUILD_DATE");
+        }
         Ok(())
     }
 
     #[test]
     #[serial_test::serial]
     fn build_timestamp_override_works() -> Result<()> {
-        env::set_var("VERGEN_BUILD_TIMESTAMP", "this is a bad timestamp");
+        unsafe {
+            env::set_var("VERGEN_BUILD_TIMESTAMP", "this is a bad timestamp");
+        }
         let mut stdout_buf = vec![];
         assert!(EmitBuilder::builder()
             .all_build()
@@ -432,7 +450,9 @@ mod test {
             .is_ok());
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(output.contains("cargo:rustc-env=VERGEN_BUILD_TIMESTAMP=this is a bad timestamp"));
-        env::remove_var("VERGEN_BUILD_TIMESTAMP");
+        unsafe {
+            env::remove_var("VERGEN_BUILD_TIMESTAMP");
+        }
         Ok(())
     }
 }
