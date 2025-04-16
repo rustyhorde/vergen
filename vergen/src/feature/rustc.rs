@@ -167,6 +167,7 @@ impl Rustc {
         self.add_rustc_to_map(vm, cargo_rustc_env, cargo_warning)
     }
 
+    #[allow(clippy::too_many_lines)]
     fn add_rustc_to_map(
         self,
         rustc_res: std::result::Result<VersionMeta, rustc_version::Error>,
@@ -177,7 +178,12 @@ impl Rustc {
 
         if self.channel {
             if let Ok(_value) = env::var(RUSTC_CHANNEL_NAME) {
-                add_default_map_entry(VergenKey::RustcChannel, cargo_rustc_env, cargo_warning);
+                add_default_map_entry(
+                    false,
+                    VergenKey::RustcChannel,
+                    cargo_rustc_env,
+                    cargo_warning,
+                );
             } else {
                 let channel = match rustc.channel {
                     Channel::Dev => "dev",
@@ -191,27 +197,52 @@ impl Rustc {
 
         if self.commit_date {
             if let Ok(_value) = env::var(RUSTC_COMMIT_DATE) {
-                add_default_map_entry(VergenKey::RustcCommitDate, cargo_rustc_env, cargo_warning);
+                add_default_map_entry(
+                    false,
+                    VergenKey::RustcCommitDate,
+                    cargo_rustc_env,
+                    cargo_warning,
+                );
             } else if let Some(commit_date) = rustc.commit_date {
                 add_map_entry(VergenKey::RustcCommitDate, commit_date, cargo_rustc_env);
             } else {
-                add_default_map_entry(VergenKey::RustcCommitDate, cargo_rustc_env, cargo_warning);
+                add_default_map_entry(
+                    false,
+                    VergenKey::RustcCommitDate,
+                    cargo_rustc_env,
+                    cargo_warning,
+                );
             }
         }
 
         if self.commit_hash {
             if let Ok(_value) = env::var(RUSTC_COMMIT_HASH) {
-                add_default_map_entry(VergenKey::RustcCommitHash, cargo_rustc_env, cargo_warning);
+                add_default_map_entry(
+                    false,
+                    VergenKey::RustcCommitHash,
+                    cargo_rustc_env,
+                    cargo_warning,
+                );
             } else if let Some(commit_hash) = rustc.commit_hash {
                 add_map_entry(VergenKey::RustcCommitHash, commit_hash, cargo_rustc_env);
             } else {
-                add_default_map_entry(VergenKey::RustcCommitHash, cargo_rustc_env, cargo_warning);
+                add_default_map_entry(
+                    false,
+                    VergenKey::RustcCommitHash,
+                    cargo_rustc_env,
+                    cargo_warning,
+                );
             }
         }
 
         if self.host_triple {
             if let Ok(_value) = env::var(RUSTC_HOST_TRIPLE_NAME) {
-                add_default_map_entry(VergenKey::RustcHostTriple, cargo_rustc_env, cargo_warning);
+                add_default_map_entry(
+                    false,
+                    VergenKey::RustcHostTriple,
+                    cargo_rustc_env,
+                    cargo_warning,
+                );
             } else {
                 add_map_entry(VergenKey::RustcHostTriple, rustc.host, cargo_rustc_env);
             }
@@ -219,7 +250,12 @@ impl Rustc {
 
         if self.llvm_version {
             if let Ok(_value) = env::var(RUSTC_LLVM_VERSION) {
-                add_default_map_entry(VergenKey::RustcLlvmVersion, cargo_rustc_env, cargo_warning);
+                add_default_map_entry(
+                    false,
+                    VergenKey::RustcLlvmVersion,
+                    cargo_rustc_env,
+                    cargo_warning,
+                );
             } else if let Some(llvm_version) = rustc.llvm_version {
                 add_map_entry(
                     VergenKey::RustcLlvmVersion,
@@ -227,13 +263,23 @@ impl Rustc {
                     cargo_rustc_env,
                 );
             } else {
-                add_default_map_entry(VergenKey::RustcLlvmVersion, cargo_rustc_env, cargo_warning);
+                add_default_map_entry(
+                    false,
+                    VergenKey::RustcLlvmVersion,
+                    cargo_rustc_env,
+                    cargo_warning,
+                );
             }
         }
 
         if self.semver {
             if let Ok(_value) = env::var(RUSTC_SEMVER_NAME) {
-                add_default_map_entry(VergenKey::RustcSemver, cargo_rustc_env, cargo_warning);
+                add_default_map_entry(
+                    false,
+                    VergenKey::RustcSemver,
+                    cargo_rustc_env,
+                    cargo_warning,
+                );
             } else {
                 add_map_entry(
                     VergenKey::RustcSemver,
@@ -280,10 +326,16 @@ impl AddEntries for Rustc {
             Err(error)
         } else {
             if self.channel {
-                add_default_map_entry(VergenKey::RustcChannel, cargo_rustc_env_map, cargo_warning);
+                add_default_map_entry(
+                    false,
+                    VergenKey::RustcChannel,
+                    cargo_rustc_env_map,
+                    cargo_warning,
+                );
             }
             if self.commit_date {
                 add_default_map_entry(
+                    false,
                     VergenKey::RustcCommitDate,
                     cargo_rustc_env_map,
                     cargo_warning,
@@ -291,6 +343,7 @@ impl AddEntries for Rustc {
             }
             if self.commit_hash {
                 add_default_map_entry(
+                    false,
                     VergenKey::RustcCommitHash,
                     cargo_rustc_env_map,
                     cargo_warning,
@@ -298,6 +351,7 @@ impl AddEntries for Rustc {
             }
             if self.host_triple {
                 add_default_map_entry(
+                    false,
                     VergenKey::RustcHostTriple,
                     cargo_rustc_env_map,
                     cargo_warning,
@@ -305,13 +359,19 @@ impl AddEntries for Rustc {
             }
             if self.llvm_version {
                 add_default_map_entry(
+                    false,
                     VergenKey::RustcLlvmVersion,
                     cargo_rustc_env_map,
                     cargo_warning,
                 );
             }
             if self.semver {
-                add_default_map_entry(VergenKey::RustcSemver, cargo_rustc_env_map, cargo_warning);
+                add_default_map_entry(
+                    false,
+                    VergenKey::RustcSemver,
+                    cargo_rustc_env_map,
+                    cargo_warning,
+                );
             }
 
             Ok(())
@@ -456,8 +516,8 @@ release: 1.68.0-nightly
             .fail_on_error()
             .add_instructions(&rustc)?
             .test_emit();
-        assert_eq!(6, emitter.cargo_rustc_env_map().len());
-        assert_eq!(1, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(5, emitter.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
         assert_eq!(1, emitter.cargo_warning().len());
         Ok(())
     }
@@ -504,8 +564,8 @@ LLVM version: 15.0.6
             .fail_on_error()
             .add_instructions(&rustc)?
             .test_emit();
-        assert_eq!(6, emitter.cargo_rustc_env_map().len());
-        assert_eq!(2, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(4, emitter.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
         assert_eq!(2, emitter.cargo_warning().len());
         Ok(())
     }
@@ -526,12 +586,12 @@ LLVM version: 15.0.6
 
     #[test]
     #[serial]
-    fn rustc_defaults_on_bad_input() -> Result<()> {
+    fn rustc_warnings_on_bad_input() -> Result<()> {
         let mut rustc = Rustc::all_rustc();
         let _ = rustc.with_rustc_str("a_bad_rustcvv_string");
         let emitter = Emitter::default().add_instructions(&rustc)?.test_emit();
-        assert_eq!(6, emitter.cargo_rustc_env_map().len());
-        assert_eq!(6, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(0, emitter.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
         assert_eq!(6, emitter.cargo_warning().len());
         Ok(())
     }

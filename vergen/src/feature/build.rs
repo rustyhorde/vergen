@@ -226,7 +226,12 @@ impl Build {
             if let Ok(value) = env::var(BUILD_DATE_NAME) {
                 add_map_entry(VergenKey::BuildDate, value, cargo_rustc_env);
             } else if idempotent && !source_date_epoch {
-                add_default_map_entry(VergenKey::BuildDate, cargo_rustc_env, cargo_warning);
+                add_default_map_entry(
+                    idempotent,
+                    VergenKey::BuildDate,
+                    cargo_rustc_env,
+                    cargo_warning,
+                );
             } else {
                 let format = format_description::parse("[year]-[month]-[day]")?;
                 add_map_entry(VergenKey::BuildDate, ts.format(&format)?, cargo_rustc_env);
@@ -247,7 +252,12 @@ impl Build {
             if let Ok(value) = env::var(BUILD_TIMESTAMP_NAME) {
                 add_map_entry(VergenKey::BuildTimestamp, value, cargo_rustc_env);
             } else if idempotent && !source_date_epoch {
-                add_default_map_entry(VergenKey::BuildTimestamp, cargo_rustc_env, cargo_warning);
+                add_default_map_entry(
+                    idempotent,
+                    VergenKey::BuildTimestamp,
+                    cargo_rustc_env,
+                    cargo_warning,
+                );
             } else {
                 add_map_entry(
                     VergenKey::BuildTimestamp,
@@ -287,10 +297,16 @@ impl AddEntries for Build {
             Err(error)
         } else {
             if self.build_date {
-                add_default_map_entry(VergenKey::BuildDate, cargo_rustc_env_map, cargo_warning);
+                add_default_map_entry(
+                    *config.idempotent(),
+                    VergenKey::BuildDate,
+                    cargo_rustc_env_map,
+                    cargo_warning,
+                );
             }
             if self.build_timestamp {
                 add_default_map_entry(
+                    *config.idempotent(),
                     VergenKey::BuildTimestamp,
                     cargo_rustc_env_map,
                     cargo_warning,

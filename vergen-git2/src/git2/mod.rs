@@ -320,21 +320,28 @@ impl Git2 {
 
         if self.branch {
             if let Ok(_value) = env::var(GIT_BRANCH_NAME) {
-                add_default_map_entry(VergenKey::GitBranch, cargo_rustc_env, cargo_warning);
+                add_default_map_entry(
+                    idempotent,
+                    VergenKey::GitBranch,
+                    cargo_rustc_env,
+                    cargo_warning,
+                );
             } else {
-                Self::add_branch_name(false, &repo, cargo_rustc_env, cargo_warning)?;
+                Self::add_branch_name(idempotent, false, &repo, cargo_rustc_env, cargo_warning)?;
             }
         }
 
         if self.commit_author_email {
             if let Ok(_value) = env::var(GIT_COMMIT_AUTHOR_EMAIL) {
                 add_default_map_entry(
+                    idempotent,
                     VergenKey::GitCommitAuthorEmail,
                     cargo_rustc_env,
                     cargo_warning,
                 );
             } else {
                 Self::add_opt_value(
+                    idempotent,
                     commit.author().email(),
                     VergenKey::GitCommitAuthorEmail,
                     cargo_rustc_env,
@@ -346,12 +353,14 @@ impl Git2 {
         if self.commit_author_name {
             if let Ok(_value) = env::var(GIT_COMMIT_AUTHOR_NAME) {
                 add_default_map_entry(
+                    idempotent,
                     VergenKey::GitCommitAuthorName,
                     cargo_rustc_env,
                     cargo_warning,
                 );
             } else {
                 Self::add_opt_value(
+                    idempotent,
                     commit.author().name(),
                     VergenKey::GitCommitAuthorName,
                     cargo_rustc_env,
@@ -362,9 +371,14 @@ impl Git2 {
 
         if self.commit_count {
             if let Ok(_value) = env::var(GIT_COMMIT_COUNT) {
-                add_default_map_entry(VergenKey::GitCommitCount, cargo_rustc_env, cargo_warning);
+                add_default_map_entry(
+                    idempotent,
+                    VergenKey::GitCommitCount,
+                    cargo_rustc_env,
+                    cargo_warning,
+                );
             } else {
-                Self::add_commit_count(false, &repo, cargo_rustc_env, cargo_warning);
+                Self::add_commit_count(idempotent, false, &repo, cargo_rustc_env, cargo_warning);
             }
         }
 
@@ -372,9 +386,15 @@ impl Git2 {
 
         if self.commit_message {
             if let Ok(_value) = env::var(GIT_COMMIT_MESSAGE) {
-                add_default_map_entry(VergenKey::GitCommitMessage, cargo_rustc_env, cargo_warning);
+                add_default_map_entry(
+                    idempotent,
+                    VergenKey::GitCommitMessage,
+                    cargo_rustc_env,
+                    cargo_warning,
+                );
             } else {
                 Self::add_opt_value(
+                    idempotent,
                     commit.message(),
                     VergenKey::GitCommitMessage,
                     cargo_rustc_env,
@@ -385,10 +405,16 @@ impl Git2 {
 
         if let Some(sha) = self.sha {
             if let Ok(_value) = env::var(GIT_SHA_NAME) {
-                add_default_map_entry(VergenKey::GitSha, cargo_rustc_env, cargo_warning);
+                add_default_map_entry(
+                    idempotent,
+                    VergenKey::GitSha,
+                    cargo_rustc_env,
+                    cargo_warning,
+                );
             } else if sha.short() {
                 let obj = repo.revparse_single("HEAD")?;
                 Self::add_opt_value(
+                    idempotent,
                     obj.short_id()?.as_str(),
                     VergenKey::GitSha,
                     cargo_rustc_env,
@@ -401,7 +427,12 @@ impl Git2 {
 
         if let Some(dirty) = self.dirty {
             if let Ok(_value) = env::var(GIT_DIRTY_NAME) {
-                add_default_map_entry(VergenKey::GitDirty, cargo_rustc_env, cargo_warning);
+                add_default_map_entry(
+                    idempotent,
+                    VergenKey::GitDirty,
+                    cargo_rustc_env,
+                    cargo_warning,
+                );
             } else {
                 let mut status_options = StatusOptions::new();
 
@@ -423,7 +454,12 @@ impl Git2 {
 
         if let Some(describe) = self.describe {
             if let Ok(_value) = env::var(GIT_DESCRIBE_NAME) {
-                add_default_map_entry(VergenKey::GitDescribe, cargo_rustc_env, cargo_warning);
+                add_default_map_entry(
+                    idempotent,
+                    VergenKey::GitDescribe,
+                    cargo_rustc_env,
+                    cargo_warning,
+                );
             } else {
                 let mut describe_opts = DescribeOptions::new();
                 let mut format_opts = DescribeFormatOptions::new();
@@ -479,6 +515,7 @@ impl Git2 {
     }
 
     fn add_branch_name(
+        idempotent: bool,
         add_default: bool,
         repo: &Repository,
         cargo_rustc_env: &mut CargoRustcEnvMap,
@@ -486,7 +523,12 @@ impl Git2 {
     ) -> Result<()> {
         if repo.head_detached()? {
             if add_default {
-                add_default_map_entry(VergenKey::GitBranch, cargo_rustc_env, cargo_warning);
+                add_default_map_entry(
+                    idempotent,
+                    VergenKey::GitBranch,
+                    cargo_rustc_env,
+                    cargo_warning,
+                );
             } else {
                 add_map_entry(VergenKey::GitBranch, "HEAD", cargo_rustc_env);
             }
@@ -503,7 +545,12 @@ impl Git2 {
                 }
             }
             if !found_head {
-                add_default_map_entry(VergenKey::GitBranch, cargo_rustc_env, cargo_warning);
+                add_default_map_entry(
+                    idempotent,
+                    VergenKey::GitBranch,
+                    cargo_rustc_env,
+                    cargo_warning,
+                );
             }
         }
         Ok(())
@@ -511,6 +558,7 @@ impl Git2 {
 
     #[allow(clippy::map_unwrap_or)]
     fn add_opt_value(
+        idempotent: bool,
         value: Option<&str>,
         key: VergenKey,
         cargo_rustc_env: &mut CargoRustcEnvMap,
@@ -518,10 +566,13 @@ impl Git2 {
     ) {
         value
             .map(|val| add_map_entry(key, val, cargo_rustc_env))
-            .unwrap_or_else(|| add_default_map_entry(key, cargo_rustc_env, cargo_warning));
+            .unwrap_or_else(|| {
+                add_default_map_entry(idempotent, key, cargo_rustc_env, cargo_warning)
+            });
     }
 
     fn add_commit_count(
+        idempotent: bool,
         add_default: bool,
         repo: &Repository,
         cargo_rustc_env: &mut CargoRustcEnvMap,
@@ -536,7 +587,7 @@ impl Git2 {
                 }
             }
         }
-        add_default_map_entry(key, cargo_rustc_env, cargo_warning);
+        add_default_map_entry(idempotent, key, cargo_rustc_env, cargo_warning);
     }
 
     fn add_git_timestamp_entries(
@@ -556,12 +607,18 @@ impl Git2 {
         };
 
         if let Ok(_value) = env::var(GIT_COMMIT_DATE_NAME) {
-            add_default_map_entry(VergenKey::GitCommitDate, cargo_rustc_env, cargo_warning);
+            add_default_map_entry(
+                idempotent,
+                VergenKey::GitCommitDate,
+                cargo_rustc_env,
+                cargo_warning,
+            );
         } else {
             self.add_git_date_entry(idempotent, sde, &ts, cargo_rustc_env, cargo_warning)?;
         }
         if let Ok(_value) = env::var(GIT_COMMIT_TIMESTAMP_NAME) {
             add_default_map_entry(
+                idempotent,
                 VergenKey::GitCommitTimestamp,
                 cargo_rustc_env,
                 cargo_warning,
@@ -595,7 +652,12 @@ impl Git2 {
     ) -> Result<()> {
         if self.commit_date {
             if idempotent && !source_date_epoch {
-                add_default_map_entry(VergenKey::GitCommitDate, cargo_rustc_env, cargo_warning);
+                add_default_map_entry(
+                    idempotent,
+                    VergenKey::GitCommitDate,
+                    cargo_rustc_env,
+                    cargo_warning,
+                );
             } else {
                 let format = format_description::parse("[year]-[month]-[day]")?;
                 add_map_entry(
@@ -619,6 +681,7 @@ impl Git2 {
         if self.commit_timestamp {
             if idempotent && !source_date_epoch {
                 add_default_map_entry(
+                    idempotent,
                     VergenKey::GitCommitTimestamp,
                     cargo_rustc_env,
                     cargo_warning,
@@ -672,10 +735,16 @@ impl AddEntries for Git2 {
             cargo_warning.push(format!("{}", config.error()));
 
             if self.branch {
-                add_default_map_entry(VergenKey::GitBranch, cargo_rustc_env_map, cargo_warning);
+                add_default_map_entry(
+                    *config.idempotent(),
+                    VergenKey::GitBranch,
+                    cargo_rustc_env_map,
+                    cargo_warning,
+                );
             }
             if self.commit_author_email {
                 add_default_map_entry(
+                    *config.idempotent(),
                     VergenKey::GitCommitAuthorEmail,
                     cargo_rustc_env_map,
                     cargo_warning,
@@ -683,6 +752,7 @@ impl AddEntries for Git2 {
             }
             if self.commit_author_name {
                 add_default_map_entry(
+                    *config.idempotent(),
                     VergenKey::GitCommitAuthorName,
                     cargo_rustc_env_map,
                     cargo_warning,
@@ -690,16 +760,23 @@ impl AddEntries for Git2 {
             }
             if self.commit_count {
                 add_default_map_entry(
+                    *config.idempotent(),
                     VergenKey::GitCommitCount,
                     cargo_rustc_env_map,
                     cargo_warning,
                 );
             }
             if self.commit_date {
-                add_default_map_entry(VergenKey::GitCommitDate, cargo_rustc_env_map, cargo_warning);
+                add_default_map_entry(
+                    *config.idempotent(),
+                    VergenKey::GitCommitDate,
+                    cargo_rustc_env_map,
+                    cargo_warning,
+                );
             }
             if self.commit_message {
                 add_default_map_entry(
+                    *config.idempotent(),
                     VergenKey::GitCommitMessage,
                     cargo_rustc_env_map,
                     cargo_warning,
@@ -707,19 +784,35 @@ impl AddEntries for Git2 {
             }
             if self.commit_timestamp {
                 add_default_map_entry(
+                    *config.idempotent(),
                     VergenKey::GitCommitTimestamp,
                     cargo_rustc_env_map,
                     cargo_warning,
                 );
             }
             if self.describe.is_some() {
-                add_default_map_entry(VergenKey::GitDescribe, cargo_rustc_env_map, cargo_warning);
+                add_default_map_entry(
+                    *config.idempotent(),
+                    VergenKey::GitDescribe,
+                    cargo_rustc_env_map,
+                    cargo_warning,
+                );
             }
             if self.sha.is_some() {
-                add_default_map_entry(VergenKey::GitSha, cargo_rustc_env_map, cargo_warning);
+                add_default_map_entry(
+                    *config.idempotent(),
+                    VergenKey::GitSha,
+                    cargo_rustc_env_map,
+                    cargo_warning,
+                );
             }
             if self.dirty.is_some() {
-                add_default_map_entry(VergenKey::GitDirty, cargo_rustc_env_map, cargo_warning);
+                add_default_map_entry(
+                    *config.idempotent(),
+                    VergenKey::GitDirty,
+                    cargo_rustc_env_map,
+                    cargo_warning,
+                );
             }
             Ok(())
         }
@@ -773,10 +866,28 @@ mod test {
 
     #[test]
     #[serial]
-    fn empty_email_is_default() -> Result<()> {
+    fn empty_email_is_warning() -> Result<()> {
         let mut cargo_rustc_env = BTreeMap::new();
         let mut cargo_warning = vec![];
         Git2::add_opt_value(
+            false,
+            None,
+            VergenKey::GitCommitAuthorEmail,
+            &mut cargo_rustc_env,
+            &mut cargo_warning,
+        );
+        assert_eq!(0, cargo_rustc_env.len());
+        assert_eq!(1, cargo_warning.len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn empty_email_idempotent() -> Result<()> {
+        let mut cargo_rustc_env = BTreeMap::new();
+        let mut cargo_warning = vec![];
+        Git2::add_opt_value(
+            true,
             None,
             VergenKey::GitCommitAuthorEmail,
             &mut cargo_rustc_env,
@@ -789,11 +900,23 @@ mod test {
 
     #[test]
     #[serial]
-    fn bad_revwalk_is_default() -> Result<()> {
+    fn bad_revwalk_is_warning() -> Result<()> {
         let mut cargo_rustc_env = BTreeMap::new();
         let mut cargo_warning = vec![];
         let repo = Repository::discover(current_dir()?)?;
-        Git2::add_commit_count(true, &repo, &mut cargo_rustc_env, &mut cargo_warning);
+        Git2::add_commit_count(false, true, &repo, &mut cargo_rustc_env, &mut cargo_warning);
+        assert_eq!(0, cargo_rustc_env.len());
+        assert_eq!(1, cargo_warning.len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn bad_revwalk_idempotent() -> Result<()> {
+        let mut cargo_rustc_env = BTreeMap::new();
+        let mut cargo_warning = vec![];
+        let repo = Repository::discover(current_dir()?)?;
+        Git2::add_commit_count(true, true, &repo, &mut cargo_rustc_env, &mut cargo_warning);
         assert_eq!(1, cargo_rustc_env.len());
         assert_eq!(1, cargo_warning.len());
         Ok(())
@@ -806,13 +929,13 @@ mod test {
         let mut map = BTreeMap::new();
         let mut cargo_warning = vec![];
         let repo = Repository::discover(current_dir()?)?;
-        Git2::add_branch_name(true, &repo, &mut map, &mut cargo_warning)?;
+        Git2::add_branch_name(false, true, &repo, &mut map, &mut cargo_warning)?;
         assert_eq!(1, map.len());
         assert_eq!(1, cargo_warning.len());
         let mut map = BTreeMap::new();
         let mut cargo_warning = vec![];
         let repo = Repository::discover(test_repo.path())?;
-        Git2::add_branch_name(true, &repo, &mut map, &mut cargo_warning)?;
+        Git2::add_branch_name(false, true, &repo, &mut map, &mut cargo_warning)?;
         assert_eq!(1, map.len());
         assert_eq!(1, cargo_warning.len());
         Ok(())
@@ -888,10 +1011,25 @@ mod test {
 
     #[test]
     #[serial]
-    fn git_error_defaults() -> Result<()> {
+    fn git_error_warnings() -> Result<()> {
         let mut git2 = Git2::all_git();
         let _ = git2.fail();
         let emitter = Emitter::default().add_instructions(&git2)?.test_emit();
+        assert_eq!(0, emitter.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(11, emitter.cargo_warning().len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn git_error_idempotent() -> Result<()> {
+        let mut git2 = Git2::all_git();
+        let _ = git2.fail();
+        let emitter = Emitter::default()
+            .idempotent()
+            .add_instructions(&git2)?
+            .test_emit();
         assert_eq!(10, emitter.cargo_rustc_env_map().len());
         assert_eq!(10, count_idempotent(emitter.cargo_rustc_env_map()));
         assert_eq!(11, emitter.cargo_warning().len());

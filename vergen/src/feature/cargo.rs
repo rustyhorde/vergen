@@ -380,16 +380,32 @@ impl AddEntries for Cargo {
             Err(error)
         } else {
             if self.debug {
-                add_default_map_entry(VergenKey::CargoDebug, cargo_rustc_env_map, cargo_warning);
+                add_default_map_entry(
+                    *config.idempotent(),
+                    VergenKey::CargoDebug,
+                    cargo_rustc_env_map,
+                    cargo_warning,
+                );
             }
             if self.features {
-                add_default_map_entry(VergenKey::CargoFeatures, cargo_rustc_env_map, cargo_warning);
+                add_default_map_entry(
+                    *config.idempotent(),
+                    VergenKey::CargoFeatures,
+                    cargo_rustc_env_map,
+                    cargo_warning,
+                );
             }
             if self.opt_level {
-                add_default_map_entry(VergenKey::CargoOptLevel, cargo_rustc_env_map, cargo_warning);
+                add_default_map_entry(
+                    *config.idempotent(),
+                    VergenKey::CargoOptLevel,
+                    cargo_rustc_env_map,
+                    cargo_warning,
+                );
             }
             if self.target_triple {
                 add_default_map_entry(
+                    *config.idempotent(),
                     VergenKey::CargoTargetTriple,
                     cargo_rustc_env_map,
                     cargo_warning,
@@ -397,6 +413,7 @@ impl AddEntries for Cargo {
             }
             if self.dependencies {
                 add_default_map_entry(
+                    *config.idempotent(),
                     VergenKey::CargoDependencies,
                     cargo_rustc_env_map,
                     cargo_warning,
@@ -581,9 +598,23 @@ mod test {
 
     #[test]
     #[serial]
-    fn bad_env_emits_default() -> Result<()> {
+    fn bad_env_emits_warnings() -> Result<()> {
         let cargo = Cargo::all_cargo();
         let config = Emitter::default().add_instructions(&cargo)?.test_emit();
+        assert_eq!(0, config.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(config.cargo_rustc_env_map()));
+        assert_eq!(5, config.cargo_warning().len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn bad_env_emits_idempotent() -> Result<()> {
+        let cargo = Cargo::all_cargo();
+        let config = Emitter::default()
+            .idempotent()
+            .add_instructions(&cargo)?
+            .test_emit();
         assert_eq!(5, config.cargo_rustc_env_map().len());
         assert_eq!(5, count_idempotent(config.cargo_rustc_env_map()));
         assert_eq!(5, config.cargo_warning().len());

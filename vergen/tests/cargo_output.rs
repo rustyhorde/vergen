@@ -98,7 +98,6 @@ mod test_cargo {
                 .add_instructions(&cargo)?
                 .emit_to(&mut stdout_buf)?;
             let output = String::from_utf8_lossy(&stdout_buf);
-            eprintln!("output: '{output}'");
             assert!(CARGO_REGEX_NO_DEP.is_match(&output));
             Ok(())
         });
