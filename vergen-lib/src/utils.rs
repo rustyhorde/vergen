@@ -1,4 +1,4 @@
-use crate::{constants::VERGEN_IDEMPOTENT_DEFAULT, CargoRustcEnvMap, CargoWarning, VergenKey};
+use crate::{CargoRustcEnvMap, CargoWarning, VergenKey, constants::VERGEN_IDEMPOTENT_DEFAULT};
 use std::env;
 
 /// Add a [`VergenKey`] entry as a default string into the [`CargoRustcEnvMap`].
@@ -14,7 +14,7 @@ use std::env;
 ///     let mut warning: CargoWarning = vec![];
 #[cfg_attr(
     feature = "build",
-    doc = r"    add_default_map_entry(VergenKey::BuildDate, &mut map, &mut warning);
+    doc = r"    add_default_map_entry(false, VergenKey::BuildDate, &mut map, &mut warning);
 assert_eq!(1, map.len());
 assert_eq!(1, warning.len());"
 )]
@@ -22,6 +22,7 @@ assert_eq!(1, warning.len());"
 /// ```
 ///
 pub fn add_default_map_entry(
+    idempotent: bool,
     key: VergenKey,
     map: &mut CargoRustcEnvMap,
     warnings: &mut CargoWarning,
@@ -29,9 +30,11 @@ pub fn add_default_map_entry(
     if let Ok(value) = env::var(key.name()) {
         add_map_entry(key, value, map);
         warnings.push(format!("{} overidden", key.name()));
-    } else {
+    } else if idempotent {
         add_map_entry(key, VERGEN_IDEMPOTENT_DEFAULT, map);
         warnings.push(format!("{} set to default", key.name()));
+    } else {
+        warnings.push(format!("Unable to set {}", key.name()));
     }
 }
 
