@@ -75,6 +75,22 @@ cargo:rerun-if-changed=build.rs
 cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT
 cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH"
     });
+    static WARNINGS_ONLY_RE_STR: LazyLock<&'static str> = LazyLock::new(|| {
+        r"cargo:warning=(.*?)
+cargo:warning=Unable to set VERGEN_GIT_BRANCH
+cargo:warning=Unable to set VERGEN_GIT_COMMIT_AUTHOR_EMAIL
+cargo:warning=Unable to set VERGEN_GIT_COMMIT_AUTHOR_NAME
+cargo:warning=Unable to set VERGEN_GIT_COMMIT_COUNT
+cargo:warning=Unable to set VERGEN_GIT_COMMIT_DATE
+cargo:warning=Unable to set VERGEN_GIT_COMMIT_MESSAGE
+cargo:warning=Unable to set VERGEN_GIT_COMMIT_TIMESTAMP
+cargo:warning=Unable to set VERGEN_GIT_DESCRIBE
+cargo:warning=Unable to set VERGEN_GIT_SHA
+cargo:warning=Unable to set VERGEN_GIT_DIRTY
+cargo:rerun-if-changed=build.rs
+cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT
+cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH"
+    });
     static GIT_REGEX_INST: LazyLock<Regex> = LazyLock::new(|| {
         let re_str = [
             *GIT_BRANCH_RE_STR,
@@ -140,9 +156,26 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH"
         .join("\n");
         Regex::new(&re_str).unwrap()
     });
+    static ALL_WARNING_OUTPUT: LazyLock<Regex> =
+        LazyLock::new(|| Regex::new(&WARNINGS_ONLY_RE_STR).unwrap());
 
     fn repo_exists() -> Result<bool> {
         Ok(true)
+    }
+
+    #[test]
+    #[serial]
+    fn git_all_output() -> Result<()> {
+        let mut stdout_buf = vec![];
+        let mut gitcl = Gitcl::all_git();
+        let _ = gitcl.at_path(temp_dir());
+        let failed = Emitter::default()
+            .add_instructions(&gitcl)?
+            .emit_to(&mut stdout_buf)?;
+        let output = String::from_utf8_lossy(&stdout_buf);
+        assert!(!failed);
+        assert!(ALL_WARNING_OUTPUT.is_match(&output));
+        Ok(())
     }
 
     #[test]
@@ -152,6 +185,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH"
         let mut gitcl = Gitcl::all_git();
         let _ = gitcl.at_path(temp_dir());
         let failed = Emitter::default()
+            .idempotent()
             .add_instructions(&gitcl)?
             .emit_to(&mut stdout_buf)?;
         let output = String::from_utf8_lossy(&stdout_buf);

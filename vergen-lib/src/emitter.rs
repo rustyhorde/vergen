@@ -203,7 +203,7 @@ impl Emitter {
                 &mut self.cargo_warning,
             )
             .or_else(|e| {
-                let default_config = DefaultConfig::new(self.fail_on_error, e);
+                let default_config = DefaultConfig::new(self.idempotent, self.fail_on_error, e);
                 entries.add_default_entries(
                     &default_config,
                     &mut self.cargo_rustc_env_map,
@@ -237,7 +237,7 @@ impl Emitter {
                 &mut self.cargo_warning,
             )
             .or_else(|e| {
-                let default_config = DefaultConfig::new(self.fail_on_error, e);
+                let default_config = DefaultConfig::new(self.idempotent, self.fail_on_error, e);
                 custom_entries.add_default_entries(
                     &default_config,
                     &mut map,

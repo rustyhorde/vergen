@@ -427,7 +427,6 @@ let build = Build::builder().build_timestamp(true).build();"
         while_true,
     )
 )]
-#![cfg_attr(all(nightly), allow(unstable_features))]
 // If nightly and unstable, allow `incomplete_features` and `unstable_features`
 #![cfg_attr(
     all(feature = "unstable", nightly),

@@ -13,6 +13,8 @@ pub type CargoWarning = Vec<String>;
 /// The default configuration to use when an issue has occured generating instructions
 #[derive(Debug)]
 pub struct DefaultConfig {
+    /// Should idempotent output be generated?
+    idempotent: bool,
     /// Should we fail if an error occurs or output idempotent values on error?
     fail_on_error: bool,
     /// The error that caused us to try default instruction output.
@@ -22,11 +24,17 @@ pub struct DefaultConfig {
 impl DefaultConfig {
     /// Create a new [`DefaultConfig`] struct with the given values.
     #[must_use]
-    pub fn new(fail_on_error: bool, error: Error) -> Self {
+    pub fn new(idempotent: bool, fail_on_error: bool, error: Error) -> Self {
         Self {
+            idempotent,
             fail_on_error,
             error,
         }
+    }
+    /// Should idempotent output be generated?
+    #[must_use]
+    pub fn idempotent(&self) -> &bool {
+        &self.idempotent
     }
     /// Should we fail if an error occurs or output idempotent values on error?
     #[must_use]
@@ -231,7 +239,7 @@ mod test {
 
     #[test]
     fn default_config_debug() -> Result<()> {
-        let config = DefaultConfig::new(true, anyhow!("blah"));
+        let config = DefaultConfig::new(true, true, anyhow!("blah"));
         let mut buf = vec![];
         write!(buf, "{config:?}")?;
         assert!(!buf.is_empty());

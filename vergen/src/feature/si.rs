@@ -251,11 +251,11 @@ impl Sysinfo {
         cargo_warning: &mut CargoWarning,
     ) {
         if idempotent {
-            add_default_map_entry(key, cargo_rustc_env, cargo_warning);
+            add_default_map_entry(idempotent, key, cargo_rustc_env, cargo_warning);
         } else if let Some(val) = value {
             add_map_entry(key, val, cargo_rustc_env);
         } else {
-            add_default_map_entry(key, cargo_rustc_env, cargo_warning);
+            add_default_map_entry(idempotent, key, cargo_rustc_env, cargo_warning);
         }
     }
 
@@ -268,7 +268,12 @@ impl Sysinfo {
     ) {
         if self.name {
             if let Ok(_value) = env::var(SYSINFO_NAME) {
-                add_default_map_entry(VergenKey::SysinfoName, cargo_rustc_env, cargo_warning);
+                add_default_map_entry(
+                    idempotent,
+                    VergenKey::SysinfoName,
+                    cargo_rustc_env,
+                    cargo_warning,
+                );
             } else {
                 Self::add_sysinfo_map_entry(
                     VergenKey::SysinfoName,
@@ -799,9 +804,27 @@ mod test {
         let mut si = Sysinfo::all_sysinfo();
         let _ = si.fail_pid();
         let emitter = Emitter::default().add_instructions(&si)?.test_emit();
-        assert_eq!(SYSINFO_COUNT, emitter.cargo_rustc_env_map().len());
-        assert_eq!(1, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(8, emitter.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
         assert_eq!(1, emitter.cargo_warning().len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn pid_lookup_fails_idempotent() -> Result<()> {
+        let mut si = Sysinfo::all_sysinfo();
+        let _ = si.fail_pid();
+        let emitter = Emitter::default()
+            .idempotent()
+            .add_instructions(&si)?
+            .test_emit();
+        assert_eq!(SYSINFO_COUNT, emitter.cargo_rustc_env_map().len());
+        assert_eq!(
+            SYSINFO_COUNT,
+            count_idempotent(emitter.cargo_rustc_env_map())
+        );
+        assert_eq!(SYSINFO_COUNT, emitter.cargo_warning().len());
         Ok(())
     }
 
