@@ -980,7 +980,10 @@ mod test {
     fn git_error_idempotent() -> Result<()> {
         let mut gix = Gix::all_git();
         let _ = gix.at_path(temp_dir());
-        let emitter = Emitter::default().idempotent().add_instructions(&gix)?.test_emit();
+        let emitter = Emitter::default()
+            .idempotent()
+            .add_instructions(&gix)?
+            .test_emit();
         assert_eq!(10, emitter.cargo_rustc_env_map().len());
         assert_eq!(10, count_idempotent(emitter.cargo_rustc_env_map()));
         assert_eq!(11, emitter.cargo_warning().len());

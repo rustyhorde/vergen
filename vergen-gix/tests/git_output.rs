@@ -157,7 +157,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH"
         Regex::new(&re_str).unwrap()
     });
     static ALL_WARNING_OUTPUT: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(&WARNINGS_ONLY_RE_STR).unwrap());
+        LazyLock::new(|| Regex::new(&WARNINGS_ONLY_RE_STR).unwrap());
 
     fn repo_exists() -> Result<()> {
         let curr_dir = env::current_dir()?;
