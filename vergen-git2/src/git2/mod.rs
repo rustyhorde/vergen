@@ -556,7 +556,6 @@ impl Git2 {
         Ok(())
     }
 
-    #[allow(clippy::map_unwrap_or)]
     fn add_opt_value(
         idempotent: bool,
         value: Option<&str>,
@@ -564,11 +563,11 @@ impl Git2 {
         cargo_rustc_env: &mut CargoRustcEnvMap,
         cargo_warning: &mut CargoWarning,
     ) {
-        value
-            .map(|val| add_map_entry(key, val, cargo_rustc_env))
-            .unwrap_or_else(|| {
-                add_default_map_entry(idempotent, key, cargo_rustc_env, cargo_warning)
-            });
+        if let Some(val) = value {
+            add_map_entry(key, val, cargo_rustc_env);
+        } else {
+            add_default_map_entry(idempotent, key, cargo_rustc_env, cargo_warning);
+        }
     }
 
     fn add_commit_count(
