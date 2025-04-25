@@ -255,7 +255,6 @@ let build = Build::builder().build_timestamp(true).build();"
 #![cfg_attr(
     nightly,
     deny(
-        abi_unsupported_vector_types,
         absolute_paths_not_starting_with_crate,
         ambiguous_glob_imports,
         ambiguous_glob_reexports,
