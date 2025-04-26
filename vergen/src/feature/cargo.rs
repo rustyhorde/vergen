@@ -6,17 +6,18 @@
 // option. All files in the project carrying such notice may not be copied,
 // modified, or distributed except according to those terms.
 
-use anyhow::{anyhow, Error, Result};
+use self::cargo_builder::{SetDebug, SetDependencies, SetFeatures, SetOptLevel, SetTargetTriple};
+use anyhow::{Error, Result, anyhow};
+use bon::Builder;
 use cargo_metadata::{DepKindInfo, DependencyKind, MetadataCommand, Package, PackageId};
-use derive_builder::Builder as DeriveBuilder;
 use regex::Regex;
 use std::env;
 use vergen_lib::{
+    AddEntries, CargoRerunIfChanged, CargoRustcEnvMap, CargoWarning, DefaultConfig, VergenKey,
     add_default_map_entry, add_map_entry,
     constants::{
         CARGO_DEBUG, CARGO_DEPENDENCIES, CARGO_FEATURES, CARGO_OPT_LEVEL, CARGO_TARGET_TRIPLE,
     },
-    AddEntries, CargoRerunIfChanged, CargoRustcEnvMap, CargoWarning, DefaultConfig, VergenKey,
 };
 
 /// Configure the emission of `VERGEN_CARGO_*` instructions
@@ -39,7 +40,7 @@ use vergen_lib::{
 /// # use anyhow::Result;
 /// # use std::env;
 /// # use vergen::Emitter;
-/// # use vergen::CargoBuilder;
+/// # use vergen::Cargo;
 /// #
 /// fn main() -> Result<()> {
 ///     temp_env::with_vars([
@@ -49,7 +50,7 @@ use vergen_lib::{
 ///         ("TARGET", Some("x86_64-unknown-linux-gnu"))
 ///     ], || {
 /// #        let result = || -> Result<()> {
-///         let cargo = CargoBuilder::all_cargo()?;
+///         let cargo = Cargo::all_cargo();
 ///         Emitter::default().add_instructions(&cargo)?.emit()?;
 /// #        Ok(())
 /// #        }();
@@ -62,7 +63,7 @@ use vergen_lib::{
 /// ```
 /// # use anyhow::Result;
 /// # use vergen::Emitter;
-/// # use vergen::CargoBuilder;
+/// # use vergen::Cargo;
 /// #
 /// # fn main() -> Result<()> {
 ///     temp_env::with_vars([
@@ -70,7 +71,7 @@ use vergen_lib::{
 ///         ("TARGET", Some("x86_64-unknown-linux-gnu"))
 ///     ], || {
 /// #        let result = || -> Result<()> {
-///         let cargo = CargoBuilder::default().opt_level(true).build()?;
+///         let cargo = Cargo::builder().opt_level(true).build();
 ///         Emitter::default().add_instructions(&cargo)?.emit()?;
 /// #        Ok(())
 /// #        }();
@@ -85,7 +86,7 @@ use vergen_lib::{
 /// # use anyhow::Result;
 /// # use std::env;
 /// # use vergen::Emitter;
-/// # use vergen::CargoBuilder;
+/// # use vergen::Cargo;
 /// #
 /// fn main() -> Result<()> {
 ///     temp_env::with_vars([
@@ -95,7 +96,7 @@ use vergen_lib::{
 ///         ("TARGET", Some("x86_64-unknown-linux-gnu"))
 ///      ], || {
 /// #        let result = || -> Result<()> {
-///          let cargo = CargoBuilder::all_cargo()?;
+///          let cargo = Cargo::all_cargo();
 ///          Emitter::default().add_instructions(&cargo)?.emit()?;
 /// #        Ok(())
 /// #        }();
@@ -104,16 +105,21 @@ use vergen_lib::{
 /// # }
 /// ```
 ///
-#[derive(Clone, Copy, Debug, DeriveBuilder, PartialEq)]
+#[derive(Builder, Clone, Copy, Debug, PartialEq)]
 #[allow(clippy::struct_excessive_bools)]
 pub struct Cargo {
+    /// Configures the default values.
+    /// If set to `true` all defaults are in "enabled" state.
+    /// If set to `false` all defaults are in "disabled" state.
+    #[builder(field)]
+    all: bool,
     /// Emit the DEBUG value set by cargo
     ///
     /// ```text
     /// cargo:rustc-env=VERGEN_CARGO_DEBUG=true|false
     /// ```
     ///
-    #[builder(default = "false")]
+    #[builder(default = all)]
     debug: bool,
     /// Emit the `CARGO_FEATURE_*` values set by cargo
     ///
@@ -121,7 +127,7 @@ pub struct Cargo {
     /// cargo:rustc-env=VERGEN_CARGO_FEATURES=<features>
     /// ```
     ///
-    #[builder(default = "false")]
+    #[builder(default = all)]
     features: bool,
     /// Emit the `OPT_LEVEL` value set by cargo
     ///
@@ -129,7 +135,7 @@ pub struct Cargo {
     /// cargo:rustc-env=VERGEN_CARGO_OPT_LEVEL=<opt_level>
     /// ```
     ///
-    #[builder(default = "false")]
+    #[builder(default = all)]
     opt_level: bool,
     /// Emit the TARGET value set by cargo
     ///
@@ -137,7 +143,7 @@ pub struct Cargo {
     /// cargo:rustc-env=VERGEN_CARGO_TARGET_TRIPLE=<target_triple>
     /// ```
     ///
-    #[builder(default = "false")]
+    #[builder(default = all)]
     target_triple: bool,
     /// Emit the dependencies value derived from `Cargo.toml`
     ///
@@ -145,7 +151,7 @@ pub struct Cargo {
     /// cargo:rustc-env=VERGEN_CARGO_DEPENDENCIES=<dependencies>
     /// ```
     ///
-    #[builder(default = "false")]
+    #[builder(default = all)]
     dependencies: bool,
     /// Add a name [`Regex`](regex::Regex) filter for cargo dependencies
     ///
@@ -153,7 +159,7 @@ pub struct Cargo {
     /// cargo:rustc-env=VERGEN_CARGO_DEPENDENCIES=<deps_filtered_by_name>
     /// ```
     ///
-    #[builder(default = "None", setter(into))]
+    #[builder(into)]
     name_filter: Option<&'static str>,
     /// Add a [`DependencyKind`](cargo_metadata::DependencyKind) filter for cargo dependencies
     ///
@@ -161,29 +167,39 @@ pub struct Cargo {
     /// cargo:rustc-env=VERGEN_CARGO_DEPENDENCIES=<deps_filtered_by_kind>
     /// ```
     ///
-    #[builder(default = "None", setter(into))]
+    #[builder(into)]
     dep_kind_filter: Option<DependencyKind>,
 }
 
-impl CargoBuilder {
+impl<S: cargo_builder::State> CargoBuilder<S> {
+    /// Convenience method that switches the defaults of [`CargoBuilder`]
+    /// to enable all of the `VERGEN_CARGO_*` instructions. It can only be
+    /// called at the start of the building process, i.e. when no config
+    /// has been set yet to avoid overwrites.
+    fn all(mut self) -> Self {
+        self.all = true;
+        self
+    }
+}
+
+impl Cargo {
     /// Emit all of the `VERGEN_CARGO_*` instructions
-    ///
-    /// # Errors
-    /// The underlying build function can error.
-    ///
-    pub fn all_cargo() -> Result<Cargo> {
-        Self::default()
+    #[must_use]
+    pub fn all_cargo() -> Self {
+        Self::builder().all().build()
+    }
+
+    /// Emit all of the `VERGEN_CARGO_*` instructions and return the builder
+    pub fn all_cargo_builder()
+    -> CargoBuilder<SetDependencies<SetTargetTriple<SetOptLevel<SetFeatures<SetDebug>>>>> {
+        Self::builder()
             .debug(true)
             .features(true)
             .opt_level(true)
             .target_triple(true)
             .dependencies(true)
-            .build()
-            .map_err(Into::into)
     }
-}
 
-impl Cargo {
     fn any(self) -> bool {
         self.debug || self.features || self.opt_level || self.target_triple || self.dependencies
     }
@@ -364,16 +380,32 @@ impl AddEntries for Cargo {
             Err(error)
         } else {
             if self.debug {
-                add_default_map_entry(VergenKey::CargoDebug, cargo_rustc_env_map, cargo_warning);
+                add_default_map_entry(
+                    *config.idempotent(),
+                    VergenKey::CargoDebug,
+                    cargo_rustc_env_map,
+                    cargo_warning,
+                );
             }
             if self.features {
-                add_default_map_entry(VergenKey::CargoFeatures, cargo_rustc_env_map, cargo_warning);
+                add_default_map_entry(
+                    *config.idempotent(),
+                    VergenKey::CargoFeatures,
+                    cargo_rustc_env_map,
+                    cargo_warning,
+                );
             }
             if self.opt_level {
-                add_default_map_entry(VergenKey::CargoOptLevel, cargo_rustc_env_map, cargo_warning);
+                add_default_map_entry(
+                    *config.idempotent(),
+                    VergenKey::CargoOptLevel,
+                    cargo_rustc_env_map,
+                    cargo_warning,
+                );
             }
             if self.target_triple {
                 add_default_map_entry(
+                    *config.idempotent(),
                     VergenKey::CargoTargetTriple,
                     cargo_rustc_env_map,
                     cargo_warning,
@@ -381,6 +413,7 @@ impl AddEntries for Cargo {
             }
             if self.dependencies {
                 add_default_map_entry(
+                    *config.idempotent(),
                     VergenKey::CargoDependencies,
                     cargo_rustc_env_map,
                     cargo_warning,
@@ -393,7 +426,7 @@ impl AddEntries for Cargo {
 
 #[cfg(test)]
 mod test {
-    use super::CargoBuilder;
+    use super::Cargo;
     use crate::Emitter;
     use anyhow::Result;
     use serial_test::serial;
@@ -405,7 +438,7 @@ mod test {
     #[serial]
     #[allow(clippy::clone_on_copy, clippy::redundant_clone)]
     fn cargo_clone_works() -> Result<()> {
-        let cargo = CargoBuilder::all_cargo()?;
+        let cargo = Cargo::all_cargo();
         let another = cargo.clone();
         assert_eq!(another, cargo);
         Ok(())
@@ -414,7 +447,7 @@ mod test {
     #[test]
     #[serial]
     fn cargo_debug_works() -> Result<()> {
-        let cargo = CargoBuilder::all_cargo()?;
+        let cargo = Cargo::all_cargo();
         let mut buf = vec![];
         write!(buf, "{cargo:?}")?;
         assert!(!buf.is_empty());
@@ -424,7 +457,7 @@ mod test {
     #[test]
     #[serial]
     fn cargo_default() -> Result<()> {
-        let cargo = CargoBuilder::default().build()?;
+        let cargo = Cargo::builder().build();
         let emitter = Emitter::default().add_instructions(&cargo)?.test_emit();
         assert_eq!(0, emitter.cargo_rustc_env_map().len());
         assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
@@ -436,7 +469,7 @@ mod test {
     #[serial]
     fn all_idempotent() {
         let result = with_cargo_vars(|| {
-            let cargo = CargoBuilder::all_cargo()?;
+            let cargo = Cargo::all_cargo();
             let config = Emitter::default()
                 .idempotent()
                 .add_instructions(&cargo)?
@@ -453,7 +486,7 @@ mod test {
     #[serial]
     fn all() {
         let result = with_cargo_vars(|| {
-            let cargo = CargoBuilder::all_cargo()?;
+            let cargo = Cargo::all_cargo();
             let config = Emitter::default().add_instructions(&cargo)?.test_emit();
             assert_eq!(5, config.cargo_rustc_env_map().len());
             assert_eq!(0, count_idempotent(config.cargo_rustc_env_map()));
@@ -467,7 +500,7 @@ mod test {
     #[serial]
     fn debug() {
         let result = with_cargo_vars(|| {
-            let cargo = CargoBuilder::default().debug(true).build()?;
+            let cargo = Cargo::builder().debug(true).build();
             let config = Emitter::default().add_instructions(&cargo)?.test_emit();
             assert_eq!(1, config.cargo_rustc_env_map().len());
             assert_eq!(0, count_idempotent(config.cargo_rustc_env_map()));
@@ -481,7 +514,7 @@ mod test {
     #[serial]
     fn features() {
         let result = with_cargo_vars(|| {
-            let cargo = CargoBuilder::default().features(true).build()?;
+            let cargo = Cargo::builder().features(true).build();
             let config = Emitter::default().add_instructions(&cargo)?.test_emit();
             assert_eq!(1, config.cargo_rustc_env_map().len());
             assert_eq!(0, count_idempotent(config.cargo_rustc_env_map()));
@@ -495,7 +528,7 @@ mod test {
     #[serial]
     fn opt_level() {
         let result = with_cargo_vars(|| {
-            let cargo = CargoBuilder::default().opt_level(true).build()?;
+            let cargo = Cargo::builder().opt_level(true).build();
             let config = Emitter::default().add_instructions(&cargo)?.test_emit();
             assert_eq!(1, config.cargo_rustc_env_map().len());
             assert_eq!(0, count_idempotent(config.cargo_rustc_env_map()));
@@ -509,7 +542,7 @@ mod test {
     #[serial]
     fn target_triple() {
         let result = with_cargo_vars(|| {
-            let cargo = CargoBuilder::default().target_triple(true).build()?;
+            let cargo = Cargo::builder().target_triple(true).build();
             let config = Emitter::default().add_instructions(&cargo)?.test_emit();
             assert_eq!(1, config.cargo_rustc_env_map().len());
             assert_eq!(0, count_idempotent(config.cargo_rustc_env_map()));
@@ -523,10 +556,10 @@ mod test {
     #[serial]
     fn dependencies() {
         let result = with_cargo_vars(|| {
-            let cargo = CargoBuilder::default()
+            let cargo = Cargo::builder()
                 .dependencies(true)
                 .name_filter("anyhow")
-                .build()?;
+                .build();
             let config = Emitter::default().add_instructions(&cargo)?.test_emit();
             assert_eq!(1, config.cargo_rustc_env_map().len());
             assert_eq!(0, count_idempotent(config.cargo_rustc_env_map()));
@@ -540,10 +573,7 @@ mod test {
     #[serial]
     fn dependencies_bad_name_filter() {
         let result = with_cargo_vars(|| {
-            let cargo = CargoBuilder::default()
-                .dependencies(true)
-                .name_filter("(")
-                .build()?;
+            let cargo = Cargo::builder().dependencies(true).name_filter("(").build();
             let config = Emitter::default().add_instructions(&cargo)?.test_emit();
             assert_eq!(1, config.cargo_rustc_env_map().len());
             assert_eq!(0, count_idempotent(config.cargo_rustc_env_map()));
@@ -556,19 +586,35 @@ mod test {
     #[test]
     #[serial]
     fn bad_env_fails() -> Result<()> {
-        let cargo = CargoBuilder::all_cargo()?;
-        assert!(Emitter::default()
-            .fail_on_error()
-            .add_instructions(&cargo)
-            .is_err());
+        let cargo = Cargo::all_cargo();
+        assert!(
+            Emitter::default()
+                .fail_on_error()
+                .add_instructions(&cargo)
+                .is_err()
+        );
         Ok(())
     }
 
     #[test]
     #[serial]
-    fn bad_env_emits_default() -> Result<()> {
-        let cargo = CargoBuilder::all_cargo()?;
+    fn bad_env_emits_warnings() -> Result<()> {
+        let cargo = Cargo::all_cargo();
         let config = Emitter::default().add_instructions(&cargo)?.test_emit();
+        assert_eq!(0, config.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(config.cargo_rustc_env_map()));
+        assert_eq!(5, config.cargo_warning().len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn bad_env_emits_idempotent() -> Result<()> {
+        let cargo = Cargo::all_cargo();
+        let config = Emitter::default()
+            .idempotent()
+            .add_instructions(&cargo)?
+            .test_emit();
         assert_eq!(5, config.cargo_rustc_env_map().len());
         assert_eq!(5, count_idempotent(config.cargo_rustc_env_map()));
         assert_eq!(5, config.cargo_warning().len());
@@ -582,11 +628,13 @@ mod test {
             &[("VERGEN_CARGO_DEBUG", Some("this is a bad date"))],
             || {
                 let mut stdout_buf = vec![];
-                let cargo = CargoBuilder::all_cargo()?;
-                assert!(Emitter::default()
-                    .add_instructions(&cargo)?
-                    .emit_to(&mut stdout_buf)
-                    .is_ok());
+                let cargo = Cargo::all_cargo();
+                assert!(
+                    Emitter::default()
+                        .add_instructions(&cargo)?
+                        .emit_to(&mut stdout_buf)
+                        .is_ok()
+                );
                 let output = String::from_utf8_lossy(&stdout_buf);
                 assert!(output.contains("cargo:rustc-env=VERGEN_CARGO_DEBUG=this is a bad date"));
                 Ok(())
@@ -602,13 +650,17 @@ mod test {
             &[("VERGEN_CARGO_FEATURES", Some("this is a bad date"))],
             || {
                 let mut stdout_buf = vec![];
-                let cargo = CargoBuilder::all_cargo()?;
-                assert!(Emitter::default()
-                    .add_instructions(&cargo)?
-                    .emit_to(&mut stdout_buf)
-                    .is_ok());
+                let cargo = Cargo::all_cargo();
+                assert!(
+                    Emitter::default()
+                        .add_instructions(&cargo)?
+                        .emit_to(&mut stdout_buf)
+                        .is_ok()
+                );
                 let output = String::from_utf8_lossy(&stdout_buf);
-                assert!(output.contains("cargo:rustc-env=VERGEN_CARGO_FEATURES=this is a bad date"));
+                assert!(
+                    output.contains("cargo:rustc-env=VERGEN_CARGO_FEATURES=this is a bad date")
+                );
                 Ok(())
             },
         );
@@ -622,11 +674,13 @@ mod test {
             &[("VERGEN_CARGO_OPT_LEVEL", Some("this is a bad date"))],
             || {
                 let mut stdout_buf = vec![];
-                let cargo = CargoBuilder::all_cargo()?;
-                assert!(Emitter::default()
-                    .add_instructions(&cargo)?
-                    .emit_to(&mut stdout_buf)
-                    .is_ok());
+                let cargo = Cargo::all_cargo();
+                assert!(
+                    Emitter::default()
+                        .add_instructions(&cargo)?
+                        .emit_to(&mut stdout_buf)
+                        .is_ok()
+                );
                 let output = String::from_utf8_lossy(&stdout_buf);
                 assert!(
                     output.contains("cargo:rustc-env=VERGEN_CARGO_OPT_LEVEL=this is a bad date")
@@ -644,14 +698,18 @@ mod test {
             &[("VERGEN_CARGO_TARGET_TRIPLE", Some("this is a bad date"))],
             || {
                 let mut stdout_buf = vec![];
-                let cargo = CargoBuilder::all_cargo()?;
-                assert!(Emitter::default()
-                    .add_instructions(&cargo)?
-                    .emit_to(&mut stdout_buf)
-                    .is_ok());
+                let cargo = Cargo::all_cargo();
+                assert!(
+                    Emitter::default()
+                        .add_instructions(&cargo)?
+                        .emit_to(&mut stdout_buf)
+                        .is_ok()
+                );
                 let output = String::from_utf8_lossy(&stdout_buf);
-                assert!(output
-                    .contains("cargo:rustc-env=VERGEN_CARGO_TARGET_TRIPLE=this is a bad date"));
+                assert!(
+                    output
+                        .contains("cargo:rustc-env=VERGEN_CARGO_TARGET_TRIPLE=this is a bad date")
+                );
                 Ok(())
             },
         );
@@ -665,11 +723,13 @@ mod test {
             &[("VERGEN_CARGO_DEPENDENCIES", Some("this is a bad date"))],
             || {
                 let mut stdout_buf = vec![];
-                let cargo = CargoBuilder::all_cargo()?;
-                assert!(Emitter::default()
-                    .add_instructions(&cargo)?
-                    .emit_to(&mut stdout_buf)
-                    .is_ok());
+                let cargo = Cargo::all_cargo();
+                assert!(
+                    Emitter::default()
+                        .add_instructions(&cargo)?
+                        .emit_to(&mut stdout_buf)
+                        .is_ok()
+                );
                 let output = String::from_utf8_lossy(&stdout_buf);
                 assert!(
                     output.contains("cargo:rustc-env=VERGEN_CARGO_DEPENDENCIES=this is a bad date")

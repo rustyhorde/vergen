@@ -13,6 +13,8 @@ pub type CargoWarning = Vec<String>;
 /// The default configuration to use when an issue has occured generating instructions
 #[derive(Debug)]
 pub struct DefaultConfig {
+    /// Should idempotent output be generated?
+    idempotent: bool,
     /// Should we fail if an error occurs or output idempotent values on error?
     fail_on_error: bool,
     /// The error that caused us to try default instruction output.
@@ -22,11 +24,17 @@ pub struct DefaultConfig {
 impl DefaultConfig {
     /// Create a new [`DefaultConfig`] struct with the given values.
     #[must_use]
-    pub fn new(fail_on_error: bool, error: Error) -> Self {
+    pub fn new(idempotent: bool, fail_on_error: bool, error: Error) -> Self {
         Self {
+            idempotent,
             fail_on_error,
             error,
         }
+    }
+    /// Should idempotent output be generated?
+    #[must_use]
+    pub fn idempotent(&self) -> &bool {
+        &self.idempotent
     }
     /// Should we fail if an error occurs or output idempotent values on error?
     #[must_use]
@@ -174,13 +182,14 @@ pub trait AddCustom<K: Into<String> + Ord, V: Into<String>> {
 #[doc(hidden)]
 pub(crate) mod test_gen {
     use crate::{AddCustomEntries, CargoRerunIfChanged, CargoWarning};
-    use anyhow::{anyhow, Result};
-    use derive_builder::Builder;
+    use anyhow::{Result, anyhow};
+    use bon::Builder;
     use std::collections::BTreeMap;
 
     #[doc(hidden)]
     #[derive(Builder, Clone, Copy, Debug, Default)]
     pub struct CustomInsGen {
+        #[builder(default = false)]
         fail: bool,
     }
 
@@ -225,12 +234,12 @@ pub(crate) mod test_gen {
 #[cfg(test)]
 mod test {
     use super::DefaultConfig;
-    use anyhow::{anyhow, Result};
+    use anyhow::{Result, anyhow};
     use std::io::Write;
 
     #[test]
     fn default_config_debug() -> Result<()> {
-        let config = DefaultConfig::new(true, anyhow!("blah"));
+        let config = DefaultConfig::new(true, true, anyhow!("blah"));
         let mut buf = vec![];
         write!(buf, "{config:?}")?;
         assert!(!buf.is_empty());
