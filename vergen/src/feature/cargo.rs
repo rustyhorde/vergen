@@ -332,7 +332,11 @@ impl Cargo {
     }
 
     #[cfg(not(feature = "cargo_metadata"))]
-    #[allow(clippy::unnecessary_wraps, clippy::unused_self, clippy::trivially_copy_pass_by_ref)]
+    #[allow(
+        clippy::unnecessary_wraps,
+        clippy::unused_self,
+        clippy::trivially_copy_pass_by_ref
+    )]
     fn add_dependencies(&self, _cargo_rustc_env: &mut CargoRustcEnvMap) -> Result<()> {
         Ok(())
     }
