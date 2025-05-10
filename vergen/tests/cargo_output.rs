@@ -2,6 +2,7 @@
 mod test_cargo {
     use std::sync::LazyLock;
 
+    #[cfg(feature = "cargo_metadata")]
     use cargo_metadata::DependencyKind;
     use regex::Regex;
     use serial_test::serial;
@@ -17,13 +18,17 @@ mod test_cargo {
         LazyLock::new(|| r"cargo:rustc-env=VERGEN_CARGO_OPT_LEVEL=\d{1}");
     static CARGO_TT_RE_STR: LazyLock<&'static str> =
         LazyLock::new(|| r"cargo:rustc-env=VERGEN_CARGO_TARGET_TRIPLE=[a-zA-Z0-9-_]+");
+    #[cfg(feature = "cargo_metadata")]
     static CARGO_DEP_RE_STR: LazyLock<&'static str> =
         LazyLock::new(|| r"cargo:rustc-env=VERGEN_CARGO_DEPENDENCIES=.*");
+    #[cfg(feature = "cargo_metadata")]
     static CARGO_DEP_NAME_RE_STR: LazyLock<&'static str> =
         LazyLock::new(|| r"(?m)^cargo:rustc-env=VERGEN_CARGO_DEPENDENCIES=anyhow 1\.0\.[0-9]{2,}$");
+    #[cfg(feature = "cargo_metadata")]
     static CARGO_DEP_DK_RE_STR: LazyLock<&'static str> = LazyLock::new(
         || r"(?m)^cargo:rustc-env=VERGEN_CARGO_DEPENDENCIES=regex 1\.[0-9]{1,}\.[0-9]{1,}$",
     );
+    #[cfg(feature = "cargo_metadata")]
     static CARGO_DEP_RV_RE_STR: LazyLock<&'static str> = LazyLock::new(
         || r"(?m)^cargo:rustc-env=VERGEN_CARGO_DEPENDENCIES=rustversion 1\.0\.[0-9]{2,}$",
     );
@@ -33,11 +38,13 @@ mod test_cargo {
             *CARGO_FEA_RE_STR,
             *CARGO_OPT_LEVEL_RE_STR,
             *CARGO_TT_RE_STR,
+            #[cfg(feature = "cargo_metadata")]
             *CARGO_DEP_RE_STR,
         ]
         .join("\n");
         Regex::new(&re_str).unwrap()
     });
+    #[cfg(feature = "cargo_metadata")]
     static CARGO_REGEX_NO_DEP: LazyLock<Regex> = LazyLock::new(|| {
         let re_str = [
             *CARGO_DEBUG_RE_STR,
@@ -48,10 +55,13 @@ mod test_cargo {
         .join("\n");
         Regex::new(&re_str).unwrap()
     });
+    #[cfg(feature = "cargo_metadata")]
     static CARGO_REGEX_NAME: LazyLock<Regex> =
         LazyLock::new(|| Regex::new(&CARGO_DEP_NAME_RE_STR).unwrap());
+    #[cfg(feature = "cargo_metadata")]
     static CARGO_REGEX_DK: LazyLock<Regex> =
         LazyLock::new(|| Regex::new(&CARGO_DEP_DK_RE_STR).unwrap());
+    #[cfg(feature = "cargo_metadata")]
     static CARGO_REGEX_RV: LazyLock<Regex> =
         LazyLock::new(|| Regex::new(&CARGO_DEP_RV_RE_STR).unwrap());
 
@@ -90,6 +100,7 @@ mod test_cargo {
 
     #[test]
     #[serial]
+    #[cfg(feature = "cargo_metadata")]
     fn cargo_all_name_filter_none_output() {
         let result = with_cargo_vars(|| {
             let mut stdout_buf = vec![];
@@ -106,6 +117,7 @@ mod test_cargo {
 
     #[test]
     #[serial]
+    #[cfg(feature = "cargo_metadata")]
     fn cargo_all_name_filter_some_output() {
         let result = with_cargo_vars(|| {
             let mut stdout_buf = vec![];
@@ -123,6 +135,7 @@ mod test_cargo {
 
     #[test]
     #[serial]
+    #[cfg(feature = "cargo_metadata")]
     fn cargo_all_dep_kind_filter_output() {
         let result = with_cargo_vars(|| {
             let mut stdout_buf = vec![];
@@ -142,6 +155,7 @@ mod test_cargo {
 
     #[test]
     #[serial]
+    #[cfg(feature = "cargo_metadata")]
     fn cargo_all_dep_kind_filter_with_name_filter_output() {
         let result = with_cargo_vars(|| {
             let mut stdout_buf = vec![];

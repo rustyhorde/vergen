@@ -493,7 +493,7 @@ pub use vergen::Build;
 pub use vergen::Cargo;
 #[cfg(feature = "si")]
 pub use vergen::CpuRefreshKind;
-#[cfg(feature = "cargo")]
+#[cfg(feature = "cargo_metadata")]
 pub use vergen::DependencyKind;
 #[cfg(feature = "si")]
 pub use vergen::MemoryRefreshKind;

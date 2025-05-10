@@ -6,18 +6,24 @@
 // option. All files in the project carrying such notice may not be copied,
 // modified, or distributed except according to those terms.
 
-use self::cargo_builder::{SetDebug, SetDependencies, SetFeatures, SetOptLevel, SetTargetTriple};
-use anyhow::{Error, Result, anyhow};
+#[cfg(feature = "cargo_metadata")]
+use self::cargo_builder::SetDependencies;
+use self::cargo_builder::{SetDebug, SetFeatures, SetOptLevel, SetTargetTriple};
+#[cfg(feature = "cargo_metadata")]
+use anyhow::anyhow;
+use anyhow::{Error, Result};
 use bon::Builder;
+#[cfg(feature = "cargo_metadata")]
 use cargo_metadata::{DepKindInfo, DependencyKind, MetadataCommand, Package, PackageId};
+#[cfg(feature = "cargo_metadata")]
 use regex::Regex;
 use std::env;
+#[cfg(feature = "cargo_metadata")]
+use vergen_lib::constants::CARGO_DEPENDENCIES;
 use vergen_lib::{
     AddEntries, CargoRerunIfChanged, CargoRustcEnvMap, CargoWarning, DefaultConfig, VergenKey,
     add_default_map_entry, add_map_entry,
-    constants::{
-        CARGO_DEBUG, CARGO_DEPENDENCIES, CARGO_FEATURES, CARGO_OPT_LEVEL, CARGO_TARGET_TRIPLE,
-    },
+    constants::{CARGO_DEBUG, CARGO_FEATURES, CARGO_OPT_LEVEL, CARGO_TARGET_TRIPLE},
 };
 
 /// Configure the emission of `VERGEN_CARGO_*` instructions
@@ -151,6 +157,7 @@ pub struct Cargo {
     /// cargo:rustc-env=VERGEN_CARGO_DEPENDENCIES=<dependencies>
     /// ```
     ///
+    #[cfg(feature = "cargo_metadata")]
     #[builder(default = all)]
     dependencies: bool,
     /// Add a name [`Regex`](regex::Regex) filter for cargo dependencies
@@ -159,6 +166,7 @@ pub struct Cargo {
     /// cargo:rustc-env=VERGEN_CARGO_DEPENDENCIES=<deps_filtered_by_name>
     /// ```
     ///
+    #[cfg(feature = "cargo_metadata")]
     #[builder(into)]
     name_filter: Option<&'static str>,
     /// Add a [`DependencyKind`](cargo_metadata::DependencyKind) filter for cargo dependencies
@@ -167,6 +175,7 @@ pub struct Cargo {
     /// cargo:rustc-env=VERGEN_CARGO_DEPENDENCIES=<deps_filtered_by_kind>
     /// ```
     ///
+    #[cfg(feature = "cargo_metadata")]
     #[builder(into)]
     dep_kind_filter: Option<DependencyKind>,
 }
@@ -190,6 +199,18 @@ impl Cargo {
     }
 
     /// Emit all of the `VERGEN_CARGO_*` instructions and return the builder
+    #[cfg(not(feature = "cargo_metadata"))]
+    pub fn all_cargo_builder() -> CargoBuilder<SetTargetTriple<SetOptLevel<SetFeatures<SetDebug>>>>
+    {
+        Self::builder()
+            .debug(true)
+            .features(true)
+            .opt_level(true)
+            .target_triple(true)
+    }
+
+    /// Emit all of the `VERGEN_CARGO_*` instructions and return the builder
+    #[cfg(feature = "cargo_metadata")]
     pub fn all_cargo_builder()
     -> CargoBuilder<SetDependencies<SetTargetTriple<SetOptLevel<SetFeatures<SetDebug>>>>> {
         Self::builder()
@@ -200,6 +221,12 @@ impl Cargo {
             .dependencies(true)
     }
 
+    #[cfg(not(feature = "cargo_metadata"))]
+    fn any(self) -> bool {
+        self.debug || self.features || self.opt_level || self.target_triple
+    }
+
+    #[cfg(feature = "cargo_metadata")]
     fn any(self) -> bool {
         self.debug || self.features || self.opt_level || self.target_triple || self.dependencies
     }
@@ -213,6 +240,7 @@ impl Cargo {
         }
     }
 
+    #[cfg(feature = "cargo_metadata")]
     fn get_dependencies(
         name_filter: Option<&'static str>,
         dep_kind_filter: Option<DependencyKind>,
@@ -286,6 +314,7 @@ impl Cargo {
     /// cargo:rustc-env=VERGEN_CARGO_DEPENDENCIES=<deps_filtered_by_name>
     /// ```
     ///
+    #[cfg(feature = "cargo_metadata")]
     pub fn set_name_filter(&mut self, val: Option<&'static str>) -> &mut Self {
         self.name_filter = val;
         self
@@ -296,9 +325,62 @@ impl Cargo {
     /// cargo:rustc-env=VERGEN_CARGO_DEPENDENCIES=<deps_filtered_by_kind>
     /// ```
     ///
+    #[cfg(feature = "cargo_metadata")]
     pub fn set_dep_kind_filter(&mut self, val: Option<DependencyKind>) -> &mut Self {
         self.dep_kind_filter = val;
         self
+    }
+
+    #[cfg(not(feature = "cargo_metadata"))]
+    #[allow(
+        clippy::unnecessary_wraps,
+        clippy::unused_self,
+        clippy::trivially_copy_pass_by_ref
+    )]
+    fn add_dependencies(&self, _cargo_rustc_env: &mut CargoRustcEnvMap) -> Result<()> {
+        Ok(())
+    }
+
+    #[cfg(feature = "cargo_metadata")]
+    fn add_dependencies(&self, cargo_rustc_env: &mut CargoRustcEnvMap) -> Result<()> {
+        if self.dependencies {
+            if let Ok(value) = env::var(CARGO_DEPENDENCIES) {
+                add_map_entry(VergenKey::CargoDependencies, value, cargo_rustc_env);
+            } else {
+                let value = Self::get_dependencies(self.name_filter, self.dep_kind_filter)?;
+                if !value.is_empty() {
+                    add_map_entry(VergenKey::CargoDependencies, value, cargo_rustc_env);
+                }
+            }
+        }
+        Ok(())
+    }
+
+    #[cfg(not(feature = "cargo_metadata"))]
+    #[allow(clippy::unused_self, clippy::trivially_copy_pass_by_ref)]
+    fn add_default_dependencies(
+        &self,
+        _config: &DefaultConfig,
+        _cargo_rustc_env_map: &mut CargoRustcEnvMap,
+        _cargo_warning: &mut CargoWarning,
+    ) {
+    }
+
+    #[cfg(feature = "cargo_metadata")]
+    fn add_default_dependencies(
+        &self,
+        config: &DefaultConfig,
+        cargo_rustc_env_map: &mut CargoRustcEnvMap,
+        cargo_warning: &mut CargoWarning,
+    ) {
+        if self.dependencies {
+            add_default_map_entry(
+                *config.idempotent(),
+                VergenKey::CargoDependencies,
+                cargo_rustc_env_map,
+                cargo_warning,
+            );
+        }
     }
 }
 
@@ -354,16 +436,7 @@ impl AddEntries for Cargo {
                 }
             }
 
-            if self.dependencies {
-                if let Ok(value) = env::var(CARGO_DEPENDENCIES) {
-                    add_map_entry(VergenKey::CargoDependencies, value, cargo_rustc_env);
-                } else {
-                    let value = Self::get_dependencies(self.name_filter, self.dep_kind_filter)?;
-                    if !value.is_empty() {
-                        add_map_entry(VergenKey::CargoDependencies, value, cargo_rustc_env);
-                    }
-                }
-            }
+            self.add_dependencies(cargo_rustc_env)?;
         }
         Ok(())
     }
@@ -411,14 +484,7 @@ impl AddEntries for Cargo {
                     cargo_warning,
                 );
             }
-            if self.dependencies {
-                add_default_map_entry(
-                    *config.idempotent(),
-                    VergenKey::CargoDependencies,
-                    cargo_rustc_env_map,
-                    cargo_warning,
-                );
-            }
+            self.add_default_dependencies(config, cargo_rustc_env_map, cargo_warning);
             Ok(())
         }
     }
@@ -474,7 +540,10 @@ mod test {
                 .idempotent()
                 .add_instructions(&cargo)?
                 .test_emit();
+            #[cfg(feature = "cargo_metadata")]
             assert_eq!(5, config.cargo_rustc_env_map().len());
+            #[cfg(not(feature = "cargo_metadata"))]
+            assert_eq!(4, config.cargo_rustc_env_map().len());
             assert_eq!(0, count_idempotent(config.cargo_rustc_env_map()));
             assert_eq!(0, config.cargo_warning().len());
             Ok(())
@@ -488,7 +557,10 @@ mod test {
         let result = with_cargo_vars(|| {
             let cargo = Cargo::all_cargo();
             let config = Emitter::default().add_instructions(&cargo)?.test_emit();
+            #[cfg(feature = "cargo_metadata")]
             assert_eq!(5, config.cargo_rustc_env_map().len());
+            #[cfg(not(feature = "cargo_metadata"))]
+            assert_eq!(4, config.cargo_rustc_env_map().len());
             assert_eq!(0, count_idempotent(config.cargo_rustc_env_map()));
             assert_eq!(0, config.cargo_warning().len());
             Ok(())
@@ -554,6 +626,7 @@ mod test {
 
     #[test]
     #[serial]
+    #[cfg(feature = "cargo_metadata")]
     fn dependencies() {
         let result = with_cargo_vars(|| {
             let cargo = Cargo::builder()
@@ -571,6 +644,7 @@ mod test {
 
     #[test]
     #[serial]
+    #[cfg(feature = "cargo_metadata")]
     fn dependencies_bad_name_filter() {
         let result = with_cargo_vars(|| {
             let cargo = Cargo::builder().dependencies(true).name_filter("(").build();
@@ -603,7 +677,10 @@ mod test {
         let config = Emitter::default().add_instructions(&cargo)?.test_emit();
         assert_eq!(0, config.cargo_rustc_env_map().len());
         assert_eq!(0, count_idempotent(config.cargo_rustc_env_map()));
+        #[cfg(feature = "cargo_metadata")]
         assert_eq!(5, config.cargo_warning().len());
+        #[cfg(not(feature = "cargo_metadata"))]
+        assert_eq!(4, config.cargo_warning().len());
         Ok(())
     }
 
@@ -615,9 +692,18 @@ mod test {
             .idempotent()
             .add_instructions(&cargo)?
             .test_emit();
+        #[cfg(feature = "cargo_metadata")]
         assert_eq!(5, config.cargo_rustc_env_map().len());
+        #[cfg(not(feature = "cargo_metadata"))]
+        assert_eq!(4, config.cargo_rustc_env_map().len());
+        #[cfg(feature = "cargo_metadata")]
         assert_eq!(5, count_idempotent(config.cargo_rustc_env_map()));
+        #[cfg(not(feature = "cargo_metadata"))]
+        assert_eq!(4, count_idempotent(config.cargo_rustc_env_map()));
+        #[cfg(feature = "cargo_metadata")]
         assert_eq!(5, config.cargo_warning().len());
+        #[cfg(not(feature = "cargo_metadata"))]
+        assert_eq!(4, config.cargo_warning().len());
         Ok(())
     }
 
@@ -718,6 +804,7 @@ mod test {
 
     #[test]
     #[serial]
+    #[cfg(feature = "cargo_metadata")]
     fn cargo_dependencies_override_works() {
         let result = with_cargo_vars_ext(
             &[("VERGEN_CARGO_DEPENDENCIES", Some("this is a bad date"))],

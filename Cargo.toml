@@ -13,7 +13,7 @@ members = [
 
 [workspace.dependencies]
 anyhow = "1.0.98"
-bon = "3.6.1"
+bon = "3.6.3"
 gix = { version = "0.72.1", default-features = false, features = [
     "revision",
     "worktree-mutation",
