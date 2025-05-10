@@ -541,7 +541,7 @@ pub use self::feature::cargo::Cargo;
 pub use self::feature::rustc::Rustc;
 #[cfg(feature = "si")]
 pub use self::feature::si::Sysinfo;
-#[cfg(feature = "cargo")]
+#[cfg(feature = "cargo_metadata")]
 pub use cargo_metadata::DependencyKind;
 #[cfg(feature = "si")]
 pub use sysinfo::CpuRefreshKind;
