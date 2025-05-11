@@ -101,7 +101,7 @@ use vergen_lib::{
 /// ```
 ///
 /// # Example
-/// Use [`SysinfoBuilder::refresh_kind()`] to minimize the amount of data that [`sysinfo`] refreshes.
+/// Use [`Sysinfo::refresh_kind()`] to minimize the amount of data that [`sysinfo`] refreshes.
 ///
 /// ```
 /// # use anyhow::Result;
