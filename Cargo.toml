@@ -10,3 +10,22 @@ members = [
     "vergen-lib",
     "vergen-pretty",
 ]
+
+[workspace.dependencies]
+anyhow = "1.0.98"
+bon = "3.6.3"
+gix = { version = "0.72.1", default-features = false, features = [
+    "revision",
+    "worktree-mutation",
+    "blocking-network-client",
+] }
+rand = { version = "0.9.1" }
+regex = { version = "1.11.1" }
+rustversion = "1.0.20"
+serial_test = "3.2.0"
+temp-env = "0.3.6"
+time = { version = "0.3.41", features = [
+    "formatting",
+    "local-offset",
+    "parsing",
+] }

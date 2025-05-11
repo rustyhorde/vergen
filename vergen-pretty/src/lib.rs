@@ -17,7 +17,7 @@
 //! ```
 //! # use anyhow::Result;
 //! # use std::{collections::BTreeMap, io::Write};
-//! # use vergen_pretty::{vergen_pretty_env, PrettyBuilder};
+//! # use vergen_pretty::{vergen_pretty_env, Pretty};
 //! # fn has_value(
 //! #     tuple: (&&'static str, &Option<&'static str>),
 //! # ) -> Option<(&'static str, &'static str)> {
@@ -35,9 +35,9 @@
 //! let mut stdout = vec![];
 //! # let map = vergen_pretty_env!();
 //! # let empty = is_empty(&map);
-//! PrettyBuilder::default()
+//! Pretty::builder()
 //!     .env(vergen_pretty_env!())
-//!     .build()?
+//!     .build()
 //!     .display(&mut stdout)?;
 //! # if empty {
 //! #    assert!(stdout.is_empty());
@@ -58,7 +58,7 @@ with the associated [`Config`] as a convenience wrapper around [`Pretty`].
 # Example
 ```
 # use anyhow::Result;
-# use vergen_pretty::{ConfigBuilder, header, vergen_pretty_env};"
+# use vergen_pretty::{Config, header, vergen_pretty_env};"
 )]
 #![cfg_attr(feature = "color", doc = r"# use vergen_pretty::Style;")]
 #![cfg_attr(
@@ -67,7 +67,7 @@ with the associated [`Config`] as a convenience wrapper around [`Pretty`].
 #
 # pub fn main() -> Result<()> {
 let mut buf = vec![];
-let config = ConfigBuilder::default()"
+let config = Config::builder()"
 )]
 #![cfg_attr(
     all(feature = "color", feature = "header"),
@@ -79,7 +79,7 @@ let config = ConfigBuilder::default()"
     .prefix("HEADER_PREFIX")
     .env(vergen_pretty_env!())
     .suffix("HEADER_SUFFIX")
-    .build()?;
+    .build();
 assert!(header(&config, Some(&mut buf)).is_ok());
 assert!(!buf.is_empty());
 #     Ok(())
@@ -108,6 +108,8 @@ assert!(!buf.is_empty());
         non_exhaustive_omitted_patterns_lint,
         rustdoc_missing_doc_code_examples,
         strict_provenance_lints,
+        supertrait_item_shadowing,
+        unqualified_local_imports,
     )
 )]
 #![cfg_attr(nightly, allow(single_use_lifetimes, unexpected_cfgs))]
@@ -117,6 +119,7 @@ assert!(!buf.is_empty());
         absolute_paths_not_starting_with_crate,
         ambiguous_glob_imports,
         ambiguous_glob_reexports,
+        ambiguous_negative_literals,
         ambiguous_wide_pointer_comparisons,
         anonymous_parameters,
         array_into_iter,
@@ -124,26 +127,33 @@ assert!(!buf.is_empty());
         async_fn_in_trait,
         bad_asm_style,
         bare_trait_objects,
+        boxed_slice_into_iter,
         break_with_label_and_loop,
         clashing_extern_declarations,
+        closure_returning_async_block,
         coherence_leak_check,
         confusable_idents,
         const_evaluatable_unchecked,
         const_item_mutation,
         dangling_pointers_from_temporaries,
         dead_code,
+        dependency_on_unit_never_type_fallback,
         deprecated,
         deprecated_in_future,
+        deprecated_safe_2024,
         deprecated_where_clause_location,
         deref_into_dyn_supertrait,
         deref_nullptr,
+        double_negations,
         drop_bounds,
         dropping_copy_types,
         dropping_references,
         duplicate_macro_attributes,
         dyn_drop,
-        elided_lifetimes_in_associated_constant,
+        // Add this back with 2024 edition
+        // edition_2024_expr_fragment_specifier,
         elided_lifetimes_in_paths,
+        elided_named_lifetimes,
         ellipsis_inclusive_range_patterns,
         explicit_outlives_requirements,
         exported_private_dependencies,
@@ -154,6 +164,9 @@ assert!(!buf.is_empty());
         for_loops_over_fallibles,
         function_item_references,
         hidden_glob_reexports,
+        if_let_rescope,
+        impl_trait_overcaptures,
+        impl_trait_redundant_captures,
         improper_ctypes,
         improper_ctypes_definitions,
         inline_no_sanitize,
@@ -176,6 +189,7 @@ assert!(!buf.is_empty());
         missing_copy_implementations,
         missing_debug_implementations,
         missing_docs,
+        missing_unsafe_on_extern,
         mixed_script_confusables,
         named_arguments_used_positionally,
         never_type_fallback_flowing_into_unsafe,
@@ -190,10 +204,13 @@ assert!(!buf.is_empty());
         non_upper_case_globals,
         noop_method_call,
         opaque_hidden_inferred_bound,
+        out_of_scope_macro_calls,
         overlapping_range_endpoints,
         path_statements,
         private_bounds,
         private_interfaces,
+        ptr_to_integer_transmute_in_consts,
+        redundant_imports,
         redundant_lifetimes,
         redundant_semicolons,
         refining_impl_trait_internal,
@@ -204,11 +221,17 @@ assert!(!buf.is_empty());
         rust_2021_incompatible_or_patterns,
         rust_2021_prefixes_incompatible_syntax,
         rust_2021_prelude_collisions,
+        rust_2024_guarded_string_incompatible_syntax,
+        rust_2024_incompatible_pat,
+        rust_2024_prelude_collisions,
+        self_constructor_from_outer_item,
         semicolon_in_expressions_from_macros,
+        single_use_lifetimes,
         special_module_name,
         stable_features,
         static_mut_refs,
         suspicious_double_ref_op,
+        tail_expr_drop_order,
         trivial_bounds,
         trivial_casts,
         trivial_numeric_casts,
@@ -217,6 +240,7 @@ assert!(!buf.is_empty());
         uncommon_codepoints,
         unconditional_recursion,
         uncovered_param_in_projection,
+        unfulfilled_lint_expectations,
         ungated_async_fn_track_caller,
         uninhabited_static,
         unit_bindings,
@@ -224,13 +248,16 @@ assert!(!buf.is_empty());
         unknown_or_malformed_diagnostic_attributes,
         unnameable_test_items,
         unnameable_types,
+        unpredictable_function_pointer_comparisons,
         unreachable_code,
         unreachable_patterns,
         unreachable_pub,
+        unsafe_attr_outside_unsafe,
         unsafe_code,
         unsafe_op_in_unsafe_fn,
         unstable_name_collisions,
         unstable_syntax_pre_expansion,
+        unsupported_fn_ptr_calling_conventions,
         unused_allocation,
         unused_assignments,
         unused_associated_type_bounds,
@@ -255,13 +282,17 @@ assert!(!buf.is_empty());
         unused_unsafe,
         unused_variables,
         useless_ptr_null_checks,
+        uses_power_alignment,
         variant_size_differences,
+        wasm_c_abi,
         while_true,
     )
 )]
-#![cfg_attr(all(nightly), allow(unstable_features))]
 // If nightly and unstable, allow `incomplete_features` and `unstable_features`
-#![cfg_attr(all(feature = "unstable", nightly), allow(incomplete_features))]
+#![cfg_attr(
+    all(feature = "unstable", nightly),
+    allow(incomplete_features, unstable_features)
+)]
 // If nightly and not unstable, deny `incomplete_features` and `unstable_features`
 #![cfg_attr(
     all(not(feature = "unstable"), nightly),
@@ -276,7 +307,9 @@ assert!(!buf.is_empty());
         multiple_supertrait_upcastable,
         must_not_suspend,
         non_exhaustive_omitted_patterns,
-        unfulfilled_lint_expectations,
+        supertrait_item_shadowing_definition,
+        supertrait_item_shadowing_usage,
+        unqualified_local_imports,
     )
 )]
 // clippy lints
@@ -307,24 +340,18 @@ mod header;
 mod pretty;
 mod utils;
 
+#[cfg(feature = "header")]
+pub use self::header::Config;
+#[cfg(feature = "header")]
+pub use self::header::Env;
+#[cfg(feature = "header")]
+pub use self::header::header;
+pub use self::pretty::Pretty;
+pub use self::pretty::prefix::Prefix;
+pub use self::pretty::suffix::Suffix;
 #[cfg(feature = "color")]
 #[doc(inline)]
 pub use console::Style;
-#[cfg(feature = "header")]
-pub use header::header;
-#[cfg(feature = "header")]
-pub use header::Config;
-#[cfg(feature = "header")]
-pub use header::ConfigBuilder;
-#[cfg(feature = "header")]
-pub use header::Env;
-pub use pretty::prefix::Prefix;
-pub use pretty::prefix::PrefixBuilder;
-pub use pretty::suffix::Suffix;
-pub use pretty::suffix::SuffixBuilder;
-pub use pretty::Pretty;
-pub use pretty::PrettyBuilder;
-pub use pretty::PrettyBuilderError;
 #[cfg(feature = "trace")]
 #[doc(inline)]
 pub use tracing::Level;
@@ -338,7 +365,7 @@ use serde_json as _;
 #[cfg(all(test, not(feature = "trace")))]
 use tracing_subscriber as _;
 
-/// Used to initialize `env` in [`PrettyBuilder`](self::PrettyBuilder)
+/// Used to initialize `env` in [`Pretty`](self::Pretty)
 ///
 /// Because `cargo` doesn't pass compile time environment variables to dependencies,
 /// this macro embeds a map of all the possible `vergen` environment variables with
@@ -348,13 +375,13 @@ use tracing_subscriber as _;
 /// ```
 /// # use anyhow::Result;
 /// # use std::{collections::BTreeMap, io::Write};
-/// # use vergen_pretty::{vergen_pretty_env, PrettyBuilder};
+/// # use vergen_pretty::{vergen_pretty_env, Pretty};
 /// #
 /// # fn main() -> Result<()> {
 /// let mut stdout = vec![];
-/// PrettyBuilder::default()
+/// Pretty::builder()
 ///     .env(vergen_pretty_env!())
-///     .build()?
+///     .build()
 ///     .display(&mut stdout)?;
 /// #     Ok(())
 /// # }

@@ -9,9 +9,9 @@
 use self::{prefix::Prefix, suffix::Suffix};
 use crate::utils::{has_value, split_key, split_kv};
 use anyhow::Result;
+use bon::Builder;
 #[cfg(feature = "color")]
 use console::Style;
-use derive_builder::Builder;
 use std::{collections::BTreeMap, io::Write};
 #[cfg(feature = "trace")]
 use tracing::Level;
@@ -22,18 +22,18 @@ pub(crate) mod suffix;
 
 /// Configuration for `vergen` environment variable pretty printing
 ///
-/// Build this with [`PrettyBuilder`]
+/// Build this with [`Pretty`]
 ///
 /// # Display
 /// ```
 /// # use anyhow::Result;
-/// # use vergen_pretty::{vergen_pretty_env, PrettyBuilder};
+/// # use vergen_pretty::{vergen_pretty_env, Pretty};
 /// #
 /// # pub fn main() -> Result<()> {
 /// let mut stdout = vec![];
-/// PrettyBuilder::default()
+/// Pretty::builder()
 ///     .env(vergen_pretty_env!())
-///     .build()?
+///     .build()
 ///     .display(&mut stdout)?;
 /// #     Ok(())
 /// # }
@@ -47,15 +47,13 @@ pub(crate) mod suffix;
 Generate [`tracing`] output
 
 ```
-# use anyhow::Result;
-# use vergen_pretty::{vergen_pretty_env, PrettyBuilder};
+# use vergen_pretty::{vergen_pretty_env, Pretty};
 # 
-# pub fn main() -> Result<()> {
-PrettyBuilder::default()
+# pub fn main() {
+Pretty::builder()
     .env(vergen_pretty_env!())
-    .build()?
+    .build()
     .trace();
-#     Ok(())
 # }
 ```
 "
@@ -68,7 +66,7 @@ PrettyBuilder::default()
 ///
 /// ```
 /// # use anyhow::Result;
-/// # use vergen_pretty::{vergen_pretty_env, PrettyBuilder, PrefixBuilder, SuffixBuilder};
+/// # use vergen_pretty::{vergen_pretty_env, Pretty, Prefix, Suffix};
 /// #
 /// const TEST_PREFIX: &str = r#"A wonderful introduction
 /// "#;
@@ -76,17 +74,17 @@ PrettyBuilder::default()
 ///
 /// # pub fn main() -> Result<()> {
 /// let mut stdout = vec![];
-/// let prefix = PrefixBuilder::default()
+/// let prefix = Prefix::builder()
 ///     .lines(TEST_PREFIX.lines().map(str::to_string).collect())
-///     .build()?;
-/// let suffix = SuffixBuilder::default()
+///     .build();
+/// let suffix = Suffix::builder()
 ///     .lines(TEST_SUFFIX.lines().map(str::to_string).collect())
-///     .build()?;
-/// PrettyBuilder::default()
+///     .build();
+/// Pretty::builder()
 ///     .env(vergen_pretty_env!())
 ///     .prefix(prefix)
 ///     .suffix(suffix)
-///     .build()?
+///     .build()
 ///     .display(&mut stdout)?;
 /// #     Ok(())
 /// # }
@@ -101,17 +99,17 @@ Uses [`Style`](console::Style) to colorize output
 
 ```
 # use anyhow::Result;
-# use vergen_pretty::{vergen_pretty_env, PrettyBuilder, Style};
+# use vergen_pretty::{vergen_pretty_env, Pretty, Style};
 # 
 # pub fn main() -> Result<()> {
 let mut stdout = vec![];
 let red_bold = Style::new().bold().red();
 let yellow_bold = Style::new().bold().yellow();
-PrettyBuilder::default()
+Pretty::builder()
     .env(vergen_pretty_env!())
     .key_style(red_bold)
     .value_style(yellow_bold)
-    .build()?
+    .build()
     .display(&mut stdout)?;
 #     Ok(())
 # }
@@ -121,41 +119,37 @@ PrettyBuilder::default()
 ///
 #[derive(Builder, Clone, Debug, PartialEq)]
 pub struct Pretty {
+    #[builder(field)]
+    vars: Vec<(String, String, String)>,
+    #[builder(field)]
+    max_label: usize,
+    #[builder(field)]
+    max_category: usize,
+
     /// Set the optional [`Prefix`] configuration
-    #[builder(setter(strip_option), default)]
     prefix: Option<Prefix>,
     /// The `vergen` env variables.  Should be set with [`vergen_pretty_env!`](crate::vergen_pretty_env) macro.
     env: BTreeMap<&'static str, Option<&'static str>>,
     /// A set of `vergen` env variable names that should be filtered regardless if they are set or not.
-    #[builder(setter(strip_option), default)]
     filter: Option<Vec<&'static str>>,
     /// Include category output.  Default: true
-    #[builder(default = "true")]
+    #[builder(default = true)]
     category: bool,
-    #[builder(setter(skip), default)]
-    vars: Vec<(String, String, String)>,
     /// The [`Style`] to apply to the keys in the output
     #[cfg(feature = "color")]
-    #[builder(setter(strip_option), default)]
     key_style: Option<Style>,
     /// The [`Style`] to apply to the values in the output
     #[cfg(feature = "color")]
-    #[builder(setter(strip_option), default)]
     value_style: Option<Style>,
-    #[builder(setter(skip), default)]
-    max_label: usize,
-    #[builder(setter(skip), default)]
-    max_category: usize,
     /// Set the optional [`Suffix`] configuration
-    #[builder(setter(strip_option), default)]
     suffix: Option<Suffix>,
     /// Set the tracing [`Level`]
     #[cfg(feature = "trace")]
-    #[builder(default = "Level::INFO")]
+    #[builder(default = Level::INFO)]
     level: Level,
     /// Flatten the serde output if no prefix/suffix are defined. Default: false
     #[cfg(feature = "serde")]
-    #[builder(default = "false")]
+    #[builder(default = false)]
     flatten: bool,
 }
 
@@ -238,25 +232,24 @@ impl Pretty {
 
 #[cfg(test)]
 mod tests {
-    use super::PrettyBuilder;
+    use super::Pretty;
     use crate::{utils::test_utils::is_empty, vergen_pretty_env};
     use anyhow::Result;
     use std::io::Write;
 
     #[test]
     #[allow(clippy::clone_on_copy, clippy::redundant_clone)]
-    fn pretty_clone_works() -> Result<()> {
+    fn pretty_clone_works() {
         let map = vergen_pretty_env!();
-        let pretty = PrettyBuilder::default().env(map).build()?;
+        let pretty = Pretty::builder().env(map).build();
         let another = pretty.clone();
         assert_eq!(pretty, another);
-        Ok(())
     }
 
     #[test]
     fn pretty_debug_works() -> Result<()> {
         let map = vergen_pretty_env!();
-        let pretty = PrettyBuilder::default().env(map).build()?;
+        let pretty = Pretty::builder().env(map).build();
         let mut buf = vec![];
         write!(buf, "{pretty:?}")?;
         assert!(!buf.is_empty());
@@ -268,7 +261,7 @@ mod tests {
         let mut stdout = vec![];
         let map = vergen_pretty_env!();
         let empty = is_empty(&map);
-        let fmt = PrettyBuilder::default().env(map).build()?;
+        let fmt = Pretty::builder().env(map).build();
         fmt.display(&mut stdout)?;
         if empty {
             assert!(stdout.is_empty());
@@ -283,7 +276,7 @@ mod tests {
         let mut stdout = vec![];
         let map = vergen_pretty_env!();
         let empty = is_empty(&map);
-        let fmt = PrettyBuilder::default().env(map).category(false).build()?;
+        let fmt = Pretty::builder().env(map).category(false).build();
         fmt.display(&mut stdout)?;
         if empty {
             assert!(stdout.is_empty());
@@ -298,7 +291,7 @@ mod tests {
         let mut stdout = vec![];
         let map = vergen_pretty_env!("vergen-cl");
         let empty = is_empty(&map);
-        let fmt = PrettyBuilder::default().env(map).build()?;
+        let fmt = Pretty::builder().env(map).build();
         fmt.display(&mut stdout)?;
         if empty {
             assert!(stdout.is_empty());

@@ -3,15 +3,15 @@ authors = ["Jason Ozias <jason.g.ozias@gmail.com>"]
 categories = ["development-tools", "development-tools::build-utils"]
 description = "Generate 'cargo:rustc-env' instructions via 'build.rs' for use in your code via the 'env!' macro"
 documentation = "https://docs.rs/vergen"
-edition = "2021"
+edition = "2024"
 homepage = "https://github.com/rustyhorde/vergen"
 keywords = ["cargo", "instructions", "build", "tool"]
 license = "MIT OR Apache-2.0"
-rust-version = "1.82.0"
+rust-version = "1.85.0"
 name = "vergen"
 readme = "README.md"
 repository = "https://github.com/rustyhorde/vergen"
-version = "9.0.6"
+version = "10.0.0-beta.1"
 
 [package.metadata.cargo-matrix]
 [[package.metadata.cargo-matrix.channel]]
@@ -26,35 +26,31 @@ always_include = ["unstable"]
 [features]
 default = []
 build = ["time", "vergen-lib/build"]
-cargo = ["cargo_metadata", "regex", "vergen-lib/cargo"]
+cargo = ["vergen-lib/cargo"]
+cargo_metadata = ["dep:cargo_metadata", "regex", "cargo"]
 rustc = ["rustc_version", "vergen-lib/rustc"]
 si = ["sysinfo", "vergen-lib/si"]
 unstable = ["vergen-lib/unstable"]
 emit_and_set = ["vergen-lib/emit_and_set"]
 
 [dependencies]
-anyhow = "1.0.95"
-cargo_metadata = { version = "0.19.1", optional = true }
-derive_builder = "0.20.2"
-regex = { version = "1.11.1", optional = true }
+anyhow = { workspace = true }
+bon = { workspace = true }
+cargo_metadata = { version = "0.19.2", optional = true }
+regex = { workspace = true, optional = true }
 rustc_version = { version = "0.4.1", optional = true }
-sysinfo = { version = "0.34.2", optional = true }
-time = { version = "0.3.37", features = [
-    "formatting",
-    "local-offset",
-    "parsing",
-], optional = true }
-vergen-lib = { version = "0.1.6", path = "../vergen-lib" }
+sysinfo = { version = "0.35.0", optional = true }
+time = { workspace = true, optional = true }
+vergen-lib = { version = "1.0.0-beta.1", path = "../vergen-lib" }
 
 [build-dependencies]
-rustversion = "1.0.19"
+rustversion = { workspace = true }
 
 [dev-dependencies]
-lazy_static = "1.5.0"
-regex = "1.11.1"
+regex = { workspace = true }
 test_util = { path = "../test_util", features = ["unstable"] }
-serial_test = "3.2.0"
-temp-env = "0.3.6"
+serial_test = { workspace =  true }
+temp-env = { workspace = true }
 
 [package.metadata.docs.rs]
 features = ["build", "cargo", "emit_and_set", "rustc", "si"]

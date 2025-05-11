@@ -55,20 +55,20 @@
 //! ```
 //! # use anyhow::Result;
 //! # use vergen::Emitter;
-#![cfg_attr(feature = "build", doc = r"# use vergen::BuildBuilder;")]
-#![cfg_attr(feature = "cargo", doc = r"# use vergen::CargoBuilder;")]
-#![cfg_attr(feature = "rustc", doc = r"# use vergen::RustcBuilder;")]
-#![cfg_attr(feature = "si", doc = r"# use vergen::SysinfoBuilder;")]
+#![cfg_attr(feature = "build", doc = r"# use vergen::Build;")]
+#![cfg_attr(feature = "cargo", doc = r"# use vergen::Cargo;")]
+#![cfg_attr(feature = "rustc", doc = r"# use vergen::Rustc;")]
+#![cfg_attr(feature = "si", doc = r"# use vergen::Sysinfo;")]
 #![cfg_attr(feature = "cargo", doc = r"# use test_util::with_cargo_vars;")]
 //! #
 //! # pub fn main() -> Result<()> {
 #![cfg_attr(feature = "cargo", doc = r"# let result = with_cargo_vars(|| {")]
 //! // NOTE: This will output everything, and requires all features enabled.
 //! // NOTE: See the specific builder documentation for configuration options.
-#![cfg_attr(feature = "build", doc = r"let build = BuildBuilder::all_build()?;")]
-#![cfg_attr(feature = "cargo", doc = r"let cargo = CargoBuilder::all_cargo()?;")]
-#![cfg_attr(feature = "rustc", doc = r"let rustc = RustcBuilder::all_rustc()?;")]
-#![cfg_attr(feature = "si", doc = r"let si = SysinfoBuilder::all_sysinfo()?;")]
+#![cfg_attr(feature = "build", doc = r"let build = Build::all_build();")]
+#![cfg_attr(feature = "cargo", doc = r"let cargo = Cargo::all_cargo();")]
+#![cfg_attr(feature = "rustc", doc = r"let rustc = Rustc::all_rustc();")]
+#![cfg_attr(feature = "si", doc = r"let si = Sysinfo::all_sysinfo();")]
 //!
 //! Emitter::default()
 #![cfg_attr(feature = "build", doc = r"    .add_instructions(&build)?")]
@@ -120,10 +120,10 @@
 //! ```
 //! # use anyhow::Result;
 //! # use vergen::Emitter;
-#![cfg_attr(feature = "build", doc = r"# use vergen::BuildBuilder;")]
-#![cfg_attr(feature = "cargo", doc = r"# use vergen::CargoBuilder;")]
-#![cfg_attr(feature = "rustc", doc = r"# use vergen::RustcBuilder;")]
-#![cfg_attr(feature = "si", doc = r"# use vergen::SysinfoBuilder;")]
+#![cfg_attr(feature = "build", doc = r"# use vergen::Build;")]
+#![cfg_attr(feature = "cargo", doc = r"# use vergen::Cargo;")]
+#![cfg_attr(feature = "rustc", doc = r"# use vergen::Rustc;")]
+#![cfg_attr(feature = "si", doc = r"# use vergen::Sysinfo;")]
 #![cfg_attr(feature = "cargo", doc = r"# use test_util::with_cargo_vars;")]
 //! #
 //! # pub fn main() -> Result<()> {
@@ -132,19 +132,19 @@
     feature = "build",
     doc = r"// NOTE: This will output only the instructions specified.
 // NOTE: See the specific builder documentation for configuration options. 
-let build = BuildBuilder::default().build_timestamp(true).build()?;"
+let build = Build::builder().build_timestamp(true).build();"
 )]
 #![cfg_attr(
     feature = "cargo",
-    doc = r"let cargo = CargoBuilder::default().opt_level(true).build()?;"
+    doc = r"let cargo = Cargo::builder().opt_level(true).build();"
 )]
 #![cfg_attr(
     feature = "rustc",
-    doc = r"let rustc = RustcBuilder::default().semver(true).build()?;"
+    doc = r"let rustc = Rustc::builder().semver(true).build();"
 )]
 #![cfg_attr(
     feature = "si",
-    doc = r"let si = SysinfoBuilder::default().cpu_core_count(true).build()?;"
+    doc = r"let si = Sysinfo::builder().cpu_core_count(true).build();"
 )]
 //!
 //! Emitter::default()
@@ -293,15 +293,18 @@ let build = BuildBuilder::default().build_timestamp(true).build()?;"
         non_exhaustive_omitted_patterns_lint,
         rustdoc_missing_doc_code_examples,
         strict_provenance_lints,
+        supertrait_item_shadowing,
+        unqualified_local_imports,
     )
 )]
-#![cfg_attr(nightly, allow(single_use_lifetimes, unexpected_cfgs))]
+#![cfg_attr(nightly, allow(single_use_lifetimes))]
 #![cfg_attr(
     nightly,
     deny(
         absolute_paths_not_starting_with_crate,
         ambiguous_glob_imports,
         ambiguous_glob_reexports,
+        ambiguous_negative_literals,
         ambiguous_wide_pointer_comparisons,
         anonymous_parameters,
         array_into_iter,
@@ -309,26 +312,32 @@ let build = BuildBuilder::default().build_timestamp(true).build()?;"
         async_fn_in_trait,
         bad_asm_style,
         bare_trait_objects,
+        boxed_slice_into_iter,
         break_with_label_and_loop,
         clashing_extern_declarations,
+        closure_returning_async_block,
         coherence_leak_check,
         confusable_idents,
         const_evaluatable_unchecked,
         const_item_mutation,
         dangling_pointers_from_temporaries,
         dead_code,
+        dependency_on_unit_never_type_fallback,
         deprecated,
         deprecated_in_future,
+        deprecated_safe_2024,
         deprecated_where_clause_location,
         deref_into_dyn_supertrait,
         deref_nullptr,
+        double_negations,
         drop_bounds,
         dropping_copy_types,
         dropping_references,
         duplicate_macro_attributes,
         dyn_drop,
-        elided_lifetimes_in_associated_constant,
+        edition_2024_expr_fragment_specifier,
         elided_lifetimes_in_paths,
+        elided_named_lifetimes,
         ellipsis_inclusive_range_patterns,
         explicit_outlives_requirements,
         exported_private_dependencies,
@@ -339,6 +348,9 @@ let build = BuildBuilder::default().build_timestamp(true).build()?;"
         for_loops_over_fallibles,
         function_item_references,
         hidden_glob_reexports,
+        if_let_rescope,
+        impl_trait_overcaptures,
+        impl_trait_redundant_captures,
         improper_ctypes,
         improper_ctypes_definitions,
         inline_no_sanitize,
@@ -361,6 +373,7 @@ let build = BuildBuilder::default().build_timestamp(true).build()?;"
         missing_copy_implementations,
         missing_debug_implementations,
         missing_docs,
+        missing_unsafe_on_extern,
         mixed_script_confusables,
         named_arguments_used_positionally,
         never_type_fallback_flowing_into_unsafe,
@@ -375,10 +388,13 @@ let build = BuildBuilder::default().build_timestamp(true).build()?;"
         non_upper_case_globals,
         noop_method_call,
         opaque_hidden_inferred_bound,
+        out_of_scope_macro_calls,
         overlapping_range_endpoints,
         path_statements,
         private_bounds,
         private_interfaces,
+        ptr_to_integer_transmute_in_consts,
+        redundant_imports,
         redundant_lifetimes,
         redundant_semicolons,
         refining_impl_trait_internal,
@@ -389,11 +405,17 @@ let build = BuildBuilder::default().build_timestamp(true).build()?;"
         rust_2021_incompatible_or_patterns,
         rust_2021_prefixes_incompatible_syntax,
         rust_2021_prelude_collisions,
+        rust_2024_guarded_string_incompatible_syntax,
+        rust_2024_incompatible_pat,
+        rust_2024_prelude_collisions,
+        self_constructor_from_outer_item,
         semicolon_in_expressions_from_macros,
+        single_use_lifetimes,
         special_module_name,
         stable_features,
         static_mut_refs,
         suspicious_double_ref_op,
+        tail_expr_drop_order,
         trivial_bounds,
         trivial_casts,
         trivial_numeric_casts,
@@ -402,6 +424,8 @@ let build = BuildBuilder::default().build_timestamp(true).build()?;"
         uncommon_codepoints,
         unconditional_recursion,
         uncovered_param_in_projection,
+        unexpected_cfgs,
+        unfulfilled_lint_expectations,
         ungated_async_fn_track_caller,
         uninhabited_static,
         unit_bindings,
@@ -409,13 +433,16 @@ let build = BuildBuilder::default().build_timestamp(true).build()?;"
         unknown_or_malformed_diagnostic_attributes,
         unnameable_test_items,
         unnameable_types,
+        unpredictable_function_pointer_comparisons,
         unreachable_code,
         unreachable_patterns,
         unreachable_pub,
+        unsafe_attr_outside_unsafe,
         unsafe_code,
         unsafe_op_in_unsafe_fn,
         unstable_name_collisions,
         unstable_syntax_pre_expansion,
+        unsupported_fn_ptr_calling_conventions,
         unused_allocation,
         unused_assignments,
         unused_associated_type_bounds,
@@ -440,13 +467,17 @@ let build = BuildBuilder::default().build_timestamp(true).build()?;"
         unused_unsafe,
         unused_variables,
         useless_ptr_null_checks,
+        uses_power_alignment,
         variant_size_differences,
+        wasm_c_abi,
         while_true,
     )
 )]
-#![cfg_attr(all(nightly), allow(unstable_features))]
 // If nightly and unstable, allow `incomplete_features` and `unstable_features`
-#![cfg_attr(all(feature = "unstable", nightly), allow(incomplete_features))]
+#![cfg_attr(
+    all(feature = "unstable", nightly),
+    allow(incomplete_features, unstable_features)
+)]
 // If nightly and not unstable, deny `incomplete_features` and `unstable_features`
 #![cfg_attr(
     all(not(feature = "unstable"), nightly),
@@ -461,7 +492,9 @@ let build = BuildBuilder::default().build_timestamp(true).build()?;"
         multiple_supertrait_upcastable,
         must_not_suspend,
         non_exhaustive_omitted_patterns,
-        unfulfilled_lint_expectations,
+        supertrait_item_shadowing_definition,
+        supertrait_item_shadowing_usage,
+        unqualified_local_imports,
     )
 )]
 // clippy lints
@@ -496,28 +529,20 @@ mod feature;
     feature = "rustc",
     feature = "si"
 )))]
-use {anyhow as _, derive_builder as _};
+use {anyhow as _, bon as _};
 #[cfg(test)]
-use {lazy_static as _, regex as _, serial_test as _, temp_env as _, test_util as _};
+use {regex as _, serial_test as _, temp_env as _, test_util as _};
 
+#[cfg(feature = "build")]
+pub use self::feature::build::Build;
 #[cfg(feature = "cargo")]
+pub use self::feature::cargo::Cargo;
+#[cfg(feature = "rustc")]
+pub use self::feature::rustc::Rustc;
+#[cfg(feature = "si")]
+pub use self::feature::si::Sysinfo;
+#[cfg(feature = "cargo_metadata")]
 pub use cargo_metadata::DependencyKind;
-#[cfg(feature = "build")]
-pub use feature::build::Build;
-#[cfg(feature = "build")]
-pub use feature::build::BuildBuilder;
-#[cfg(feature = "cargo")]
-pub use feature::cargo::Cargo;
-#[cfg(feature = "cargo")]
-pub use feature::cargo::CargoBuilder;
-#[cfg(feature = "rustc")]
-pub use feature::rustc::Rustc;
-#[cfg(feature = "rustc")]
-pub use feature::rustc::RustcBuilder;
-#[cfg(feature = "si")]
-pub use feature::si::Sysinfo;
-#[cfg(feature = "si")]
-pub use feature::si::SysinfoBuilder;
 #[cfg(feature = "si")]
 pub use sysinfo::CpuRefreshKind;
 #[cfg(feature = "si")]

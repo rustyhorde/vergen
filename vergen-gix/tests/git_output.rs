@@ -1,58 +1,66 @@
 mod test_git_gix {
+    use std::sync::LazyLock;
+
     use anyhow::Result;
-    use lazy_static::lazy_static;
     use regex::Regex;
     use serial_test::serial;
     use std::env::{self, temp_dir};
     use temp_env::with_var;
-    use vergen::Emitter;
-    use vergen_gix::GixBuilder;
-
     use test_util::TestRepos;
+    use vergen::Emitter;
+    use vergen_gix::Gix;
 
-    lazy_static! {
-        static ref GIT_BRANCH_RE_STR: &'static str = r"cargo:rustc-env=VERGEN_GIT_BRANCH=.*";
-        static ref GIT_CAE_RE_STR: &'static str =
-            r"cargo:rustc-env=VERGEN_GIT_COMMIT_AUTHOR_EMAIL=\S+@\S+";
-        static ref GIT_CAN_RE_STR: &'static str =
-            r"cargo:rustc-env=VERGEN_GIT_COMMIT_AUTHOR_NAME=.*";
-        static ref GIT_CC_RE_STR: &'static str =
-            r"cargo:rustc-env=VERGEN_GIT_COMMIT_COUNT=([0-9]+)";
-        static ref GIT_CD_RE_STR: &'static str = r"cargo:rustc-env=VERGEN_GIT_COMMIT_DATE=([0-9]+)-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])";
-        static ref GIT_CD_IDEM_RE_STR: &'static str =
-            r"cargo:rustc-env=VERGEN_GIT_COMMIT_DATE=VERGEN_IDEMPOTENT_OUTPUT";
-        static ref GIT_CM_RE_STR: &'static str =
-            r"cargo:rustc-env=VERGEN_GIT_COMMIT_MESSAGE=[\s\S]+";
-        static ref GIT_CT_RE_STR: &'static str = r"cargo:rustc-env=VERGEN_GIT_COMMIT_TIMESTAMP=([0-9]+)-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])[Tt]([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9]|60)(\.[0-9]+)?(([Zz])|([\+|\-]([01][0-9]|2[0-3]):[0-5][0-9]))";
-        static ref GIT_CT_IDEM_RE_STR: &'static str =
-            r"cargo:rustc-env=VERGEN_GIT_COMMIT_TIMESTAMP=VERGEN_IDEMPOTENT_OUTPUT";
-        static ref GIT_DESCRIBE_RE_STR: &'static str = r"cargo:rustc-env=VERGEN_GIT_DESCRIBE=.*";
-        static ref GIT_SHA_RE_STR: &'static str = r"cargo:rustc-env=VERGEN_GIT_SHA=[0-9a-f]{40}";
-        static ref GIT_SHORT_SHA_RE_STR: &'static str =
-            r"cargo:rustc-env=VERGEN_GIT_SHA=[0-9a-f]{7}";
-        static ref GIT_DIRTY_RE_STR: &'static str =
-            r"cargo:rustc-env=VERGEN_GIT_DIRTY=(true|false)";
-        static ref GIT_BRANCH_IDEM_RE_STR: &'static str =
-            r"cargo:rustc-env=VERGEN_GIT_BRANCH=VERGEN_IDEMPOTENT_OUTPUT";
-        static ref GIT_COMMIT_AUTHOR_EMAIL_IDEM_RE_STR: &'static str =
-            r"cargo:rustc-env=VERGEN_GIT_COMMIT_AUTHOR_EMAIL=VERGEN_IDEMPOTENT_OUTPUT";
-        static ref GIT_COMMIT_AUTHOR_NAME_IDEM_RE_STR: &'static str =
-            r"cargo:rustc-env=VERGEN_GIT_COMMIT_AUTHOR_NAME=VERGEN_IDEMPOTENT_OUTPUT";
-        static ref GIT_COMMIT_COUNT_IDEM_RE_STR: &'static str =
-            r"cargo:rustc-env=VERGEN_GIT_COMMIT_COUNT=VERGEN_IDEMPOTENT_OUTPUT";
-        static ref GIT_COMMIT_DATE_IDEM_RE_STR: &'static str =
-            r"cargo:rustc-env=VERGEN_GIT_COMMIT_DATE=VERGEN_IDEMPOTENT_OUTPUT";
-        static ref GIT_COMMIT_MESSAGE_IDEM_RE_STR: &'static str =
-            r"cargo:rustc-env=VERGEN_GIT_COMMIT_MESSAGE=VERGEN_IDEMPOTENT_OUTPUT";
-        static ref GIT_COMMIT_TIMESTAMP_IDEM_RE_STR: &'static str =
-            r"cargo:rustc-env=VERGEN_GIT_COMMIT_TIMESTAMP=VERGEN_IDEMPOTENT_OUTPUT";
-        static ref GIT_DESCRIBE_IDEM_RE_STR: &'static str =
-            r"cargo:rustc-env=VERGEN_GIT_DESCRIBE=VERGEN_IDEMPOTENT_OUTPUT";
-        static ref GIT_SHA_IDEM_RE_STR: &'static str =
-            r"cargo:rustc-env=VERGEN_GIT_SHA=VERGEN_IDEMPOTENT_OUTPUT";
-        static ref GIT_DIRTY_IDEM_RE_STR: &'static str =
-            r"cargo:rustc-env=VERGEN_GIT_DIRTY=VERGEN_IDEMPOTENT_OUTPUT";
-        static ref WARNINGS_RERUN_RE_STR: &'static str = r"cargo:warning=(.*?)
+    static GIT_BRANCH_RE_STR: LazyLock<&'static str> =
+        LazyLock::new(|| r"cargo:rustc-env=VERGEN_GIT_BRANCH=.*");
+    static GIT_CAE_RE_STR: LazyLock<&'static str> =
+        LazyLock::new(|| r"cargo:rustc-env=VERGEN_GIT_COMMIT_AUTHOR_EMAIL=\S+@\S+");
+    static GIT_CAN_RE_STR: LazyLock<&'static str> =
+        LazyLock::new(|| r"cargo:rustc-env=VERGEN_GIT_COMMIT_AUTHOR_NAME=.*");
+    static GIT_CC_RE_STR: LazyLock<&'static str> =
+        LazyLock::new(|| r"cargo:rustc-env=VERGEN_GIT_COMMIT_COUNT=([0-9]+)");
+    static GIT_CD_RE_STR: LazyLock<&'static str> = LazyLock::new(
+        || r"cargo:rustc-env=VERGEN_GIT_COMMIT_DATE=([0-9]+)-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])",
+    );
+    static GIT_CD_IDEM_RE_STR: LazyLock<&'static str> =
+        LazyLock::new(|| r"cargo:rustc-env=VERGEN_GIT_COMMIT_DATE=VERGEN_IDEMPOTENT_OUTPUT");
+    static GIT_CM_RE_STR: LazyLock<&'static str> =
+        LazyLock::new(|| r"cargo:rustc-env=VERGEN_GIT_COMMIT_MESSAGE=[\s\S]+");
+    static GIT_CT_RE_STR: LazyLock<&'static str> = LazyLock::new(
+        || r"cargo:rustc-env=VERGEN_GIT_COMMIT_TIMESTAMP=([0-9]+)-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])[Tt]([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9]|60)(\.[0-9]+)?(([Zz])|([\+|\-]([01][0-9]|2[0-3]):[0-5][0-9]))",
+    );
+    static GIT_CT_IDEM_RE_STR: LazyLock<&'static str> =
+        LazyLock::new(|| r"cargo:rustc-env=VERGEN_GIT_COMMIT_TIMESTAMP=VERGEN_IDEMPOTENT_OUTPUT");
+    static GIT_DESCRIBE_RE_STR: LazyLock<&'static str> =
+        LazyLock::new(|| r"cargo:rustc-env=VERGEN_GIT_DESCRIBE=.*");
+    static GIT_SHA_RE_STR: LazyLock<&'static str> =
+        LazyLock::new(|| r"cargo:rustc-env=VERGEN_GIT_SHA=[0-9a-f]{40}");
+    static GIT_SHORT_SHA_RE_STR: LazyLock<&'static str> =
+        LazyLock::new(|| r"cargo:rustc-env=VERGEN_GIT_SHA=[0-9a-f]{7}");
+    static GIT_DIRTY_RE_STR: LazyLock<&'static str> =
+        LazyLock::new(|| r"cargo:rustc-env=VERGEN_GIT_DIRTY=(true|false)");
+    static GIT_BRANCH_IDEM_RE_STR: LazyLock<&'static str> =
+        LazyLock::new(|| r"cargo:rustc-env=VERGEN_GIT_BRANCH=VERGEN_IDEMPOTENT_OUTPUT");
+    static GIT_COMMIT_AUTHOR_EMAIL_IDEM_RE_STR: LazyLock<&'static str> = LazyLock::new(
+        || r"cargo:rustc-env=VERGEN_GIT_COMMIT_AUTHOR_EMAIL=VERGEN_IDEMPOTENT_OUTPUT",
+    );
+    static GIT_COMMIT_AUTHOR_NAME_IDEM_RE_STR: LazyLock<&'static str> =
+        LazyLock::new(|| r"cargo:rustc-env=VERGEN_GIT_COMMIT_AUTHOR_NAME=VERGEN_IDEMPOTENT_OUTPUT");
+    static GIT_COMMIT_COUNT_IDEM_RE_STR: LazyLock<&'static str> =
+        LazyLock::new(|| r"cargo:rustc-env=VERGEN_GIT_COMMIT_COUNT=VERGEN_IDEMPOTENT_OUTPUT");
+    static GIT_COMMIT_DATE_IDEM_RE_STR: LazyLock<&'static str> =
+        LazyLock::new(|| r"cargo:rustc-env=VERGEN_GIT_COMMIT_DATE=VERGEN_IDEMPOTENT_OUTPUT");
+    static GIT_COMMIT_MESSAGE_IDEM_RE_STR: LazyLock<&'static str> =
+        LazyLock::new(|| r"cargo:rustc-env=VERGEN_GIT_COMMIT_MESSAGE=VERGEN_IDEMPOTENT_OUTPUT");
+    static GIT_COMMIT_TIMESTAMP_IDEM_RE_STR: LazyLock<&'static str> =
+        LazyLock::new(|| r"cargo:rustc-env=VERGEN_GIT_COMMIT_TIMESTAMP=VERGEN_IDEMPOTENT_OUTPUT");
+    static GIT_DESCRIBE_IDEM_RE_STR: LazyLock<&'static str> =
+        LazyLock::new(|| r"cargo:rustc-env=VERGEN_GIT_DESCRIBE=VERGEN_IDEMPOTENT_OUTPUT");
+    static GIT_SHA_IDEM_RE_STR: LazyLock<&'static str> =
+        LazyLock::new(|| r"cargo:rustc-env=VERGEN_GIT_SHA=VERGEN_IDEMPOTENT_OUTPUT");
+    static GIT_DIRTY_IDEM_RE_STR: LazyLock<&'static str> =
+        LazyLock::new(|| r"cargo:rustc-env=VERGEN_GIT_DIRTY=VERGEN_IDEMPOTENT_OUTPUT");
+    static WARNINGS_RERUN_RE_STR: LazyLock<&'static str> = LazyLock::new(|| {
+        r"cargo:warning=(.*?)
 cargo:warning=VERGEN_GIT_BRANCH set to default
 cargo:warning=VERGEN_GIT_COMMIT_AUTHOR_EMAIL set to default
 cargo:warning=VERGEN_GIT_COMMIT_AUTHOR_NAME set to default
@@ -65,73 +73,91 @@ cargo:warning=VERGEN_GIT_SHA set to default
 cargo:warning=VERGEN_GIT_DIRTY set to default
 cargo:rerun-if-changed=build.rs
 cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT
-cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
-        static ref GIT_REGEX_INST: Regex = {
-            let re_str = [
-                *GIT_BRANCH_RE_STR,
-                *GIT_CAE_RE_STR,
-                *GIT_CAN_RE_STR,
-                *GIT_CC_RE_STR,
-                *GIT_CD_RE_STR,
-                *GIT_CM_RE_STR,
-                *GIT_CT_RE_STR,
-                *GIT_DESCRIBE_RE_STR,
-                *GIT_SHA_RE_STR,
-                *GIT_DIRTY_RE_STR,
-            ]
-            .join("\n");
-            Regex::new(&re_str).unwrap()
-        };
-        static ref GIT_REGEX_SHORT_INST: Regex = {
-            let re_str = [
-                *GIT_BRANCH_RE_STR,
-                *GIT_CAE_RE_STR,
-                *GIT_CAN_RE_STR,
-                *GIT_CC_RE_STR,
-                *GIT_CD_RE_STR,
-                *GIT_CM_RE_STR,
-                *GIT_CT_RE_STR,
-                *GIT_DESCRIBE_RE_STR,
-                *GIT_SHORT_SHA_RE_STR,
-                *GIT_DIRTY_RE_STR,
-            ]
-            .join("\n");
-            Regex::new(&re_str).unwrap()
-        };
-        static ref GIT_REGEX_IDEM_INST: Regex = {
-            let re_str = [
-                *GIT_BRANCH_RE_STR,
-                *GIT_CAE_RE_STR,
-                *GIT_CAN_RE_STR,
-                *GIT_CC_RE_STR,
-                *GIT_CD_IDEM_RE_STR,
-                *GIT_CM_RE_STR,
-                *GIT_CT_IDEM_RE_STR,
-                *GIT_DESCRIBE_RE_STR,
-                *GIT_SHA_RE_STR,
-                *GIT_DIRTY_RE_STR,
-            ]
-            .join("\n");
-            Regex::new(&re_str).unwrap()
-        };
-        static ref ALL_IDEM_OUTPUT: Regex = {
-            let re_str = [
-                *GIT_BRANCH_IDEM_RE_STR,
-                *GIT_COMMIT_AUTHOR_EMAIL_IDEM_RE_STR,
-                *GIT_COMMIT_AUTHOR_NAME_IDEM_RE_STR,
-                *GIT_COMMIT_COUNT_IDEM_RE_STR,
-                *GIT_COMMIT_DATE_IDEM_RE_STR,
-                *GIT_COMMIT_MESSAGE_IDEM_RE_STR,
-                *GIT_COMMIT_TIMESTAMP_IDEM_RE_STR,
-                *GIT_DESCRIBE_IDEM_RE_STR,
-                *GIT_SHA_IDEM_RE_STR,
-                *GIT_DIRTY_IDEM_RE_STR,
-                *WARNINGS_RERUN_RE_STR,
-            ]
-            .join("\n");
-            Regex::new(&re_str).unwrap()
-        };
-    }
+cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH"
+    });
+    static WARNINGS_ONLY_RE_STR: LazyLock<&'static str> = LazyLock::new(|| {
+        r"cargo:warning=(.*?)
+cargo:warning=Unable to set VERGEN_GIT_BRANCH
+cargo:warning=Unable to set VERGEN_GIT_COMMIT_AUTHOR_EMAIL
+cargo:warning=Unable to set VERGEN_GIT_COMMIT_AUTHOR_NAME
+cargo:warning=Unable to set VERGEN_GIT_COMMIT_COUNT
+cargo:warning=Unable to set VERGEN_GIT_COMMIT_DATE
+cargo:warning=Unable to set VERGEN_GIT_COMMIT_MESSAGE
+cargo:warning=Unable to set VERGEN_GIT_COMMIT_TIMESTAMP
+cargo:warning=Unable to set VERGEN_GIT_DESCRIBE
+cargo:warning=Unable to set VERGEN_GIT_SHA
+cargo:warning=Unable to set VERGEN_GIT_DIRTY
+cargo:rerun-if-changed=build.rs
+cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT
+cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH"
+    });
+    static GIT_REGEX_INST: LazyLock<Regex> = LazyLock::new(|| {
+        let re_str = [
+            *GIT_BRANCH_RE_STR,
+            *GIT_CAE_RE_STR,
+            *GIT_CAN_RE_STR,
+            *GIT_CC_RE_STR,
+            *GIT_CD_RE_STR,
+            *GIT_CM_RE_STR,
+            *GIT_CT_RE_STR,
+            *GIT_DESCRIBE_RE_STR,
+            *GIT_SHA_RE_STR,
+            *GIT_DIRTY_RE_STR,
+        ]
+        .join("\n");
+        Regex::new(&re_str).unwrap()
+    });
+    static GIT_REGEX_SHORT_INST: LazyLock<Regex> = LazyLock::new(|| {
+        let re_str = [
+            *GIT_BRANCH_RE_STR,
+            *GIT_CAE_RE_STR,
+            *GIT_CAN_RE_STR,
+            *GIT_CC_RE_STR,
+            *GIT_CD_RE_STR,
+            *GIT_CM_RE_STR,
+            *GIT_CT_RE_STR,
+            *GIT_DESCRIBE_RE_STR,
+            *GIT_SHORT_SHA_RE_STR,
+            *GIT_DIRTY_RE_STR,
+        ]
+        .join("\n");
+        Regex::new(&re_str).unwrap()
+    });
+    static GIT_REGEX_IDEM_INST: LazyLock<Regex> = LazyLock::new(|| {
+        let re_str = [
+            *GIT_BRANCH_RE_STR,
+            *GIT_CAE_RE_STR,
+            *GIT_CAN_RE_STR,
+            *GIT_CC_RE_STR,
+            *GIT_CD_IDEM_RE_STR,
+            *GIT_CM_RE_STR,
+            *GIT_CT_IDEM_RE_STR,
+            *GIT_DESCRIBE_RE_STR,
+            *GIT_SHA_RE_STR,
+            *GIT_DIRTY_RE_STR,
+        ]
+        .join("\n");
+        Regex::new(&re_str).unwrap()
+    });
+    static ALL_IDEM_OUTPUT: LazyLock<Regex> = LazyLock::new(|| {
+        let re_str = [
+            *GIT_BRANCH_IDEM_RE_STR,
+            *GIT_COMMIT_AUTHOR_EMAIL_IDEM_RE_STR,
+            *GIT_COMMIT_AUTHOR_NAME_IDEM_RE_STR,
+            *GIT_COMMIT_COUNT_IDEM_RE_STR,
+            *GIT_COMMIT_DATE_IDEM_RE_STR,
+            *GIT_COMMIT_MESSAGE_IDEM_RE_STR,
+            *GIT_COMMIT_TIMESTAMP_IDEM_RE_STR,
+            *GIT_DESCRIBE_IDEM_RE_STR,
+            *GIT_SHA_IDEM_RE_STR,
+            *GIT_DIRTY_IDEM_RE_STR,
+            *WARNINGS_RERUN_RE_STR,
+        ]
+        .join("\n");
+        Regex::new(&re_str).unwrap()
+    });
+    static ALL_WARNING_OUTPUT: LazyLock<Regex> =
+        LazyLock::new(|| Regex::new(&WARNINGS_ONLY_RE_STR).unwrap());
 
     fn repo_exists() -> Result<()> {
         let curr_dir = env::current_dir()?;
@@ -141,11 +167,27 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
 
     #[test]
     #[serial]
-    fn git_all_output_idempotent() -> Result<()> {
+    fn git_all_output() -> Result<()> {
         let mut stdout_buf = vec![];
-        let mut gix = GixBuilder::all_git()?;
+        let mut gix = Gix::all_git();
         let _ = gix.at_path(temp_dir());
         let failed = Emitter::default()
+            .add_instructions(&gix)?
+            .emit_to(&mut stdout_buf)?;
+        let output = String::from_utf8_lossy(&stdout_buf);
+        assert!(!failed);
+        assert!(ALL_WARNING_OUTPUT.is_match(&output));
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn git_all_output_idempotent() -> Result<()> {
+        let mut stdout_buf = vec![];
+        let mut gix = Gix::all_git();
+        let _ = gix.at_path(temp_dir());
+        let failed = Emitter::default()
+            .idempotent()
             .add_instructions(&gix)?
             .emit_to(&mut stdout_buf)?;
         let output = String::from_utf8_lossy(&stdout_buf);
@@ -158,7 +200,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
     #[serial]
     fn git_all_output_default_dir() -> Result<()> {
         let mut stdout_buf = vec![];
-        let gix = GixBuilder::all_git()?;
+        let gix = Gix::all_git();
         let failed = Emitter::default()
             .add_instructions(&gix)?
             .emit_to(&mut stdout_buf)?;
@@ -174,11 +216,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
     fn git_all_flags_test_repo() -> Result<()> {
         let repo = TestRepos::new(true, false, false)?;
         let mut stdout_buf = vec![];
-        let mut gix = GixBuilder::default()
-            .all()
-            .describe(true, false, None)
-            .sha(true)
-            .build()?;
+        let mut gix = Gix::all().describe(true, false, None).sha(true).build();
         let _ = gix.at_path(repo.path());
         let failed = Emitter::default()
             .add_instructions(&gix)?
@@ -194,12 +232,11 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
     fn git_all_flags_test_repo_local() -> Result<()> {
         let repo = TestRepos::new(true, false, false)?;
         let mut stdout_buf = vec![];
-        let mut gix = GixBuilder::default()
-            .all()
+        let mut gix = Gix::all()
             .describe(true, false, None)
             .sha(true)
             .use_local(true)
-            .build()?;
+            .build();
         let _ = gix.at_path(repo.path());
         let result = || -> Result<bool> {
             let failed = Emitter::default()
@@ -232,7 +269,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
     fn git_all_output_test_repo() -> Result<()> {
         let repo = TestRepos::new(true, true, false)?;
         let mut stdout_buf = vec![];
-        let mut gix = GixBuilder::all_git()?;
+        let mut gix = Gix::all_git();
         let _ = gix.at_path(repo.path());
         let failed = Emitter::default()
             .add_instructions(&gix)?
@@ -249,10 +286,9 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
         let repo = TestRepos::new(true, true, false)?;
         let mut stdout_buf = vec![];
 
-        let mut gix = GixBuilder::default()
-            .all()
+        let mut gix = Gix::all()
             .describe(false, true, Some("0.1.0")) // Include only annotated tags
-            .build()?;
+            .build();
         let _ = gix.at_path(repo.path());
         let failed = Emitter::default()
             .add_instructions(&gix)?
@@ -264,10 +300,9 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
 
         stdout_buf.clear();
 
-        let mut gix = GixBuilder::default()
-            .all()
+        let mut gix = Gix::all()
             .describe(true, true, Some("0.2.0-rc1")) // Include both annotated and lightweight tags
-            .build()?;
+            .build();
         let _ = gix.at_path(repo.path());
         let failed = Emitter::default()
             .add_instructions(&gix)?
@@ -284,11 +319,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
     #[serial]
     fn git_emit_at_test_repo() -> Result<()> {
         let repo = TestRepos::new(true, false, false)?;
-        let mut gix = GixBuilder::default()
-            .all()
-            .describe(true, false, None)
-            .sha(true)
-            .build()?;
+        let mut gix = Gix::all().describe(true, false, None).sha(true).build();
         let _ = gix.at_path(repo.path());
         assert!(Emitter::default().add_instructions(&gix)?.emit().is_ok());
         Ok(())
@@ -298,7 +329,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
         use anyhow::Result;
         use serial_test::serial;
         use test_util::TestRepos;
-        use vergen_gix::{Emitter, GixBuilder};
+        use vergen_gix::{Emitter, Gix};
 
         const GIT_DIRTY_TRUE_OUTPUT: &str = r"cargo:rustc-env=VERGEN_GIT_DIRTY=true";
         const GIT_DIRTY_FALSE_OUTPUT: &str = r"cargo:rustc-env=VERGEN_GIT_DIRTY=false";
@@ -320,7 +351,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             let repo = TestRepos::new(false, false, false)?;
 
             let mut stdout_buf = vec![];
-            let mut gix = GixBuilder::default().dirty(false).build()?;
+            let mut gix = Gix::builder().dirty(false).build();
             let _ = gix.at_path(repo.path());
             let _emitter = Emitter::default()
                 .add_instructions(&gix)?
@@ -340,7 +371,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             let repo = TestRepos::new(false, false, false)?;
 
             let mut stdout_buf = vec![];
-            let mut gix = GixBuilder::default().dirty(true).build()?;
+            let mut gix = Gix::builder().dirty(true).build();
             let _ = gix.at_path(repo.path());
             let _emitter = Emitter::default()
                 .add_instructions(&gix)?
@@ -360,7 +391,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             let repo = TestRepos::new(true, false, false)?;
 
             let mut stdout_buf = vec![];
-            let mut gix = GixBuilder::default().dirty(false).build()?;
+            let mut gix = Gix::builder().dirty(false).build();
             let _ = gix.at_path(repo.path());
             let _emitter = Emitter::default()
                 .add_instructions(&gix)?
@@ -380,7 +411,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             let repo = TestRepos::new(true, false, false)?;
 
             let mut stdout_buf = vec![];
-            let mut gix = GixBuilder::default().dirty(true).build()?;
+            let mut gix = Gix::builder().dirty(true).build();
             let _ = gix.at_path(repo.path());
             let _emitter = Emitter::default()
                 .add_instructions(&gix)?
@@ -400,7 +431,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             let repo = TestRepos::new(false, true, false)?;
 
             let mut stdout_buf = vec![];
-            let mut gix = GixBuilder::default().dirty(false).build()?;
+            let mut gix = Gix::builder().dirty(false).build();
             let _ = gix.at_path(repo.path());
             let _emitter = Emitter::default()
                 .add_instructions(&gix)?
@@ -420,7 +451,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             let repo = TestRepos::new(false, true, false)?;
 
             let mut stdout_buf = vec![];
-            let mut gix = GixBuilder::default().dirty(true).build()?;
+            let mut gix = Gix::builder().dirty(true).build();
             let _ = gix.at_path(repo.path());
             let _emitter = Emitter::default()
                 .add_instructions(&gix)?
@@ -440,7 +471,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             let repo = TestRepos::new(true, true, false)?;
 
             let mut stdout_buf = vec![];
-            let mut gix = GixBuilder::default().dirty(false).build()?;
+            let mut gix = Gix::builder().dirty(false).build();
             let _ = gix.at_path(repo.path());
             let _emitter = Emitter::default()
                 .add_instructions(&gix)?
@@ -460,7 +491,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             let repo = TestRepos::new(true, true, false)?;
 
             let mut stdout_buf = vec![];
-            let mut gix = GixBuilder::default().dirty(true).build()?;
+            let mut gix = Gix::builder().dirty(true).build();
             let _ = gix.at_path(repo.path());
             let _emitter = Emitter::default()
                 .add_instructions(&gix)?
@@ -477,7 +508,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
     #[serial]
     fn git_all_idempotent_output() -> Result<()> {
         let mut stdout_buf = vec![];
-        let gix = GixBuilder::all_git()?;
+        let gix = Gix::all_git();
         let failed = Emitter::default()
             .idempotent()
             .add_instructions(&gix)?
@@ -493,7 +524,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
     #[serial_test::serial]
     fn git_all_idempotent_output_quiet() -> Result<()> {
         let mut stdout_buf = vec![];
-        let gix = GixBuilder::all_git()?;
+        let gix = Gix::all_git();
         let failed = Emitter::default()
             .idempotent()
             .quiet()
@@ -512,7 +543,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
         with_var("VERGEN_GIT_BRANCH", Some("this is a bad date"), || {
             let result = || -> Result<()> {
                 let mut stdout_buf = vec![];
-                let gix = GixBuilder::all_git()?;
+                let gix = Gix::all_git();
                 let _failed = Emitter::default()
                     .add_instructions(&gix)?
                     .emit_to(&mut stdout_buf)?;
@@ -534,7 +565,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             || {
                 let result = || -> Result<()> {
                     let mut stdout_buf = vec![];
-                    let gix = GixBuilder::all_git()?;
+                    let gix = Gix::all_git();
                     let _failed = Emitter::default()
                         .add_instructions(&gix)?
                         .emit_to(&mut stdout_buf)?;
@@ -561,7 +592,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             || {
                 let result = || -> Result<()> {
                     let mut stdout_buf = vec![];
-                    let gix = GixBuilder::all_git()?;
+                    let gix = Gix::all_git();
                     let _failed = Emitter::default()
                         .add_instructions(&gix)?
                         .emit_to(&mut stdout_buf)?;
@@ -588,13 +619,15 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             || {
                 let result = || -> Result<()> {
                     let mut stdout_buf = vec![];
-                    let gix = GixBuilder::all_git()?;
+                    let gix = Gix::all_git();
                     let _failed = Emitter::default()
                         .add_instructions(&gix)?
                         .emit_to(&mut stdout_buf)?;
                     let output = String::from_utf8_lossy(&stdout_buf);
-                    assert!(output
-                        .contains("cargo:rustc-env=VERGEN_GIT_COMMIT_COUNT=this is a bad date"));
+                    assert!(
+                        output
+                            .contains("cargo:rustc-env=VERGEN_GIT_COMMIT_COUNT=this is a bad date")
+                    );
                     assert!(output.contains("cargo:warning=VERGEN_GIT_COMMIT_COUNT overidden"));
                     Ok(())
                 }();
@@ -609,7 +642,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
         with_var("VERGEN_GIT_COMMIT_DATE", Some("this is a bad date"), || {
             let result = || -> Result<()> {
                 let mut stdout_buf = vec![];
-                let gix = GixBuilder::all_git()?;
+                let gix = Gix::all_git();
                 let _failed = Emitter::default()
                     .add_instructions(&gix)?
                     .emit_to(&mut stdout_buf)?;
@@ -633,13 +666,16 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             || {
                 let result = || -> Result<()> {
                     let mut stdout_buf = vec![];
-                    let gix = GixBuilder::all_git()?;
+                    let gix = Gix::all_git();
                     let _failed = Emitter::default()
                         .add_instructions(&gix)?
                         .emit_to(&mut stdout_buf)?;
                     let output = String::from_utf8_lossy(&stdout_buf);
-                    assert!(output
-                        .contains("cargo:rustc-env=VERGEN_GIT_COMMIT_MESSAGE=this is a bad date"));
+                    assert!(
+                        output.contains(
+                            "cargo:rustc-env=VERGEN_GIT_COMMIT_MESSAGE=this is a bad date"
+                        )
+                    );
                     assert!(output.contains("cargo:warning=VERGEN_GIT_COMMIT_MESSAGE overidden"));
                     Ok(())
                 }();
@@ -657,7 +693,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
             || {
                 let result = || -> Result<()> {
                     let mut stdout_buf = vec![];
-                    let gix = GixBuilder::all_git()?;
+                    let gix = Gix::all_git();
                     let _failed = Emitter::default()
                         .add_instructions(&gix)?
                         .emit_to(&mut stdout_buf)?;
@@ -679,7 +715,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
         with_var("VERGEN_GIT_DESCRIBE", Some("this is a bad date"), || {
             let result = || -> Result<()> {
                 let mut stdout_buf = vec![];
-                let gix = GixBuilder::all_git()?;
+                let gix = Gix::all_git();
                 let _failed = Emitter::default()
                     .add_instructions(&gix)?
                     .emit_to(&mut stdout_buf)?;
@@ -698,7 +734,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
         with_var("VERGEN_GIT_SHA", Some("this is a bad date"), || {
             let result = || -> Result<()> {
                 let mut stdout_buf = vec![];
-                let gix = GixBuilder::all_git()?;
+                let gix = Gix::all_git();
                 let _failed = Emitter::default()
                     .add_instructions(&gix)?
                     .emit_to(&mut stdout_buf)?;
@@ -717,7 +753,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH";
         with_var("VERGEN_GIT_DIRTY", Some("this is a bad date"), || {
             let result = || -> Result<()> {
                 let mut stdout_buf = vec![];
-                let gix = GixBuilder::all_git()?;
+                let gix = Gix::all_git();
                 let _failed = Emitter::default()
                     .add_instructions(&gix)?
                     .emit_to(&mut stdout_buf)?;

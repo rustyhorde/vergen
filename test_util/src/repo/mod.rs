@@ -1,12 +1,13 @@
 use anyhow::Result;
 use git::{
+    Id, ObjectId,
     clone::PrepareFetch,
     config::CommitAutoRollback,
     create::{Kind, Options},
     interrupt::IS_INTERRUPTED,
     objs::{
-        tree::{Entry, EntryKind},
         Tree,
+        tree::{Entry, EntryKind},
     },
     open,
     path::os_str_into_bstr,
@@ -14,10 +15,9 @@ use git::{
     refs::transaction::PreviousValue,
     remote::fetch::Shallow,
     url::parse,
-    Id, ObjectId,
 };
 use gix as git;
-use rand::{distr::Alphanumeric, rng, Rng};
+use rand::{Rng, distr::Alphanumeric, rng};
 use std::{
     env,
     fs::{self, FileTimes, OpenOptions},
@@ -358,7 +358,7 @@ impl Drop for TestRepos {
 
 #[cfg(test)]
 mod test {
-    use super::{TestRepos, RUNNER_TEMP_ENV};
+    use super::{RUNNER_TEMP_ENV, TestRepos};
     use anyhow::Result;
     use serial_test::serial;
 

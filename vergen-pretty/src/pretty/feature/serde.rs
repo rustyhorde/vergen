@@ -9,8 +9,8 @@
 use crate::Pretty;
 use convert_case::{Case, Casing};
 use serde::{
-    ser::{SerializeMap, SerializeStruct},
     Serialize, Serializer,
+    ser::{SerializeMap, SerializeStruct},
 };
 
 pub(crate) struct VarsTuple(Vec<(String, String, String)>);
@@ -64,10 +64,7 @@ impl Serialize for VarsTuple {
 
 #[cfg(test)]
 mod test {
-    use crate::{
-        utils::test_utils::TEST_PREFIX_SUFFIX, vergen_pretty_env, PrefixBuilder, PrettyBuilder,
-        SuffixBuilder,
-    };
+    use crate::{Prefix, Pretty, Suffix, utils::test_utils::TEST_PREFIX_SUFFIX, vergen_pretty_env};
     use anyhow::Result;
 
     const VARS: &str = r#"vars":{"#;
@@ -76,7 +73,7 @@ mod test {
 
     #[test]
     fn pretty_serialize_works() -> Result<()> {
-        let pretty = PrettyBuilder::default().env(vergen_pretty_env!()).build()?;
+        let pretty = Pretty::builder().env(vergen_pretty_env!()).build();
         let val = serde_json::to_string(&pretty)?;
         assert!(val.contains(VARS));
         Ok(())
@@ -84,13 +81,13 @@ mod test {
 
     #[test]
     fn pretty_with_prefix_serialize_works() -> Result<()> {
-        let prefix = PrefixBuilder::default()
+        let prefix = Prefix::builder()
             .lines(TEST_PREFIX_SUFFIX.lines().map(str::to_string).collect())
-            .build()?;
-        let pretty = PrettyBuilder::default()
+            .build();
+        let pretty = Pretty::builder()
             .env(vergen_pretty_env!())
             .prefix(prefix)
-            .build()?;
+            .build();
         let val = serde_json::to_string(&pretty)?;
         assert!(val.contains(VARS));
         assert!(val.contains(PREFIX));
@@ -99,13 +96,13 @@ mod test {
 
     #[test]
     fn pretty_with_suffix_serialize_works() -> Result<()> {
-        let suffix = SuffixBuilder::default()
+        let suffix = Suffix::builder()
             .lines(TEST_PREFIX_SUFFIX.lines().map(str::to_string).collect())
-            .build()?;
-        let pretty = PrettyBuilder::default()
+            .build();
+        let pretty = Pretty::builder()
             .env(vergen_pretty_env!())
             .suffix(suffix)
-            .build()?;
+            .build();
         let val = serde_json::to_string(&pretty)?;
         assert!(val.contains(VARS));
         assert!(val.contains(SUFFIX));
@@ -114,10 +111,10 @@ mod test {
 
     #[test]
     fn pretty_with_flatten_serialize_works() -> Result<()> {
-        let pretty = PrettyBuilder::default()
+        let pretty = Pretty::builder()
             .env(vergen_pretty_env!())
             .flatten(true)
-            .build()?;
+            .build();
         let val = serde_json::to_string(&pretty)?;
         assert!(!val.contains(VARS));
         assert!(!val.contains(PREFIX));

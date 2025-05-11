@@ -3,15 +3,15 @@ authors = ["Jason Ozias <jason.g.ozias@gmail.com>"]
 categories = ["development-tools", "development-tools::build-utils"]
 description = "Common code used to support the vergen libraries"
 documentation = "https://docs.rs/vergen-lib"
-edition = "2021"
+edition = "2024"
 homepage = "https://github.com/rustyhorde/vergen"
 keywords = ["cargo", "instructions", "build", "tool"]
 license = "MIT OR Apache-2.0"
-rust-version = "1.82.0"
+rust-version = "1.85.0"
 name = "vergen-lib"
 readme = "README.md"
 repository = "https://github.com/rustyhorde/vergen"
-version = "0.1.6"
+version = "1.0.0-beta.1"
 
 [package.metadata.cargo-matrix]
 [[package.metadata.cargo-matrix.channel]]
@@ -39,17 +39,21 @@ unstable = []
 si = []
 
 [dependencies]
-anyhow = "1.0.95"
-derive_builder = "0.20.2"
+anyhow = { workspace = true }
+bon = { workspace = true }
+getset = "0.1.5"
 
 [build-dependencies]
-rustversion = "1.0.19"
+rustversion = { workspace = true }
 
 [dev-dependencies]
-serial_test = "3.2.0"
-temp-env = "0.3.6"
+serial_test = { workspace =  true }
+temp-env = { workspace = true }
 test_util = { path = "../test_util", features = ["unstable"] }
 
 [package.metadata.docs.rs]
 features = ["build", "cargo", "git", "rustc", "si"]
 rustdoc-args = ["--cfg", "docsrs"]
+
+[lints.rust]
+unexpected_cfgs = { level = "allow", check-cfg = ['cfg(coverage,coverage_nightly)'] }

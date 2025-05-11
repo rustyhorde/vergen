@@ -6,8 +6,9 @@
 // option. All files in the project carrying such notice may not be copied,
 // modified, or distributed except according to those terms.
 
-use anyhow::{anyhow, Error, Result};
-use derive_builder::Builder as DeriveBuilder;
+use self::gitcl_builder::Empty;
+use anyhow::{Error, Result, anyhow};
+use bon::Builder;
 use std::{
     env::{self, VarError},
     path::PathBuf,
@@ -15,20 +16,20 @@ use std::{
     str::FromStr,
 };
 use time::{
+    OffsetDateTime, UtcOffset,
     format_description::{
         self,
         well_known::{Iso8601, Rfc3339},
     },
-    OffsetDateTime, UtcOffset,
 };
 use vergen_lib::{
-    add_default_map_entry, add_map_entry,
+    AddEntries, CargoRerunIfChanged, CargoRustcEnvMap, CargoWarning, DefaultConfig, Describe,
+    Dirty, Sha, VergenKey, add_default_map_entry, add_map_entry,
     constants::{
         GIT_BRANCH_NAME, GIT_COMMIT_AUTHOR_EMAIL, GIT_COMMIT_AUTHOR_NAME, GIT_COMMIT_COUNT,
         GIT_COMMIT_DATE_NAME, GIT_COMMIT_MESSAGE, GIT_COMMIT_TIMESTAMP_NAME, GIT_DESCRIBE_NAME,
         GIT_DIRTY_NAME, GIT_SHA_NAME,
     },
-    AddEntries, CargoRerunIfChanged, CargoRustcEnvMap, CargoWarning, DefaultConfig, VergenKey,
 };
 
 // This funkiness allows the command to be output in the docs
@@ -112,10 +113,10 @@ const DIRTY: &str = dirty!();
 ///
 /// ```
 /// # use anyhow::Result;
-/// # use vergen_gitcl::{Emitter, GitclBuilder};
+/// # use vergen_gitcl::{Emitter, Gitcl};
 /// #
 /// # fn main() -> Result<()> {
-/// let gitcl = GitclBuilder::all_git()?;
+/// let gitcl = Gitcl::all_git();
 /// Emitter::default().add_instructions(&gitcl)?.emit()?;
 /// #   Ok(())
 /// # }
@@ -125,10 +126,10 @@ const DIRTY: &str = dirty!();
 ///
 /// ```
 /// # use anyhow::Result;
-/// # use vergen_gitcl::{Emitter, GitclBuilder};
+/// # use vergen_gitcl::{Emitter, Gitcl};
 /// #
 /// # fn main() -> Result<()> {
-/// let gitcl = GitclBuilder::default().describe(true, false, None).build()?;
+/// let gitcl = Gitcl::builder().describe(true, false, None).build();
 /// Emitter::default().add_instructions(&gitcl)?.emit()?;
 /// #   Ok(())
 /// # }
@@ -138,12 +139,12 @@ const DIRTY: &str = dirty!();
 ///
 /// ```
 /// # use anyhow::Result;
-/// # use vergen_gitcl::{Emitter, GitclBuilder};
+/// # use vergen_gitcl::{Emitter, Gitcl};
 /// #
 /// # fn main() -> Result<()> {
 /// temp_env::with_var("VERGEN_GIT_BRANCH", Some("this is the branch I want output"), || {
 ///     let result = || -> Result<()> {
-///         let gitcl = GitclBuilder::all_git()?;
+///         let gitcl = Gitcl::all_git();
 ///         Emitter::default().add_instructions(&gitcl)?.emit()?;
 ///         Ok(())
 ///     }();
@@ -160,12 +161,12 @@ const DIRTY: &str = dirty!();
 ///
 /// ```
 /// # use anyhow::Result;
-/// # use vergen_gitcl::{Emitter, GitclBuilder};
+/// # use vergen_gitcl::{Emitter, Gitcl};
 /// #
 /// # fn main() -> Result<()> {
 /// temp_env::with_var("SOURCE_DATE_EPOCH", Some("1671809360"), || {
 ///     let result = || -> Result<()> {
-///         let gitcl = GitclBuilder::all_git()?;
+///         let gitcl = Gitcl::all_git();
 ///         Emitter::default().add_instructions(&gitcl)?.emit()?;
 ///         Ok(())
 ///     }();
@@ -196,10 +197,10 @@ const DIRTY: &str = dirty!();
 /// # Example
 /// ```
 /// # use anyhow::Result;
-/// # use vergen_gitcl::{Emitter, GitclBuilder};
+/// # use vergen_gitcl::{Emitter, Gitcl};
 /// #
 /// # fn main() -> Result<()> {
-/// let gitcl = GitclBuilder::all_git()?;
+/// let gitcl = Gitcl::all_git();
 /// Emitter::default().idempotent().add_instructions(&gitcl)?.emit()?;
 /// #   Ok(())
 /// # }
@@ -231,11 +232,16 @@ const DIRTY: &str = dirty!();
 /// cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
 /// ```
 ///
-#[derive(Clone, Debug, DeriveBuilder, PartialEq)]
+#[derive(Builder, Clone, Debug, PartialEq)]
 #[allow(clippy::struct_excessive_bools)]
 pub struct Gitcl {
+    /// Configures the default values.
+    /// If set to `true` all defaults are in "enabled" state.
+    /// If set to `false` all defaults are in "disabled" state.
+    #[builder(field)]
+    all: bool,
     /// An optional path to a repository.
-    #[builder(default = "None")]
+    #[builder(into)]
     repo_path: Option<PathBuf>,
     /// Emit the current git branch
     ///
@@ -243,7 +249,7 @@ pub struct Gitcl {
     /// cargo:rustc-env=VERGEN_GIT_BRANCH=<BRANCH_NAME>
     /// ```
     ///
-    #[builder(default = "false")]
+    #[builder(default = all)]
     branch: bool,
     /// Emit the author email of the most recent commit
     ///
@@ -251,7 +257,7 @@ pub struct Gitcl {
     /// cargo:rustc-env=VERGEN_GIT_COMMIT_AUTHOR_EMAIL=<AUTHOR_EMAIL>
     /// ```
     ///
-    #[builder(default = "false")]
+    #[builder(default = all)]
     commit_author_name: bool,
     /// Emit the author name of the most recent commit
     ///
@@ -259,14 +265,14 @@ pub struct Gitcl {
     /// cargo:rustc-env=VERGEN_GIT_COMMIT_AUTHOR_NAME=<AUTHOR_NAME>
     /// ```
     ///
-    #[builder(default = "false")]
+    #[builder(default = all)]
     commit_author_email: bool,
     /// Emit the total commit count to HEAD
     ///
     /// ```text
     /// cargo:rustc-env=VERGEN_GIT_COMMIT_COUNT=<COUNT>
     /// ```
-    #[builder(default = "false")]
+    #[builder(default = all)]
     commit_count: bool,
     /// Emit the commit message of the latest commit
     ///
@@ -274,7 +280,7 @@ pub struct Gitcl {
     /// cargo:rustc-env=VERGEN_GIT_COMMIT_MESSAGE=<MESSAGE>
     /// ```
     ///
-    #[builder(default = "false")]
+    #[builder(default = all)]
     commit_message: bool,
     /// Emit the commit date of the latest commit
     ///
@@ -286,7 +292,7 @@ pub struct Gitcl {
     /// ```text
     #[doc = concat!(commit_date!())]
     /// ```
-    #[builder(default = "false")]
+    #[builder(default = all)]
     commit_date: bool,
     /// Emit the commit timestamp of the latest commit
     ///
@@ -294,7 +300,7 @@ pub struct Gitcl {
     /// cargo:rustc-env=VERGEN_GIT_COMMIT_TIMESTAMP=<YYYY-MM-DDThh:mm:ssZ>
     /// ```
     ///
-    #[builder(default = "false")]
+    #[builder(default = all)]
     commit_timestamp: bool,
     /// Emit the describe output
     ///
@@ -305,17 +311,22 @@ pub struct Gitcl {
     /// Optionally, add the `dirty` or `tags` flag to describe.
     /// See [`git describe`](https://git-scm.com/docs/git-describe#_options) for more details
     ///
-    #[builder(default = "false", setter(custom))]
-    describe: bool,
+    /// ## `tags`
     /// Instead of using only the annotated tags, use any tag found in refs/tags namespace.
-    #[builder(default = "false", private)]
-    describe_tags: bool,
+    ///
+    /// ## `dirty`
     /// If the working tree has local modification "-dirty" is appended to it.
-    #[builder(default = "false", private)]
-    describe_dirty: bool,
+    ///
+    /// ## `match_pattern`
     /// Only consider tags matching the given glob pattern, excluding the "refs/tags/" prefix.
-    #[builder(default = "None", private)]
-    describe_match_pattern: Option<&'static str>,
+    #[builder(
+        required,
+        default = all.then(|| Describe::builder().build()),
+        with = |tags: bool, dirty: bool, match_pattern: Option<&'static str>| {
+            Some(Describe::builder().tags(tags).dirty(dirty).maybe_match_pattern(match_pattern).build())
+        }
+    )]
+    describe: Option<Describe>,
     /// Emit the SHA of the latest commit
     ///
     /// ```text
@@ -325,11 +336,14 @@ pub struct Gitcl {
     /// Optionally, add the `short` flag to rev-parse.
     /// See [`git rev-parse`](https://git-scm.com/docs/git-rev-parse#_options_for_output) for more details.
     ///
-    #[builder(default = "false", setter(custom))]
-    sha: bool,
+    /// ## `short`
     /// Shortens the object name to a unique prefix
-    #[builder(default = "false", private)]
-    sha_short: bool,
+    #[builder(
+        required,
+        default = all.then(|| Sha::builder().build()),
+        with = |short: bool| Some(Sha::builder().short(short).build())
+    )]
+    sha: Option<Sha>,
     /// Emit the dirty state of the git repository
     /// ```text
     /// cargo:rustc-env=VERGEN_GIT_DIRTY=(true|false)
@@ -337,107 +351,44 @@ pub struct Gitcl {
     ///
     /// Optionally, include untracked files when determining the dirty status of the repository.
     ///
-    #[builder(default = "false", setter(custom))]
-    dirty: bool,
+    /// # `include_tracked`
     /// Should we include/ignore untracked files in deciding whether the repository is dirty.
-    #[builder(default = "false", private)]
-    dirty_include_untracked: bool,
+    #[builder(
+        required,
+        default = all.then(|| Dirty::builder().build()),
+        with = |include_untracked: bool| Some(Dirty::builder().include_untracked(include_untracked).build())
+    )]
+    dirty: Option<Dirty>,
     /// Enable local offset date/timestamp output
-    #[builder(default = "false")]
+    #[builder(default = false)]
     use_local: bool,
     /// Specify the git cmd you wish to use, i.e. `/usr/bin/git`
-    #[builder(default = "None")]
     git_cmd: Option<&'static str>,
 }
 
-impl GitclBuilder {
-    /// Emit all of the `VERGEN_GIT_*` instructions
-    ///
-    /// # Errors
-    /// The underlying build function can error
-    ///
-    pub fn all_git() -> Result<Gitcl> {
-        Self::default()
-            .branch(true)
-            .commit_author_email(true)
-            .commit_author_name(true)
-            .commit_count(true)
-            .commit_date(true)
-            .commit_message(true)
-            .commit_timestamp(true)
-            .describe(false, false, None)
-            .sha(false)
-            .dirty(false)
-            .build()
-            .map_err(Into::into)
-    }
-
-    /// Convenience method to setup the [`GitclBuilder`] with all of the `VERGEN_GIT_*` instructions on
-    pub fn all(&mut self) -> &mut Self {
-        self.branch(true)
-            .commit_author_email(true)
-            .commit_author_name(true)
-            .commit_count(true)
-            .commit_date(true)
-            .commit_message(true)
-            .commit_timestamp(true)
-            .describe(false, false, None)
-            .sha(false)
-            .dirty(false)
-    }
-
-    /// Emit the describe output
-    ///
-    /// ```text
-    /// cargo:rustc-env=VERGEN_GIT_DESCRIBE=<DESCRIBE>
-    /// ```
-    ///
-    /// Optionally, add the `dirty` or `tags` flag to describe.
-    /// See [`git describe`](https://git-scm.com/docs/git-describe#_options) for more details
-    ///
-    pub fn describe(
-        &mut self,
-        tags: bool,
-        dirty: bool,
-        matches: Option<&'static str>,
-    ) -> &mut Self {
-        self.describe = Some(true);
-        let _ = self.describe_tags(tags);
-        let _ = self.describe_dirty(dirty);
-        let _ = self.describe_match_pattern(matches);
-        self
-    }
-
-    /// Emit the dirty state of the git repository
-    /// ```text
-    /// cargo:rustc-env=VERGEN_GIT_DIRTY=(true|false)
-    /// ```
-    ///
-    /// Optionally, include untracked files when determining the dirty status of the repository.
-    ///
-    pub fn dirty(&mut self, include_untracked: bool) -> &mut Self {
-        self.dirty = Some(true);
-        let _ = self.dirty_include_untracked(include_untracked);
-        self
-    }
-
-    /// Emit the SHA of the latest commit
-    ///
-    /// ```text
-    /// cargo:rustc-env=VERGEN_GIT_SHA=<SHA>
-    /// ```
-    ///
-    /// Optionally, add the `short` flag to rev-parse.
-    /// See [`git rev-parse`](https://git-scm.com/docs/git-rev-parse#_options_for_output) for more details.
-    ///
-    pub fn sha(&mut self, short: bool) -> &mut Self {
-        self.sha = Some(true);
-        let _ = self.sha_short(short);
+impl<S: gitcl_builder::State> GitclBuilder<S> {
+    /// Convenience method that switches the defaults of [`GitclBuilder`]
+    /// to enable all of the `VERGEN_GIT_*` instructions. It can only be
+    /// called at the start of the building process, i.e. when no config
+    /// has been set yet to avoid overwrites.
+    fn all(mut self) -> Self {
+        self.all = true;
         self
     }
 }
 
 impl Gitcl {
+    /// Emit all of the `VERGEN_GIT_*` instructions
+    #[must_use]
+    pub fn all_git() -> Gitcl {
+        Self::builder().all().build()
+    }
+
+    /// Convenience method to setup the [`GitclBuilder`] with all of the `VERGEN_GIT_*` instructions on
+    pub fn all() -> GitclBuilder<Empty> {
+        Self::builder().all()
+    }
+
     fn any(&self) -> bool {
         self.branch
             || self.commit_author_email
@@ -446,9 +397,9 @@ impl Gitcl {
             || self.commit_date
             || self.commit_message
             || self.commit_timestamp
-            || self.describe
-            || self.sha
-            || self.dirty
+            || self.describe.is_some()
+            || self.sha.is_some()
+            || self.dirty.is_some()
     }
 
     /// Run at the given path
@@ -577,7 +528,12 @@ impl Gitcl {
 
         if self.branch {
             if let Ok(_value) = env::var(GIT_BRANCH_NAME) {
-                add_default_map_entry(VergenKey::GitBranch, cargo_rustc_env, cargo_warning);
+                add_default_map_entry(
+                    idempotent,
+                    VergenKey::GitBranch,
+                    cargo_rustc_env,
+                    cargo_warning,
+                );
             } else {
                 Self::add_git_cmd_entry(
                     BRANCH_CMD,
@@ -591,6 +547,7 @@ impl Gitcl {
         if self.commit_author_email {
             if let Ok(_value) = env::var(GIT_COMMIT_AUTHOR_EMAIL) {
                 add_default_map_entry(
+                    idempotent,
                     VergenKey::GitCommitAuthorEmail,
                     cargo_rustc_env,
                     cargo_warning,
@@ -608,6 +565,7 @@ impl Gitcl {
         if self.commit_author_name {
             if let Ok(_value) = env::var(GIT_COMMIT_AUTHOR_NAME) {
                 add_default_map_entry(
+                    idempotent,
                     VergenKey::GitCommitAuthorName,
                     cargo_rustc_env,
                     cargo_warning,
@@ -624,7 +582,12 @@ impl Gitcl {
 
         if self.commit_count {
             if let Ok(_value) = env::var(GIT_COMMIT_COUNT) {
-                add_default_map_entry(VergenKey::GitCommitCount, cargo_rustc_env, cargo_warning);
+                add_default_map_entry(
+                    idempotent,
+                    VergenKey::GitCommitCount,
+                    cargo_rustc_env,
+                    cargo_warning,
+                );
             } else {
                 Self::add_git_cmd_entry(
                     COMMIT_COUNT,
@@ -645,7 +608,12 @@ impl Gitcl {
 
         if self.commit_message {
             if let Ok(_value) = env::var(GIT_COMMIT_MESSAGE) {
-                add_default_map_entry(VergenKey::GitCommitMessage, cargo_rustc_env, cargo_warning);
+                add_default_map_entry(
+                    idempotent,
+                    VergenKey::GitCommitMessage,
+                    cargo_rustc_env,
+                    cargo_warning,
+                );
             } else {
                 Self::add_git_cmd_entry(
                     COMMIT_MESSAGE,
@@ -657,40 +625,50 @@ impl Gitcl {
         }
 
         let mut dirty_cache = None; // attempt to re-use dirty status later if possible
-        if self.dirty {
+        if let Some(dirty) = self.dirty {
             if let Ok(_value) = env::var(GIT_DIRTY_NAME) {
-                add_default_map_entry(VergenKey::GitDirty, cargo_rustc_env, cargo_warning);
+                add_default_map_entry(
+                    idempotent,
+                    VergenKey::GitDirty,
+                    cargo_rustc_env,
+                    cargo_warning,
+                );
             } else {
-                let dirty = self.compute_dirty(self.dirty_include_untracked)?;
-                if !self.dirty_include_untracked {
-                    dirty_cache = Some(dirty);
+                let use_dirty = self.compute_dirty(dirty.include_untracked())?;
+                if !dirty.include_untracked() {
+                    dirty_cache = Some(use_dirty);
                 }
                 add_map_entry(
                     VergenKey::GitDirty,
-                    bool::to_string(&dirty),
+                    bool::to_string(&use_dirty),
                     cargo_rustc_env,
                 );
             }
         }
 
-        if self.describe {
+        if let Some(describe) = self.describe {
             // `git describe --dirty` does not support `GIT_OPTIONAL_LOCKS=0`
             // (see https://github.com/gitgitgadget/git/pull/1872)
             //
             // Instead, always compute the dirty status with `git status`
             if let Ok(_value) = env::var(GIT_DESCRIBE_NAME) {
-                add_default_map_entry(VergenKey::GitDescribe, cargo_rustc_env, cargo_warning);
+                add_default_map_entry(
+                    idempotent,
+                    VergenKey::GitDescribe,
+                    cargo_rustc_env,
+                    cargo_warning,
+                );
             } else {
                 let mut describe_cmd = String::from(DESCRIBE);
-                if self.describe_tags {
+                if describe.tags() {
                     describe_cmd.push_str(" --tags");
                 }
-                if let Some(pattern) = self.describe_match_pattern {
+                if let Some(pattern) = *describe.match_pattern() {
                     Self::match_pattern_cmd_str(&mut describe_cmd, pattern);
                 }
                 let stdout = Self::run_cmd_checked(&describe_cmd, self.repo_path.as_ref())?;
                 let mut describe_value = String::from_utf8_lossy(&stdout).trim().to_string();
-                if self.describe_dirty
+                if describe.dirty()
                     && (dirty_cache.is_some_and(|dirty| dirty) || self.compute_dirty(false)?)
                 {
                     describe_value.push_str("-dirty");
@@ -699,12 +677,17 @@ impl Gitcl {
             }
         }
 
-        if self.sha {
+        if let Some(sha) = self.sha {
             if let Ok(_value) = env::var(GIT_SHA_NAME) {
-                add_default_map_entry(VergenKey::GitSha, cargo_rustc_env, cargo_warning);
+                add_default_map_entry(
+                    idempotent,
+                    VergenKey::GitSha,
+                    cargo_rustc_env,
+                    cargo_warning,
+                );
             } else {
                 let mut sha_cmd = String::from(SHA);
-                if self.sha_short {
+                if sha.short() {
                     sha_cmd.push_str(" --short");
                 }
                 sha_cmd.push_str(" HEAD");
@@ -804,13 +787,19 @@ impl Gitcl {
     ) -> Result<()> {
         let mut date_override = false;
         if let Ok(_value) = env::var(GIT_COMMIT_DATE_NAME) {
-            add_default_map_entry(VergenKey::GitCommitDate, cargo_rustc_env, cargo_warning);
+            add_default_map_entry(
+                idempotent,
+                VergenKey::GitCommitDate,
+                cargo_rustc_env,
+                cargo_warning,
+            );
             date_override = true;
         }
 
         let mut timestamp_override = false;
         if let Ok(_value) = env::var(GIT_COMMIT_TIMESTAMP_NAME) {
             add_default_map_entry(
+                idempotent,
                 VergenKey::GitCommitTimestamp,
                 cargo_rustc_env,
                 cargo_warning,
@@ -839,11 +828,17 @@ impl Gitcl {
 
             if idempotent && !sde {
                 if self.commit_date && !date_override {
-                    add_default_map_entry(VergenKey::GitCommitDate, cargo_rustc_env, cargo_warning);
+                    add_default_map_entry(
+                        idempotent,
+                        VergenKey::GitCommitDate,
+                        cargo_rustc_env,
+                        cargo_warning,
+                    );
                 }
 
                 if self.commit_timestamp && !timestamp_override {
                     add_default_map_entry(
+                        idempotent,
                         VergenKey::GitCommitTimestamp,
                         cargo_rustc_env,
                         cargo_warning,
@@ -869,11 +864,17 @@ impl Gitcl {
             }
         } else {
             if self.commit_date && !date_override {
-                add_default_map_entry(VergenKey::GitCommitDate, cargo_rustc_env, cargo_warning);
+                add_default_map_entry(
+                    idempotent,
+                    VergenKey::GitCommitDate,
+                    cargo_rustc_env,
+                    cargo_warning,
+                );
             }
 
             if self.commit_timestamp && !timestamp_override {
                 add_default_map_entry(
+                    idempotent,
                     VergenKey::GitCommitTimestamp,
                     cargo_rustc_env,
                     cargo_warning,
@@ -948,10 +949,16 @@ impl AddEntries for Gitcl {
             cargo_warning.push(format!("{}", config.error()));
 
             if self.branch {
-                add_default_map_entry(VergenKey::GitBranch, cargo_rustc_env_map, cargo_warning);
+                add_default_map_entry(
+                    *config.idempotent(),
+                    VergenKey::GitBranch,
+                    cargo_rustc_env_map,
+                    cargo_warning,
+                );
             }
             if self.commit_author_email {
                 add_default_map_entry(
+                    *config.idempotent(),
                     VergenKey::GitCommitAuthorEmail,
                     cargo_rustc_env_map,
                     cargo_warning,
@@ -959,6 +966,7 @@ impl AddEntries for Gitcl {
             }
             if self.commit_author_name {
                 add_default_map_entry(
+                    *config.idempotent(),
                     VergenKey::GitCommitAuthorName,
                     cargo_rustc_env_map,
                     cargo_warning,
@@ -966,16 +974,23 @@ impl AddEntries for Gitcl {
             }
             if self.commit_count {
                 add_default_map_entry(
+                    *config.idempotent(),
                     VergenKey::GitCommitCount,
                     cargo_rustc_env_map,
                     cargo_warning,
                 );
             }
             if self.commit_date {
-                add_default_map_entry(VergenKey::GitCommitDate, cargo_rustc_env_map, cargo_warning);
+                add_default_map_entry(
+                    *config.idempotent(),
+                    VergenKey::GitCommitDate,
+                    cargo_rustc_env_map,
+                    cargo_warning,
+                );
             }
             if self.commit_message {
                 add_default_map_entry(
+                    *config.idempotent(),
                     VergenKey::GitCommitMessage,
                     cargo_rustc_env_map,
                     cargo_warning,
@@ -983,19 +998,35 @@ impl AddEntries for Gitcl {
             }
             if self.commit_timestamp {
                 add_default_map_entry(
+                    *config.idempotent(),
                     VergenKey::GitCommitTimestamp,
                     cargo_rustc_env_map,
                     cargo_warning,
                 );
             }
-            if self.describe {
-                add_default_map_entry(VergenKey::GitDescribe, cargo_rustc_env_map, cargo_warning);
+            if self.describe.is_some() {
+                add_default_map_entry(
+                    *config.idempotent(),
+                    VergenKey::GitDescribe,
+                    cargo_rustc_env_map,
+                    cargo_warning,
+                );
             }
-            if self.sha {
-                add_default_map_entry(VergenKey::GitSha, cargo_rustc_env_map, cargo_warning);
+            if self.sha.is_some() {
+                add_default_map_entry(
+                    *config.idempotent(),
+                    VergenKey::GitSha,
+                    cargo_rustc_env_map,
+                    cargo_warning,
+                );
             }
-            if self.dirty {
-                add_default_map_entry(VergenKey::GitDirty, cargo_rustc_env_map, cargo_warning);
+            if self.dirty.is_some() {
+                add_default_map_entry(
+                    *config.idempotent(),
+                    VergenKey::GitDirty,
+                    cargo_rustc_env_map,
+                    cargo_warning,
+                );
             }
             Ok(())
         }
@@ -1004,32 +1035,31 @@ impl AddEntries for Gitcl {
 
 #[cfg(test)]
 mod test {
-    use super::{Gitcl, GitclBuilder};
+    use super::Gitcl;
     use crate::Emitter;
     use anyhow::Result;
     use serial_test::serial;
     #[cfg(unix)]
     use std::io::stdout;
     use std::{collections::BTreeMap, env::temp_dir, io::Write};
-    use test_util::TestRepos;
     #[cfg(unix)]
     use test_util::TEST_MTIME;
-    use vergen_lib::{count_idempotent, VergenKey};
+    use test_util::TestRepos;
+    use vergen_lib::{VergenKey, count_idempotent};
 
     #[test]
     #[serial]
     #[allow(clippy::clone_on_copy, clippy::redundant_clone)]
-    fn gitcl_clone_works() -> Result<()> {
-        let gitcl = GitclBuilder::all_git()?;
+    fn gitcl_clone_works() {
+        let gitcl = Gitcl::all_git();
         let another = gitcl.clone();
         assert_eq!(another, gitcl);
-        Ok(())
     }
 
     #[test]
     #[serial]
     fn gitcl_debug_works() -> Result<()> {
-        let gitcl = GitclBuilder::all_git()?;
+        let gitcl = Gitcl::all_git();
         let mut buf = vec![];
         write!(buf, "{gitcl:?}")?;
         assert!(!buf.is_empty());
@@ -1039,7 +1069,7 @@ mod test {
     #[test]
     #[serial]
     fn gix_default() -> Result<()> {
-        let gitcl = GitclBuilder::default().build()?;
+        let gitcl = Gitcl::builder().build();
         let emitter = Emitter::default().add_instructions(&gitcl)?.test_emit();
         assert_eq!(0, emitter.cargo_rustc_env_map().len());
         assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
@@ -1051,13 +1081,15 @@ mod test {
     #[serial]
     fn bad_command_is_error() -> Result<()> {
         let mut map = BTreeMap::new();
-        assert!(Gitcl::add_git_cmd_entry(
-            "such_a_terrible_cmd",
-            None,
-            VergenKey::GitCommitMessage,
-            &mut map
-        )
-        .is_err());
+        assert!(
+            Gitcl::add_git_cmd_entry(
+                "such_a_terrible_cmd",
+                None,
+                VergenKey::GitCommitMessage,
+                &mut map
+            )
+            .is_err()
+        );
         Ok(())
     }
 
@@ -1081,13 +1113,10 @@ mod test {
     fn shell_env_works() -> Result<()> {
         temp_env::with_var("SHELL", Some("bash"), || {
             let mut map = BTreeMap::new();
-            assert!(Gitcl::add_git_cmd_entry(
-                "git -v",
-                None,
-                VergenKey::GitCommitMessage,
-                &mut map
-            )
-            .is_ok());
+            assert!(
+                Gitcl::add_git_cmd_entry("git -v", None, VergenKey::GitCommitMessage, &mut map)
+                    .is_ok()
+            );
         });
         Ok(())
     }
@@ -1095,7 +1124,7 @@ mod test {
     #[test]
     #[serial]
     fn git_all_idempotent() -> Result<()> {
-        let gitcl = GitclBuilder::all_git()?;
+        let gitcl = Gitcl::all_git();
         let emitter = Emitter::default()
             .idempotent()
             .add_instructions(&gitcl)?
@@ -1109,7 +1138,7 @@ mod test {
     #[test]
     #[serial]
     fn git_all_idempotent_no_warn() -> Result<()> {
-        let gitcl = GitclBuilder::all_git()?;
+        let gitcl = Gitcl::all_git();
         let emitter = Emitter::default()
             .idempotent()
             .quiet()
@@ -1125,7 +1154,7 @@ mod test {
     #[serial]
     fn git_all_at_path() -> Result<()> {
         let repo = TestRepos::new(false, false, false)?;
-        let mut gitcl = GitclBuilder::all_git()?;
+        let mut gitcl = Gitcl::all_git();
         let _ = gitcl.at_path(repo.path());
         let emitter = Emitter::default().add_instructions(&gitcl)?.test_emit();
         assert_eq!(10, emitter.cargo_rustc_env_map().len());
@@ -1137,7 +1166,7 @@ mod test {
     #[test]
     #[serial]
     fn git_all() -> Result<()> {
-        let gitcl = GitclBuilder::all_git()?;
+        let gitcl = Gitcl::all_git();
         let emitter = Emitter::default().add_instructions(&gitcl)?.test_emit();
         assert_eq!(10, emitter.cargo_rustc_env_map().len());
         assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
@@ -1149,7 +1178,7 @@ mod test {
     #[serial]
     fn git_all_shallow_clone() -> Result<()> {
         let repo = TestRepos::new(false, false, true)?;
-        let mut gitcl = GitclBuilder::all_git()?;
+        let mut gitcl = Gitcl::all_git();
         let _ = gitcl.at_path(repo.path());
         let emitter = Emitter::default().add_instructions(&gitcl)?.test_emit();
         assert_eq!(10, emitter.cargo_rustc_env_map().len());
@@ -1161,11 +1190,11 @@ mod test {
     #[test]
     #[serial]
     fn git_all_dirty_tags_short() -> Result<()> {
-        let gitcl = GitclBuilder::default()
+        let gitcl = Gitcl::builder()
             .all()
             .describe(true, true, None)
             .sha(true)
-            .build()?;
+            .build();
         let emitter = Emitter::default().add_instructions(&gitcl)?.test_emit();
         assert_eq!(10, emitter.cargo_rustc_env_map().len());
         assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
@@ -1176,21 +1205,38 @@ mod test {
     #[test]
     #[serial]
     fn fails_on_bad_git_command() -> Result<()> {
-        let mut gitcl = GitclBuilder::all_git()?;
+        let mut gitcl = Gitcl::all_git();
         let _ = gitcl.git_cmd(Some("this_is_not_a_git_cmd"));
-        assert!(Emitter::default()
-            .fail_on_error()
-            .add_instructions(&gitcl)
-            .is_err());
+        assert!(
+            Emitter::default()
+                .fail_on_error()
+                .add_instructions(&gitcl)
+                .is_err()
+        );
         Ok(())
     }
 
     #[test]
     #[serial]
     fn defaults_on_bad_git_command() -> Result<()> {
-        let mut gitcl = GitclBuilder::all_git()?;
+        let mut gitcl = Gitcl::all_git();
         let _ = gitcl.git_cmd(Some("this_is_not_a_git_cmd"));
         let emitter = Emitter::default().add_instructions(&gitcl)?.test_emit();
+        assert_eq!(0, emitter.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(11, emitter.cargo_warning().len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn idempotent_on_bad_git_command() -> Result<()> {
+        let mut gitcl = Gitcl::all_git();
+        let _ = gitcl.git_cmd(Some("this_is_not_a_git_cmd"));
+        let emitter = Emitter::default()
+            .idempotent()
+            .add_instructions(&gitcl)?
+            .test_emit();
         assert_eq!(10, emitter.cargo_rustc_env_map().len());
         assert_eq!(10, count_idempotent(emitter.cargo_rustc_env_map()));
         assert_eq!(11, emitter.cargo_warning().len());
@@ -1202,16 +1248,40 @@ mod test {
     fn bad_timestamp_defaults() -> Result<()> {
         let mut map = BTreeMap::new();
         let mut warnings = vec![];
-        let gitcl = GitclBuilder::all_git()?;
-        assert!(gitcl
-            .add_git_timestamp_entries(
-                "this_is_not_a_git_cmd",
-                None,
-                false,
-                &mut map,
-                &mut warnings
-            )
-            .is_ok());
+        let gitcl = Gitcl::all_git();
+        assert!(
+            gitcl
+                .add_git_timestamp_entries(
+                    "this_is_not_a_git_cmd",
+                    None,
+                    false,
+                    &mut map,
+                    &mut warnings
+                )
+                .is_ok()
+        );
+        assert_eq!(0, map.len());
+        assert_eq!(2, warnings.len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn bad_timestamp_idempotent() -> Result<()> {
+        let mut map = BTreeMap::new();
+        let mut warnings = vec![];
+        let gitcl = Gitcl::all_git();
+        assert!(
+            gitcl
+                .add_git_timestamp_entries(
+                    "this_is_not_a_git_cmd",
+                    None,
+                    true,
+                    &mut map,
+                    &mut warnings
+                )
+                .is_ok()
+        );
         assert_eq!(2, map.len());
         assert_eq!(2, warnings.len());
         Ok(())
@@ -1223,10 +1293,10 @@ mod test {
         temp_env::with_var("SOURCE_DATE_EPOCH", Some("1671809360"), || {
             let result = || -> Result<()> {
                 let mut stdout_buf = vec![];
-                let gitcl = GitclBuilder::default()
+                let gitcl = Gitcl::builder()
                     .commit_date(true)
                     .commit_timestamp(true)
-                    .build()?;
+                    .build();
                 _ = Emitter::new()
                     .idempotent()
                     .add_instructions(&gitcl)?
@@ -1260,7 +1330,7 @@ mod test {
         temp_env::with_var("SOURCE_DATE_EPOCH", Some(os_str), || {
             let result = || -> Result<bool> {
                 let mut stdout_buf = vec![];
-                let gitcl = GitclBuilder::default().commit_date(true).build()?;
+                let gitcl = Gitcl::builder().commit_date(true).build()?;
                 Emitter::new()
                     .idempotent()
                     .fail_on_error()
@@ -1283,7 +1353,7 @@ mod test {
         temp_env::with_var("SOURCE_DATE_EPOCH", Some(os_str), || {
             let result = || -> Result<bool> {
                 let mut stdout_buf = vec![];
-                let gitcl = GitclBuilder::default().commit_date(true).build()?;
+                let gitcl = Gitcl::builder().commit_date(true).build()?;
                 Emitter::new()
                     .idempotent()
                     .add_instructions(&gitcl)?
@@ -1306,7 +1376,7 @@ mod test {
         temp_env::with_var("SOURCE_DATE_EPOCH", Some(os_str), || {
             let result = || -> Result<bool> {
                 let mut stdout_buf = vec![];
-                let gitcl = GitclBuilder::default().commit_date(true).build()?;
+                let gitcl = Gitcl::builder().commit_date(true).build();
                 Emitter::new()
                     .fail_on_error()
                     .idempotent()
@@ -1330,7 +1400,7 @@ mod test {
         temp_env::with_var("SOURCE_DATE_EPOCH", Some(os_str), || {
             let result = || -> Result<bool> {
                 let mut stdout_buf = vec![];
-                let gitcl = GitclBuilder::default().commit_date(true).build()?;
+                let gitcl = Gitcl::builder().commit_date(true).build();
                 Emitter::new()
                     .idempotent()
                     .add_instructions(&gitcl)?
@@ -1348,10 +1418,7 @@ mod test {
         repo.set_index_magic_mtime()?;
 
         // The GIT_OPTIONAL_LOCKS=0 environment variable should prevent modifications to the index
-        let mut gitcl = GitclBuilder::default()
-            .all()
-            .describe(true, true, None)
-            .build()?;
+        let mut gitcl = Gitcl::builder().all().describe(true, true, None).build()?;
         let _ = gitcl.at_path(repo.path());
         let failed = Emitter::default()
             .add_instructions(&gitcl)?
