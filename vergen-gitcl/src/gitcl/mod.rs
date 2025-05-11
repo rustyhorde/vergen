@@ -1330,7 +1330,7 @@ mod test {
         temp_env::with_var("SOURCE_DATE_EPOCH", Some(os_str), || {
             let result = || -> Result<bool> {
                 let mut stdout_buf = vec![];
-                let gitcl = Gitcl::builder().commit_date(true).build()?;
+                let gitcl = Gitcl::builder().commit_date(true).build();
                 Emitter::new()
                     .idempotent()
                     .fail_on_error()
@@ -1353,7 +1353,7 @@ mod test {
         temp_env::with_var("SOURCE_DATE_EPOCH", Some(os_str), || {
             let result = || -> Result<bool> {
                 let mut stdout_buf = vec![];
-                let gitcl = Gitcl::builder().commit_date(true).build()?;
+                let gitcl = Gitcl::builder().commit_date(true).build();
                 Emitter::new()
                     .idempotent()
                     .add_instructions(&gitcl)?
@@ -1418,7 +1418,7 @@ mod test {
         repo.set_index_magic_mtime()?;
 
         // The GIT_OPTIONAL_LOCKS=0 environment variable should prevent modifications to the index
-        let mut gitcl = Gitcl::builder().all().describe(true, true, None).build()?;
+        let mut gitcl = Gitcl::builder().all().describe(true, true, None).build();
         let _ = gitcl.at_path(repo.path());
         let failed = Emitter::default()
             .add_instructions(&gitcl)?
