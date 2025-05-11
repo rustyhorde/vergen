@@ -231,7 +231,7 @@ impl Git2 {
         Self::builder().all().build()
     }
 
-    /// Convenience method to setup the [`Git2Builder`] with all of the `VERGEN_GIT_*` instructions on
+    /// Convenience method to setup the [`Git2`] builder with all of the `VERGEN_GIT_*` instructions on
     pub fn all() -> Git2Builder<Empty> {
         Self::builder().all()
     }

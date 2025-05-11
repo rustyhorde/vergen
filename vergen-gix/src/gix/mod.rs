@@ -228,7 +228,7 @@ impl Gix {
         Self::builder().all().build()
     }
 
-    /// Convenience method to setup the [`GixBuilder`] with all of the `VERGEN_GIT_*` instructions on
+    /// Convenience method to setup the [`Gix`] builder with all of the `VERGEN_GIT_*` instructions on
     pub fn all() -> GixBuilder<Empty> {
         Self::builder().all()
     }
