@@ -1078,7 +1078,7 @@ mod test {
         temp_env::with_var("SOURCE_DATE_EPOCH", Some(os_str), || {
             let result = || -> Result<bool> {
                 let mut stdout_buf = vec![];
-                let gix = Git2Builder::default().commit_date(true).build()?;
+                let gix = Git2::builder().commit_date(true).build();
                 Emitter::new()
                     .idempotent()
                     .fail_on_error()
@@ -1101,7 +1101,7 @@ mod test {
         temp_env::with_var("SOURCE_DATE_EPOCH", Some(os_str), || {
             let result = || -> Result<bool> {
                 let mut stdout_buf = vec![];
-                let gix = Git2Builder::default().commit_date(true).build()?;
+                let gix = Git2::builder().commit_date(true).build();
                 Emitter::new()
                     .idempotent()
                     .add_instructions(&gix)?
