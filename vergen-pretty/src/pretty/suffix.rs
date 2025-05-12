@@ -16,7 +16,7 @@ use std::io::Write;
 #[cfg(feature = "trace")]
 use tracing::Level;
 
-/// Configure suffix output for [`PrettyBuilder`](crate::PrettyBuilder)
+/// Configure suffix output for [`Pretty`](crate::Pretty) builder
 #[derive(Builder, Clone, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
 pub struct Suffix {

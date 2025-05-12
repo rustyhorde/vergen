@@ -16,7 +16,7 @@ use std::io::Write;
 #[cfg(feature = "trace")]
 use tracing::Level;
 
-/// Configure prefix output for [`PrettyBuilder`](crate::PrettyBuilder)
+/// Configure prefix output for [`Pretty`](crate::Pretty)
 #[derive(Builder, Clone, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
 pub struct Prefix {

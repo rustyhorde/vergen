@@ -97,7 +97,7 @@ pub struct Config {
 ///
 /// # Errors
 ///
-/// The errors are generally passed up from [`PrettyBuilder`]
+/// The errors are generally passed up from [`Pretty`] builder.
 ///
 pub fn header<T>(config: &Config, writer: Option<&mut T>) -> Result<()>
 where
