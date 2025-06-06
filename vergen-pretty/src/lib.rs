@@ -153,7 +153,6 @@ assert!(!buf.is_empty());
         // Add this back with 2024 edition
         // edition_2024_expr_fragment_specifier,
         elided_lifetimes_in_paths,
-        elided_named_lifetimes,
         ellipsis_inclusive_range_patterns,
         explicit_outlives_requirements,
         exported_private_dependencies,
@@ -185,6 +184,7 @@ assert!(!buf.is_empty());
         macro_use_extern_crate,
         map_unit_fn,
         meta_variable_misuse,
+        mismatched_lifetime_syntaxes,
         missing_abi,
         missing_copy_implementations,
         missing_debug_implementations,
