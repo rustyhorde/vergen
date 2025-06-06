@@ -281,6 +281,7 @@ assert!(!buf.is_empty());
 )]
 // clippy lints
 #![cfg_attr(nightly, deny(clippy::all, clippy::pedantic))]
+#![cfg_attr(nightly, allow(clippy::doc_markdown))]
 // rustdoc lints
 #![cfg_attr(
     nightly,
