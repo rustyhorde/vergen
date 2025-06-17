@@ -252,7 +252,6 @@ the [`TestRepos`] struct to creat temporary git repositories useful for `vergen-
         useless_ptr_null_checks,
         uses_power_alignment,
         variant_size_differences,
-        wasm_c_abi,
         while_true,
     )
 )]
