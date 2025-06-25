@@ -442,7 +442,6 @@ let build = Build::builder().build_timestamp(true).build();"
         unsafe_op_in_unsafe_fn,
         unstable_name_collisions,
         unstable_syntax_pre_expansion,
-        unsupported_fn_ptr_calling_conventions,
         unused_allocation,
         unused_assignments,
         unused_associated_type_bounds,
