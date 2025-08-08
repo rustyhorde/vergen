@@ -41,7 +41,7 @@ __vergen_empty_test = ["vergen-gix", "vergen-gix/unstable"]
 [dependencies]
 anyhow = { workspace = true }
 bon = { workspace = true }
-console = { version = "0.15.11", optional = true }
+console = { version = "0.16.0", optional = true }
 convert_case = "0.8.0"
 rand = { workspace = true, optional = true }
 serde = { version = "1.0.219", features = ["derive"], optional = true }
@@ -62,7 +62,7 @@ vergen-gix = { version = "2.0.0-beta.1", path = "../vergen-gix", features = [
 
 [dev-dependencies]
 regex = { workspace = true }
-serde_json = "1.0.140"
+serde_json = "1.0.142"
 tracing-subscriber = { version = "0.3.19", features = ["fmt"] }
 
 [package.metadata.docs.rs]

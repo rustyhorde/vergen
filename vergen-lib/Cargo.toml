@@ -41,7 +41,7 @@ si = []
 [dependencies]
 anyhow = { workspace = true }
 bon = { workspace = true }
-getset = "0.1.5"
+getset = "0.1.6"
 
 [build-dependencies]
 rustversion = { workspace = true }
