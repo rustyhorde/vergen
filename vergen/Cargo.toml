@@ -7,7 +7,7 @@ edition = "2024"
 homepage = "https://github.com/rustyhorde/vergen"
 keywords = ["cargo", "instructions", "build", "tool"]
 license = "MIT OR Apache-2.0"
-rust-version = "1.85.0"
+rust-version = "1.86.0"
 name = "vergen"
 readme = "README.md"
 repository = "https://github.com/rustyhorde/vergen"
@@ -36,10 +36,10 @@ emit_and_set = ["vergen-lib/emit_and_set"]
 [dependencies]
 anyhow = { workspace = true }
 bon = { workspace = true }
-cargo_metadata = { version = "0.19.2", optional = true }
+cargo_metadata = { version = "0.21.0", optional = true }
 regex = { workspace = true, optional = true }
 rustc_version = { version = "0.4.1", optional = true }
-sysinfo = { version = "0.35.0", optional = true }
+sysinfo = { version = "0.35.2", optional = true }
 time = { workspace = true, optional = true }
 vergen-lib = { version = "1.0.0-beta.1", path = "../vergen-lib" }
 
