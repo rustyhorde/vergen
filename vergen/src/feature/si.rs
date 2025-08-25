@@ -331,13 +331,13 @@ impl Sysinfo {
     }
 
     fn get_user(&self, system: &System) -> Option<String> {
-        if let Ok(pid) = self.get_pid() {
-            if let Some(process) = system.process(pid) {
-                let users = Users::new_with_refreshed_list();
-                for user in &users {
-                    if Self::check_user(process, user) {
-                        return Some(user.name().to_string());
-                    }
+        if let Ok(pid) = self.get_pid()
+            && let Some(process) = system.process(pid)
+        {
+            let users = Users::new_with_refreshed_list();
+            for user in &users {
+                if Self::check_user(process, user) {
+                    return Some(user.name().to_string());
                 }
             }
         }

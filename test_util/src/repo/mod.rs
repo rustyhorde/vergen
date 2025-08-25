@@ -224,10 +224,8 @@ impl TestRepos {
             Options::default(),
             opts,
         )?;
-        if shallow_clone {
-            if let Some(one) = NonZeroU32::new(1) {
-                prep = prep.with_shallow(Shallow::DepthAtRemote(one));
-            }
+        if shallow_clone && let Some(one) = NonZeroU32::new(1) {
+            prep = prep.with_shallow(Shallow::DepthAtRemote(one));
         }
         let (mut prepare_checkout, _) = prep.fetch_then_checkout(Discard, &IS_INTERRUPTED)?;
         let (_repo, _) = prepare_checkout.main_worktree(Discard, &IS_INTERRUPTED)?;
