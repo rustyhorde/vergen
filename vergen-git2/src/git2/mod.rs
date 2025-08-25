@@ -502,14 +502,14 @@ impl Git2 {
             cargo_rerun_if_changed.push(format!("{}", head_path.display()));
         }
 
-        if let Ok(resolved) = ref_head.resolve() {
-            if let Some(name) = resolved.name() {
-                let ref_path = git_path.to_path_buf();
-                let path = ref_path.join(name);
-                // Check whether the path exists in the filesystem before emitting it
-                if path.exists() {
-                    cargo_rerun_if_changed.push(format!("{}", path.display()));
-                }
+        if let Ok(resolved) = ref_head.resolve()
+            && let Some(name) = resolved.name()
+        {
+            let ref_path = git_path.to_path_buf();
+            let path = ref_path.join(name);
+            // Check whether the path exists in the filesystem before emitting it
+            if path.exists() {
+                cargo_rerun_if_changed.push(format!("{}", path.display()));
             }
         }
     }
@@ -536,12 +536,12 @@ impl Git2 {
             let locals = repo.branches(Some(BranchType::Local))?;
             let mut found_head = false;
             for (local, _bt) in locals.filter_map(std::result::Result::ok) {
-                if local.is_head() {
-                    if let Some(name) = local.name()? {
-                        add_map_entry(VergenKey::GitBranch, name, cargo_rustc_env);
-                        found_head = !add_default;
-                        break;
-                    }
+                if local.is_head()
+                    && let Some(name) = local.name()?
+                {
+                    add_map_entry(VergenKey::GitBranch, name, cargo_rustc_env);
+                    found_head = !add_default;
+                    break;
                 }
             }
             if !found_head {
@@ -578,13 +578,12 @@ impl Git2 {
         cargo_warning: &mut CargoWarning,
     ) {
         let key = VergenKey::GitCommitCount;
-        if !add_default {
-            if let Ok(mut revwalk) = repo.revwalk() {
-                if revwalk.push_head().is_ok() {
-                    add_map_entry(key, revwalk.count().to_string(), cargo_rustc_env);
-                    return;
-                }
-            }
+        if !add_default
+            && let Ok(mut revwalk) = repo.revwalk()
+            && revwalk.push_head().is_ok()
+        {
+            add_map_entry(key, revwalk.count().to_string(), cargo_rustc_env);
+            return;
         }
         add_default_map_entry(idempotent, key, cargo_rustc_env, cargo_warning);
     }
