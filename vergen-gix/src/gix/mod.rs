@@ -278,8 +278,9 @@ impl Gix {
     }
 
     #[cfg(not(feature = "allow_remote"))]
+    #[allow(clippy::unused_self)]
     fn get_repository(&self, repo_dir: PathBuf) -> Result<Repository> {
-        discover(repo_dir).map_err(|e| e.into())
+        discover(repo_dir).map_err(Into::into)
     }
 
     #[cfg(feature = "allow_remote")]

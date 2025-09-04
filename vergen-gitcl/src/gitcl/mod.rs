@@ -700,12 +700,7 @@ impl Gitcl {
                     sha_cmd.push_str(" --short");
                 }
                 sha_cmd.push_str(" HEAD");
-                Self::add_git_cmd_entry(
-                    &sha_cmd,
-                    repo_path,
-                    VergenKey::GitSha,
-                    cargo_rustc_env,
-                )?;
+                Self::add_git_cmd_entry(&sha_cmd, repo_path, VergenKey::GitSha, cargo_rustc_env)?;
             }
         }
 
@@ -938,8 +933,7 @@ impl AddEntries for Gitcl {
         if self.any() {
             let repo_path = self.get_repo_path();
             let git_cmd = self.git_cmd.unwrap_or("git --version");
-            Self::check_git(git_cmd)
-                .and_then(|()| Self::check_inside_git_worktree(repo_path))?;
+            Self::check_git(git_cmd).and_then(|()| Self::check_inside_git_worktree(repo_path))?;
             self.inner_add_git_map_entries(
                 idempotent,
                 cargo_rustc_env,

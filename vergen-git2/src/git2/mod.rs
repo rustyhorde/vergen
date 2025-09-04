@@ -300,16 +300,19 @@ impl Git2 {
     }
 
     #[cfg(not(feature = "allow_remote"))]
-    fn get_repository(&self, repo_dir: PathBuf) -> Result<Repository> {
-        Repository::discover(repo_dir).map_err(|e| e.into())
+    #[allow(clippy::unused_self)]
+    fn get_repository(&self, repo_dir: &PathBuf) -> Result<Repository> {
+        Repository::discover(repo_dir).map_err(Into::into)
     }
 
     #[cfg(feature = "allow_remote")]
-    fn get_repository(&self, repo_dir: PathBuf) -> Result<Repository> {
-        if let Ok(repo) = Repository::discover(&repo_dir) {
+    fn get_repository(&self, repo_dir: &PathBuf) -> Result<Repository> {
+        if let Ok(repo) = Repository::discover(repo_dir) {
             Ok(repo)
         } else if let Some(remote_url) = &self.remote_url {
-            let repo = git2_rs::build::RepoBuilder::new().bare(true).clone(remote_url, &repo_dir)?;
+            let repo = git2_rs::build::RepoBuilder::new()
+                .bare(true)
+                .clone(remote_url, repo_dir)?;
             Ok(repo)
         } else {
             Err(anyhow::anyhow!(
@@ -332,7 +335,7 @@ impl Git2 {
         } else {
             env::current_dir()?
         };
-        let repo = self.get_repository(repo_dir)?;
+        let repo = self.get_repository(&repo_dir)?;
         let ref_head = repo.find_reference("HEAD")?;
         let git_path = repo.path().to_path_buf();
         let commit = ref_head.peel_to_commit()?;
