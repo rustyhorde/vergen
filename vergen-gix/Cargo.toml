@@ -20,7 +20,7 @@ always_deny = ["emit_and_set", "unstable"]
 
 [[package.metadata.cargo-matrix.channel]]
 name = "nightly"
-always_deny = ["emit_and_set"]
+always_deny = ["emit_and_set","cargo_metadata"]
 always_include = ["unstable"]
 
 [[package.metadata.cargo-matrix.channel]]
