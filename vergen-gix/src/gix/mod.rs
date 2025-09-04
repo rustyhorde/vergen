@@ -13,8 +13,7 @@ use gix::{
     Commit, Head, Id, Repository,
     commit::describe::SelectRef,
     dir::{entry::Status, walk::EmissionMode},
-    discover,
-    head::Kind,
+    discover, head,
 };
 use std::{
     env::{self, VarError},
@@ -33,6 +32,11 @@ use vergen_lib::{
         GIT_COMMIT_DATE_NAME, GIT_COMMIT_MESSAGE, GIT_COMMIT_TIMESTAMP_NAME, GIT_DESCRIBE_NAME,
         GIT_DIRTY_NAME, GIT_SHA_NAME,
     },
+};
+#[cfg(feature = "allow_remote")]
+use {
+    gix::{clone::PrepareFetch, create, open, progress},
+    std::sync::atomic::AtomicBool,
 };
 
 /// The `VERGEN_GIT_*` configuration features
@@ -93,6 +97,9 @@ pub struct Gix {
     /// An optional path to a repository.
     #[builder(into)]
     repo_path: Option<PathBuf>,
+    /// An optional remote URL to use in lieu of a local repository
+    #[builder(into)]
+    remote_url: Option<String>,
     /// Emit the current git branch
     ///
     /// ```text
@@ -270,6 +277,33 @@ impl Gix {
         Ok(())
     }
 
+    #[cfg(not(feature = "allow_remote"))]
+    fn get_repository(&self, repo_dir: PathBuf) -> Result<Repository> {
+        discover(repo_dir).map_err(|e| e.into())
+    }
+
+    #[cfg(feature = "allow_remote")]
+    fn get_repository(&self, repo_dir: PathBuf) -> Result<Repository> {
+        if let Ok(repo) = discover(&repo_dir) {
+            Ok(repo)
+        } else if let Some(remote_url) = &self.remote_url {
+            let mut fetch = PrepareFetch::new(
+                &remote_url[..],
+                repo_dir,
+                create::Kind::Bare,
+                create::Options::default(),
+                open::Options::default(),
+            )?;
+            let (repo, _) = fetch.fetch_only(progress::Discard, &AtomicBool::default())?;
+            Ok(repo)
+        } else {
+            Err(anyhow!(
+                "Could not find a git repository at '{}'",
+                repo_dir.display()
+            ))
+        }
+    }
+
     #[allow(clippy::too_many_lines, clippy::default_trait_access)]
     fn inner_add_git_map_entries(
         &self,
@@ -283,7 +317,7 @@ impl Gix {
         } else {
             env::current_dir()?
         };
-        let repo = discover(repo_dir)?;
+        let repo = self.get_repository(repo_dir)?;
         let mut head = repo.head()?;
         let git_path = repo.git_dir().to_path_buf();
         let commit = Self::get_commit(&repo, &mut head)?;
@@ -488,7 +522,7 @@ impl Gix {
             cargo_rerun_if_changed.push(format!("{}", head_path.display()));
         }
 
-        if let Kind::Symbolic(reference) = &head.kind {
+        if let head::Kind::Symbolic(reference) = &head.kind {
             let mut ref_path = git_path.to_path_buf();
             ref_path.push(reference.name.to_path());
             // Check whether the path exists in the filesystem before emitting it

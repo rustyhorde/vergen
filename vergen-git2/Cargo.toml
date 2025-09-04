@@ -25,6 +25,7 @@ always_include = ["unstable"]
 
 [features]
 default = []
+allow_remote = []
 build = ["vergen/build"]
 cargo = ["vergen/cargo"]
 cargo_metadata = ["vergen/cargo_metadata"]

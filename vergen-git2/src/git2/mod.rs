@@ -92,6 +92,9 @@ pub struct Git2 {
     /// An optional path to a repository.
     #[builder(into)]
     repo_path: Option<PathBuf>,
+    /// An optional remote URL to use in lieu of a local repository
+    #[builder(into)]
+    remote_url: Option<String>,
     /// Emit the current git branch
     ///
     /// ```text
@@ -296,6 +299,26 @@ impl Git2 {
         )
     }
 
+    #[cfg(not(feature = "allow_remote"))]
+    fn get_repository(&self, repo_dir: PathBuf) -> Result<Repository> {
+        Repository::discover(repo_dir).map_err(|e| e.into())
+    }
+
+    #[cfg(feature = "allow_remote")]
+    fn get_repository(&self, repo_dir: PathBuf) -> Result<Repository> {
+        if let Ok(repo) = Repository::discover(&repo_dir) {
+            Ok(repo)
+        } else if let Some(remote_url) = &self.remote_url {
+            let repo = git2_rs::build::RepoBuilder::new().bare(true).clone(remote_url, &repo_dir)?;
+            Ok(repo)
+        } else {
+            Err(anyhow::anyhow!(
+                "Could not find a git repository at '{}'",
+                repo_dir.display()
+            ))
+        }
+    }
+
     #[allow(clippy::too_many_lines)]
     fn inner_add_entries(
         &self,
@@ -309,7 +332,7 @@ impl Git2 {
         } else {
             env::current_dir()?
         };
-        let repo = Repository::discover(repo_dir)?;
+        let repo = self.get_repository(repo_dir)?;
         let ref_head = repo.find_reference("HEAD")?;
         let git_path = repo.path().to_path_buf();
         let commit = ref_head.peel_to_commit()?;

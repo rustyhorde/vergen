@@ -11,7 +11,7 @@ rust-version = "1.88.0"
 name = "vergen-gix"
 readme = "README.md"
 repository = "https://github.com/rustyhorde/vergen"
-version = "2.0.0-beta.1"
+version = "2.1.0-beta.1"
 
 [package.metadata.cargo-matrix]
 [[package.metadata.cargo-matrix.channel]]
@@ -34,6 +34,7 @@ build = ["vergen/build"]
 cargo = ["vergen/cargo"]
 cargo_metadata = ["vergen/cargo_metadata"]
 emit_and_set = ["vergen-lib/emit_and_set"]
+allow_remote = [ "gix/blocking-http-transport-reqwest-rust-tls" ]
 rustc = ["vergen/rustc"]
 unstable = ["vergen/unstable", "vergen-lib/unstable"]
 si = ["vergen/si"]
