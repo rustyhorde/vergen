@@ -10,7 +10,7 @@ use self::gitcl_builder::Empty;
 use anyhow::{Error, Result, anyhow};
 use bon::Builder;
 use std::{
-    env::{self, VarError},
+    env::{self, VarError, temp_dir},
     path::PathBuf,
     process::{Command, Output, Stdio},
     str::FromStr,
@@ -240,12 +240,19 @@ pub struct Gitcl {
     /// If set to `false` all defaults are in "disabled" state.
     #[builder(field)]
     all: bool,
-    /// An optional path to a repository.
+    /// An optional path to a local repository.
     #[builder(into)]
-    repo_path: Option<PathBuf>,
+    local_repo_path: Option<PathBuf>,
+    /// Force the use of a local repository, ignoring any remote configuration
+    #[builder(default = all)]
+    force_local: bool,
     /// An optional remote URL to use in lieu of a local repository
     #[builder(into)]
     remote_url: Option<String>,
+    /// An optional path to place the git repository if grabbed remotely
+    /// defaults to the temp directory on the system
+    #[builder(into)]
+    remote_repo_path: Option<PathBuf>,
     /// Emit the current git branch
     ///
     /// ```text
@@ -407,7 +414,7 @@ impl Gitcl {
 
     /// Run at the given path
     pub fn at_path(&mut self, path: PathBuf) -> &mut Self {
-        self.repo_path = Some(path);
+        self.local_repo_path = Some(path);
         self
     }
 
@@ -526,13 +533,14 @@ impl Gitcl {
     #[allow(clippy::too_many_lines)]
     fn inner_add_git_map_entries(
         &self,
+        repo_path: Option<&PathBuf>,
         idempotent: bool,
         cargo_rustc_env: &mut CargoRustcEnvMap,
         cargo_rerun_if_changed: &mut CargoRerunIfChanged,
         cargo_warning: &mut CargoWarning,
     ) -> Result<()> {
         if !idempotent && self.any() {
-            Self::add_rerun_if_changed(cargo_rerun_if_changed, self.repo_path.as_ref())?;
+            Self::add_rerun_if_changed(cargo_rerun_if_changed, repo_path)?;
         }
 
         if self.branch {
@@ -546,7 +554,7 @@ impl Gitcl {
             } else {
                 Self::add_git_cmd_entry(
                     BRANCH_CMD,
-                    self.repo_path.as_ref(),
+                    repo_path,
                     VergenKey::GitBranch,
                     cargo_rustc_env,
                 )?;
@@ -564,7 +572,7 @@ impl Gitcl {
             } else {
                 Self::add_git_cmd_entry(
                     COMMIT_AUTHOR_EMAIL,
-                    self.repo_path.as_ref(),
+                    repo_path,
                     VergenKey::GitCommitAuthorEmail,
                     cargo_rustc_env,
                 )?;
@@ -582,7 +590,7 @@ impl Gitcl {
             } else {
                 Self::add_git_cmd_entry(
                     COMMIT_AUTHOR_NAME,
-                    self.repo_path.as_ref(),
+                    repo_path,
                     VergenKey::GitCommitAuthorName,
                     cargo_rustc_env,
                 )?;
@@ -600,7 +608,7 @@ impl Gitcl {
             } else {
                 Self::add_git_cmd_entry(
                     COMMIT_COUNT,
-                    self.repo_path.as_ref(),
+                    repo_path,
                     VergenKey::GitCommitCount,
                     cargo_rustc_env,
                 )?;
@@ -609,7 +617,7 @@ impl Gitcl {
 
         self.add_git_timestamp_entries(
             COMMIT_TIMESTAMP,
-            self.repo_path.as_ref(),
+            repo_path,
             idempotent,
             cargo_rustc_env,
             cargo_warning,
@@ -626,7 +634,7 @@ impl Gitcl {
             } else {
                 Self::add_git_cmd_entry(
                     COMMIT_MESSAGE,
-                    self.repo_path.as_ref(),
+                    repo_path,
                     VergenKey::GitCommitMessage,
                     cargo_rustc_env,
                 )?;
@@ -643,7 +651,7 @@ impl Gitcl {
                     cargo_warning,
                 );
             } else {
-                let use_dirty = self.compute_dirty(dirty.include_untracked())?;
+                let use_dirty = self.compute_dirty(repo_path, dirty.include_untracked())?;
                 if !dirty.include_untracked() {
                     dirty_cache = Some(use_dirty);
                 }
@@ -675,10 +683,11 @@ impl Gitcl {
                 if let Some(pattern) = *describe.match_pattern() {
                     Self::match_pattern_cmd_str(&mut describe_cmd, pattern);
                 }
-                let stdout = Self::run_cmd_checked(&describe_cmd, self.repo_path.as_ref())?;
+                let stdout = Self::run_cmd_checked(&describe_cmd, repo_path)?;
                 let mut describe_value = String::from_utf8_lossy(&stdout).trim().to_string();
                 if describe.dirty()
-                    && (dirty_cache.is_some_and(|dirty| dirty) || self.compute_dirty(false)?)
+                    && (dirty_cache.is_some_and(|dirty| dirty)
+                        || self.compute_dirty(repo_path, false)?)
                 {
                     describe_value.push_str("-dirty");
                 }
@@ -700,12 +709,7 @@ impl Gitcl {
                     sha_cmd.push_str(" --short");
                 }
                 sha_cmd.push_str(" HEAD");
-                Self::add_git_cmd_entry(
-                    &sha_cmd,
-                    self.repo_path.as_ref(),
-                    VergenKey::GitSha,
-                    cargo_rustc_env,
-                )?;
+                Self::add_git_cmd_entry(&sha_cmd, repo_path, VergenKey::GitSha, cargo_rustc_env)?;
             }
         }
 
@@ -907,23 +911,31 @@ impl Gitcl {
         }
     }
 
-    fn compute_dirty(&self, include_untracked: bool) -> Result<bool> {
+    fn compute_dirty(&self, repo_path: Option<&PathBuf>, include_untracked: bool) -> Result<bool> {
         let mut dirty_cmd = String::from(DIRTY);
         if !include_untracked {
             dirty_cmd.push_str(" --untracked-files=no");
         }
-        let stdout = Self::run_cmd_checked(&dirty_cmd, self.repo_path.as_ref())?;
+        let stdout = Self::run_cmd_checked(&dirty_cmd, repo_path)?;
         Ok(!stdout.is_empty())
     }
 
     #[cfg(not(feature = "allow_remote"))]
-    fn get_repo_path(&self) -> Option<&PathBuf> {
-        self.repo_path.as_ref()
-    }
+    fn cleanup(&self) {}
 
     #[cfg(feature = "allow_remote")]
-    fn get_repo_path(&self) -> Option<&PathBuf> {
-        self.repo_path.as_ref()
+    fn cleanup(&self) {
+        if let Some(_remote_url) = self.remote_url.as_ref() {
+            let temp_dir = temp_dir().join("vergen-gitcl");
+            // If we used a remote URL, we should clean up the repo we cloned
+            if let Some(path) = &self.remote_repo_path {
+                if path.exists() {
+                    let _ = std::fs::remove_dir_all(path).ok();
+                }
+            } else if temp_dir.exists() {
+                let _ = std::fs::remove_dir_all(temp_dir).ok();
+            }
+        }
     }
 }
 
@@ -936,26 +948,54 @@ impl AddEntries for Gitcl {
         cargo_warning: &mut CargoWarning,
     ) -> Result<()> {
         if self.any() {
-            let repo_path = self.get_repo_path();
+            let mut repo_path = if let Some(repo_path) = &self.local_repo_path {
+                repo_path.clone()
+            } else {
+                env::current_dir()?
+            };
             let git_cmd = self.git_cmd.unwrap_or("git --version");
             Self::check_git(git_cmd)?;
 
-            if Self::check_inside_git_worktree(repo_path).is_err() {
-                if let Some(remote_url) = &self.remote_url {
-                    if !Self::clone(remote_url, self.repo_path.as_ref()) {
+            if Self::check_inside_git_worktree(Some(&repo_path)).is_err() {
+                if !self.force_local
+                    && let Some(remote_url) = &self.remote_url
+                {
+                    let remote_path = if let Some(remote_path) = &self.remote_repo_path {
+                        remote_path.clone()
+                    } else {
+                        temp_dir().join("vergen-gitcl")
+                    };
+                    if !Self::clone(remote_url, Some(&remote_path)) {
                         return Err(anyhow!("Failed to clone git repository"));
                     }
+                    cargo_warning.push(format!(
+                        "Using remote repository from '{remote_url}' at '{}'",
+                        remote_path.display()
+                    ));
+                    repo_path = remote_path;
                 } else {
-                    Self::check_inside_git_worktree(repo_path)?;
+                    Self::check_inside_git_worktree(Some(&repo_path))?;
+                    cargo_warning.push(format!(
+                        "Using local repository at '{}'",
+                        repo_path.display()
+                    ));
                 }
+            } else {
+                cargo_warning.push(format!(
+                    "Using local repository at '{}'",
+                    repo_path.display()
+                ));
             }
 
             self.inner_add_git_map_entries(
+                Some(&repo_path),
                 idempotent,
                 cargo_rustc_env,
                 cargo_rerun_if_changed,
                 cargo_warning,
             )?;
+
+            self.cleanup();
         }
         Ok(())
     }

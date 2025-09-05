@@ -33,6 +33,11 @@ use vergen_lib::{
         GIT_DIRTY_NAME, GIT_SHA_NAME,
     },
 };
+#[cfg(feature = "allow_remote")]
+use {
+    git2_rs::{FetchOptions, build::RepoBuilder},
+    std::env::temp_dir,
+};
 
 /// The `VERGEN_GIT_*` configuration features
 ///
@@ -89,12 +94,19 @@ pub struct Git2 {
     /// If set to `false` all defaults are in "disabled" state.
     #[builder(field)]
     all: bool,
-    /// An optional path to a repository.
+    /// An optional path to a local repository.
     #[builder(into)]
-    repo_path: Option<PathBuf>,
+    local_repo_path: Option<PathBuf>,
+    /// Force the use of a local repository, ignoring any remote configuration
+    #[builder(default = all)]
+    force_local: bool,
     /// An optional remote URL to use in lieu of a local repository
     #[builder(into)]
     remote_url: Option<String>,
+    /// An optional path to place the git repository if grabbed remotely
+    /// defaults to the temp directory on the system
+    #[builder(into)]
+    remote_repo_path: Option<PathBuf>,
     /// Emit the current git branch
     ///
     /// ```text
@@ -254,7 +266,7 @@ impl Git2 {
 
     /// Use the repository location at the given path to determine the git instruction output.
     pub fn at_path(&mut self, path: PathBuf) -> &mut Self {
-        self.repo_path = Some(path);
+        self.local_repo_path = Some(path);
         self
     }
 
@@ -301,26 +313,67 @@ impl Git2 {
 
     #[cfg(not(feature = "allow_remote"))]
     #[allow(clippy::unused_self)]
-    fn get_repository(&self, repo_dir: &PathBuf) -> Result<Repository> {
+    fn get_repository(
+        &self,
+        repo_dir: &PathBuf,
+        _warnings: &mut CargoWarning,
+    ) -> Result<Repository> {
         Repository::discover(repo_dir).map_err(Into::into)
     }
 
     #[cfg(feature = "allow_remote")]
-    fn get_repository(&self, repo_dir: &PathBuf) -> Result<Repository> {
+    fn get_repository(
+        &self,
+        repo_dir: &PathBuf,
+        warnings: &mut CargoWarning,
+    ) -> Result<Repository> {
         if let Ok(repo) = Repository::discover(repo_dir) {
+            warnings.push(format!(
+                "Using local repository at '{}'",
+                repo.path().display()
+            ));
             Ok(repo)
-        } else if let Some(remote_url) = &self.remote_url {
-            let mut fetch_opts = git2_rs::FetchOptions::new();
+        } else if !self.force_local
+            && let Some(remote_url) = &self.remote_url
+        {
+            let repo_path = if let Some(path) = &self.remote_repo_path {
+                path.clone()
+            } else {
+                temp_dir().join("vergen-git2")
+            };
+            let mut fetch_opts = FetchOptions::new();
             let _ = fetch_opts.depth(5);
-            let repo = git2_rs::build::RepoBuilder::new()
+            let repo = RepoBuilder::new()
                 .fetch_options(fetch_opts)
-                .clone(remote_url, repo_dir)?;
+                .clone(remote_url, &repo_path)?;
+            warnings.push(format!(
+                "Using remote repository from '{remote_url}' at '{}'",
+                repo.path().display()
+            ));
             Ok(repo)
         } else {
             Err(anyhow::anyhow!(
                 "Could not find a git repository at '{}'",
                 repo_dir.display()
             ))
+        }
+    }
+
+    #[cfg(not(feature = "allow_remote"))]
+    fn cleanup(&self) {}
+
+    #[cfg(feature = "allow_remote")]
+    fn cleanup(&self) {
+        if let Some(_remote_url) = self.remote_url.as_ref() {
+            let temp_dir = temp_dir().join("vergen-git2");
+            // If we used a remote URL, we should clean up the repo we cloned
+            if let Some(path) = &self.remote_repo_path {
+                if path.exists() {
+                    let _ = std::fs::remove_dir_all(path).ok();
+                }
+            } else if temp_dir.exists() {
+                let _ = std::fs::remove_dir_all(temp_dir).ok();
+            }
         }
     }
 
@@ -332,12 +385,12 @@ impl Git2 {
         cargo_rerun_if_changed: &mut CargoRerunIfChanged,
         cargo_warning: &mut CargoWarning,
     ) -> Result<()> {
-        let repo_dir = if let Some(path) = &self.repo_path {
+        let repo_dir = if let Some(path) = &self.local_repo_path {
             path.clone()
         } else {
             env::current_dir()?
         };
-        let repo = self.get_repository(&repo_dir)?;
+        let repo = self.get_repository(&repo_dir, cargo_warning)?;
         let ref_head = repo.find_reference("HEAD")?;
         let git_path = repo.path().to_path_buf();
         let commit = ref_head.peel_to_commit()?;
@@ -512,6 +565,8 @@ impl Git2 {
                 add_map_entry(VergenKey::GitDescribe, describe, cargo_rustc_env);
             }
         }
+
+        self.cleanup();
 
         Ok(())
     }
