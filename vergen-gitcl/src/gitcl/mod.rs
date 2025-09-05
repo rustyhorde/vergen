@@ -10,7 +10,11 @@ use self::gitcl_builder::Empty;
 use anyhow::{Error, Result, anyhow};
 use bon::Builder;
 use std::{
-    env::{self, VarError, temp_dir}, fs::create_dir_all, path::PathBuf, process::{Command, Output, Stdio}, str::FromStr
+    env::{self, VarError, temp_dir},
+    fs::create_dir_all,
+    path::PathBuf,
+    process::{Command, Output, Stdio},
+    str::FromStr,
 };
 use time::{
     OffsetDateTime, UtcOffset,
