@@ -310,8 +310,10 @@ impl Git2 {
         if let Ok(repo) = Repository::discover(repo_dir) {
             Ok(repo)
         } else if let Some(remote_url) = &self.remote_url {
+            let mut fetch_opts = git2_rs::FetchOptions::new();
+            let _ = fetch_opts.depth(5);
             let repo = git2_rs::build::RepoBuilder::new()
-                .bare(true)
+                .fetch_options(fetch_opts)
                 .clone(remote_url, repo_dir)?;
             Ok(repo)
         } else {

@@ -446,6 +446,12 @@ impl Gitcl {
             .unwrap_or(false)
     }
 
+    fn clone(remote_url: &str, path: Option<&PathBuf>) -> bool {
+        Self::run_cmd(&format!("git clone --depth 5 {remote_url} ."), path)
+            .map(|output| output.status.success())
+            .unwrap_or(false)
+    }
+
     fn inside_git_worktree(path: Option<&PathBuf>) -> bool {
         Self::run_cmd("git rev-parse --is-inside-work-tree", path)
             .map(|output| {
@@ -529,12 +535,6 @@ impl Gitcl {
             Self::add_rerun_if_changed(cargo_rerun_if_changed, self.repo_path.as_ref())?;
         }
 
-        let repo_path = if let Some(_remote_url) = &self.remote_url {
-            None
-        } else {
-            self.repo_path.as_ref()
-        };
-
         if self.branch {
             if let Ok(_value) = env::var(GIT_BRANCH_NAME) {
                 add_default_map_entry(
@@ -546,7 +546,7 @@ impl Gitcl {
             } else {
                 Self::add_git_cmd_entry(
                     BRANCH_CMD,
-                    repo_path,
+                    self.repo_path.as_ref(),
                     VergenKey::GitBranch,
                     cargo_rustc_env,
                 )?;
@@ -564,7 +564,7 @@ impl Gitcl {
             } else {
                 Self::add_git_cmd_entry(
                     COMMIT_AUTHOR_EMAIL,
-                    repo_path,
+                    self.repo_path.as_ref(),
                     VergenKey::GitCommitAuthorEmail,
                     cargo_rustc_env,
                 )?;
@@ -582,7 +582,7 @@ impl Gitcl {
             } else {
                 Self::add_git_cmd_entry(
                     COMMIT_AUTHOR_NAME,
-                    repo_path,
+                    self.repo_path.as_ref(),
                     VergenKey::GitCommitAuthorName,
                     cargo_rustc_env,
                 )?;
@@ -600,7 +600,7 @@ impl Gitcl {
             } else {
                 Self::add_git_cmd_entry(
                     COMMIT_COUNT,
-                    repo_path,
+                    self.repo_path.as_ref(),
                     VergenKey::GitCommitCount,
                     cargo_rustc_env,
                 )?;
@@ -609,7 +609,7 @@ impl Gitcl {
 
         self.add_git_timestamp_entries(
             COMMIT_TIMESTAMP,
-            repo_path,
+            self.repo_path.as_ref(),
             idempotent,
             cargo_rustc_env,
             cargo_warning,
@@ -626,7 +626,7 @@ impl Gitcl {
             } else {
                 Self::add_git_cmd_entry(
                     COMMIT_MESSAGE,
-                    repo_path,
+                    self.repo_path.as_ref(),
                     VergenKey::GitCommitMessage,
                     cargo_rustc_env,
                 )?;
@@ -675,7 +675,7 @@ impl Gitcl {
                 if let Some(pattern) = *describe.match_pattern() {
                     Self::match_pattern_cmd_str(&mut describe_cmd, pattern);
                 }
-                let stdout = Self::run_cmd_checked(&describe_cmd, repo_path)?;
+                let stdout = Self::run_cmd_checked(&describe_cmd, self.repo_path.as_ref())?;
                 let mut describe_value = String::from_utf8_lossy(&stdout).trim().to_string();
                 if describe.dirty()
                     && (dirty_cache.is_some_and(|dirty| dirty) || self.compute_dirty(false)?)
@@ -700,7 +700,12 @@ impl Gitcl {
                     sha_cmd.push_str(" --short");
                 }
                 sha_cmd.push_str(" HEAD");
-                Self::add_git_cmd_entry(&sha_cmd, repo_path, VergenKey::GitSha, cargo_rustc_env)?;
+                Self::add_git_cmd_entry(
+                    &sha_cmd,
+                    self.repo_path.as_ref(),
+                    VergenKey::GitSha,
+                    cargo_rustc_env,
+                )?;
             }
         }
 
@@ -933,7 +938,18 @@ impl AddEntries for Gitcl {
         if self.any() {
             let repo_path = self.get_repo_path();
             let git_cmd = self.git_cmd.unwrap_or("git --version");
-            Self::check_git(git_cmd).and_then(|()| Self::check_inside_git_worktree(repo_path))?;
+            Self::check_git(git_cmd)?;
+
+            if Self::check_inside_git_worktree(repo_path).is_err() {
+                if let Some(remote_url) = &self.remote_url {
+                    if !Self::clone(remote_url, self.repo_path.as_ref()) {
+                        return Err(anyhow!("Failed to clone git repository"));
+                    }
+                } else {
+                    Self::check_inside_git_worktree(repo_path)?;
+                }
+            }
+
             self.inner_add_git_map_entries(
                 idempotent,
                 cargo_rustc_env,
