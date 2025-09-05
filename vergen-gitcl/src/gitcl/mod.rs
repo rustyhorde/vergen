@@ -259,6 +259,9 @@ pub struct Gitcl {
     /// defaults to the temp directory on the system
     #[builder(into)]
     remote_repo_path: Option<PathBuf>,
+    /// An optional tag to clone from the remote
+    #[builder(into)]
+    remote_tag: Option<String>,
     /// Emit the current git branch
     ///
     /// ```text
@@ -460,8 +463,14 @@ impl Gitcl {
     }
 
     #[cfg(feature = "allow_remote")]
-    fn clone(remote_url: &str, path: Option<&PathBuf>) -> bool {
-        Self::run_cmd(&format!("git clone --depth 5 {remote_url} ."), path)
+    fn clone_repo(&self, remote_url: &str, path: Option<&PathBuf>) -> bool {
+        let cmd = if let Some(remote_tag) = self.remote_tag.as_deref() {
+            format!("git clone --branch {remote_tag} --single-branch {remote_url} .")
+        } else {
+            format!("git clone --depth 5 {remote_url} .")
+        };
+
+        Self::run_cmd(&cmd, path)
             .map(|output| output.status.success())
             .unwrap_or(false)
     }
@@ -984,7 +993,7 @@ impl Gitcl {
                 temp_dir().join("vergen-gitcl")
             };
             create_dir_all(&remote_path)?;
-            if !Self::clone(remote_url, Some(&remote_path)) {
+            if !self.clone_repo(remote_url, Some(&remote_path)) {
                 return Err(anyhow!("Failed to clone git repository"));
             }
             cargo_warning.push(format!(
@@ -1544,6 +1553,24 @@ mod test {
             // For testing only
             .force_remote(true)
             .remote_url("https://github.com/rustyhorde/vergen-cl.git")
+            .describe(true, true, None)
+            .build();
+        let emitter = Emitter::default().add_instructions(&gitcl)?.test_emit();
+        assert_eq!(10, emitter.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(1, emitter.cargo_warning().len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    #[cfg(feature = "allow_remote")]
+    fn remote_clone_with_tag_works() -> Result<()> {
+        let gitcl = Gitcl::all()
+            // For testing only
+            .force_remote(true)
+            .remote_url("https://github.com/rustyhorde/vergen-cl.git")
+            .remote_tag("0.3.2")
             .describe(true, true, None)
             .build();
         let emitter = Emitter::default().add_instructions(&gitcl)?.test_emit();
