@@ -325,7 +325,9 @@ impl Gix {
         repo_dir: &PathBuf,
         warnings: &mut CargoWarning,
     ) -> Result<Repository> {
-        if self.try_local() &&let Ok(repo) = discover(repo_dir) {
+        if self.try_local()
+            && let Ok(repo) = discover(repo_dir)
+        {
             Ok(repo)
         } else if self.try_remote()
             && let Some(remote_url) = &self.remote_url
