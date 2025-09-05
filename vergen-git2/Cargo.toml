@@ -16,11 +16,26 @@ version = "2.1.0-beta.4"
 [package.metadata.cargo-matrix]
 [[package.metadata.cargo-matrix.channel]]
 name = "default"
-always_deny = ["emit_and_set", "unstable"]
+always_deny = [
+    "build",
+    "cargo",
+    "cargo_metadata",
+    "emit_and_set",
+    "rustc",
+    "si",
+    "unstable"
+]
 
 [[package.metadata.cargo-matrix.channel]]
 name = "nightly"
-always_deny = ["emit_and_set"]
+always_deny = [
+    "build",
+    "cargo",
+    "cargo_metadata",
+    "emit_and_set",
+    "rustc",
+    "si",
+]
 always_include = ["unstable"]
 
 [features]
