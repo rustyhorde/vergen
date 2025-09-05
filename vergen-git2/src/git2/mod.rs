@@ -98,7 +98,7 @@ pub struct Git2 {
     #[builder(into)]
     local_repo_path: Option<PathBuf>,
     /// Force the use of a local repository, ignoring any remote configuration
-    #[builder(default = all)]
+    #[builder(default = false)]
     force_local: bool,
     /// An optional remote URL to use in lieu of a local repository
     #[builder(into)]
