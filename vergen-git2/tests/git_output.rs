@@ -747,20 +747,4 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH"
             assert!(result.is_ok());
         });
     }
-
-    // #[cfg(feature = "gitcl")]
-    // #[test]
-    // #[serial_test::serial]
-    // fn git_cmd_override_works() -> Result<()> {
-    //     let mut stdout_buf = vec![];
-    //     let failed = EmitBuilder::builder()
-    //         .all_git()
-    //         .git_cmd(Some("git -v"))
-    //         .emit_to(&mut stdout_buf)?;
-    //     let output = String::from_utf8_lossy(&stdout_buf);
-    //     assert!(!failed);
-    //     assert!(repo_exists().is_ok());
-    //     assert!(GIT_REGEX_INST.is_match(&output));
-    //     Ok(())
-    // }
 }

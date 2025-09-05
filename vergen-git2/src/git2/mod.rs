@@ -100,6 +100,10 @@ pub struct Git2 {
     /// Force the use of a local repository, ignoring any remote configuration
     #[builder(default = false)]
     force_local: bool,
+    /// Force the use of a remote repository (testing only)
+    #[cfg(test)]
+    #[builder(default = false)]
+    force_remote: bool,
     /// An optional remote URL to use in lieu of a local repository
     #[builder(into)]
     remote_url: Option<String>,
@@ -311,6 +315,27 @@ impl Git2 {
         )
     }
 
+    #[cfg(all(not(test), feature = "allow_remote"))]
+    #[allow(clippy::unused_self)]
+    fn try_local(&self) -> bool {
+        true
+    }
+
+    #[cfg(all(test, feature = "allow_remote"))]
+    fn try_local(&self) -> bool {
+        self.force_local || !self.force_remote
+    }
+
+    #[cfg(all(not(test), feature = "allow_remote"))]
+    fn try_remote(&self) -> bool {
+        !self.force_local
+    }
+
+    #[cfg(all(test, feature = "allow_remote"))]
+    fn try_remote(&self) -> bool {
+        self.force_remote || !self.force_local
+    }
+
     #[cfg(not(feature = "allow_remote"))]
     #[allow(clippy::unused_self)]
     fn get_repository(
@@ -327,13 +352,11 @@ impl Git2 {
         repo_dir: &PathBuf,
         warnings: &mut CargoWarning,
     ) -> Result<Repository> {
-        if let Ok(repo) = Repository::discover(repo_dir) {
-            warnings.push(format!(
-                "Using local repository at '{}'",
-                repo.path().display()
-            ));
+        if self.try_local()
+            && let Ok(repo) = Repository::discover(repo_dir)
+        {
             Ok(repo)
-        } else if !self.force_local
+        } else if self.try_remote()
             && let Some(remote_url) = &self.remote_url
         {
             let repo_path = if let Some(path) = &self.remote_repo_path {
@@ -341,6 +364,7 @@ impl Git2 {
             } else {
                 temp_dir().join("vergen-git2")
             };
+            std::fs::create_dir_all(&repo_path)?;
             let mut fetch_opts = FetchOptions::new();
             let _ = fetch_opts.depth(5);
             let repo = RepoBuilder::new()
@@ -360,6 +384,7 @@ impl Git2 {
     }
 
     #[cfg(not(feature = "allow_remote"))]
+    #[allow(clippy::unused_self)]
     fn cleanup(&self) {}
 
     #[cfg(feature = "allow_remote")]
@@ -1255,6 +1280,60 @@ mod test {
         assert!(!failed);
 
         assert_eq!(*TEST_MTIME, repo.get_index_magic_mtime()?);
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    #[cfg(feature = "allow_remote")]
+    fn remote_clone_works() -> Result<()> {
+        let git2 = Git2::all()
+            // For testing only
+            .force_remote(true)
+            .remote_url("https://github.com/rustyhorde/vergen-cl.git")
+            .describe(true, true, None)
+            .build();
+        let emitter = Emitter::default().add_instructions(&git2)?.test_emit();
+        assert_eq!(10, emitter.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(1, emitter.cargo_warning().len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    #[cfg(feature = "allow_remote")]
+    fn remote_clone_with_path_works() -> Result<()> {
+        let remote_path = std::env::temp_dir().join("blah");
+        let git2 = Git2::all()
+            // For testing only
+            .force_remote(true)
+            .remote_repo_path(&remote_path)
+            .remote_url("https://github.com/rustyhorde/vergen-cl.git")
+            .describe(true, true, None)
+            .build();
+        let emitter = Emitter::default().add_instructions(&git2)?.test_emit();
+        assert_eq!(10, emitter.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(1, emitter.cargo_warning().len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    #[cfg(feature = "allow_remote")]
+    fn remote_clone_with_force_local_works() -> Result<()> {
+        let git2 = Git2::all()
+            .force_local(true)
+            // For testing only
+            .force_remote(true)
+            .remote_url("https://github.com/rustyhorde/vergen-cl.git")
+            .describe(true, true, None)
+            .build();
+        let emitter = Emitter::default().add_instructions(&git2)?.test_emit();
+        assert_eq!(10, emitter.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(0, emitter.cargo_warning().len());
         Ok(())
     }
 }
