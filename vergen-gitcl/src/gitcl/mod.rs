@@ -10,10 +10,7 @@ use self::gitcl_builder::Empty;
 use anyhow::{Error, Result, anyhow};
 use bon::Builder;
 use std::{
-    env::{self, VarError, temp_dir},
-    path::PathBuf,
-    process::{Command, Output, Stdio},
-    str::FromStr,
+    env::{self, VarError, temp_dir}, fs::create_dir_all, path::PathBuf, process::{Command, Output, Stdio}, str::FromStr
 };
 use time::{
     OffsetDateTime, UtcOffset,
@@ -965,6 +962,7 @@ impl AddEntries for Gitcl {
                     } else {
                         temp_dir().join("vergen-gitcl")
                     };
+                    create_dir_all(&remote_path)?;
                     if !Self::clone(remote_url, Some(&remote_path)) {
                         return Err(anyhow!("Failed to clone git repository"));
                     }
