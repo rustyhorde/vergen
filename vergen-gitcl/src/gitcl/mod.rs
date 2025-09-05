@@ -973,7 +973,7 @@ impl Gitcl {
         repo_path: Option<&PathBuf>,
         cargo_warning: &mut CargoWarning,
     ) -> Result<Option<PathBuf>> {
-        if self.try_local() {
+        if self.try_local() && Self::check_inside_git_worktree(repo_path).is_ok() {
             Ok(repo_path.cloned())
         } else if self.try_remote()
             && let Some(remote_url) = &self.remote_url
