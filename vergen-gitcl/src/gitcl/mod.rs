@@ -9,6 +9,8 @@
 use self::gitcl_builder::Empty;
 use anyhow::{Error, Result, anyhow};
 use bon::Builder;
+#[cfg(feature = "allow_remote")]
+use std::{env::temp_dir, fs::create_dir_all};
 use std::{
     env::{self, VarError},
     path::PathBuf,
@@ -240,9 +242,29 @@ pub struct Gitcl {
     /// If set to `false` all defaults are in "disabled" state.
     #[builder(field)]
     all: bool,
-    /// An optional path to a repository.
+    /// An optional path to a local repository.
     #[builder(into)]
-    repo_path: Option<PathBuf>,
+    local_repo_path: Option<PathBuf>,
+    /// Force the use of a local repository, ignoring any remote configuration
+    #[builder(default = false)]
+    force_local: bool,
+    /// Force the use of a remote repository (testing only)
+    #[cfg(test)]
+    #[builder(default = false)]
+    force_remote: bool,
+    /// An optional remote URL to use in lieu of a local repository
+    #[builder(into)]
+    remote_url: Option<String>,
+    /// An optional path to place the git repository if grabbed remotely
+    /// defaults to the temp directory on the system
+    #[builder(into)]
+    remote_repo_path: Option<PathBuf>,
+    /// An optional tag to clone from the remote
+    #[builder(into)]
+    remote_tag: Option<String>,
+    /// The depth to use when fetching the repository
+    #[builder(default = 100)]
+    fetch_depth: usize,
     /// Emit the current git branch
     ///
     /// ```text
@@ -404,7 +426,7 @@ impl Gitcl {
 
     /// Run at the given path
     pub fn at_path(&mut self, path: PathBuf) -> &mut Self {
-        self.repo_path = Some(path);
+        self.local_repo_path = Some(path);
         self
     }
 
@@ -439,6 +461,19 @@ impl Gitcl {
 
     fn git_cmd_exists(cmd: &str) -> bool {
         Self::run_cmd(cmd, None)
+            .map(|output| output.status.success())
+            .unwrap_or(false)
+    }
+
+    #[cfg(feature = "allow_remote")]
+    fn clone_repo(&self, remote_url: &str, path: Option<&PathBuf>) -> bool {
+        let cmd = if let Some(remote_tag) = self.remote_tag.as_deref() {
+            format!("git clone --branch {remote_tag} --single-branch {remote_url} .")
+        } else {
+            format!("git clone --depth {} {remote_url} .", self.fetch_depth)
+        };
+
+        Self::run_cmd(&cmd, path)
             .map(|output| output.status.success())
             .unwrap_or(false)
     }
@@ -517,13 +552,14 @@ impl Gitcl {
     #[allow(clippy::too_many_lines)]
     fn inner_add_git_map_entries(
         &self,
+        repo_path: Option<&PathBuf>,
         idempotent: bool,
         cargo_rustc_env: &mut CargoRustcEnvMap,
         cargo_rerun_if_changed: &mut CargoRerunIfChanged,
         cargo_warning: &mut CargoWarning,
     ) -> Result<()> {
         if !idempotent && self.any() {
-            Self::add_rerun_if_changed(cargo_rerun_if_changed, self.repo_path.as_ref())?;
+            Self::add_rerun_if_changed(cargo_rerun_if_changed, repo_path)?;
         }
 
         if self.branch {
@@ -537,7 +573,7 @@ impl Gitcl {
             } else {
                 Self::add_git_cmd_entry(
                     BRANCH_CMD,
-                    self.repo_path.as_ref(),
+                    repo_path,
                     VergenKey::GitBranch,
                     cargo_rustc_env,
                 )?;
@@ -555,7 +591,7 @@ impl Gitcl {
             } else {
                 Self::add_git_cmd_entry(
                     COMMIT_AUTHOR_EMAIL,
-                    self.repo_path.as_ref(),
+                    repo_path,
                     VergenKey::GitCommitAuthorEmail,
                     cargo_rustc_env,
                 )?;
@@ -573,7 +609,7 @@ impl Gitcl {
             } else {
                 Self::add_git_cmd_entry(
                     COMMIT_AUTHOR_NAME,
-                    self.repo_path.as_ref(),
+                    repo_path,
                     VergenKey::GitCommitAuthorName,
                     cargo_rustc_env,
                 )?;
@@ -591,7 +627,7 @@ impl Gitcl {
             } else {
                 Self::add_git_cmd_entry(
                     COMMIT_COUNT,
-                    self.repo_path.as_ref(),
+                    repo_path,
                     VergenKey::GitCommitCount,
                     cargo_rustc_env,
                 )?;
@@ -600,7 +636,7 @@ impl Gitcl {
 
         self.add_git_timestamp_entries(
             COMMIT_TIMESTAMP,
-            self.repo_path.as_ref(),
+            repo_path,
             idempotent,
             cargo_rustc_env,
             cargo_warning,
@@ -617,7 +653,7 @@ impl Gitcl {
             } else {
                 Self::add_git_cmd_entry(
                     COMMIT_MESSAGE,
-                    self.repo_path.as_ref(),
+                    repo_path,
                     VergenKey::GitCommitMessage,
                     cargo_rustc_env,
                 )?;
@@ -634,7 +670,7 @@ impl Gitcl {
                     cargo_warning,
                 );
             } else {
-                let use_dirty = self.compute_dirty(dirty.include_untracked())?;
+                let use_dirty = Self::compute_dirty(repo_path, dirty.include_untracked())?;
                 if !dirty.include_untracked() {
                     dirty_cache = Some(use_dirty);
                 }
@@ -666,10 +702,11 @@ impl Gitcl {
                 if let Some(pattern) = *describe.match_pattern() {
                     Self::match_pattern_cmd_str(&mut describe_cmd, pattern);
                 }
-                let stdout = Self::run_cmd_checked(&describe_cmd, self.repo_path.as_ref())?;
+                let stdout = Self::run_cmd_checked(&describe_cmd, repo_path)?;
                 let mut describe_value = String::from_utf8_lossy(&stdout).trim().to_string();
                 if describe.dirty()
-                    && (dirty_cache.is_some_and(|dirty| dirty) || self.compute_dirty(false)?)
+                    && (dirty_cache.is_some_and(|dirty| dirty)
+                        || Self::compute_dirty(repo_path, false)?)
                 {
                     describe_value.push_str("-dirty");
                 }
@@ -691,12 +728,7 @@ impl Gitcl {
                     sha_cmd.push_str(" --short");
                 }
                 sha_cmd.push_str(" HEAD");
-                Self::add_git_cmd_entry(
-                    &sha_cmd,
-                    self.repo_path.as_ref(),
-                    VergenKey::GitSha,
-                    cargo_rustc_env,
-                )?;
+                Self::add_git_cmd_entry(&sha_cmd, repo_path, VergenKey::GitSha, cargo_rustc_env)?;
             }
         }
 
@@ -898,13 +930,93 @@ impl Gitcl {
         }
     }
 
-    fn compute_dirty(&self, include_untracked: bool) -> Result<bool> {
+    fn compute_dirty(repo_path: Option<&PathBuf>, include_untracked: bool) -> Result<bool> {
         let mut dirty_cmd = String::from(DIRTY);
         if !include_untracked {
             dirty_cmd.push_str(" --untracked-files=no");
         }
-        let stdout = Self::run_cmd_checked(&dirty_cmd, self.repo_path.as_ref())?;
+        let stdout = Self::run_cmd_checked(&dirty_cmd, repo_path)?;
         Ok(!stdout.is_empty())
+    }
+
+    #[cfg(not(feature = "allow_remote"))]
+    #[allow(clippy::unused_self)]
+    fn cleanup(&self) {}
+
+    #[cfg(feature = "allow_remote")]
+    fn cleanup(&self) {
+        if let Some(_remote_url) = self.remote_url.as_ref() {
+            let temp_dir = temp_dir().join("vergen-gitcl");
+            // If we used a remote URL, we should clean up the repo we cloned
+            if let Some(path) = &self.remote_repo_path {
+                if path.exists() {
+                    let _ = std::fs::remove_dir_all(path).ok();
+                }
+            } else if temp_dir.exists() {
+                let _ = std::fs::remove_dir_all(temp_dir).ok();
+            }
+        }
+    }
+
+    #[cfg(all(not(test), feature = "allow_remote"))]
+    #[allow(clippy::unused_self)]
+    fn try_local(&self) -> bool {
+        true
+    }
+
+    #[cfg(all(test, feature = "allow_remote"))]
+    fn try_local(&self) -> bool {
+        self.force_local || !self.force_remote
+    }
+
+    #[cfg(all(not(test), feature = "allow_remote"))]
+    fn try_remote(&self) -> bool {
+        !self.force_local
+    }
+
+    #[cfg(all(test, feature = "allow_remote"))]
+    fn try_remote(&self) -> bool {
+        self.force_remote || !self.force_local
+    }
+
+    #[cfg(feature = "allow_remote")]
+    fn setup_repo_path(
+        &self,
+        repo_path: Option<&PathBuf>,
+        cargo_warning: &mut CargoWarning,
+    ) -> Result<Option<PathBuf>> {
+        if self.try_local() && Self::check_inside_git_worktree(repo_path).is_ok() {
+            Ok(repo_path.cloned())
+        } else if self.try_remote()
+            && let Some(remote_url) = &self.remote_url
+        {
+            let remote_path = if let Some(remote_path) = &self.remote_repo_path {
+                remote_path.clone()
+            } else {
+                temp_dir().join("vergen-gitcl")
+            };
+            create_dir_all(&remote_path)?;
+            if !self.clone_repo(remote_url, Some(&remote_path)) {
+                return Err(anyhow!("Failed to clone git repository"));
+            }
+            cargo_warning.push(format!(
+                "Using remote repository from '{remote_url}' at '{}'",
+                remote_path.display()
+            ));
+            Ok(Some(remote_path))
+        } else {
+            Ok(repo_path.cloned())
+        }
+    }
+
+    #[cfg(not(feature = "allow_remote"))]
+    #[allow(clippy::unused_self, clippy::unnecessary_wraps)]
+    fn setup_repo_path(
+        &self,
+        repo_path: Option<&PathBuf>,
+        _cargo_warning: &mut CargoWarning,
+    ) -> Result<Option<PathBuf>> {
+        Ok(repo_path.cloned())
     }
 }
 
@@ -918,14 +1030,21 @@ impl AddEntries for Gitcl {
     ) -> Result<()> {
         if self.any() {
             let git_cmd = self.git_cmd.unwrap_or("git --version");
-            Self::check_git(git_cmd)
-                .and_then(|()| Self::check_inside_git_worktree(self.repo_path.as_ref()))?;
+            Self::check_git(git_cmd)?;
+
+            let repo_path = self.setup_repo_path(self.local_repo_path.as_ref(), cargo_warning)?;
+            let repo_path = repo_path.as_ref();
+            Self::check_inside_git_worktree(repo_path)?;
+
             self.inner_add_git_map_entries(
+                repo_path,
                 idempotent,
                 cargo_rustc_env,
                 cargo_rerun_if_changed,
                 cargo_warning,
             )?;
+
+            self.cleanup();
         }
         Ok(())
     }
@@ -1068,7 +1187,7 @@ mod test {
 
     #[test]
     #[serial]
-    fn gix_default() -> Result<()> {
+    fn gitcl_default() -> Result<()> {
         let gitcl = Gitcl::builder().build();
         let emitter = Emitter::default().add_instructions(&gitcl)?.test_emit();
         assert_eq!(0, emitter.cargo_rustc_env_map().len());
@@ -1426,6 +1545,97 @@ mod test {
         assert!(!failed);
 
         assert_eq!(*TEST_MTIME, repo.get_index_magic_mtime()?);
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    #[cfg(feature = "allow_remote")]
+    fn remote_clone_works() -> Result<()> {
+        let gitcl = Gitcl::all()
+            // For testing only
+            .force_remote(true)
+            .remote_url("https://github.com/rustyhorde/vergen-cl.git")
+            .describe(true, true, None)
+            .build();
+        let emitter = Emitter::default().add_instructions(&gitcl)?.test_emit();
+        assert_eq!(10, emitter.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(1, emitter.cargo_warning().len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    #[cfg(feature = "allow_remote")]
+    fn remote_clone_with_path_works() -> Result<()> {
+        let remote_path = temp_dir().join("blah");
+        let gitcl = Gitcl::all()
+            // For testing only
+            .force_remote(true)
+            .remote_repo_path(&remote_path)
+            .remote_url("https://github.com/rustyhorde/vergen-cl.git")
+            .describe(true, true, None)
+            .build();
+        let emitter = Emitter::default().add_instructions(&gitcl)?.test_emit();
+        assert_eq!(10, emitter.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(1, emitter.cargo_warning().len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    #[cfg(feature = "allow_remote")]
+    fn remote_clone_with_force_local_works() -> Result<()> {
+        let gitcl = Gitcl::all()
+            .force_local(true)
+            // For testing only
+            .force_remote(true)
+            .remote_url("https://github.com/rustyhorde/vergen-cl.git")
+            .describe(true, true, None)
+            .build();
+        let emitter = Emitter::default().add_instructions(&gitcl)?.test_emit();
+        assert_eq!(10, emitter.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(0, emitter.cargo_warning().len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    #[cfg(feature = "allow_remote")]
+    fn remote_clone_with_tag_works() -> Result<()> {
+        let gitcl = Gitcl::all()
+            // For testing only
+            .force_remote(true)
+            .remote_tag("0.3.9")
+            .remote_url("https://github.com/rustyhorde/vergen-cl.git")
+            .describe(true, true, None)
+            .build();
+        let emitter = Emitter::default().add_instructions(&gitcl)?.test_emit();
+        assert_eq!(10, emitter.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(1, emitter.cargo_warning().len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    #[cfg(feature = "allow_remote")]
+    fn remote_clone_with_depth_works() -> Result<()> {
+        let gitcl = Gitcl::all()
+            // For testing only
+            .force_remote(true)
+            .fetch_depth(200)
+            .remote_tag("0.3.9")
+            .remote_url("https://github.com/rustyhorde/vergen-cl.git")
+            .describe(true, true, None)
+            .build();
+        let emitter = Emitter::default().add_instructions(&gitcl)?.test_emit();
+        assert_eq!(10, emitter.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(1, emitter.cargo_warning().len());
         Ok(())
     }
 }

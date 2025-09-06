@@ -13,8 +13,7 @@ use gix::{
     Commit, Head, Id, Repository,
     commit::describe::SelectRef,
     dir::{entry::Status, walk::EmissionMode},
-    discover,
-    head::Kind,
+    discover, head,
 };
 use std::{
     env::{self, VarError},
@@ -33,6 +32,11 @@ use vergen_lib::{
         GIT_COMMIT_DATE_NAME, GIT_COMMIT_MESSAGE, GIT_COMMIT_TIMESTAMP_NAME, GIT_DESCRIBE_NAME,
         GIT_DIRTY_NAME, GIT_SHA_NAME,
     },
+};
+#[cfg(feature = "allow_remote")]
+use {
+    gix::{clone::PrepareFetch, create, open, progress},
+    std::{env::temp_dir, sync::atomic::AtomicBool},
 };
 
 /// The `VERGEN_GIT_*` configuration features
@@ -90,9 +94,26 @@ pub struct Gix {
     /// If set to `false` all defaults are in "disabled" state.
     #[builder(field)]
     all: bool,
-    /// An optional path to a repository.
+    /// An optional path to a local repository.
     #[builder(into)]
-    repo_path: Option<PathBuf>,
+    local_repo_path: Option<PathBuf>,
+    /// Force the use of a local repository, ignoring any remote configuration
+    #[builder(default = false)]
+    force_local: bool,
+    /// Force the use of a remote repository (testing only)
+    #[cfg(test)]
+    #[builder(default = false)]
+    force_remote: bool,
+    /// An optional remote URL to use in lieu of a local repository
+    #[builder(into)]
+    remote_url: Option<String>,
+    /// An optional path to place the git repository if grabbed remotely
+    /// defaults to the temp directory on the system
+    #[builder(into)]
+    remote_repo_path: Option<PathBuf>,
+    /// An optional tag to clone from the remote
+    #[builder(into)]
+    remote_tag: Option<String>,
     /// Emit the current git branch
     ///
     /// ```text
@@ -248,7 +269,7 @@ impl Gix {
 
     /// Run at the given path
     pub fn at_path(&mut self, path: PathBuf) -> &mut Self {
-        self.repo_path = Some(path);
+        self.local_repo_path = Some(path);
         self
     }
 
@@ -270,6 +291,100 @@ impl Gix {
         Ok(())
     }
 
+    #[cfg(all(not(test), feature = "allow_remote"))]
+    #[allow(clippy::unused_self)]
+    fn try_local(&self) -> bool {
+        true
+    }
+
+    #[cfg(all(test, feature = "allow_remote"))]
+    fn try_local(&self) -> bool {
+        self.force_local || !self.force_remote
+    }
+
+    #[cfg(all(not(test), feature = "allow_remote"))]
+    fn try_remote(&self) -> bool {
+        !self.force_local
+    }
+
+    #[cfg(all(test, feature = "allow_remote"))]
+    fn try_remote(&self) -> bool {
+        self.force_remote || !self.force_local
+    }
+
+    #[cfg(not(feature = "allow_remote"))]
+    #[allow(clippy::unused_self)]
+    fn get_repository(
+        &self,
+        repo_dir: &PathBuf,
+        _warnings: &mut CargoWarning,
+    ) -> Result<Repository> {
+        discover(repo_dir).map_err(Into::into)
+    }
+
+    #[cfg(feature = "allow_remote")]
+    fn get_repository(
+        &self,
+        repo_dir: &PathBuf,
+        warnings: &mut CargoWarning,
+    ) -> Result<Repository> {
+        if self.try_local()
+            && let Ok(repo) = discover(repo_dir)
+        {
+            Ok(repo)
+        } else if self.try_remote()
+            && let Some(remote_url) = &self.remote_url
+        {
+            let repo_path = if let Some(path) = &self.remote_repo_path {
+                path.clone()
+            } else {
+                temp_dir().join("vergen-gix")
+            };
+            let mut fetch = PrepareFetch::new(
+                &remote_url[..],
+                repo_path,
+                create::Kind::Bare,
+                create::Options::default(),
+                open::Options::default(),
+            )?;
+
+            if let Some(remote_tag) = self.remote_tag.as_deref() {
+                fetch = fetch.with_ref_name(Some(remote_tag))?;
+            }
+
+            let (repo, _) = fetch.fetch_only(progress::Discard, &AtomicBool::default())?;
+            warnings.push(format!(
+                "Using remote repository from '{remote_url}' at '{}'",
+                repo.path().display()
+            ));
+            Ok(repo)
+        } else {
+            Err(anyhow!(
+                "Could not find a git repository at '{}'",
+                repo_dir.display()
+            ))
+        }
+    }
+
+    #[cfg(not(feature = "allow_remote"))]
+    #[allow(clippy::unused_self)]
+    fn cleanup(&self) {}
+
+    #[cfg(feature = "allow_remote")]
+    fn cleanup(&self) {
+        if let Some(_remote_url) = self.remote_url.as_ref() {
+            let temp_dir = temp_dir().join("vergen-gix");
+            // If we used a remote URL, we should clean up the repo we cloned
+            if let Some(path) = &self.remote_repo_path {
+                if path.exists() {
+                    let _ = std::fs::remove_dir_all(path).ok();
+                }
+            } else if temp_dir.exists() {
+                let _ = std::fs::remove_dir_all(temp_dir).ok();
+            }
+        }
+    }
+
     #[allow(clippy::too_many_lines, clippy::default_trait_access)]
     fn inner_add_git_map_entries(
         &self,
@@ -278,12 +393,12 @@ impl Gix {
         cargo_rerun_if_changed: &mut CargoRerunIfChanged,
         cargo_warning: &mut CargoWarning,
     ) -> Result<()> {
-        let repo_dir = if let Some(path) = &self.repo_path {
+        let repo_dir = if let Some(path) = &self.local_repo_path {
             path.clone()
         } else {
             env::current_dir()?
         };
-        let repo = discover(repo_dir)?;
+        let repo = self.get_repository(&repo_dir, cargo_warning)?;
         let mut head = repo.head()?;
         let git_path = repo.git_dir().to_path_buf();
         let commit = Self::get_commit(&repo, &mut head)?;
@@ -457,6 +572,8 @@ impl Gix {
             }
         }
 
+        self.cleanup();
+
         Ok(())
     }
 
@@ -488,7 +605,7 @@ impl Gix {
             cargo_rerun_if_changed.push(format!("{}", head_path.display()));
         }
 
-        if let Kind::Symbolic(reference) = &head.kind {
+        if let head::Kind::Symbolic(reference) = &head.kind {
             let mut ref_path = git_path.to_path_buf();
             ref_path.push(reference.name.to_path());
             // Check whether the path exists in the filesystem before emitting it
@@ -1127,6 +1244,78 @@ mod test {
         assert!(!failed);
 
         assert_eq!(*TEST_MTIME, repo.get_index_magic_mtime()?);
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    #[cfg(feature = "allow_remote")]
+    fn remote_clone_works() -> Result<()> {
+        let gix = Gix::all()
+            // For testing only
+            .force_remote(true)
+            .remote_url("https://github.com/rustyhorde/vergen-cl.git")
+            .describe(true, true, None)
+            .build();
+        let emitter = Emitter::default().add_instructions(&gix)?.test_emit();
+        assert_eq!(10, emitter.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(1, emitter.cargo_warning().len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    #[cfg(feature = "allow_remote")]
+    fn remote_clone_with_path_works() -> Result<()> {
+        let remote_path = temp_dir().join("blah");
+        let gix = Gix::all()
+            // For testing only
+            .force_remote(true)
+            .remote_repo_path(&remote_path)
+            .remote_url("https://github.com/rustyhorde/vergen-cl.git")
+            .describe(true, true, None)
+            .build();
+        let emitter = Emitter::default().add_instructions(&gix)?.test_emit();
+        assert_eq!(10, emitter.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(1, emitter.cargo_warning().len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    #[cfg(feature = "allow_remote")]
+    fn remote_clone_with_force_local_works() -> Result<()> {
+        let gix = Gix::all()
+            .force_local(true)
+            // For testing only
+            .force_remote(true)
+            .remote_url("https://github.com/rustyhorde/vergen-cl.git")
+            .describe(true, true, None)
+            .build();
+        let emitter = Emitter::default().add_instructions(&gix)?.test_emit();
+        assert_eq!(10, emitter.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(0, emitter.cargo_warning().len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    #[cfg(feature = "allow_remote")]
+    fn remote_clone_with_tag_works() -> Result<()> {
+        let gix = Gix::all()
+            // For testing only
+            .force_remote(true)
+            .remote_tag("0.3.9")
+            .remote_url("https://github.com/rustyhorde/vergen-cl.git")
+            .describe(true, true, None)
+            .build();
+        let emitter = Emitter::default().add_instructions(&gix)?.test_emit();
+        assert_eq!(10, emitter.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(1, emitter.cargo_warning().len());
         Ok(())
     }
 }

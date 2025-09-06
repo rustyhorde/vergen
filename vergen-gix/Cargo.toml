@@ -11,21 +11,43 @@ rust-version = "1.88.0"
 name = "vergen-gix"
 readme = "README.md"
 repository = "https://github.com/rustyhorde/vergen"
-version = "2.0.0-beta.1"
+version = "2.1.0-beta.5"
 
 [package.metadata.cargo-matrix]
 [[package.metadata.cargo-matrix.channel]]
 name = "default"
-always_deny = ["emit_and_set", "unstable"]
+always_deny = [
+    "build",
+    "cargo",
+    "cargo_metadata",
+    "emit_and_set",
+    "rustc",
+    "si",
+    "unstable",
+]
 
 [[package.metadata.cargo-matrix.channel]]
 name = "nightly"
-always_deny = ["emit_and_set"]
+always_deny = [
+    "build",
+    "cargo",
+    "cargo_metadata",
+    "emit_and_set",
+    "rustc",
+    "si",
+]
 always_include = ["unstable"]
 
 [[package.metadata.cargo-matrix.channel]]
 name = "llvm-cov"
-always_deny = ["emit_and_set"]
+always_deny = [
+    "build",
+    "cargo",
+    "cargo_metadata",
+    "emit_and_set",
+    "rustc",
+    "si",
+]
 always_include = ["unstable"]
 
 [features]
@@ -34,6 +56,7 @@ build = ["vergen/build"]
 cargo = ["vergen/cargo"]
 cargo_metadata = ["vergen/cargo_metadata"]
 emit_and_set = ["vergen-lib/emit_and_set"]
+allow_remote = ["gix/blocking-http-transport-reqwest-rust-tls"]
 rustc = ["vergen/rustc"]
 unstable = ["vergen/unstable", "vergen-lib/unstable"]
 si = ["vergen/si"]
@@ -49,7 +72,9 @@ gix = { workspace = true, features = [
 ] }
 time = { workspace = true }
 vergen = { version = "10.0.0-beta.1", path = "../vergen", default-features = false }
-vergen-lib = { version = "1.0.0-beta.1", path = "../vergen-lib", features = ["git"] }
+vergen-lib = { version = "1.0.0-beta.1", path = "../vergen-lib", features = [
+    "git",
+] }
 
 [build-dependencies]
 rustversion = { workspace = true }
@@ -57,7 +82,7 @@ rustversion = { workspace = true }
 [dev-dependencies]
 regex = { workspace = true }
 test_util = { path = "../test_util", features = ["repo", "unstable"] }
-serial_test = { workspace =  true }
+serial_test = { workspace = true }
 temp-env = { workspace = true }
 
 [package.metadata.docs.rs]
