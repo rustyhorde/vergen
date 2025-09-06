@@ -362,6 +362,8 @@ impl Git2 {
         } else if self.try_remote()
             && let Some(remote_url) = &self.remote_url
         {
+            use git2_rs::build::CheckoutBuilder;
+
             let repo_path = if let Some(path) = &self.remote_repo_path {
                 path.clone()
             } else {
@@ -372,12 +374,18 @@ impl Git2 {
             let _ = fetch_opts.depth(5);
             let mut repo_builder = RepoBuilder::new();
             let _ = repo_builder.fetch_options(fetch_opts);
+            let repo = repo_builder.clone(remote_url, &repo_path)?;
 
             if let Some(remote_tag) = self.remote_tag.as_deref() {
-                let _ = repo_builder.branch(remote_tag);
+                let (obj, reference) = repo.revparse_ext(remote_tag)?;
+                repo.checkout_tree(&obj, Some(CheckoutBuilder::new().force()))?;
+                if let Some(gref) = reference {
+                    repo.set_head(gref.name().unwrap())?;
+                } else {
+                    // detached head
+                    repo.set_head_detached(obj.id())?;
+                }
             }
-
-            let repo = repo_builder.clone(remote_url, &repo_path)?;
             warnings.push(format!(
                 "Using remote repository from '{remote_url}' at '{}'",
                 repo.path().display()
