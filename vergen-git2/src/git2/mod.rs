@@ -111,6 +111,9 @@ pub struct Git2 {
     /// defaults to the temp directory on the system
     #[builder(into)]
     remote_repo_path: Option<PathBuf>,
+    /// An optional tag to clone from the remote
+    #[builder(into)]
+    remote_tag: Option<String>,
     /// Emit the current git branch
     ///
     /// ```text
@@ -367,9 +370,14 @@ impl Git2 {
             std::fs::create_dir_all(&repo_path)?;
             let mut fetch_opts = FetchOptions::new();
             let _ = fetch_opts.depth(5);
-            let repo = RepoBuilder::new()
-                .fetch_options(fetch_opts)
-                .clone(remote_url, &repo_path)?;
+            let mut repo_builder = RepoBuilder::new();
+            let _ = repo_builder.fetch_options(fetch_opts);
+
+            if let Some(remote_tag) = self.remote_tag.as_deref() {
+                let _ = repo_builder.branch(remote_tag);
+            }
+
+            let repo = repo_builder.clone(remote_url, &repo_path)?;
             warnings.push(format!(
                 "Using remote repository from '{remote_url}' at '{}'",
                 repo.path().display()

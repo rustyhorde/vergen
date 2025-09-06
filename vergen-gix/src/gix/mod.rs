@@ -111,6 +111,9 @@ pub struct Gix {
     /// defaults to the temp directory on the system
     #[builder(into)]
     remote_repo_path: Option<PathBuf>,
+    /// An optional tag to clone from the remote
+    #[builder(into)]
+    remote_tag: Option<String>,
     /// Emit the current git branch
     ///
     /// ```text
@@ -344,6 +347,11 @@ impl Gix {
                 create::Options::default(),
                 open::Options::default(),
             )?;
+
+            if let Some(remote_tag) = self.remote_tag.as_deref() {
+                fetch = fetch.with_ref_name(Some(remote_tag))?;
+            }
+
             let (repo, _) = fetch.fetch_only(progress::Discard, &AtomicBool::default())?;
             warnings.push(format!(
                 "Using remote repository from '{remote_url}' at '{}'",
