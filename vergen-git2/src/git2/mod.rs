@@ -371,7 +371,8 @@ impl Git2 {
             };
             std::fs::create_dir_all(&repo_path)?;
             let mut fetch_opts = FetchOptions::new();
-            let _ = fetch_opts.depth(5);
+            let _ = fetch_opts.download_tags(git2_rs::AutotagOption::All);
+            let _ = fetch_opts.depth(100);
             let mut repo_builder = RepoBuilder::new();
             let _ = repo_builder.fetch_options(fetch_opts);
             let repo = repo_builder.clone(remote_url, &repo_path)?;
