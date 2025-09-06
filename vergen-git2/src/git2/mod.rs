@@ -114,6 +114,9 @@ pub struct Git2 {
     /// An optional tag to clone from the remote
     #[builder(into)]
     remote_tag: Option<String>,
+    /// The depth to use when fetching the repository
+    #[builder(default = 100)]
+    fetch_depth: usize,
     /// Emit the current git branch
     ///
     /// ```text
@@ -372,7 +375,7 @@ impl Git2 {
             std::fs::create_dir_all(&repo_path)?;
             let mut fetch_opts = FetchOptions::new();
             let _ = fetch_opts.download_tags(git2_rs::AutotagOption::All);
-            let _ = fetch_opts.depth(100);
+            let _ = fetch_opts.depth(self.fetch_depth.try_into()?);
             let mut repo_builder = RepoBuilder::new();
             let _ = repo_builder.fetch_options(fetch_opts);
             let repo = repo_builder.clone(remote_url, &repo_path)?;
@@ -1352,6 +1355,43 @@ mod test {
         assert_eq!(10, emitter.cargo_rustc_env_map().len());
         assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
         assert_eq!(0, emitter.cargo_warning().len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    #[cfg(feature = "allow_remote")]
+    fn remote_clone_with_tag_works() -> Result<()> {
+        let git2 = Git2::all()
+            // For testing only
+            .force_remote(true)
+            .remote_tag("0.3.9")
+            .remote_url("https://github.com/rustyhorde/vergen-cl.git")
+            .describe(true, true, None)
+            .build();
+        let emitter = Emitter::default().add_instructions(&git2)?.test_emit();
+        assert_eq!(10, emitter.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(1, emitter.cargo_warning().len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    #[cfg(feature = "allow_remote")]
+    fn remote_clone_with_depth_works() -> Result<()> {
+        let git2 = Git2::all()
+            // For testing only
+            .force_remote(true)
+            .fetch_depth(200)
+            .remote_tag("0.3.9")
+            .remote_url("https://github.com/rustyhorde/vergen-cl.git")
+            .describe(true, true, None)
+            .build();
+        let emitter = Emitter::default().add_instructions(&git2)?.test_emit();
+        assert_eq!(10, emitter.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(1, emitter.cargo_warning().len());
         Ok(())
     }
 }

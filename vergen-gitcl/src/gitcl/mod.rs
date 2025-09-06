@@ -262,6 +262,9 @@ pub struct Gitcl {
     /// An optional tag to clone from the remote
     #[builder(into)]
     remote_tag: Option<String>,
+    /// The depth to use when fetching the repository
+    #[builder(default = 100)]
+    fetch_depth: usize,
     /// Emit the current git branch
     ///
     /// ```text
@@ -467,7 +470,7 @@ impl Gitcl {
         let cmd = if let Some(remote_tag) = self.remote_tag.as_deref() {
             format!("git clone --branch {remote_tag} --single-branch {remote_url} .")
         } else {
-            format!("git clone --depth 5 {remote_url} .")
+            format!("git clone --depth {} {remote_url} .", self.fetch_depth)
         };
 
         Self::run_cmd(&cmd, path)
@@ -1565,24 +1568,6 @@ mod test {
     #[test]
     #[serial]
     #[cfg(feature = "allow_remote")]
-    fn remote_clone_with_tag_works() -> Result<()> {
-        let gitcl = Gitcl::all()
-            // For testing only
-            .force_remote(true)
-            .remote_url("https://github.com/rustyhorde/vergen-cl.git")
-            .remote_tag("0.3.2")
-            .describe(true, true, None)
-            .build();
-        let emitter = Emitter::default().add_instructions(&gitcl)?.test_emit();
-        assert_eq!(10, emitter.cargo_rustc_env_map().len());
-        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
-        assert_eq!(1, emitter.cargo_warning().len());
-        Ok(())
-    }
-
-    #[test]
-    #[serial]
-    #[cfg(feature = "allow_remote")]
     fn remote_clone_with_path_works() -> Result<()> {
         let remote_path = temp_dir().join("blah");
         let gitcl = Gitcl::all()
@@ -1614,6 +1599,43 @@ mod test {
         assert_eq!(10, emitter.cargo_rustc_env_map().len());
         assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
         assert_eq!(0, emitter.cargo_warning().len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    #[cfg(feature = "allow_remote")]
+    fn remote_clone_with_tag_works() -> Result<()> {
+        let gitcl = Gitcl::all()
+            // For testing only
+            .force_remote(true)
+            .remote_tag("0.3.9")
+            .remote_url("https://github.com/rustyhorde/vergen-cl.git")
+            .describe(true, true, None)
+            .build();
+        let emitter = Emitter::default().add_instructions(&gitcl)?.test_emit();
+        assert_eq!(10, emitter.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(1, emitter.cargo_warning().len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    #[cfg(feature = "allow_remote")]
+    fn remote_clone_with_depth_works() -> Result<()> {
+        let gitcl = Gitcl::all()
+            // For testing only
+            .force_remote(true)
+            .fetch_depth(200)
+            .remote_tag("0.3.9")
+            .remote_url("https://github.com/rustyhorde/vergen-cl.git")
+            .describe(true, true, None)
+            .build();
+        let emitter = Emitter::default().add_instructions(&gitcl)?.test_emit();
+        assert_eq!(10, emitter.cargo_rustc_env_map().len());
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(1, emitter.cargo_warning().len());
         Ok(())
     }
 }
