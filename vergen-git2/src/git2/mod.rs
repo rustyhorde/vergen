@@ -377,7 +377,8 @@ impl Git2 {
             let repo = repo_builder.clone(remote_url, &repo_path)?;
 
             if let Some(remote_tag) = self.remote_tag.as_deref() {
-                let (obj, reference) = repo.revparse_ext(remote_tag)?;
+                let spec = format!("refs/tags/{remote_tag}");
+                let (obj, reference) = repo.revparse_ext(&spec)?;
                 repo.checkout_tree(&obj, Some(CheckoutBuilder::new().force()))?;
                 if let Some(gref) = reference {
                     repo.set_head(gref.name().unwrap())?;
