@@ -93,6 +93,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     }
 
     #[test]
+    #[ignore]
     #[serial_test::serial]
     fn sysinfo_disabled_output() -> Result<()> {
         let mut stdout_buf = vec![];

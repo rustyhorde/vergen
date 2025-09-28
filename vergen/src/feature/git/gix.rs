@@ -96,9 +96,11 @@ pub(crate) struct Config {
 /// # use vergen::EmitBuilder;
 /// #
 /// # fn main() -> Result<()> {
+/// # unsafe {
 /// env::set_var("VERGEN_GIT_BRANCH", "this is the branch I want output");
 /// EmitBuilder::builder().all_git().emit()?;
 /// # env::remove_var("VERGEN_GIT_BRANCH");
+/// # }
 /// #   Ok(())
 /// # }
 /// ```

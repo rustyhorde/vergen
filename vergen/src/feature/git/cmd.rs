@@ -173,9 +173,11 @@ const DIRTY: &str = dirty!();
 /// # use vergen::EmitBuilder;
 /// #
 /// # fn main() -> Result<()> {
+/// # unsafe {
 /// env::set_var("VERGEN_GIT_BRANCH", "this is the branch I want output");
 /// EmitBuilder::builder().all_git().emit()?;
 /// # env::remove_var("VERGEN_GIT_BRANCH");
+/// # }
 /// #   Ok(())
 /// # }
 /// ```
@@ -191,6 +193,7 @@ const DIRTY: &str = dirty!();
 /// # use vergen::EmitBuilder;
 /// #
 /// # fn main() -> Result<()> {
+/// # unsafe {
 /// env::set_var("SOURCE_DATE_EPOCH", "1671809360");
 #[cfg_attr(
     all(feature = "git", feature = "gitcl"),
@@ -199,6 +202,7 @@ EmitBuilder::builder().all_git().emit()?;
 "
 )]
 /// # env::remove_var("SOURCE_DATE_EPOCH");
+/// # }
 /// #   Ok(())
 /// # }
 /// ```

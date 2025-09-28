@@ -70,6 +70,7 @@
         feature = "si"
     ),
     doc = r#"
+# unsafe {
 # env::set_var("CARGO_FEATURE_BUILD", "build");
 # env::set_var("CARGO_FEATURE_GIT", "git");
 # env::set_var("DEBUG", "true");
@@ -89,6 +90,7 @@
 # env::remove_var("DEBUG");
 # env::remove_var("OPT_LEVEL");
 # env::remove_var("TARGET");
+# }
 "#
 )]
 //!     Ok(())
