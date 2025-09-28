@@ -63,6 +63,7 @@ impl Config {
 /// # use vergen::EmitBuilder;
 /// #
 /// # fn main() -> Result<()> {
+/// # unsafe {
 /// # env::set_var("CARGO_FEATURE_BUILD", "");
 /// # env::set_var("DEBUG", "true");
 /// # env::set_var("OPT_LEVEL", "1");
@@ -72,6 +73,7 @@ impl Config {
 /// # env::remove_var("DEBUG");
 /// # env::remove_var("OPT_LEVEL");
 /// # env::remove_var("TARGET");
+/// # }
 /// #   Ok(())
 /// # }
 /// ```
@@ -83,11 +85,13 @@ impl Config {
 /// # use vergen::EmitBuilder;
 /// #
 /// # fn main() -> Result<()> {
+/// # unsafe {
 /// # env::set_var("DEBUG", "true");
 /// # env::set_var("OPT_LEVEL", "1");
 /// EmitBuilder::builder().cargo_debug().cargo_opt_level().emit()?;
 /// # env::remove_var("DEBUG");
 /// # env::remove_var("OPT_LEVEL");
+/// # }
 /// #   Ok(())
 /// # }
 /// ```
@@ -100,6 +104,7 @@ impl Config {
 /// # use vergen::EmitBuilder;
 /// #
 /// # fn main() -> Result<()> {
+/// # unsafe {
 /// # env::set_var("DEBUG", "true");
 /// # env::set_var("OPT_LEVEL", "1");
 /// env::set_var("VERGEN_CARGO_DEBUG", "this is the debug I want output");
@@ -107,6 +112,7 @@ impl Config {
 /// # env::remove_var("VERGEN_BUILD_DATE");
 /// # env::remove_var("DEBUG");
 /// # env::remove_var("OPT_LEVEL");
+/// # }
 /// #   Ok(())
 /// # }
 /// ```

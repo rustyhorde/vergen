@@ -437,6 +437,7 @@ EmitBuilder::builder().idempotent().all_build().emit()?;
 "
     )]
     /// // or
+    /// # unsafe {
     /// env::set_var("VERGEN_IDEMPOTENT", "true");
     #[cfg_attr(
         feature = "build",
@@ -445,6 +446,7 @@ EmitBuilder::builder().all_build().emit()?;
 "
     )]
     /// # env::remove_var("VERGEN_IDEMPOTENT");
+    /// # }
     /// #   Ok(())
     /// # }
     /// ```

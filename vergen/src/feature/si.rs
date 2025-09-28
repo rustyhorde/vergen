@@ -100,9 +100,11 @@ impl Config {
 /// # use vergen::EmitBuilder;
 /// #
 /// # fn main() -> Result<()> {
+/// # unsafe {
 /// env::set_var("VERGEN_SYSINFO_NAME", "this is the name I want output");
 /// EmitBuilder::builder().all_sysinfo().emit()?;
 /// # env::remove_var("VERGEN_SYSINFO_NAME");
+/// # }
 /// #   Ok(())
 /// # }
 /// ```

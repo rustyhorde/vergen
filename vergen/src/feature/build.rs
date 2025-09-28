@@ -64,9 +64,11 @@ impl Config {
 /// # use vergen::EmitBuilder;
 /// #
 /// # fn main() -> Result<()> {
+/// # unsafe {
 /// env::set_var("VERGEN_BUILD_DATE", "this is the date I want output");
 /// EmitBuilder::builder().build_date().emit()?;
 /// # env::remove_var("VERGEN_BUILD_DATE");
+/// # }
 /// #   Ok(())
 /// # }
 /// ```
@@ -82,6 +84,7 @@ impl Config {
 /// # use vergen::EmitBuilder;
 /// #
 /// # fn main() -> Result<()> {
+/// # unsafe {
 /// env::set_var("SOURCE_DATE_EPOCH", "1671809360");
 #[cfg_attr(
     feature = "build",
@@ -90,6 +93,7 @@ EmitBuilder::builder().all_build().emit()?;
 "
 )]
 /// # env::remove_var("SOURCE_DATE_EPOCH");
+/// # }
 /// #   Ok(())
 /// # }
 /// ```
