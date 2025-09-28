@@ -297,7 +297,6 @@ the [`TestRepos`] struct to creat temporary git repositories useful for `vergen-
     all(nightly, feature = "unstable"),
     deny(rustdoc::missing_doc_code_examples)
 )]
-#![cfg_attr(all(doc, nightly), feature(doc_auto_cfg))]
 #![cfg_attr(all(docsrs, nightly), feature(doc_cfg))]
 
 #[cfg(all(test, not(feature = "repo")))]
