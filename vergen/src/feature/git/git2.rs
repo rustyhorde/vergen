@@ -29,8 +29,8 @@ use std::{
     str::FromStr,
 };
 use time::{
-    format_description::{self, well_known::Iso8601},
     OffsetDateTime, UtcOffset,
+    format_description::{self, well_known::Iso8601},
 };
 
 #[derive(Clone, Copy, Debug, Default)]
@@ -587,14 +587,14 @@ impl EmitBuilder {
             rerun_if_changed.push(format!("{}", head_path.display()));
         }
 
-        if let Ok(resolved) = ref_head.resolve() {
-            if let Some(name) = resolved.name() {
-                let ref_path = git_path.to_path_buf();
-                let path = ref_path.join(name);
-                // Check whether the path exists in the filesystem before emitting it
-                if path.exists() {
-                    rerun_if_changed.push(format!("{}", ref_path.display()));
-                }
+        if let Ok(resolved) = ref_head.resolve()
+            && let Some(name) = resolved.name()
+        {
+            let ref_path = git_path.to_path_buf();
+            let path = ref_path.join(name);
+            // Check whether the path exists in the filesystem before emitting it
+            if path.exists() {
+                rerun_if_changed.push(format!("{}", ref_path.display()));
             }
         }
     }
@@ -619,13 +619,12 @@ fn add_commit_count(
     warnings: &mut Vec<String>,
 ) {
     let key = VergenKey::GitCommitCount;
-    if !add_default {
-        if let Ok(mut revwalk) = repo.revwalk() {
-            if revwalk.push_head().is_ok() {
-                add_map_entry(key, revwalk.count().to_string(), map);
-                return;
-            }
-        }
+    if !add_default
+        && let Ok(mut revwalk) = repo.revwalk()
+        && revwalk.push_head().is_ok()
+    {
+        add_map_entry(key, revwalk.count().to_string(), map);
+        return;
     }
     add_default_map_entry(key, map, warnings);
 }
@@ -646,12 +645,12 @@ fn add_branch_name(
         let locals = repo.branches(Some(BranchType::Local))?;
         let mut found_head = false;
         for (local, _bt) in locals.filter_map(std::result::Result::ok) {
-            if local.is_head() {
-                if let Some(name) = local.name()? {
-                    add_map_entry(VergenKey::GitBranch, name, map);
-                    found_head = !add_default;
-                    break;
-                }
+            if local.is_head()
+                && let Some(name) = local.name()?
+            {
+                add_map_entry(VergenKey::GitBranch, name, map);
+                found_head = !add_default;
+                break;
             }
         }
         if !found_head {
@@ -664,7 +663,7 @@ fn add_branch_name(
 #[cfg(test)]
 mod test {
     use super::{add_branch_name, add_commit_count, add_opt_value};
-    use crate::{emitter::test::count_idempotent, key::VergenKey, EmitBuilder};
+    use crate::{EmitBuilder, emitter::test::count_idempotent, key::VergenKey};
     use anyhow::Result;
     use git2_rs::Repository;
     use repo_util::TestRepos;

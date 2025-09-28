@@ -18,15 +18,15 @@ use crate::{
 };
 use anyhow::anyhow;
 use anyhow::{Error, Result};
-use gix::{head::Kind, Commit, Head, Id, Repository};
+use gix::{Commit, Head, Id, Repository, head::Kind};
 use std::{
     env,
     path::{Path, PathBuf},
     str::FromStr,
 };
 use time::{
-    format_description::{self, well_known::Iso8601},
     OffsetDateTime, UtcOffset,
+    format_description::{self, well_known::Iso8601},
 };
 
 #[derive(Clone, Copy, Debug, Default)]
@@ -594,7 +594,7 @@ impl EmitBuilder {
 
 #[cfg(test)]
 mod test {
-    use crate::{emitter::test::count_idempotent, EmitBuilder};
+    use crate::{EmitBuilder, emitter::test::count_idempotent};
     use anyhow::Result;
     use repo_util::TestRepos;
     use serial_test::serial;

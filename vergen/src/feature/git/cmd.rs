@@ -16,7 +16,7 @@ use crate::{
     key::VergenKey,
     utils::fns::{add_default_map_entry, add_map_entry},
 };
-use anyhow::{anyhow, Error, Result};
+use anyhow::{Error, Result, anyhow};
 use std::{
     env,
     path::PathBuf,
@@ -24,11 +24,11 @@ use std::{
     str::FromStr,
 };
 use time::{
+    OffsetDateTime, UtcOffset,
     format_description::{
         self,
         well_known::{Iso8601, Rfc3339},
     },
-    OffsetDateTime, UtcOffset,
 };
 
 #[derive(Clone, Copy, Debug, Default)]
@@ -872,7 +872,7 @@ fn setup_ref_path(path: Option<&PathBuf>) -> Result<Output> {
 #[cfg(test)]
 mod test {
     use super::{add_git_cmd_entry, check_git, check_inside_git_worktree};
-    use crate::{emitter::test::count_idempotent, key::VergenKey, EmitBuilder};
+    use crate::{EmitBuilder, emitter::test::count_idempotent, key::VergenKey};
     use anyhow::Result;
     use repo_util::TestRepos;
     use std::{collections::BTreeMap, env};
@@ -881,13 +881,15 @@ mod test {
     #[serial_test::serial]
     fn bad_command_is_error() -> Result<()> {
         let mut map = BTreeMap::new();
-        assert!(add_git_cmd_entry(
-            "such_a_terrible_cmd",
-            None,
-            VergenKey::GitCommitMessage,
-            &mut map
-        )
-        .is_err());
+        assert!(
+            add_git_cmd_entry(
+                "such_a_terrible_cmd",
+                None,
+                VergenKey::GitCommitMessage,
+                &mut map
+            )
+            .is_err()
+        );
         Ok(())
     }
 
@@ -1027,15 +1029,17 @@ mod test {
         let mut warnings = vec![];
         let mut config = EmitBuilder::builder();
         _ = config.all_git();
-        assert!(config
-            .add_git_timestamp_entries(
-                "this_is_not_a_git_cmd",
-                None,
-                false,
-                &mut map,
-                &mut warnings
-            )
-            .is_ok());
+        assert!(
+            config
+                .add_git_timestamp_entries(
+                    "this_is_not_a_git_cmd",
+                    None,
+                    false,
+                    &mut map,
+                    &mut warnings
+                )
+                .is_ok()
+        );
         assert_eq!(2, map.len());
         assert_eq!(2, warnings.len());
         Ok(())

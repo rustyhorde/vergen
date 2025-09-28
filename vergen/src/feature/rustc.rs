@@ -8,7 +8,7 @@ use crate::{
     utils::fns::{add_default_map_entry, add_map_entry},
 };
 use anyhow::{Error, Result};
-use rustc_version::{version_meta, Channel, VersionMeta};
+use rustc_version::{Channel, VersionMeta, version_meta};
 use std::env;
 
 #[derive(Clone, Copy, Debug, Default)]
@@ -279,7 +279,7 @@ impl EmitBuilder {
 
 #[cfg(test)]
 mod test {
-    use crate::{emitter::test::count_idempotent, EmitBuilder};
+    use crate::{EmitBuilder, emitter::test::count_idempotent};
     use anyhow::Result;
     use std::env;
 
@@ -405,10 +405,12 @@ LLVM version: 15.0.6
             env::set_var("VERGEN_RUSTC_CHANNEL", "this is a bad date");
         }
         let mut stdout_buf = vec![];
-        assert!(EmitBuilder::builder()
-            .all_rustc()
-            .emit_to(&mut stdout_buf)
-            .is_ok());
+        assert!(
+            EmitBuilder::builder()
+                .all_rustc()
+                .emit_to(&mut stdout_buf)
+                .is_ok()
+        );
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(output.contains("cargo:rustc-env=VERGEN_RUSTC_CHANNEL=this is a bad date"));
         unsafe {
@@ -424,10 +426,12 @@ LLVM version: 15.0.6
             env::set_var("VERGEN_RUSTC_COMMIT_DATE", "this is a bad date");
         }
         let mut stdout_buf = vec![];
-        assert!(EmitBuilder::builder()
-            .all_rustc()
-            .emit_to(&mut stdout_buf)
-            .is_ok());
+        assert!(
+            EmitBuilder::builder()
+                .all_rustc()
+                .emit_to(&mut stdout_buf)
+                .is_ok()
+        );
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(output.contains("cargo:rustc-env=VERGEN_RUSTC_COMMIT_DATE=this is a bad date"));
         unsafe {
@@ -443,10 +447,12 @@ LLVM version: 15.0.6
             env::set_var("VERGEN_RUSTC_COMMIT_HASH", "this is a bad date");
         }
         let mut stdout_buf = vec![];
-        assert!(EmitBuilder::builder()
-            .all_rustc()
-            .emit_to(&mut stdout_buf)
-            .is_ok());
+        assert!(
+            EmitBuilder::builder()
+                .all_rustc()
+                .emit_to(&mut stdout_buf)
+                .is_ok()
+        );
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(output.contains("cargo:rustc-env=VERGEN_RUSTC_COMMIT_HASH=this is a bad date"));
         unsafe {
@@ -462,10 +468,12 @@ LLVM version: 15.0.6
             env::set_var("VERGEN_RUSTC_HOST_TRIPLE", "this is a bad date");
         }
         let mut stdout_buf = vec![];
-        assert!(EmitBuilder::builder()
-            .all_rustc()
-            .emit_to(&mut stdout_buf)
-            .is_ok());
+        assert!(
+            EmitBuilder::builder()
+                .all_rustc()
+                .emit_to(&mut stdout_buf)
+                .is_ok()
+        );
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(output.contains("cargo:rustc-env=VERGEN_RUSTC_HOST_TRIPLE=this is a bad date"));
         unsafe {
@@ -481,10 +489,12 @@ LLVM version: 15.0.6
             env::set_var("VERGEN_RUSTC_LLVM_VERSION", "this is a bad date");
         }
         let mut stdout_buf = vec![];
-        assert!(EmitBuilder::builder()
-            .all_rustc()
-            .emit_to(&mut stdout_buf)
-            .is_ok());
+        assert!(
+            EmitBuilder::builder()
+                .all_rustc()
+                .emit_to(&mut stdout_buf)
+                .is_ok()
+        );
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(output.contains("cargo:rustc-env=VERGEN_RUSTC_LLVM_VERSION=this is a bad date"));
         unsafe {
@@ -500,10 +510,12 @@ LLVM version: 15.0.6
             env::set_var("VERGEN_RUSTC_SEMVER", "this is a bad date");
         }
         let mut stdout_buf = vec![];
-        assert!(EmitBuilder::builder()
-            .all_rustc()
-            .emit_to(&mut stdout_buf)
-            .is_ok());
+        assert!(
+            EmitBuilder::builder()
+                .all_rustc()
+                .emit_to(&mut stdout_buf)
+                .is_ok()
+        );
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(output.contains("cargo:rustc-env=VERGEN_RUSTC_SEMVER=this is a bad date"));
         unsafe {

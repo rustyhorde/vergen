@@ -64,7 +64,7 @@ impl Prefix {
 #[cfg(test)]
 mod test {
     use crate::{
-        utils::test_utils::TEST_PREFIX_SUFFIX, vergen_pretty_env, PrefixBuilder, PrettyBuilder,
+        PrefixBuilder, PrettyBuilder, utils::test_utils::TEST_PREFIX_SUFFIX, vergen_pretty_env,
     };
     use anyhow::Result;
 

@@ -1,4 +1,4 @@
 [workspace]
-resolver = "2"
+resolver = "3"
 
 members = ["repo_util", "vergen", "vergen-pretty"]

@@ -290,9 +290,7 @@
     all(nightly, feature = "unstable"),
     deny(rustdoc::missing_doc_code_examples)
 )]
-#![cfg_attr(all(doc, nightly), feature(doc_auto_cfg))]
 #![cfg_attr(all(docsrs, nightly), feature(doc_cfg))]
-#![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
 #[cfg(feature = "header")]
 mod header;
@@ -303,20 +301,20 @@ mod utils;
 #[doc(inline)]
 pub use console::Style;
 #[cfg(feature = "header")]
-pub use header::header;
-#[cfg(feature = "header")]
 pub use header::Config;
 #[cfg(feature = "header")]
 pub use header::ConfigBuilder;
 #[cfg(feature = "header")]
 pub use header::Env;
+#[cfg(feature = "header")]
+pub use header::header;
+pub use pretty::Pretty;
+pub use pretty::PrettyBuilder;
+pub use pretty::PrettyBuilderError;
 pub use pretty::prefix::Prefix;
 pub use pretty::prefix::PrefixBuilder;
 pub use pretty::suffix::Suffix;
 pub use pretty::suffix::SuffixBuilder;
-pub use pretty::Pretty;
-pub use pretty::PrettyBuilder;
-pub use pretty::PrettyBuilderError;
 #[cfg(feature = "trace")]
 #[doc(inline)]
 pub use tracing::Level;

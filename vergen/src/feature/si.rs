@@ -15,9 +15,9 @@ use crate::{
     key::VergenKey,
     utils::fns::{add_default_map_entry, add_map_entry},
 };
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use std::env;
-use sysinfo::{get_current_pid, Cpu, Pid, Process, RefreshKind, System, User, Users};
+use sysinfo::{Cpu, Pid, Process, RefreshKind, System, User, Users, get_current_pid};
 
 #[derive(Clone, Copy, Debug, Default)]
 #[allow(clippy::struct_excessive_bools, clippy::struct_field_names)]
@@ -492,13 +492,13 @@ let config = EmitBuilder::builder()
     }
 
     fn get_user(&self, system: &System) -> Option<String> {
-        if let Ok(pid) = self.get_pid() {
-            if let Some(process) = system.process(pid) {
-                let users = Users::new_with_refreshed_list();
-                for user in &users {
-                    if check_user(process, user) {
-                        return Some(user.name().to_string());
-                    }
+        if let Ok(pid) = self.get_pid()
+            && let Some(process) = system.process(pid)
+        {
+            let users = Users::new_with_refreshed_list();
+            for user in &users {
+                if check_user(process, user) {
+                    return Some(user.name().to_string());
                 }
             }
         }
@@ -577,7 +577,7 @@ fn suffix(mut curr_memory: u64) -> String {
 #[cfg(test)]
 mod test {
     use super::{add_sysinfo_map_entry, suffix};
-    use crate::{emitter::test::count_idempotent, key::VergenKey, EmitBuilder};
+    use crate::{EmitBuilder, emitter::test::count_idempotent, key::VergenKey};
     use anyhow::Result;
     use std::{collections::BTreeMap, env};
     use sysinfo::{CpuRefreshKind, RefreshKind};
@@ -678,10 +678,12 @@ mod test {
             env::set_var("VERGEN_SYSINFO_NAME", "this is a bad date");
         }
         let mut stdout_buf = vec![];
-        assert!(EmitBuilder::builder()
-            .all_sysinfo()
-            .emit_to(&mut stdout_buf)
-            .is_ok());
+        assert!(
+            EmitBuilder::builder()
+                .all_sysinfo()
+                .emit_to(&mut stdout_buf)
+                .is_ok()
+        );
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(output.contains("cargo:rustc-env=VERGEN_SYSINFO_NAME=this is a bad date"));
         unsafe {
@@ -697,10 +699,12 @@ mod test {
             env::set_var("VERGEN_SYSINFO_OS_VERSION", "this is a bad date");
         }
         let mut stdout_buf = vec![];
-        assert!(EmitBuilder::builder()
-            .all_sysinfo()
-            .emit_to(&mut stdout_buf)
-            .is_ok());
+        assert!(
+            EmitBuilder::builder()
+                .all_sysinfo()
+                .emit_to(&mut stdout_buf)
+                .is_ok()
+        );
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(output.contains("cargo:rustc-env=VERGEN_SYSINFO_OS_VERSION=this is a bad date"));
         unsafe {
@@ -716,10 +720,12 @@ mod test {
             env::set_var("VERGEN_SYSINFO_USER", "this is a bad date");
         }
         let mut stdout_buf = vec![];
-        assert!(EmitBuilder::builder()
-            .all_sysinfo()
-            .emit_to(&mut stdout_buf)
-            .is_ok());
+        assert!(
+            EmitBuilder::builder()
+                .all_sysinfo()
+                .emit_to(&mut stdout_buf)
+                .is_ok()
+        );
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(output.contains("cargo:rustc-env=VERGEN_SYSINFO_USER=this is a bad date"));
         unsafe {
@@ -735,10 +741,12 @@ mod test {
             env::set_var("VERGEN_SYSINFO_TOTAL_MEMORY", "this is a bad date");
         }
         let mut stdout_buf = vec![];
-        assert!(EmitBuilder::builder()
-            .all_sysinfo()
-            .emit_to(&mut stdout_buf)
-            .is_ok());
+        assert!(
+            EmitBuilder::builder()
+                .all_sysinfo()
+                .emit_to(&mut stdout_buf)
+                .is_ok()
+        );
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(output.contains("cargo:rustc-env=VERGEN_SYSINFO_TOTAL_MEMORY=this is a bad date"));
         unsafe {
@@ -754,10 +762,12 @@ mod test {
             env::set_var("VERGEN_SYSINFO_CPU_VENDOR", "this is a bad date");
         }
         let mut stdout_buf = vec![];
-        assert!(EmitBuilder::builder()
-            .all_sysinfo()
-            .emit_to(&mut stdout_buf)
-            .is_ok());
+        assert!(
+            EmitBuilder::builder()
+                .all_sysinfo()
+                .emit_to(&mut stdout_buf)
+                .is_ok()
+        );
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(output.contains("cargo:rustc-env=VERGEN_SYSINFO_CPU_VENDOR=this is a bad date"));
         unsafe {
@@ -773,12 +783,16 @@ mod test {
             env::set_var("VERGEN_SYSINFO_CPU_CORE_COUNT", "this is a bad date");
         }
         let mut stdout_buf = vec![];
-        assert!(EmitBuilder::builder()
-            .all_sysinfo()
-            .emit_to(&mut stdout_buf)
-            .is_ok());
+        assert!(
+            EmitBuilder::builder()
+                .all_sysinfo()
+                .emit_to(&mut stdout_buf)
+                .is_ok()
+        );
         let output = String::from_utf8_lossy(&stdout_buf);
-        assert!(output.contains("cargo:rustc-env=VERGEN_SYSINFO_CPU_CORE_COUNT=this is a bad date"));
+        assert!(
+            output.contains("cargo:rustc-env=VERGEN_SYSINFO_CPU_CORE_COUNT=this is a bad date")
+        );
         unsafe {
             env::remove_var("VERGEN_SYSINFO_CPU_CORE_COUNT");
         }
@@ -792,10 +806,12 @@ mod test {
             env::set_var("VERGEN_SYSINFO_CPU_NAME", "this is a bad date");
         }
         let mut stdout_buf = vec![];
-        assert!(EmitBuilder::builder()
-            .all_sysinfo()
-            .emit_to(&mut stdout_buf)
-            .is_ok());
+        assert!(
+            EmitBuilder::builder()
+                .all_sysinfo()
+                .emit_to(&mut stdout_buf)
+                .is_ok()
+        );
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(output.contains("cargo:rustc-env=VERGEN_SYSINFO_CPU_NAME=this is a bad date"));
         unsafe {
@@ -811,10 +827,12 @@ mod test {
             env::set_var("VERGEN_SYSINFO_CPU_BRAND", "this is a bad date");
         }
         let mut stdout_buf = vec![];
-        assert!(EmitBuilder::builder()
-            .all_sysinfo()
-            .emit_to(&mut stdout_buf)
-            .is_ok());
+        assert!(
+            EmitBuilder::builder()
+                .all_sysinfo()
+                .emit_to(&mut stdout_buf)
+                .is_ok()
+        );
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(output.contains("cargo:rustc-env=VERGEN_SYSINFO_CPU_BRAND=this is a bad date"));
         unsafe {
@@ -830,10 +848,12 @@ mod test {
             env::set_var("VERGEN_SYSINFO_CPU_FREQUENCY", "this is a bad date");
         }
         let mut stdout_buf = vec![];
-        assert!(EmitBuilder::builder()
-            .all_sysinfo()
-            .emit_to(&mut stdout_buf)
-            .is_ok());
+        assert!(
+            EmitBuilder::builder()
+                .all_sysinfo()
+                .emit_to(&mut stdout_buf)
+                .is_ok()
+        );
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(output.contains("cargo:rustc-env=VERGEN_SYSINFO_CPU_FREQUENCY=this is a bad date"));
         unsafe {

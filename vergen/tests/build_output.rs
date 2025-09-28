@@ -72,17 +72,19 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     #[test]
     #[serial_test::serial]
     fn build_all_output_local() -> Result<()> {
-        env::set_var("SOURCE_DATE_EPOCH", "1671809360");
-        let mut stdout_buf = vec![];
-        let result = EmitBuilder::builder()
-            .all_build()
-            .use_local_build()
-            .fail_on_error()
-            .emit_to(&mut stdout_buf);
-        env::remove_var("SOURCE_DATE_EPOCH");
-        assert!(result.is_ok());
-        let output = String::from_utf8_lossy(&stdout_buf);
-        assert!(BUILD_REGEX_INST.is_match(&output));
+        unsafe {
+            env::set_var("SOURCE_DATE_EPOCH", "1671809360");
+            let mut stdout_buf = vec![];
+            let result = EmitBuilder::builder()
+                .all_build()
+                .use_local_build()
+                .fail_on_error()
+                .emit_to(&mut stdout_buf);
+            env::remove_var("SOURCE_DATE_EPOCH");
+            assert!(result.is_ok());
+            let output = String::from_utf8_lossy(&stdout_buf);
+            assert!(BUILD_REGEX_INST.is_match(&output));
+        }
         Ok(())
     }
 
@@ -143,14 +145,16 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     #[test]
     #[serial_test::serial]
     fn build_all_sde_output() -> Result<()> {
-        env::set_var("SOURCE_DATE_EPOCH", "1671809360");
-        let mut stdout_buf = vec![];
-        EmitBuilder::builder()
-            .all_build()
-            .emit_to(&mut stdout_buf)?;
-        let output = String::from_utf8_lossy(&stdout_buf);
-        assert_eq!(SOURCE_DATE_EPOCH_IDEM_OUTPUT, output);
-        env::remove_var("SOURCE_DATE_EPOCH");
+        unsafe {
+            env::set_var("SOURCE_DATE_EPOCH", "1671809360");
+            let mut stdout_buf = vec![];
+            EmitBuilder::builder()
+                .all_build()
+                .emit_to(&mut stdout_buf)?;
+            let output = String::from_utf8_lossy(&stdout_buf);
+            assert_eq!(SOURCE_DATE_EPOCH_IDEM_OUTPUT, output);
+            env::remove_var("SOURCE_DATE_EPOCH");
+        }
         Ok(())
     }
 }

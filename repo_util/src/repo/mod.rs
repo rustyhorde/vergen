@@ -1,12 +1,13 @@
 use anyhow::Result;
 use git::{
+    Id, ObjectId,
     clone::PrepareFetch,
     config::CommitAutoRollback,
     create::{Kind, Options},
     interrupt::IS_INTERRUPTED,
     objs::{
-        tree::{Entry, EntryKind},
         Tree,
+        tree::{Entry, EntryKind},
     },
     open,
     path::os_str_into_bstr,
@@ -14,10 +15,9 @@ use git::{
     refs::transaction::PreviousValue,
     remote::fetch::Shallow,
     url::parse,
-    Id, ObjectId,
 };
 use gix as git;
-use rand::{distr::Alphanumeric, rng, Rng};
+use rand::{Rng, distr::Alphanumeric, rng};
 use std::{
     env,
     fs::{self, OpenOptions},
@@ -160,10 +160,8 @@ impl TestRepos {
             Options::default(),
             opts,
         )?;
-        if shallow_clone {
-            if let Some(one) = NonZeroU32::new(1) {
-                prep = prep.with_shallow(Shallow::DepthAtRemote(one));
-            }
+        if shallow_clone && let Some(one) = NonZeroU32::new(1) {
+            prep = prep.with_shallow(Shallow::DepthAtRemote(one));
         }
         let (mut prepare_checkout, _) = prep.fetch_then_checkout(Discard, &IS_INTERRUPTED)?;
         let (_repo, _) = prepare_checkout.main_worktree(Discard, &IS_INTERRUPTED)?;
@@ -261,7 +259,7 @@ impl Drop for TestRepos {
 
 #[cfg(test)]
 mod test {
-    use super::{TestRepos, RUNNER_TEMP_ENV};
+    use super::{RUNNER_TEMP_ENV, TestRepos};
     use anyhow::Result;
 
     #[test]
