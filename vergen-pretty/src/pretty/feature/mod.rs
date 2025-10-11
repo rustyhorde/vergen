@@ -81,7 +81,9 @@ impl From<Pretty> for PrettyExt {
 
 #[cfg(all(test, feature = "bincode"))]
 mod test_bincode {
-    use crate::{Pretty, PrettyExt, vergen_pretty_env};
+    use crate::{
+        Prefix, Pretty, PrettyExt, Suffix, utils::test_utils::TEST_PREFIX_SUFFIX, vergen_pretty_env,
+    };
     use anyhow::Result;
     use bincode::{config::standard, decode_from_slice, encode_to_vec};
 
@@ -97,19 +99,69 @@ mod test_bincode {
         assert!(decoded.suffix().is_none());
         Ok(())
     }
+
+    #[test]
+    fn pretty_encode_decode_with_prefix_suffix_works() -> Result<()> {
+        let prefix = Prefix::builder()
+            .lines(TEST_PREFIX_SUFFIX.lines().map(str::to_string).collect())
+            .build();
+        let suffix = Suffix::builder()
+            .lines(TEST_PREFIX_SUFFIX.lines().map(str::to_string).collect())
+            .build();
+        let pretty = Pretty::builder()
+            .env(vergen_pretty_env!())
+            .prefix(prefix)
+            .suffix(suffix)
+            .build();
+        let pretty_ext = PrettyExt::from(pretty);
+        let encoded = encode_to_vec(&pretty_ext, standard())?;
+        let decoded: PrettyExt = decode_from_slice(&encoded, standard())?.0;
+        assert_eq!(pretty_ext, decoded);
+        assert!(!decoded.vars().is_empty());
+        assert!(decoded.prefix().is_some());
+        assert!(decoded.suffix().is_some());
+        Ok(())
+    }
 }
 
 #[cfg(all(test, feature = "serde"))]
 mod test_serde {
-    use crate::{Pretty, PrettyExt, vergen_pretty_env};
+    use crate::{
+        Prefix, Pretty, PrettyExt, Suffix, utils::test_utils::TEST_PREFIX_SUFFIX, vergen_pretty_env,
+    };
     use anyhow::Result;
+
+    const VARS: &str = r#"vars":"#;
+    const PREFIX: &str = r#""prefix":{"lines":["#;
+    const SUFFIX: &str = r#""suffix":{"lines":["#;
 
     #[test]
     fn pretty_serde_works() -> Result<()> {
         let pretty = Pretty::builder().env(vergen_pretty_env!()).build();
         let pretty_ext = PrettyExt::from(pretty);
         let val = serde_json::to_string(&pretty_ext)?;
-        assert!(val.contains(r#"{"vars":"#));
+        assert!(val.contains(VARS));
+        Ok(())
+    }
+
+    #[test]
+    fn pretty_encode_decode_with_prefix_suffix_works() -> Result<()> {
+        let prefix = Prefix::builder()
+            .lines(TEST_PREFIX_SUFFIX.lines().map(str::to_string).collect())
+            .build();
+        let suffix = Suffix::builder()
+            .lines(TEST_PREFIX_SUFFIX.lines().map(str::to_string).collect())
+            .build();
+        let pretty = Pretty::builder()
+            .env(vergen_pretty_env!())
+            .prefix(prefix)
+            .suffix(suffix)
+            .build();
+        let pretty_ext = PrettyExt::from(pretty);
+        let val = serde_json::to_string(&pretty_ext)?;
+        assert!(val.contains(VARS));
+        assert!(val.contains(PREFIX));
+        assert!(val.contains(SUFFIX));
         Ok(())
     }
 }
