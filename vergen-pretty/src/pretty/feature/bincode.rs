@@ -88,7 +88,13 @@ mod test {
         let mut pretty = Pretty::builder().env(vergen_pretty_env!()).build();
         pretty.populate_fmt();
         let pretty_ext = PrettyExt::builder()
-            .vars(pretty.vars.iter().map(|v| (v.0.clone(), v.1.clone(), v.2.clone())).collect())
+            .vars(
+                pretty
+                    .vars
+                    .iter()
+                    .map(|v| (v.0.clone(), v.1.clone(), v.2.clone()))
+                    .collect(),
+            )
             .maybe_prefix(pretty.prefix.clone())
             .maybe_suffix(pretty.suffix.clone())
             .build();
