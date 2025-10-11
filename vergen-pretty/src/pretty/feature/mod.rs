@@ -40,6 +40,24 @@ pub struct PrettyExt {
 }
 
 #[cfg(any(feature = "bincode", feature = "serde"))]
+impl PrettyExt {
+    /// Get the environment variables
+    pub fn vars(&self) -> &Vec<(String, String, String)> {
+        &self.vars
+    }
+
+    /// Get the optional prefix
+    pub fn prefix(&self) -> Option<&Prefix> {
+        self.prefix.as_ref()
+    }
+
+    /// Get the optional suffix
+    pub fn suffix(&self) -> Option<&Suffix> {
+        self.suffix.as_ref()
+    }
+}
+
+#[cfg(any(feature = "bincode", feature = "serde"))]
 impl From<Pretty> for PrettyExt {
     fn from(pretty: Pretty) -> Self {
         let mut pretty_c = pretty.clone();
@@ -71,6 +89,9 @@ mod test_bincode {
         let encoded = encode_to_vec(&pretty_ext, standard())?;
         let decoded: PrettyExt = decode_from_slice(&encoded, standard())?.0;
         assert_eq!(pretty_ext, decoded);
+        assert!(decoded.vars().len() > 0);
+        assert!(decoded.prefix().is_none());
+        assert!(decoded.suffix().is_none());
         Ok(())
     }
 }
