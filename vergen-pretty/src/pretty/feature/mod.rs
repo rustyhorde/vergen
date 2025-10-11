@@ -42,16 +42,19 @@ pub struct PrettyExt {
 #[cfg(any(feature = "bincode", feature = "serde"))]
 impl PrettyExt {
     /// Get the environment variables
+    #[must_use]
     pub fn vars(&self) -> &Vec<(String, String, String)> {
         &self.vars
     }
 
     /// Get the optional prefix
+    #[must_use]
     pub fn prefix(&self) -> Option<&Prefix> {
         self.prefix.as_ref()
     }
 
     /// Get the optional suffix
+    #[must_use]
     pub fn suffix(&self) -> Option<&Suffix> {
         self.suffix.as_ref()
     }
@@ -89,7 +92,7 @@ mod test_bincode {
         let encoded = encode_to_vec(&pretty_ext, standard())?;
         let decoded: PrettyExt = decode_from_slice(&encoded, standard())?.0;
         assert_eq!(pretty_ext, decoded);
-        assert!(decoded.vars().len() > 0);
+        assert!(!decoded.vars().is_empty());
         assert!(decoded.prefix().is_none());
         assert!(decoded.suffix().is_none());
         Ok(())
