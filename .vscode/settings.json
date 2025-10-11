@@ -1,5 +1,5 @@
 {
     "rust-analyzer.cargo.features": [
-        "build","cargo","color","emit_and_set","git","header","repo","rustc","serde","si","trace","unstable","allow_remote"
+        "bincode","build","cargo","color","emit_and_set","git","header","repo","rustc","serde","si","trace","unstable","allow_remote"
     ]
 }

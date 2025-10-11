@@ -11,23 +11,26 @@ rust-version = "1.88.0"
 name = "vergen-pretty"
 readme = "README.md"
 repository = "https://github.com/rustyhorde/vergen"
-version = "2.0.1"
+version = "2.1.0"
 
 [package.metadata.cargo-matrix]
 [[package.metadata.cargo-matrix.channel]]
 name = "default"
 always_deny = ["unstable"]
 always_include = ["__vergen_test"]
+include_optional = ["bincode", "serde"]
 
 [[package.metadata.cargo-matrix.channel]]
 name = "nightly"
 always_deny = []
 always_include = ["__vergen_test", "unstable"]
+include_optional = ["bincode", "serde"]
 
 [[package.metadata.cargo-matrix.channel]]
 name = "nightly-empty"
 always_deny = []
 always_include = ["__vergen_empty_test", "unstable"]
+include_optional = ["bincode", "serde"]
 
 [features]
 default = []
@@ -40,6 +43,7 @@ __vergen_empty_test = ["vergen-gix", "vergen-gix/unstable"]
 
 [dependencies]
 anyhow = { workspace = true }
+bincode = { version = "2.0.1", optional = true }
 bon = { workspace = true }
 console = { version = "0.16.0", optional = true }
 convert_case = "0.8.0"
@@ -66,5 +70,5 @@ serde_json = "1.0.143"
 tracing-subscriber = { version = "=0.3.19", features = ["fmt"] }
 
 [package.metadata.docs.rs]
-features = ["color", "header", "serde", "trace"]
+features = ["bincode", "color", "header", "serde", "trace"]
 rustdoc-args = ["--cfg", "docsrs"]

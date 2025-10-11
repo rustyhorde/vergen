@@ -6,6 +6,8 @@
 // option. All files in the project carrying such notice may not be copied,
 // modified, or distributed except according to those terms.
 
+#[cfg(feature = "bincode")]
+pub(crate) mod bincode;
 #[cfg(feature = "color")]
 pub(crate) mod color;
 #[cfg(feature = "serde")]
