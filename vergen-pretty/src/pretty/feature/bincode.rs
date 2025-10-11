@@ -12,20 +12,8 @@ use bincode::{
     enc::Encoder,
     error::{DecodeError, EncodeError},
 };
-use bon::Builder;
 
 use crate::{Prefix, Suffix};
-
-/// Extension of `Pretty` to support `bincode` serialization
-#[derive(Builder, Clone, Debug, Decode, Encode, PartialEq)]
-pub struct PrettyExt {
-    /// Environment variables from `vergen`
-    vars: Vec<(String, String, String)>,
-    /// Optional prefix to print before the variables
-    prefix: Option<Prefix>,
-    /// Optional suffix to print after the variables
-    suffix: Option<Suffix>,
-}
 
 impl Encode for Prefix {
     fn encode<E: Encoder>(&self, encoder: &mut E) -> Result<(), EncodeError> {
@@ -74,34 +62,5 @@ impl<'de, Context> BorrowDecode<'de, Context> for Suffix {
         Ok(Suffix::builder()
             .lines(Vec::<String>::borrow_decode(decoder)?)
             .build())
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use crate::{Pretty, PrettyExt, vergen_pretty_env};
-    use anyhow::Result;
-    use bincode::{config::standard, decode_from_slice, encode_to_vec};
-
-    #[test]
-    fn pretty_encode_decode_works() -> Result<()> {
-        let mut pretty = Pretty::builder().env(vergen_pretty_env!()).build();
-        pretty.populate_fmt();
-        let pretty_ext = PrettyExt::builder()
-            .vars(
-                pretty
-                    .vars
-                    .iter()
-                    .map(|v| (v.0.clone(), v.1.clone(), v.2.clone()))
-                    .collect(),
-            )
-            .maybe_prefix(pretty.prefix.clone())
-            .maybe_suffix(pretty.suffix.clone())
-            .build();
-        let encoded = encode_to_vec(&pretty_ext, standard())?;
-        assert!(!encoded.is_empty());
-        let decoded: PrettyExt = decode_from_slice(&encoded, standard())?.0;
-        assert_eq!(pretty_ext, decoded);
-        Ok(())
     }
 }
