@@ -345,6 +345,8 @@ pub use self::header::Env;
 #[cfg(feature = "header")]
 pub use self::header::header;
 pub use self::pretty::Pretty;
+#[cfg(any(feature = "bincode", feature = "serde"))]
+pub use self::pretty::feature::PrettyExt;
 pub use self::pretty::prefix::Prefix;
 pub use self::pretty::suffix::Suffix;
 #[cfg(feature = "color")]

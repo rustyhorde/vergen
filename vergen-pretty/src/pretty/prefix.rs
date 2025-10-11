@@ -11,14 +11,14 @@ use bon::Builder;
 #[cfg(feature = "color")]
 use console::Style;
 #[cfg(feature = "serde")]
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::io::Write;
 #[cfg(feature = "trace")]
 use tracing::Level;
 
 /// Configure prefix output for [`Pretty`](crate::Pretty)
 #[derive(Builder, Clone, Debug, PartialEq)]
-#[cfg_attr(feature = "serde", derive(Serialize))]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub struct Prefix {
     /// The prefix lines to output
     pub(crate) lines: Vec<String>,
@@ -29,7 +29,7 @@ pub struct Prefix {
     /// The tracing [`Level`] to output the prefix at
     #[cfg(feature = "trace")]
     #[builder(default = Level::INFO)]
-    #[cfg_attr(feature = "serde", serde(skip))]
+    #[cfg_attr(feature = "serde", serde(skip, default = "default_level"))]
     pub(crate) level: Level,
 }
 
@@ -58,6 +58,11 @@ impl Prefix {
         }
         Ok(())
     }
+}
+
+#[cfg(all(feature = "serde", feature = "trace"))]
+fn default_level() -> Level {
+    Level::INFO
 }
 
 #[cfg(test)]
