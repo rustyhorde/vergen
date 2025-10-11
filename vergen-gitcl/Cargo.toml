@@ -11,7 +11,7 @@ rust-version = "1.88.0"
 name = "vergen-gitcl"
 readme = "README.md"
 repository = "https://github.com/rustyhorde/vergen"
-version = "2.1.0-beta.9"
+version = "10.0.0-beta.4"
 
 [package.metadata.cargo-matrix]
 [[package.metadata.cargo-matrix.channel]]
@@ -53,8 +53,8 @@ si = ["vergen/si"]
 anyhow = { workspace = true }
 bon = { workspace = true }
 time = { workspace = true }
-vergen = { version = "10.0.0-beta.3", path = "../vergen", default-features = false }
-vergen-lib = { version = "1.0.0-beta.3", path = "../vergen-lib", features = ["git"] }
+vergen = { version = "10.0.0-beta.4", path = "../vergen", default-features = false }
+vergen-lib = { version = "10.0.0-beta.4", path = "../vergen-lib", features = ["git"] }
 
 [build-dependencies]
 rustversion = { workspace = true }
@@ -68,3 +68,8 @@ test_util = { path = "../test_util", features = ["repo", "unstable"] }
 [package.metadata.docs.rs]
 features = ["build", "cargo", "emit_and_set", "rustc", "si"]
 rustdoc-args = ["--cfg", "docsrs"]
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = [
+    'cfg(coverage,coverage_nightly)',
+] }
