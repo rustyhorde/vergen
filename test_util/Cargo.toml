@@ -11,7 +11,7 @@ rust-version = "1.88.0"
 name = "test_util"
 readme = "README.md"
 repository = "https://github.com/rustyhorde/vergen"
-version = "1.0.0-beta.3"
+version = "10.0.0-beta.4"
 
 [package.metadata.cargo-matrix]
 [[package.metadata.cargo-matrix.channel]]
@@ -39,3 +39,8 @@ serial_test = { workspace =  true }
 
 [build-dependencies]
 rustversion = { workspace = true }
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = [
+    'cfg(coverage,coverage_nightly)',
+] }
