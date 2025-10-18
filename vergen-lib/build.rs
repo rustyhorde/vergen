@@ -13,4 +13,3 @@ fn nightly() {
 fn nightly() {
     println!("cargo:rustc-check-cfg=cfg(nightly)");
 }
-

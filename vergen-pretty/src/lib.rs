@@ -337,9 +337,6 @@ mod header;
 mod pretty;
 mod utils;
 
-#[cfg(feature = "color")]
-#[doc(inline)]
-pub use console::Style;
 #[cfg(feature = "header")]
 pub use self::header::header;
 #[cfg(feature = "header")]
@@ -355,6 +352,9 @@ pub use self::pretty::suffix::SuffixBuilder;
 pub use self::pretty::Pretty;
 pub use self::pretty::PrettyBuilder;
 pub use self::pretty::PrettyBuilderError;
+#[cfg(feature = "color")]
+#[doc(inline)]
+pub use console::Style;
 #[cfg(feature = "trace")]
 #[doc(inline)]
 pub use tracing::Level;

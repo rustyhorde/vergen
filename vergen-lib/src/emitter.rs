@@ -409,7 +409,9 @@ impl Emitter {
         self.emit_output(&mut io::stdout()).map(|()| {
             for (k, v) in &self.cargo_rustc_env_map {
                 if env::var(k.name()).is_err() {
-                    unsafe { env::set_var(k.name(), v); }
+                    unsafe {
+                        env::set_var(k.name(), v);
+                    }
                 }
             }
         })
