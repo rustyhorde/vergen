@@ -194,8 +194,8 @@ impl Emitter {
     ///
     /// # Errors
     ///
-    pub fn add_instructions(&mut self, gen: &dyn AddEntries) -> Result<&mut Self> {
-        gen.add_map_entries(
+    pub fn add_instructions(&mut self, generator: &dyn AddEntries) -> Result<&mut Self> {
+        generator.add_map_entries(
             self.idempotent,
             &mut self.cargo_rustc_env_map,
             &mut self.cargo_rerun_if_changed,
@@ -203,7 +203,7 @@ impl Emitter {
         )
         .or_else(|e| {
             let default_config = DefaultConfig::new(self.fail_on_error, e);
-            gen.add_default_entries(
+            generator.add_default_entries(
                 &default_config,
                 &mut self.cargo_rustc_env_map,
                 &mut self.cargo_rerun_if_changed,
@@ -221,14 +221,14 @@ impl Emitter {
     ///
     pub fn add_custom_instructions<K, V>(
         &mut self,
-        gen: &impl AddCustomEntries<K, V>,
+        generator: &impl AddCustomEntries<K, V>,
     ) -> Result<&mut Self>
     where
         K: Into<String> + Ord,
         V: Into<String>,
     {
         let mut map = BTreeMap::default();
-        gen.add_calculated_entries(
+        generator.add_calculated_entries(
             self.idempotent,
             &mut map,
             &mut self.cargo_rerun_if_changed,
@@ -236,7 +236,7 @@ impl Emitter {
         )
         .or_else(|e| {
             let default_config = DefaultConfig::new(self.fail_on_error, e);
-            gen.add_default_entries(
+            generator.add_default_entries(
                 &default_config,
                 &mut map,
                 &mut self.cargo_rerun_if_changed,
