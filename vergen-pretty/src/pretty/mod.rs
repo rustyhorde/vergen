@@ -215,12 +215,12 @@ impl Pretty {
             .iter()
             .map(|(_, label, _)| label.len())
             .max()
-            .map_or_else(|| 16, |x| x);
+            .unwrap_or(16);
         let max_category = vm_iter
             .iter()
             .map(|(category, _, _)| category.len())
             .max()
-            .map_or_else(|| 7, |x| x);
+            .unwrap_or(7);
         self.vars = vm_iter;
         self.max_label = max_label;
         self.max_category = max_category;
