@@ -404,11 +404,12 @@ impl Emitter {
     ///
     #[cfg(feature = "emit_and_set")]
     #[cfg_attr(coverage_nightly, coverage(off))]
+    #[allow(unsafe_code)]
     pub fn emit_and_set(&self) -> Result<()> {
         self.emit_output(&mut io::stdout()).map(|()| {
             for (k, v) in &self.cargo_rustc_env_map {
                 if env::var(k.name()).is_err() {
-                    env::set_var(k.name(), v);
+                    unsafe { env::set_var(k.name(), v); }
                 }
             }
         })

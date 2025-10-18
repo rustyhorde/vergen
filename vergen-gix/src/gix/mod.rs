@@ -426,17 +426,17 @@ impl Gix {
                     SelectRef::AnnotatedTags
                 };
 
-                let describe =
-                    if let Some(res) = commit.describe().names(describe_refs).try_resolve()? {
+                let describe = match commit.describe().names(describe_refs).try_resolve()? {
+                    Some(res) => {
                         if self.describe_dirty {
                             let fmt = res.format_with_dirty_suffix(Some("dirty".to_string()))?;
                             fmt.to_string()
                         } else {
                             res.format()?.to_string()
                         }
-                    } else {
-                        String::new()
-                    };
+                    }
+                    _ => String::new(),
+                };
                 add_map_entry(VergenKey::GitDescribe, describe, cargo_rustc_env);
             }
         }

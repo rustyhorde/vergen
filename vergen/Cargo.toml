@@ -11,7 +11,7 @@ rust-version = "1.82.0"
 name = "vergen"
 readme = "README.md"
 repository = "https://github.com/rustyhorde/vergen"
-version = "9.0.6"
+version = "9.1.0"
 
 [package.metadata.cargo-matrix]
 [[package.metadata.cargo-matrix.channel]]
@@ -33,25 +33,25 @@ unstable = ["vergen-lib/unstable"]
 emit_and_set = ["vergen-lib/emit_and_set"]
 
 [dependencies]
-anyhow = "1.0.95"
-cargo_metadata = { version = "0.19.1", optional = true }
+anyhow = "1.0.100"
+cargo_metadata = { version = "0.23.0", optional = true }
 derive_builder = "0.20.2"
-regex = { version = "1.11.1", optional = true }
+regex = { version = "1.12.2", optional = true }
 rustc_version = { version = "0.4.1", optional = true }
-sysinfo = { version = "0.34.2", optional = true }
-time = { version = "0.3.37", features = [
+sysinfo = { version = "0.37.2", optional = true }
+time = { version = "0.3.44", features = [
     "formatting",
     "local-offset",
     "parsing",
 ], optional = true }
-vergen-lib = { version = "0.1.6", path = "../vergen-lib" }
+vergen-lib = { version = "9.1.0", path = "../vergen-lib" }
 
 [build-dependencies]
-rustversion = "1.0.19"
+rustversion = "1.0.22"
 
 [dev-dependencies]
 lazy_static = "1.5.0"
-regex = "1.11.1"
+regex = "1.12.2"
 test_util = { path = "../test_util", features = ["unstable"] }
 serial_test = "3.2.0"
 temp-env = "0.3.6"
@@ -59,3 +59,6 @@ temp-env = "0.3.6"
 [package.metadata.docs.rs]
 features = ["build", "cargo", "emit_and_set", "rustc", "si"]
 rustdoc-args = ["--cfg", "docsrs"]
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(coverage,coverage_nightly)'] }
