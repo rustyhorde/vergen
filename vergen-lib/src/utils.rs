@@ -1,4 +1,4 @@
-use crate::{constants::VERGEN_IDEMPOTENT_DEFAULT, CargoRustcEnvMap, CargoWarning, VergenKey};
+use crate::{CargoRustcEnvMap, CargoWarning, VergenKey, constants::VERGEN_IDEMPOTENT_DEFAULT};
 use std::env;
 
 /// Add a [`VergenKey`] entry as a default string into the [`CargoRustcEnvMap`].

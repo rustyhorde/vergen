@@ -174,7 +174,7 @@ pub trait AddCustom<K: Into<String> + Ord, V: Into<String>> {
 #[doc(hidden)]
 pub(crate) mod test_gen {
     use crate::{AddCustomEntries, CargoRerunIfChanged, CargoWarning};
-    use anyhow::{anyhow, Result};
+    use anyhow::{Result, anyhow};
     use derive_builder::Builder;
     use std::collections::BTreeMap;
 
@@ -225,7 +225,7 @@ pub(crate) mod test_gen {
 #[cfg(test)]
 mod test {
     use super::DefaultConfig;
-    use anyhow::{anyhow, Result};
+    use anyhow::{Result, anyhow};
     use std::io::Write;
 
     #[test]

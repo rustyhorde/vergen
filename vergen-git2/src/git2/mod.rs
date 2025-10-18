@@ -20,17 +20,17 @@ use std::{
     str::FromStr,
 };
 use time::{
-    format_description::{self, well_known::Iso8601},
     OffsetDateTime, UtcOffset,
+    format_description::{self, well_known::Iso8601},
 };
 use vergen_lib::{
+    AddEntries, CargoRerunIfChanged, CargoRustcEnvMap, CargoWarning, DefaultConfig, VergenKey,
     add_default_map_entry, add_map_entry,
     constants::{
         GIT_BRANCH_NAME, GIT_COMMIT_AUTHOR_EMAIL, GIT_COMMIT_AUTHOR_NAME, GIT_COMMIT_COUNT,
         GIT_COMMIT_DATE_NAME, GIT_COMMIT_MESSAGE, GIT_COMMIT_TIMESTAMP_NAME, GIT_DESCRIBE_NAME,
         GIT_DIRTY_NAME, GIT_SHA_NAME,
     },
-    AddEntries, CargoRerunIfChanged, CargoRustcEnvMap, CargoWarning, DefaultConfig, VergenKey,
 };
 
 /// The `VERGEN_GIT_*` configuration features
@@ -783,11 +783,11 @@ mod test {
     #[cfg(unix)]
     use std::io::stdout;
     use std::{collections::BTreeMap, env::current_dir, io::Write};
-    use test_util::TestRepos;
     #[cfg(unix)]
     use test_util::TEST_MTIME;
+    use test_util::TestRepos;
     use vergen::Emitter;
-    use vergen_lib::{count_idempotent, VergenKey};
+    use vergen_lib::{VergenKey, count_idempotent};
 
     #[test]
     #[serial]
@@ -926,10 +926,12 @@ mod test {
     fn git_error_fails() -> Result<()> {
         let mut git2 = Git2Builder::all_git()?;
         let _ = git2.fail();
-        assert!(Emitter::default()
-            .fail_on_error()
-            .add_instructions(&git2)
-            .is_err());
+        assert!(
+            Emitter::default()
+                .fail_on_error()
+                .add_instructions(&git2)
+                .is_err()
+        );
         Ok(())
     }
 

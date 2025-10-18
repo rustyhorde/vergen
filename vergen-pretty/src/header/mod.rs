@@ -237,11 +237,11 @@ fn get_suffix(suffix_opt: Option<&'static str>, _app_style: &Style) -> Result<Su
 
 #[cfg(test)]
 mod test {
+    use super::Config;
     #[cfg(feature = "color")]
     use super::from_u8;
     #[cfg(feature = "__vergen_test")]
     use super::header;
-    use super::Config;
     use anyhow::Result;
     #[cfg(feature = "color")]
     use console::Style;

@@ -126,11 +126,13 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     fn build_all_with_custom_fail() -> Result<()> {
         let build = BuildBuilder::all_build()?;
         let cust_gen = CustomInsGenBuilder::default().fail(true).build()?;
-        assert!(Emitter::new()
-            .fail_on_error()
-            .add_instructions(&build)?
-            .add_custom_instructions(&cust_gen)
-            .is_err());
+        assert!(
+            Emitter::new()
+                .fail_on_error()
+                .add_instructions(&build)?
+                .add_custom_instructions(&cust_gen)
+                .is_err()
+        );
         Ok(())
     }
 

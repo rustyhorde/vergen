@@ -13,13 +13,13 @@ use std::{
     str::FromStr,
 };
 use time::{
-    format_description::{self, well_known::Iso8601},
     OffsetDateTime,
+    format_description::{self, well_known::Iso8601},
 };
 use vergen_lib::{
+    AddEntries, CargoRerunIfChanged, CargoRustcEnvMap, CargoWarning, DefaultConfig, VergenKey,
     add_default_map_entry, add_map_entry,
     constants::{BUILD_DATE_NAME, BUILD_TIMESTAMP_NAME},
-    AddEntries, CargoRerunIfChanged, CargoRustcEnvMap, CargoWarning, DefaultConfig, VergenKey,
 };
 
 /// The `VERGEN_BUILD_*` configuration features
@@ -297,7 +297,7 @@ mod test {
     use anyhow::Result;
     use serial_test::serial;
     use std::io::Write;
-    use vergen_lib::{count_idempotent, CustomInsGen};
+    use vergen_lib::{CustomInsGen, count_idempotent};
 
     #[test]
     #[serial]
@@ -584,10 +584,12 @@ mod test {
             let result = || -> Result<()> {
                 let mut stdout_buf = vec![];
                 let build = BuildBuilder::all_build()?;
-                assert!(Emitter::default()
-                    .add_instructions(&build)?
-                    .emit_to(&mut stdout_buf)
-                    .is_ok());
+                assert!(
+                    Emitter::default()
+                        .add_instructions(&build)?
+                        .emit_to(&mut stdout_buf)
+                        .is_ok()
+                );
                 let output = String::from_utf8_lossy(&stdout_buf);
                 assert!(output.contains("cargo:rustc-env=VERGEN_BUILD_DATE=this is a bad date"));
                 Ok(())
@@ -606,10 +608,12 @@ mod test {
                 let result = || -> Result<()> {
                     let mut stdout_buf = vec![];
                     let build = BuildBuilder::all_build()?;
-                    assert!(Emitter::default()
-                        .add_instructions(&build)?
-                        .emit_to(&mut stdout_buf)
-                        .is_ok());
+                    assert!(
+                        Emitter::default()
+                            .add_instructions(&build)?
+                            .emit_to(&mut stdout_buf)
+                            .is_ok()
+                    );
                     let output = String::from_utf8_lossy(&stdout_buf);
                     assert!(output.contains(
                         "cargo:rustc-env=VERGEN_BUILD_TIMESTAMP=this is a bad timestamp"

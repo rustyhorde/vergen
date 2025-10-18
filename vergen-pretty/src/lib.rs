@@ -338,20 +338,20 @@ mod pretty;
 mod utils;
 
 #[cfg(feature = "header")]
-pub use self::header::header;
-#[cfg(feature = "header")]
 pub use self::header::Config;
 #[cfg(feature = "header")]
 pub use self::header::ConfigBuilder;
 #[cfg(feature = "header")]
 pub use self::header::Env;
+#[cfg(feature = "header")]
+pub use self::header::header;
+pub use self::pretty::Pretty;
+pub use self::pretty::PrettyBuilder;
+pub use self::pretty::PrettyBuilderError;
 pub use self::pretty::prefix::Prefix;
 pub use self::pretty::prefix::PrefixBuilder;
 pub use self::pretty::suffix::Suffix;
 pub use self::pretty::suffix::SuffixBuilder;
-pub use self::pretty::Pretty;
-pub use self::pretty::PrettyBuilder;
-pub use self::pretty::PrettyBuilderError;
 #[cfg(feature = "color")]
 #[doc(inline)]
 pub use console::Style;

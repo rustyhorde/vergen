@@ -195,21 +195,22 @@ impl Emitter {
     /// # Errors
     ///
     pub fn add_instructions(&mut self, generator: &dyn AddEntries) -> Result<&mut Self> {
-        generator.add_map_entries(
-            self.idempotent,
-            &mut self.cargo_rustc_env_map,
-            &mut self.cargo_rerun_if_changed,
-            &mut self.cargo_warning,
-        )
-        .or_else(|e| {
-            let default_config = DefaultConfig::new(self.fail_on_error, e);
-            generator.add_default_entries(
-                &default_config,
+        generator
+            .add_map_entries(
+                self.idempotent,
                 &mut self.cargo_rustc_env_map,
                 &mut self.cargo_rerun_if_changed,
                 &mut self.cargo_warning,
             )
-        })?;
+            .or_else(|e| {
+                let default_config = DefaultConfig::new(self.fail_on_error, e);
+                generator.add_default_entries(
+                    &default_config,
+                    &mut self.cargo_rustc_env_map,
+                    &mut self.cargo_rerun_if_changed,
+                    &mut self.cargo_warning,
+                )
+            })?;
         Ok(self)
     }
 
@@ -228,21 +229,22 @@ impl Emitter {
         V: Into<String>,
     {
         let mut map = BTreeMap::default();
-        generator.add_calculated_entries(
-            self.idempotent,
-            &mut map,
-            &mut self.cargo_rerun_if_changed,
-            &mut self.cargo_warning,
-        )
-        .or_else(|e| {
-            let default_config = DefaultConfig::new(self.fail_on_error, e);
-            generator.add_default_entries(
-                &default_config,
+        generator
+            .add_calculated_entries(
+                self.idempotent,
                 &mut map,
                 &mut self.cargo_rerun_if_changed,
                 &mut self.cargo_warning,
             )
-        })?;
+            .or_else(|e| {
+                let default_config = DefaultConfig::new(self.fail_on_error, e);
+                generator.add_default_entries(
+                    &default_config,
+                    &mut map,
+                    &mut self.cargo_rerun_if_changed,
+                    &mut self.cargo_warning,
+                )
+            })?;
         self.cargo_rustc_env_map_custom.extend(Self::map_into(map));
         Ok(self)
     }

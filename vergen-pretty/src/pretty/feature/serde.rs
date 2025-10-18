@@ -9,8 +9,8 @@
 use crate::Pretty;
 use convert_case::{Case, Casing};
 use serde::{
-    ser::{SerializeMap, SerializeStruct},
     Serialize, Serializer,
+    ser::{SerializeMap, SerializeStruct},
 };
 
 pub(crate) struct VarsTuple(Vec<(String, String, String)>);
@@ -65,8 +65,8 @@ impl Serialize for VarsTuple {
 #[cfg(test)]
 mod test {
     use crate::{
-        utils::test_utils::TEST_PREFIX_SUFFIX, vergen_pretty_env, PrefixBuilder, PrettyBuilder,
-        SuffixBuilder,
+        PrefixBuilder, PrettyBuilder, SuffixBuilder, utils::test_utils::TEST_PREFIX_SUFFIX,
+        vergen_pretty_env,
     };
     use anyhow::Result;
 

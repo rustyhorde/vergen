@@ -6,7 +6,7 @@
 // option. All files in the project carrying such notice may not be copied,
 // modified, or distributed except according to those terms.
 
-use anyhow::{anyhow, Error, Result};
+use anyhow::{Error, Result, anyhow};
 use derive_builder::Builder as DeriveBuilder;
 use std::{
     env::{self, VarError},
@@ -15,20 +15,20 @@ use std::{
     str::FromStr,
 };
 use time::{
+    OffsetDateTime, UtcOffset,
     format_description::{
         self,
         well_known::{Iso8601, Rfc3339},
     },
-    OffsetDateTime, UtcOffset,
 };
 use vergen_lib::{
+    AddEntries, CargoRerunIfChanged, CargoRustcEnvMap, CargoWarning, DefaultConfig, VergenKey,
     add_default_map_entry, add_map_entry,
     constants::{
         GIT_BRANCH_NAME, GIT_COMMIT_AUTHOR_EMAIL, GIT_COMMIT_AUTHOR_NAME, GIT_COMMIT_COUNT,
         GIT_COMMIT_DATE_NAME, GIT_COMMIT_MESSAGE, GIT_COMMIT_TIMESTAMP_NAME, GIT_DESCRIBE_NAME,
         GIT_DIRTY_NAME, GIT_SHA_NAME,
     },
-    AddEntries, CargoRerunIfChanged, CargoRustcEnvMap, CargoWarning, DefaultConfig, VergenKey,
 };
 
 // This funkiness allows the command to be output in the docs
@@ -1011,10 +1011,10 @@ mod test {
     #[cfg(unix)]
     use std::io::stdout;
     use std::{collections::BTreeMap, env::temp_dir, io::Write};
-    use test_util::TestRepos;
     #[cfg(unix)]
     use test_util::TEST_MTIME;
-    use vergen_lib::{count_idempotent, VergenKey};
+    use test_util::TestRepos;
+    use vergen_lib::{VergenKey, count_idempotent};
 
     #[test]
     #[serial]
@@ -1051,13 +1051,15 @@ mod test {
     #[serial]
     fn bad_command_is_error() -> Result<()> {
         let mut map = BTreeMap::new();
-        assert!(Gitcl::add_git_cmd_entry(
-            "such_a_terrible_cmd",
-            None,
-            VergenKey::GitCommitMessage,
-            &mut map
-        )
-        .is_err());
+        assert!(
+            Gitcl::add_git_cmd_entry(
+                "such_a_terrible_cmd",
+                None,
+                VergenKey::GitCommitMessage,
+                &mut map
+            )
+            .is_err()
+        );
         Ok(())
     }
 
@@ -1081,13 +1083,10 @@ mod test {
     fn shell_env_works() -> Result<()> {
         temp_env::with_var("SHELL", Some("bash"), || {
             let mut map = BTreeMap::new();
-            assert!(Gitcl::add_git_cmd_entry(
-                "git -v",
-                None,
-                VergenKey::GitCommitMessage,
-                &mut map
-            )
-            .is_ok());
+            assert!(
+                Gitcl::add_git_cmd_entry("git -v", None, VergenKey::GitCommitMessage, &mut map)
+                    .is_ok()
+            );
         });
         Ok(())
     }
@@ -1178,10 +1177,12 @@ mod test {
     fn fails_on_bad_git_command() -> Result<()> {
         let mut gitcl = GitclBuilder::all_git()?;
         let _ = gitcl.git_cmd(Some("this_is_not_a_git_cmd"));
-        assert!(Emitter::default()
-            .fail_on_error()
-            .add_instructions(&gitcl)
-            .is_err());
+        assert!(
+            Emitter::default()
+                .fail_on_error()
+                .add_instructions(&gitcl)
+                .is_err()
+        );
         Ok(())
     }
 
@@ -1203,15 +1204,17 @@ mod test {
         let mut map = BTreeMap::new();
         let mut warnings = vec![];
         let gitcl = GitclBuilder::all_git()?;
-        assert!(gitcl
-            .add_git_timestamp_entries(
-                "this_is_not_a_git_cmd",
-                None,
-                false,
-                &mut map,
-                &mut warnings
-            )
-            .is_ok());
+        assert!(
+            gitcl
+                .add_git_timestamp_entries(
+                    "this_is_not_a_git_cmd",
+                    None,
+                    false,
+                    &mut map,
+                    &mut warnings
+                )
+                .is_ok()
+        );
         assert_eq!(2, map.len());
         assert_eq!(2, warnings.len());
         Ok(())

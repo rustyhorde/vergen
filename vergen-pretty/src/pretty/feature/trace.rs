@@ -8,8 +8,8 @@
 
 #[cfg(feature = "color")]
 use super::color::{BOLD_BLUE, BOLD_GREEN};
-use crate::{pretty::Pretty, Prefix, Suffix};
-use tracing::{event, Level};
+use crate::{Prefix, Suffix, pretty::Pretty};
+use tracing::{Level, event};
 
 impl Pretty {
     /// Output the `vergen` environment variables that are set in table format to a tracing subscriber
@@ -151,14 +151,14 @@ impl Suffix {
 #[cfg(test)]
 mod test {
     use crate::{
-        utils::test_utils::TEST_PREFIX_SUFFIX, vergen_pretty_env, PrefixBuilder, PrettyBuilder,
-        SuffixBuilder,
+        PrefixBuilder, PrettyBuilder, SuffixBuilder, utils::test_utils::TEST_PREFIX_SUFFIX,
+        vergen_pretty_env,
     };
     use anyhow::Result;
     #[cfg(feature = "color")]
     use console::Style;
     use std::sync::Once;
-    use tracing::{metadata::LevelFilter, Level};
+    use tracing::{Level, metadata::LevelFilter};
     use tracing_subscriber::{
         fmt, prelude::__tracing_subscriber_SubscriberExt, registry, util::SubscriberInitExt,
     };

@@ -62,7 +62,7 @@ impl Suffix {
 #[cfg(test)]
 mod test {
     use crate::{
-        utils::test_utils::TEST_PREFIX_SUFFIX, vergen_pretty_env, PrettyBuilder, SuffixBuilder,
+        PrettyBuilder, SuffixBuilder, utils::test_utils::TEST_PREFIX_SUFFIX, vergen_pretty_env,
     };
     use anyhow::Result;
     use std::io::Write;

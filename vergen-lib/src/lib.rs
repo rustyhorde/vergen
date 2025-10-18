@@ -252,16 +252,16 @@ mod keys;
 mod utils;
 
 pub use self::emitter::Emitter;
-#[doc(hidden)]
-pub use self::entries::test_gen::CustomInsGen;
-#[doc(hidden)]
-pub use self::entries::test_gen::CustomInsGenBuilder;
 pub use self::entries::Add as AddEntries;
 pub use self::entries::AddCustom as AddCustomEntries;
 pub use self::entries::CargoRerunIfChanged;
 pub use self::entries::CargoRustcEnvMap;
 pub use self::entries::CargoWarning;
 pub use self::entries::DefaultConfig;
+#[doc(hidden)]
+pub use self::entries::test_gen::CustomInsGen;
+#[doc(hidden)]
+pub use self::entries::test_gen::CustomInsGenBuilder;
 pub use self::keys::vergen_key::VergenKey;
 pub use self::utils::add_default_map_entry;
 pub use self::utils::add_map_entry;
