@@ -60,7 +60,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        channel: ["1.85.1", "stable", "beta", "nightly"]
+        channel: ["1.86.0", "stable", "beta", "nightly"]
         target: [x86_64-unknown-linux-gnu]
     uses: rustyhorde/workflows/.github/workflows/test-all-features.yml@main
     with:
@@ -76,7 +76,7 @@ jobs:
     strategy:
       matrix:
         os: [macos-latest]
-        channel: ["1.85.1", "stable", "beta", "nightly"]
+        channel: ["1.86.0", "stable", "beta", "nightly"]
         target: [apple-darwin]
     uses: rustyhorde/workflows/.github/workflows/test-all-features.yml@main
     with:
@@ -92,7 +92,7 @@ jobs:
     strategy:
       matrix:
         os: [windows-latest]
-        channel: ["1.85.1", "stable", "beta", "nightly"]
+        channel: ["1.86.0", "stable", "beta", "nightly"]
         target: [x86_64-pc-windows-gnu]
     uses: rustyhorde/workflows/.github/workflows/test-all-features.yml@main
     with:
@@ -108,7 +108,7 @@ jobs:
     strategy:
       matrix:
         os: [windows-latest]
-        channel: ["1.85.1", "stable", "beta", "nightly"]
+        channel: ["1.86.0", "stable", "beta", "nightly"]
         target: [x86_64-pc-windows-msvc]
     uses: rustyhorde/workflows/.github/workflows/test-all-features.yml@main
     with:
