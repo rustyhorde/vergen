@@ -490,8 +490,6 @@ let build = Build::builder().build_timestamp(true).build();"
         multiple_supertrait_upcastable,
         must_not_suspend,
         non_exhaustive_omitted_patterns,
-        supertrait_item_shadowing_definition,
-        supertrait_item_shadowing_usage,
         unqualified_local_imports,
     )
 )]
