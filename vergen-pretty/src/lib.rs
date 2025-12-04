@@ -266,8 +266,6 @@
         multiple_supertrait_upcastable,
         must_not_suspend,
         non_exhaustive_omitted_patterns,
-        supertrait_item_shadowing_definition,
-        supertrait_item_shadowing_usage,
         unqualified_local_imports,
     )
 )]
@@ -301,20 +299,20 @@ mod utils;
 #[doc(inline)]
 pub use console::Style;
 #[cfg(feature = "header")]
-pub use header::Config;
+pub use self::header::Config;
 #[cfg(feature = "header")]
-pub use header::ConfigBuilder;
+pub use self::header::ConfigBuilder;
 #[cfg(feature = "header")]
-pub use header::Env;
+pub use self::header::Env;
 #[cfg(feature = "header")]
-pub use header::header;
-pub use pretty::Pretty;
-pub use pretty::PrettyBuilder;
-pub use pretty::PrettyBuilderError;
-pub use pretty::prefix::Prefix;
-pub use pretty::prefix::PrefixBuilder;
-pub use pretty::suffix::Suffix;
-pub use pretty::suffix::SuffixBuilder;
+pub use self::header::header;
+pub use self::pretty::Pretty;
+pub use self::pretty::PrettyBuilder;
+pub use self::pretty::PrettyBuilderError;
+pub use self::pretty::prefix::Prefix;
+pub use self::pretty::prefix::PrefixBuilder;
+pub use self::pretty::suffix::Suffix;
+pub use self::pretty::suffix::SuffixBuilder;
 #[cfg(feature = "trace")]
 #[doc(inline)]
 pub use tracing::Level;
