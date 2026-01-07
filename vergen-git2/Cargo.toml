@@ -11,7 +11,7 @@ rust-version = "1.88.0"
 name = "vergen-git2"
 readme = "README.md"
 repository = "https://github.com/rustyhorde/vergen"
-version = "10.0.0-beta.4"
+version = "10.0.0-beta.5"
 
 [package.metadata.cargo-matrix]
 [[package.metadata.cargo-matrix.channel]]
@@ -52,10 +52,10 @@ si = ["vergen/si"]
 [dependencies]
 anyhow = { workspace = true }
 bon = { workspace = true }
-git2-rs = { version = "0.20.2", package = "git2", default-features = false }
+git2-rs = { version = "0.20.3", package = "git2", default-features = false }
 time = { workspace = true }
-vergen = { version = "10.0.0-beta.4", path = "../vergen", default-features = false }
-vergen-lib = { version = "10.0.0-beta.4", path = "../vergen-lib", features = [
+vergen = { version = "10.0.0-beta.5", path = "../vergen", default-features = false }
+vergen-lib = { version = "10.0.0-beta.5", path = "../vergen-lib", features = [
     "git",
 ] }
 

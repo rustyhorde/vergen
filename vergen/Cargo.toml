@@ -11,7 +11,7 @@ rust-version = "1.88.0"
 name = "vergen"
 readme = "README.md"
 repository = "https://github.com/rustyhorde/vergen"
-version = "10.0.0-beta.4"
+version = "10.0.0-beta.5"
 
 [package.metadata.cargo-matrix]
 [[package.metadata.cargo-matrix.channel]]
@@ -36,19 +36,19 @@ emit_and_set = ["vergen-lib/emit_and_set"]
 [dependencies]
 anyhow = { workspace = true }
 bon = { workspace = true }
-cargo_metadata = { version = "0.23.0", optional = true }
+cargo_metadata = { version = "0.23.1", optional = true }
 regex = { workspace = true, optional = true }
 rustc_version = { version = "0.4.1", optional = true }
 sysinfo = { version = "0.37.2", optional = true }
 time = { workspace = true, optional = true }
-vergen-lib = { version = "10.0.0-beta.4", path = "../vergen-lib" }
+vergen-lib = { version = "10.0.0-beta.5", path = "../vergen-lib" }
 
 [build-dependencies]
 rustversion = { workspace = true }
 
 [dev-dependencies]
 regex = { workspace = true }
-test_util = { version = "10.0.0-beta.4", path = "../test_util", features = ["unstable"] }
+test_util = { version = "10.0.0-beta.5", path = "../test_util", features = ["unstable"] }
 serial_test = { workspace = true }
 temp-env = { workspace = true }
 
