@@ -583,12 +583,12 @@ impl Gix {
             let object = id.try_object()?.ok_or_else(|| anyhow!("Not an Object"))?;
             object.try_into_commit()?
         } else {
-            head.peel_to_commit_in_place()?
+            head.peel_to_commit()?
         })
     }
 
     fn get_id<'a>(head: &mut Head<'a>) -> Result<Option<Id<'a>>> {
-        head.try_peel_to_id_in_place().map_err(Into::into)
+        head.try_peel_to_id().map_err(Into::into)
     }
 
     fn add_rerun_if_changed(

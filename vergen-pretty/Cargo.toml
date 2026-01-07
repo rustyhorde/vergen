@@ -11,7 +11,7 @@ rust-version = "1.88.0"
 name = "vergen-pretty"
 readme = "README.md"
 repository = "https://github.com/rustyhorde/vergen"
-version = "10.0.0-beta.4"
+version = "10.0.0-beta.5"
 
 [package.metadata.cargo-matrix]
 [[package.metadata.cargo-matrix.channel]]
@@ -43,13 +43,13 @@ __vergen_empty_test = ["vergen-gix", "vergen-gix/unstable"]
 
 [dependencies]
 anyhow = { workspace = true }
-bincode = { version = "2.0.1", optional = true }
+bincode = { version = "=2.0.1", optional = true }
 bon = { workspace = true }
-console = { version = "0.16.1", optional = true }
-convert_case = "0.8.0"
+console = { version = "0.16.2", optional = true }
+convert_case = "0.10.0"
 rand = { workspace = true, optional = true }
 serde = { version = "1.0.228", features = ["derive"], optional = true }
-tracing = { version = "0.1.41", features = [
+tracing = { version = "0.1.44", features = [
     "max_level_trace",
     "release_max_level_trace",
 ], optional = true }
@@ -57,7 +57,7 @@ tracing = { version = "0.1.41", features = [
 [build-dependencies]
 anyhow = { workspace = true }
 rustversion = { workspace = true }
-vergen-gix = { version = "10.0.0-beta.4", path = "../vergen-gix", features = [
+vergen-gix = { version = "10.0.0-beta.5", path = "../vergen-gix", features = [
     "build",
     "cargo",
     "rustc",
@@ -66,7 +66,7 @@ vergen-gix = { version = "10.0.0-beta.4", path = "../vergen-gix", features = [
 
 [dev-dependencies]
 regex = { workspace = true }
-serde_json = "1.0.145"
+serde_json = "1.0.149"
 tracing-subscriber = { version = "=0.3.19", features = ["fmt"] }
 
 [package.metadata.docs.rs]
