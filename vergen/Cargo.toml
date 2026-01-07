@@ -48,7 +48,7 @@ rustversion = { workspace = true }
 
 [dev-dependencies]
 regex = { workspace = true }
-test_util = { version = "10.0.0-beta.5", path = "../test_util", features = ["unstable"] }
+test_util = { path = "../test_util", features = ["unstable"] }
 serial_test = { workspace = true }
 temp-env = { workspace = true }
 
