@@ -110,6 +110,7 @@
 //! cargo:rustc-env=VERGEN_GIT_COMMIT_MESSAGE=depsup
 //! cargo:rustc-env=VERGEN_GIT_COMMIT_TIMESTAMP=2024-01-30T21:43:43.000000000Z
 //! cargo:rustc-env=VERGEN_GIT_DESCRIBE=0.1.0-beta.1-15-g728e25c
+//! cargo:rustc-env=VERGEN_GIT_DIRTY=false
 //! cargo:rustc-env=VERGEN_GIT_SHA=728e25ca5bb7edbbc505f12b28c66b2b27883cf1
 //! cargo:rustc-env=VERGEN_RUSTC_CHANNEL=nightly
 //! cargo:rustc-env=VERGEN_RUSTC_COMMIT_DATE=2024-01-29
