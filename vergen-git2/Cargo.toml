@@ -36,7 +36,7 @@ si = ["vergen/si"]
 anyhow = "1.0.100"
 derive_builder = "0.20.2"
 git2-rs = { version = "0.20.1", package = "git2", default-features = false }
-time = { version = "0.3.44", features = [
+time = { version = "0.3.45", features = [
     "formatting",
     "local-offset",
     "parsing",
@@ -50,7 +50,7 @@ rustversion = "1.0.22"
 [dev-dependencies]
 lazy_static = "1.5.0"
 regex = "1.12.2"
-serial_test = "3.2.0"
+serial_test = "3.3.1"
 temp-env = "0.3.6"
 test_util = { path = "../test_util", features = ["repo", "unstable"] }
 
