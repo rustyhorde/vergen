@@ -764,18 +764,14 @@ fn check_inside_git_worktree(path: Option<&PathBuf>) -> Result<()> {
 }
 
 fn git_cmd_exists(cmd: &str) -> bool {
-    run_cmd(cmd, None)
-        .map(|output| output.status.success())
-        .unwrap_or(false)
+    run_cmd(cmd, None).is_ok_and(|output| output.status.success())
 }
 
 fn inside_git_worktree(path: Option<&PathBuf>) -> bool {
-    run_cmd("git rev-parse --is-inside-work-tree", path)
-        .map(|output| {
-            let stdout = String::from_utf8_lossy(&output.stdout);
-            output.status.success() && stdout.trim() == "true"
-        })
-        .unwrap_or(false)
+    run_cmd("git rev-parse --is-inside-work-tree", path).is_ok_and(|output| {
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        output.status.success() && stdout.trim() == "true"
+    })
 }
 
 #[cfg(not(target_env = "msvc"))]
