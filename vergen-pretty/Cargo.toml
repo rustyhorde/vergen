@@ -18,19 +18,19 @@ version = "10.0.0-beta.5"
 name = "default"
 always_deny = ["unstable"]
 always_include = ["__vergen_test"]
-include_optional = ["bincode", "serde"]
+include_optional = ["serde"]
 
 [[package.metadata.cargo-matrix.channel]]
 name = "nightly"
 always_deny = []
 always_include = ["__vergen_test", "unstable"]
-include_optional = ["bincode", "serde"]
+include_optional = ["serde"]
 
 [[package.metadata.cargo-matrix.channel]]
 name = "nightly-empty"
 always_deny = []
 always_include = ["__vergen_empty_test", "unstable"]
-include_optional = ["bincode", "serde"]
+include_optional = ["serde"]
 
 [features]
 default = []
@@ -43,7 +43,6 @@ __vergen_empty_test = ["vergen-gix", "vergen-gix/unstable"]
 
 [dependencies]
 anyhow = { workspace = true }
-bincode = { version = "=2.0.1", optional = true }
 bon = { workspace = true }
 console = { version = "0.16.2", optional = true }
 convert_case = "0.10.0"
@@ -70,7 +69,7 @@ serde_json = "1.0.149"
 tracing-subscriber = { version = "=0.3.19", features = ["fmt"] }
 
 [package.metadata.docs.rs]
-features = ["bincode", "color", "header", "serde", "trace"]
+features = ["color", "header", "serde", "trace"]
 rustdoc-args = ["--cfg", "docsrs"]
 
 [lints.rust]
