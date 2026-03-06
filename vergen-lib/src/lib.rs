@@ -16,9 +16,7 @@
         multiple_supertrait_upcastable,
         must_not_suspend,
         non_exhaustive_omitted_patterns_lint,
-        rustdoc_missing_doc_code_examples,
         strict_provenance_lints,
-        supertrait_item_shadowing,
         unqualified_local_imports,
     )
 )]
@@ -232,10 +230,6 @@
         rustdoc::private_doc_tests,
         rustdoc::private_intra_doc_links,
     )
-)]
-#![cfg_attr(
-    all(nightly, feature = "unstable"),
-    deny(rustdoc::missing_doc_code_examples)
 )]
 #![cfg_attr(all(docsrs), feature(doc_cfg))]
 #![cfg_attr(coverage_nightly, feature(coverage_attribute))]
