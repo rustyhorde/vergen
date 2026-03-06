@@ -234,6 +234,7 @@
     )
 )]
 #![cfg_attr(all(docsrs, nightly), feature(doc_cfg))]
+#![cfg_attr(all(nightly, coverage_nightly), feature(coverage_attribute))]
 
 #[cfg(test)]
 use {temp_env as _, test_util as _};
