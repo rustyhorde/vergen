@@ -507,7 +507,6 @@ let build = Build::builder().build_timestamp(true).build();"
     )
 )]
 #![cfg_attr(all(docsrs, nightly), feature(doc_cfg))]
-#![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
 mod feature;
 

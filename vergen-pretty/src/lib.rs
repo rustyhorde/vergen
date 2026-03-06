@@ -323,7 +323,6 @@ assert!(!buf.is_empty());
     )
 )]
 #![cfg_attr(all(docsrs, nightly), feature(doc_cfg))]
-#![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
 #[cfg(feature = "header")]
 mod header;
