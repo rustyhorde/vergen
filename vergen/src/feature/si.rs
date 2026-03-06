@@ -558,7 +558,7 @@ impl AddEntries for Sysinfo {
         Ok(())
     }
 
-    #[cfg_attr(coverage_nightly, coverage(off))]
+    #[cfg_attr(all(nightly, coverage_nightly), coverage(off))]
     fn add_default_entries(
         &self,
         _config: &DefaultConfig,
