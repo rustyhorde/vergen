@@ -106,9 +106,7 @@ assert!(!buf.is_empty());
         multiple_supertrait_upcastable,
         must_not_suspend,
         non_exhaustive_omitted_patterns_lint,
-        rustdoc_missing_doc_code_examples,
         strict_provenance_lints,
-        supertrait_item_shadowing,
         unqualified_local_imports,
     )
 )]
@@ -324,12 +322,7 @@ assert!(!buf.is_empty());
         rustdoc::private_intra_doc_links,
     )
 )]
-#![cfg_attr(
-    all(nightly, feature = "unstable"),
-    deny(rustdoc::missing_doc_code_examples)
-)]
 #![cfg_attr(all(docsrs, nightly), feature(doc_cfg))]
-#![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
 #[cfg(feature = "header")]
 mod header;
@@ -343,7 +336,7 @@ pub use self::header::Env;
 #[cfg(feature = "header")]
 pub use self::header::header;
 pub use self::pretty::Pretty;
-#[cfg(any(feature = "bincode", feature = "serde"))]
+#[cfg(feature = "serde")]
 pub use self::pretty::feature::PrettyExt;
 pub use self::pretty::prefix::Prefix;
 pub use self::pretty::suffix::Suffix;

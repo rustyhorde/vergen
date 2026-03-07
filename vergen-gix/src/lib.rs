@@ -246,9 +246,7 @@ let build = Build::builder().build_timestamp(true).build();"
         multiple_supertrait_upcastable,
         must_not_suspend,
         non_exhaustive_omitted_patterns_lint,
-        rustdoc_missing_doc_code_examples,
         strict_provenance_lints,
-        supertrait_item_shadowing,
         unqualified_local_imports,
     )
 )]
@@ -462,12 +460,8 @@ let build = Build::builder().build_timestamp(true).build();"
         rustdoc::private_intra_doc_links,
     )
 )]
-#![cfg_attr(
-    all(nightly, feature = "unstable"),
-    deny(rustdoc::missing_doc_code_examples)
-)]
 #![cfg_attr(all(docsrs, nightly), feature(doc_cfg))]
-#![cfg_attr(coverage_nightly, feature(coverage_attribute))]
+#![cfg_attr(all(nightly, coverage_nightly), feature(coverage_attribute))]
 
 #[cfg(test)]
 use regex as _;
