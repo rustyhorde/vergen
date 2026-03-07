@@ -45,7 +45,7 @@ __vergen_empty_test = ["vergen-gix", "vergen-gix/unstable"]
 anyhow = { workspace = true }
 bon = { workspace = true }
 console = { version = "0.16.2", optional = true }
-convert_case = "0.10.0"
+convert_case = "0.11.0"
 rand = { workspace = true, optional = true }
 serde = { version = "1.0.228", features = ["derive"], optional = true }
 tracing = { version = "0.1.44", features = [
