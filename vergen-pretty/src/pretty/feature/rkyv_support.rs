@@ -470,8 +470,7 @@ mod tests {
             style: Some(Style::new().bold().red()),
         };
         let bytes = rkyv::to_bytes::<rkyv::rancor::Error>(&original).unwrap();
-        let restored =
-            rkyv::from_bytes::<StyleWrap, rkyv::rancor::Error>(&bytes).unwrap();
+        let restored = rkyv::from_bytes::<StyleWrap, rkyv::rancor::Error>(&bytes).unwrap();
         let orig_ansi = original
             .style
             .as_ref()
@@ -496,8 +495,7 @@ mod tests {
     fn style_with_rkyv_round_trip_none() {
         let original = StyleWrap { style: None };
         let bytes = rkyv::to_bytes::<rkyv::rancor::Error>(&original).unwrap();
-        let restored =
-            rkyv::from_bytes::<StyleWrap, rkyv::rancor::Error>(&bytes).unwrap();
+        let restored = rkyv::from_bytes::<StyleWrap, rkyv::rancor::Error>(&bytes).unwrap();
         assert!(restored.style.is_none());
     }
 
@@ -527,8 +525,7 @@ mod tests {
         ] {
             let original = LevelWrap { level };
             let bytes = rkyv::to_bytes::<rkyv::rancor::Error>(&original).unwrap();
-            let restored =
-                rkyv::from_bytes::<LevelWrap, rkyv::rancor::Error>(&bytes).unwrap();
+            let restored = rkyv::from_bytes::<LevelWrap, rkyv::rancor::Error>(&bytes).unwrap();
             assert_eq!(restored.level, level);
         }
     }
