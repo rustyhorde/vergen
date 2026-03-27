@@ -369,4 +369,187 @@ mod tests {
         }
         let _ = LevelWith;
     }
+
+    // ── Additional branch-coverage tests ────────────────────────────────────
+
+    #[cfg(feature = "color")]
+    #[test]
+    fn all_bg_colors_round_trips() {
+        for (style, expected) in [
+            (Style::new().on_black(), "on_black"),
+            (Style::new().on_green(), "on_green"),
+            (Style::new().on_yellow(), "on_yellow"),
+            (Style::new().on_magenta(), "on_magenta"),
+            (Style::new().on_cyan(), "on_cyan"),
+            (Style::new().on_white(), "on_white"),
+        ] {
+            assert_eq!(style_to_dotted(&style), expected);
+        }
+    }
+
+    #[cfg(feature = "color")]
+    #[test]
+    fn remaining_attrs_round_trips() {
+        for (style, expected) in [
+            (Style::new().dim(), "dim"),
+            (Style::new().blink(), "blink"),
+            (Style::new().blink_fast(), "blink_fast"),
+            (Style::new().reverse(), "reverse"),
+            (Style::new().hidden(), "hidden"),
+        ] {
+            assert_eq!(style_to_dotted(&style), expected);
+        }
+    }
+
+    #[cfg(feature = "color")]
+    #[test]
+    fn bg_color256_round_trips() {
+        let s = Style::new().on_color256(196);
+        let dotted = style_to_dotted(&s);
+        assert_eq!(dotted, "on_196");
+        let restored = Style::from_dotted_str(&dotted);
+        assert_eq!(
+            s.force_styling(true).apply_to("x").to_string(),
+            restored.force_styling(true).apply_to("x").to_string(),
+        );
+    }
+
+    #[cfg(feature = "color")]
+    #[test]
+    fn bg_true_color_round_trips() {
+        let s = Style::new().on_true_color(0x12, 0x34, 0x56);
+        let dotted = style_to_dotted(&s);
+        assert_eq!(dotted, "on_#123456");
+        let restored = Style::from_dotted_str(&dotted);
+        assert_eq!(
+            s.force_styling(true).apply_to("x").to_string(),
+            restored.force_styling(true).apply_to("x").to_string(),
+        );
+    }
+
+    /// Directly exercises the `_ => {}` arms in [`push_dotted_parts`] that
+    /// silently discard unrecognised / out-of-range SGR codes.
+    #[cfg(feature = "color")]
+    #[test]
+    fn push_dotted_parts_unrecognised_codes_are_ignored() {
+        use super::push_dotted_parts;
+
+        let mut parts: Vec<String> = Vec::new();
+
+        // Single numeric code outside the handled ranges (1-9, 30-37, 40-47)
+        // → hits the inner `_ => {}` in `match n`
+        push_dotted_parts("10", &mut parts); // between attrs and fg basic
+        push_dotted_parts("28", &mut parts); // between attrs and fg basic
+        push_dotted_parts("50", &mut parts); // between bg basic and 256
+        assert!(parts.is_empty(), "unexpected parts: {parts:?}");
+
+        // Multi-segment slices that don't match any known pattern
+        // → hit the outer `_ => {}` arm
+        push_dotted_parts("38;5", &mut parts); // incomplete fg-256 (missing N)
+        push_dotted_parts("99;99;99", &mut parts); // 3 segs, not 38;2 or 48;2
+        push_dotted_parts("38;5;196;extra", &mut parts); // 4 segs
+        assert!(parts.is_empty(), "unexpected parts: {parts:?}");
+    }
+
+    // ── End-to-end rkyv round-trip tests ─────────────────────────────────────
+
+    /// A minimal struct that exercises `StyleWith` through rkyv's derive
+    /// machinery: `resolve_with`, `serialize_with`, and `deserialize_with` are
+    /// all exercised by the serialize + deserialize cycle below.
+    #[cfg(feature = "color")]
+    #[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)]
+    struct StyleWrap {
+        #[rkyv(with = rkyv::with::Map<super::StyleWith>)]
+        style: Option<Style>,
+    }
+
+    #[cfg(feature = "color")]
+    #[test]
+    fn style_with_rkyv_round_trip_some() {
+        let original = StyleWrap {
+            style: Some(Style::new().bold().red()),
+        };
+        let bytes = rkyv::to_bytes::<rkyv::rancor::Error>(&original).unwrap();
+        let restored =
+            rkyv::from_bytes::<StyleWrap, rkyv::rancor::Error>(&bytes).unwrap();
+        let orig_ansi = original
+            .style
+            .as_ref()
+            .unwrap()
+            .clone()
+            .force_styling(true)
+            .apply_to("x")
+            .to_string();
+        let rest_ansi = restored
+            .style
+            .as_ref()
+            .unwrap()
+            .clone()
+            .force_styling(true)
+            .apply_to("x")
+            .to_string();
+        assert_eq!(orig_ansi, rest_ansi);
+    }
+
+    #[cfg(feature = "color")]
+    #[test]
+    fn style_with_rkyv_round_trip_none() {
+        let original = StyleWrap { style: None };
+        let bytes = rkyv::to_bytes::<rkyv::rancor::Error>(&original).unwrap();
+        let restored =
+            rkyv::from_bytes::<StyleWrap, rkyv::rancor::Error>(&bytes).unwrap();
+        assert!(restored.style.is_none());
+    }
+
+    /// A minimal struct that exercises `LevelWith` through rkyv's derive
+    /// machinery.
+    ///
+    /// `Level::INFO` serialises to `"INFO"` which hits the `_ => Level::INFO`
+    /// fallback arm in `deserialize_with`, so running all five levels gives
+    /// full branch coverage.
+    #[cfg(feature = "trace")]
+    #[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)]
+    struct LevelWrap {
+        #[rkyv(with = super::LevelWith)]
+        level: tracing::Level,
+    }
+
+    #[cfg(feature = "trace")]
+    #[test]
+    fn level_with_rkyv_round_trip() {
+        use tracing::Level;
+        for level in [
+            Level::TRACE,
+            Level::DEBUG,
+            Level::INFO, // falls to `_ => Level::INFO` in deserialize_with
+            Level::WARN,
+            Level::ERROR,
+        ] {
+            let original = LevelWrap { level };
+            let bytes = rkyv::to_bytes::<rkyv::rancor::Error>(&original).unwrap();
+            let restored =
+                rkyv::from_bytes::<LevelWrap, rkyv::rancor::Error>(&bytes).unwrap();
+            assert_eq!(restored.level, level);
+        }
+    }
+
+    // ── Derived-trait coverage ────────────────────────────────────────────────
+
+    #[cfg(feature = "color")]
+    #[test]
+    fn style_with_clone_and_debug() {
+        use super::StyleWith;
+        let sw = StyleWith;
+        let cloned = sw;
+        let _unused = format!("{cloned:?}");
+    }
+
+    #[cfg(feature = "trace")]
+    #[test]
+    fn level_with_clone_and_debug() {
+        use super::LevelWith;
+        let lw = LevelWith;
+        let cloned = lw;
+        let _unused = format!("{cloned:?}");
+    }
 }
