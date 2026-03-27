@@ -104,16 +104,21 @@ fn push_dotted_parts(code: &str, parts: &mut Vec<String>) {
                 // Basic foreground colors: 30 (Black) … 37 (White)
                 30..=37 => {
                     const FG: [&str; 8] = [
-                        "black", "red", "green", "yellow", "blue", "magenta",
-                        "cyan", "white",
+                        "black", "red", "green", "yellow", "blue", "magenta", "cyan", "white",
                     ];
                     parts.push(FG[(n - 30) as usize].to_string());
                 }
                 // Basic background colors: 40 (Black) … 47 (White)
                 40..=47 => {
                     const BG: [&str; 8] = [
-                        "on_black", "on_red", "on_green", "on_yellow",
-                        "on_blue", "on_magenta", "on_cyan", "on_white",
+                        "on_black",
+                        "on_red",
+                        "on_green",
+                        "on_yellow",
+                        "on_blue",
+                        "on_magenta",
+                        "on_cyan",
+                        "on_white",
                     ];
                     parts.push(BG[(n - 40) as usize].to_string());
                 }
@@ -163,11 +168,7 @@ impl ArchiveWith<Style> for StyleWith {
     type Archived = ArchivedString;
     type Resolver = StringResolver;
 
-    fn resolve_with(
-        field: &Style,
-        resolver: Self::Resolver,
-        out: Place<Self::Archived>,
-    ) {
+    fn resolve_with(field: &Style, resolver: Self::Resolver, out: Place<Self::Archived>) {
         ArchivedString::resolve_from_str(&style_to_dotted(field), resolver, out);
     }
 }
@@ -179,10 +180,7 @@ where
     S::Error: Source,
     str: SerializeUnsized<S>,
 {
-    fn serialize_with(
-        field: &Style,
-        serializer: &mut S,
-    ) -> Result<Self::Resolver, S::Error> {
+    fn serialize_with(field: &Style, serializer: &mut S) -> Result<Self::Resolver, S::Error> {
         ArchivedString::serialize_from_str(&style_to_dotted(field), serializer)
     }
 }
@@ -192,10 +190,7 @@ impl<D> DeserializeWith<ArchivedString, Style, D> for StyleWith
 where
     D: Fallible + ?Sized,
 {
-    fn deserialize_with(
-        field: &ArchivedString,
-        _: &mut D,
-    ) -> Result<Style, D::Error> {
+    fn deserialize_with(field: &ArchivedString, _: &mut D) -> Result<Style, D::Error> {
         Ok(Style::from_dotted_str(field.as_str()))
     }
 }
@@ -217,11 +212,7 @@ impl ArchiveWith<Level> for LevelWith {
     type Archived = ArchivedString;
     type Resolver = StringResolver;
 
-    fn resolve_with(
-        field: &Level,
-        resolver: Self::Resolver,
-        out: Place<Self::Archived>,
-    ) {
+    fn resolve_with(field: &Level, resolver: Self::Resolver, out: Place<Self::Archived>) {
         ArchivedString::resolve_from_str(field.as_str(), resolver, out);
     }
 }
@@ -233,20 +224,14 @@ where
     S::Error: Source,
     str: SerializeUnsized<S>,
 {
-    fn serialize_with(
-        field: &Level,
-        serializer: &mut S,
-    ) -> Result<Self::Resolver, S::Error> {
+    fn serialize_with(field: &Level, serializer: &mut S) -> Result<Self::Resolver, S::Error> {
         ArchivedString::serialize_from_str(field.as_str(), serializer)
     }
 }
 
 #[cfg(feature = "trace")]
 impl<D: Fallible + ?Sized> DeserializeWith<ArchivedString, Level, D> for LevelWith {
-    fn deserialize_with(
-        field: &ArchivedString,
-        _: &mut D,
-    ) -> Result<Level, D::Error> {
+    fn deserialize_with(field: &ArchivedString, _: &mut D) -> Result<Level, D::Error> {
         Ok(match field.as_str() {
             "TRACE" => Level::TRACE,
             "DEBUG" => Level::DEBUG,
