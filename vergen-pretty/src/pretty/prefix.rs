@@ -19,17 +19,26 @@ use tracing::Level;
 /// Configure prefix output for [`Pretty`](crate::Pretty)
 #[derive(Builder, Clone, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
+#[cfg_attr(
+    feature = "rkyv",
+    derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)
+)]
 pub struct Prefix {
     /// The prefix lines to output
     pub(crate) lines: Vec<String>,
     /// The [`Style`] to apply to the output lines
     #[cfg(feature = "color")]
     #[cfg_attr(feature = "serde", serde(skip))]
+    #[cfg_attr(feature = "rkyv", rkyv(with = rkyv::with::Map<crate::pretty::feature::rkyv_support::StyleWith>))]
     pub(crate) style: Option<Style>,
     /// The tracing [`Level`] to output the prefix at
     #[cfg(feature = "trace")]
     #[builder(default = Level::INFO)]
     #[cfg_attr(feature = "serde", serde(skip, default = "default_level"))]
+    #[cfg_attr(
+        feature = "rkyv",
+        rkyv(with = crate::pretty::feature::rkyv_support::LevelWith)
+    )]
     pub(crate) level: Level,
 }
 

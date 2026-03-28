@@ -14,7 +14,7 @@ use anyhow::Result;
 use bon::Builder;
 use console::Style;
 #[cfg(feature = "color")]
-use rand::Rng;
+use rand::RngExt;
 use std::{collections::BTreeMap, io::Write};
 
 #[cfg(feature = "color")]

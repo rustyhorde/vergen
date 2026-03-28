@@ -336,8 +336,10 @@ pub use self::header::Env;
 #[cfg(feature = "header")]
 pub use self::header::header;
 pub use self::pretty::Pretty;
-#[cfg(feature = "serde")]
+#[cfg(any(feature = "serde", feature = "rkyv"))]
 pub use self::pretty::feature::PrettyExt;
+#[cfg(all(feature = "rkyv", feature = "color"))]
+pub use self::pretty::feature::rkyv_support::StyleWith;
 pub use self::pretty::prefix::Prefix;
 pub use self::pretty::suffix::Suffix;
 #[cfg(feature = "color")]

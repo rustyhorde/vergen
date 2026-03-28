@@ -8,7 +8,7 @@
 
 #[cfg(feature = "serde")]
 use ::serde::{Deserialize, Serialize};
-#[cfg(feature = "serde")]
+#[cfg(any(feature = "serde", feature = "rkyv"))]
 use {
     crate::{Prefix, Pretty, Suffix},
     bon::Builder,
@@ -16,15 +16,21 @@ use {
 
 #[cfg(feature = "color")]
 pub(crate) mod color;
+#[cfg(all(feature = "rkyv", any(feature = "color", feature = "trace")))]
+pub(crate) mod rkyv_support;
 #[cfg(feature = "serde")]
 pub(crate) mod serde;
 #[cfg(feature = "trace")]
 pub(crate) mod trace;
 
-#[cfg(feature = "serde")]
-/// Extension of `Pretty` to support `serde` serialization
+#[cfg(any(feature = "serde", feature = "rkyv"))]
+/// Extension of `Pretty` to support serialization
 #[derive(Builder, Clone, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
+#[cfg_attr(
+    feature = "rkyv",
+    derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)
+)]
 pub struct PrettyExt {
     /// Environment variables from `vergen`
     vars: Vec<(String, String, String)>,
@@ -34,7 +40,7 @@ pub struct PrettyExt {
     suffix: Option<Suffix>,
 }
 
-#[cfg(feature = "serde")]
+#[cfg(any(feature = "serde", feature = "rkyv"))]
 impl PrettyExt {
     /// Get the environment variables
     #[must_use]
@@ -55,7 +61,7 @@ impl PrettyExt {
     }
 }
 
-#[cfg(feature = "serde")]
+#[cfg(any(feature = "serde", feature = "rkyv"))]
 impl From<Pretty> for PrettyExt {
     fn from(pretty: Pretty) -> Self {
         let mut pretty_c = pretty.clone();

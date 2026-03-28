@@ -11,32 +11,33 @@ rust-version = "1.88.0"
 name = "vergen-pretty"
 readme = "README.md"
 repository = "https://github.com/rustyhorde/vergen"
-version = "10.0.0-beta.5"
+version = "10.0.0-beta.6"
 
 [package.metadata.cargo-matrix]
 [[package.metadata.cargo-matrix.channel]]
 name = "default"
 always_deny = ["unstable"]
 always_include = ["__vergen_test"]
-include_optional = ["serde"]
+include_optional = ["rkyv", "serde"]
 
 [[package.metadata.cargo-matrix.channel]]
 name = "nightly"
 always_deny = []
 always_include = ["__vergen_test", "unstable"]
-include_optional = ["serde"]
+include_optional = ["rkyv", "serde"]
 
 [[package.metadata.cargo-matrix.channel]]
 name = "nightly-empty"
 always_deny = []
 always_include = ["__vergen_empty_test", "unstable"]
-include_optional = ["serde"]
+include_optional = ["rkyv", "serde"]
 
 [features]
 default = []
 unstable = ["vergen-gix/unstable"]
 color = ["console"]
 header = ["console", "rand"]
+rkyv = ["dep:rkyv"]
 trace = ["tracing"]
 __vergen_test = ["vergen-gix", "vergen-gix/unstable"]
 __vergen_empty_test = ["vergen-gix", "vergen-gix/unstable"]
@@ -45,9 +46,10 @@ __vergen_empty_test = ["vergen-gix", "vergen-gix/unstable"]
 anyhow = { workspace = true }
 bon = { workspace = true }
 console = { version = "0.16.2", optional = true }
-convert_case = "0.10.0"
+convert_case = "0.11.0"
 rand = { workspace = true, optional = true }
 serde = { version = "1.0.228", features = ["derive"], optional = true }
+rkyv = { version = "0.8", features = ["std"], optional = true }
 tracing = { version = "0.1.44", features = [
     "max_level_trace",
     "release_max_level_trace",
@@ -56,7 +58,7 @@ tracing = { version = "0.1.44", features = [
 [build-dependencies]
 anyhow = { workspace = true }
 rustversion = { workspace = true }
-vergen-gix = { version = "10.0.0-beta.5", path = "../vergen-gix", features = [
+vergen-gix = { version = "10.0.0-beta.6", path = "../vergen-gix", features = [
     "build",
     "cargo",
     "rustc",
@@ -69,7 +71,7 @@ serde_json = "1.0.149"
 tracing-subscriber = { version = "=0.3.19", features = ["fmt"] }
 
 [package.metadata.docs.rs]
-features = ["color", "header", "serde", "trace"]
+features = ["color", "header", "rkyv", "serde", "trace"]
 rustdoc-args = ["--cfg", "docsrs"]
 
 [lints.rust]
