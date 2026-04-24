@@ -11,7 +11,7 @@ rust-version = "1.91.1"
 name = "vergen-pretty"
 readme = "README.md"
 repository = "https://github.com/rustyhorde/vergen"
-version = "10.0.0-beta.6"
+version = "10.0.0-beta.7"
 
 [package.metadata.cargo-matrix]
 [[package.metadata.cargo-matrix.channel]]
@@ -45,11 +45,11 @@ __vergen_empty_test = ["vergen-gix", "vergen-gix/unstable"]
 [dependencies]
 anyhow = { workspace = true }
 bon = { workspace = true }
-console = { version = "0.16.2", optional = true }
+console = { version = "0.16.3", optional = true }
 convert_case = "0.11.0"
 rand = { workspace = true, optional = true }
 serde = { version = "1.0.228", features = ["derive"], optional = true }
-rkyv = { version = "0.8", features = ["std"], optional = true }
+rkyv = { version = "0.8.16", features = ["std"], optional = true }
 tracing = { version = "0.1.44", features = [
     "max_level_trace",
     "release_max_level_trace",
@@ -58,7 +58,7 @@ tracing = { version = "0.1.44", features = [
 [build-dependencies]
 anyhow = { workspace = true }
 rustversion = { workspace = true }
-vergen-gix = { version = "10.0.0-beta.6", path = "../vergen-gix", features = [
+vergen-gix = { version = "10.0.0-beta.7", path = "../vergen-gix", features = [
     "build",
     "cargo",
     "rustc",
@@ -68,13 +68,8 @@ vergen-gix = { version = "10.0.0-beta.6", path = "../vergen-gix", features = [
 [dev-dependencies]
 regex = { workspace = true }
 serde_json = "1.0.149"
-tracing-subscriber = { version = "=0.3.19", features = ["fmt"] }
+tracing-subscriber = { version = "0.3.23", features = ["fmt"] }
 
 [package.metadata.docs.rs]
 features = ["color", "header", "rkyv", "serde", "trace"]
 rustdoc-args = ["--cfg", "docsrs"]
-
-[lints.rust]
-unexpected_cfgs = { level = "warn", check-cfg = [
-    'cfg(coverage,coverage_nightly)',
-] }

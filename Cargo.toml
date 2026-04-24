@@ -13,13 +13,14 @@ members = [
 
 [workspace.dependencies]
 anyhow = "1.0.102"
-bon = "3.9.0"
-gix = { version = "0.80.0", default-features = false, features = [
+bon = "3.9.1"
+gix = { version = "0.82.0", default-features = false, features = [
     "revision",
     "worktree-mutation",
     "blocking-network-client",
+    "sha1",
 ] }
-rand = { version = "0.10.0" }
+rand = { version = "0.10.1" }
 regex = { version = "1.12.3" }
 rustversion = "1.0.22"
 serial_test = "3.4.0"
