@@ -11,7 +11,7 @@ rust-version = "1.91.1"
 name = "vergen-gix"
 readme = "README.md"
 repository = "https://github.com/rustyhorde/vergen"
-version = "10.0.0-beta.6"
+version = "10.0.0-beta.7"
 
 [package.metadata.cargo-matrix]
 [[package.metadata.cargo-matrix.channel]]
@@ -69,10 +69,11 @@ gix = { workspace = true, features = [
     "interrupt",
     "status",
     "dirwalk",
+    "sha1",
 ] }
 time = { workspace = true }
-vergen = { version = "10.0.0-beta.6", path = "../vergen", default-features = false }
-vergen-lib = { version = "10.0.0-beta.6", path = "../vergen-lib", features = [
+vergen = { version = "10.0.0-beta.7", path = "../vergen", default-features = false }
+vergen-lib = { version = "10.0.0-beta.7", path = "../vergen-lib", features = [
     "git",
 ] }
 
@@ -89,7 +90,3 @@ temp-env = { workspace = true }
 features = ["build", "cargo", "emit_and_set", "rustc", "si"]
 rustdoc-args = ["--cfg", "docsrs"]
 
-[lints.rust]
-unexpected_cfgs = { level = "warn", check-cfg = [
-    'cfg(coverage,coverage_nightly)',
-] }
