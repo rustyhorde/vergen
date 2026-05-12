@@ -110,6 +110,7 @@ jobs:
 
   coverage-linux:
     name: 🧱 Coverage (Linux) 🧱
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
     needs: test-linux
     uses: rustyhorde/workflows/.github/workflows/coverage.yml@main
     with:
@@ -123,6 +124,7 @@ jobs:
 
   coverage-macos:
     name: 🧱 Coverage (MacOS) 🧱
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
     needs: test-macos
     uses: rustyhorde/workflows/.github/workflows/coverage.yml@main
     with:
@@ -136,6 +138,7 @@ jobs:
 
   coverage-windows:
     name: 🧱 Coverage (Wndows) 🧱
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
     needs: [test-windows-gnu, test-windows-msvc]
     strategy:
       matrix:
