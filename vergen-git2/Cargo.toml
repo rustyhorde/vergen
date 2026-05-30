@@ -7,7 +7,7 @@ edition = "2024"
 homepage = "https://github.com/rustyhorde/vergen"
 keywords = ["cargo", "instructions", "build", "tool"]
 license = "MIT OR Apache-2.0"
-rust-version = "1.88.0"
+rust-version = "1.91.0"
 name = "vergen-git2"
 readme = "README.md"
 repository = "https://github.com/rustyhorde/vergen"
@@ -57,6 +57,3 @@ test_util = { path = "../test_util", features = ["repo", "unstable"] }
 [package.metadata.docs.rs]
 features = ["build", "cargo", "emit_and_set", "rustc", "si"]
 rustdoc-args = ["--cfg", "docsrs"]
-
-[lints.rust]
-unexpected_cfgs = { level = "warn", check-cfg = ['cfg(coverage,coverage_nightly)'] }
