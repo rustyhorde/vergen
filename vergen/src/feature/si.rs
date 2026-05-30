@@ -346,7 +346,7 @@ impl Sysinfo {
     #[cfg(not(test))]
     #[allow(clippy::unused_self)]
     fn get_pid(&self) -> Result<Pid> {
-        get_current_pid().map_err(|e| anyhow!(format!("{e}")))
+        get_current_pid().map_err(|e| anyhow!(e.to_string()))
     }
 
     #[cfg(test)]
@@ -354,7 +354,7 @@ impl Sysinfo {
         if self.fail_pid {
             Err(anyhow!("unable to determine pid"))
         } else {
-            get_current_pid().map_err(|e| anyhow!(format!("{e}")))
+            get_current_pid().map_err(|e| anyhow!(e.to_string()))
         }
     }
 
