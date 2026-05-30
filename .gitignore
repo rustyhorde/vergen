@@ -5,3 +5,4 @@ Cargo.lock
 .DS_Store
 cobertura.xml
 lcov.info
+CLAUDE.md
