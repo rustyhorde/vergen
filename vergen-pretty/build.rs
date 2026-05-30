@@ -12,6 +12,7 @@ use {
 };
 
 fn main() -> Result<()> {
+    println!("cargo::rustc-check-cfg=cfg(coverage_nightly)");
     println!("cargo:rerun-if-changed=build.rs");
     nightly();
     setup_env()
