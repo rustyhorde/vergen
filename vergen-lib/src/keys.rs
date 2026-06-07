@@ -297,9 +297,14 @@ mod test {
 
     #[test]
     fn vergen_key_hash_works() {
-        let mut hasher = DefaultHasher::new();
-        VergenKey::Empty.hash(&mut hasher);
-        assert_eq!(15_130_871_412_783_076_140, hasher.finish());
+        // Assert hashing is deterministic rather than a hard-coded digest: the
+        // derived enum-discriminant hash is pointer-width dependent, so a fixed
+        // value only holds on 64-bit targets (see #494).
+        let mut first = DefaultHasher::new();
+        VergenKey::Empty.hash(&mut first);
+        let mut second = DefaultHasher::new();
+        VergenKey::Empty.hash(&mut second);
+        assert_eq!(first.finish(), second.finish());
     }
 }
 
@@ -349,8 +354,17 @@ mod test {
 
     #[test]
     fn vergen_key_hash_works() {
-        let mut hasher = DefaultHasher::new();
-        VergenKey::BuildDate.hash(&mut hasher);
-        assert_eq!(13_646_096_770_106_105_413, hasher.finish());
+        // Assert hashing is deterministic rather than a hard-coded digest: the
+        // derived enum-discriminant hash is pointer-width dependent, so a fixed
+        // value only holds on 64-bit targets (see #494).
+        let mut first = DefaultHasher::new();
+        VergenKey::BuildDate.hash(&mut first);
+        let mut second = DefaultHasher::new();
+        VergenKey::BuildDate.hash(&mut second);
+        assert_eq!(first.finish(), second.finish());
+
+        let mut other = DefaultHasher::new();
+        VergenKey::CargoDebug.hash(&mut other);
+        assert_ne!(first.finish(), other.finish());
     }
 }

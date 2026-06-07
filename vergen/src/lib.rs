@@ -40,9 +40,9 @@
 //!
 //! [build-dependencies]
 //! # All features enabled
-//! vergen = { version = "9.0.0", features = ["build", "cargo", "rustc", "si"] }
+//! vergen = { version = "10", features = ["build", "cargo", "rustc", "si"] }
 //! # or
-//! vergen = { version = "9.0.0", features = ["build"] }
+//! vergen = { version = "10", features = ["build"] }
 //! # if you wish to disable certain features
 //! ```
 //!

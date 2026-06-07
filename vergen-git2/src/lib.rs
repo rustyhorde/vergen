@@ -45,9 +45,9 @@
 //!
 //! [build-dependencies]
 //! # All features enabled
-//! vergen-git2 = { version = "1.0.0", features = ["build", "cargo", "rustc", "si"] }
+//! vergen-git2 = { version = "10", features = ["build", "cargo", "rustc", "si"] }
 //! # or
-//! vergen-git2 = { version = "1.0.0", features = ["build"] }
+//! vergen-git2 = { version = "10", features = ["build"] }
 //! # if you wish to disable certain features
 //! ```
 //!

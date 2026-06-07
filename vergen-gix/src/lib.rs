@@ -45,9 +45,9 @@
 //!
 //! [build-dependencies]
 //! # All features enabled
-//! vergen-gix = { version = "1.0.0", features = ["build", "cargo", "rustc", "si"] }
+//! vergen-gix = { version = "10", features = ["build", "cargo", "rustc", "si"] }
 //! # or
-//! vergen-gix = { version = "1.0.0", features = ["build"] }
+//! vergen-gix = { version = "10", features = ["build"] }
 //! # if you wish to disable certain features
 //! ```
 //!
