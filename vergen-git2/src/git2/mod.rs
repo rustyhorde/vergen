@@ -469,7 +469,7 @@ impl Git2 {
             } else {
                 Self::add_opt_value(
                     idempotent,
-                    commit.author().email(),
+                    commit.author().email().ok(),
                     VergenKey::GitCommitAuthorEmail,
                     cargo_rustc_env,
                     cargo_warning,
@@ -488,7 +488,7 @@ impl Git2 {
             } else {
                 Self::add_opt_value(
                     idempotent,
-                    commit.author().name(),
+                    commit.author().name().ok(),
                     VergenKey::GitCommitAuthorName,
                     cargo_rustc_env,
                     cargo_warning,
@@ -522,7 +522,7 @@ impl Git2 {
             } else {
                 Self::add_opt_value(
                     idempotent,
-                    commit.message(),
+                    commit.message().ok(),
                     VergenKey::GitCommitMessage,
                     cargo_rustc_env,
                     cargo_warning,
@@ -542,7 +542,7 @@ impl Git2 {
                 let obj = repo.revparse_single("HEAD")?;
                 Self::add_opt_value(
                     idempotent,
-                    obj.short_id()?.as_str(),
+                    obj.short_id()?.as_str().ok(),
                     VergenKey::GitSha,
                     cargo_rustc_env,
                     cargo_warning,
@@ -632,7 +632,7 @@ impl Git2 {
         }
 
         if let Ok(resolved) = ref_head.resolve()
-            && let Some(name) = resolved.name()
+            && let Ok(name) = resolved.name()
         {
             let ref_path = git_path.to_path_buf();
             let path = ref_path.join(name);
