@@ -10,6 +10,10 @@ on:
   schedule:
     - cron: "13 4 * * *"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 env:
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
@@ -18,12 +22,14 @@ name: 🦀 vergen 🦀
 jobs:
   rustfmt:
     name: 📌 Formatting 📌
-    uses: rustyhorde/workflows/.github/workflows/rustfmt.yml@main
+    # main
+    uses: rustyhorde/workflows/.github/workflows/rustfmt.yml@7a073ab416038755f63ff549d1331c9644d37cd7
 
   lints-linux:
     name: 🕳️ Clippy (Linux) 🕳️
     needs: rustfmt
-    uses: rustyhorde/workflows/.github/workflows/clippy-all-features.yml@main
+    # main
+    uses: rustyhorde/workflows/.github/workflows/clippy-all-features.yml@7a073ab416038755f63ff549d1331c9644d37cd7
     with:
       os: ubuntu-latest
       channel: nightly
@@ -34,7 +40,8 @@ jobs:
   lints-macos:
     name: 🕳️ Clippy (MacOS) 🕳️
     needs: rustfmt
-    uses: rustyhorde/workflows/.github/workflows/clippy-all-features.yml@main
+    # main
+    uses: rustyhorde/workflows/.github/workflows/clippy-all-features.yml@7a073ab416038755f63ff549d1331c9644d37cd7
     with:
       os: macos-latest
       channel: nightly
@@ -45,7 +52,8 @@ jobs:
   lints-windows:
     name: 🕳️ Clippy (Windows) 🕳️
     needs: rustfmt
-    uses: rustyhorde/workflows/.github/workflows/clippy-all-features.yml@main
+    # main
+    uses: rustyhorde/workflows/.github/workflows/clippy-all-features.yml@7a073ab416038755f63ff549d1331c9644d37cd7
     with:
       os: windows-latest
       channel: nightly
@@ -61,7 +69,8 @@ jobs:
         os: [ubuntu-latest]
         channel: ["1.95.0", "stable", "beta", "nightly"]
         target: [x86_64-unknown-linux-gnu]
-    uses: rustyhorde/workflows/.github/workflows/test-all-features.yml@main
+    # main
+    uses: rustyhorde/workflows/.github/workflows/test-all-features.yml@7a073ab416038755f63ff549d1331c9644d37cd7
     with:
       os: ${{ matrix.os }}
       channel: ${{ matrix.channel }}
@@ -75,9 +84,10 @@ jobs:
     strategy:
       matrix:
         os: [macos-latest]
-        channel: ["1.95.0", "stable", "beta", "nightly"]
+        channel: ["1.95.0", "nightly"]
         target: [apple-darwin]
-    uses: rustyhorde/workflows/.github/workflows/test-all-features.yml@main
+    # main
+    uses: rustyhorde/workflows/.github/workflows/test-all-features.yml@7a073ab416038755f63ff549d1331c9644d37cd7
     with:
       os: ${{ matrix.os }}
       channel: ${{ matrix.channel }}
@@ -91,9 +101,10 @@ jobs:
     strategy:
       matrix:
         os: [windows-latest]
-        channel: ["1.95.0", "stable", "beta", "nightly"]
+        channel: ["1.95.0", "nightly"]
         target: [x86_64-pc-windows-gnu]
-    uses: rustyhorde/workflows/.github/workflows/test-all-features.yml@main
+    # main
+    uses: rustyhorde/workflows/.github/workflows/test-all-features.yml@7a073ab416038755f63ff549d1331c9644d37cd7
     with:
       os: ${{ matrix.os }}
       channel: ${{ matrix.channel }}
@@ -107,9 +118,10 @@ jobs:
     strategy:
       matrix:
         os: [windows-latest]
-        channel: ["1.95.0", "stable", "beta", "nightly"]
+        channel: ["1.95.0", "nightly"]
         target: [x86_64-pc-windows-msvc]
-    uses: rustyhorde/workflows/.github/workflows/test-all-features.yml@main
+    # main
+    uses: rustyhorde/workflows/.github/workflows/test-all-features.yml@7a073ab416038755f63ff549d1331c9644d37cd7
     with:
       os: ${{ matrix.os }}
       channel: ${{ matrix.channel }}
@@ -121,7 +133,8 @@ jobs:
     name: 🧱 Coverage (Linux) 🧱
     if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
     needs: test-linux
-    uses: rustyhorde/workflows/.github/workflows/coverage.yml@main
+    # main
+    uses: rustyhorde/workflows/.github/workflows/coverage.yml@7a073ab416038755f63ff549d1331c9644d37cd7
     with:
       os: ubuntu-latest
       channel: nightly
@@ -135,7 +148,8 @@ jobs:
     name: 🧱 Coverage (MacOS) 🧱
     if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
     needs: test-macos
-    uses: rustyhorde/workflows/.github/workflows/coverage.yml@main
+    # main
+    uses: rustyhorde/workflows/.github/workflows/coverage.yml@7a073ab416038755f63ff549d1331c9644d37cd7
     with:
       os: macos-latest
       channel: nightly
@@ -152,7 +166,8 @@ jobs:
     strategy:
       matrix:
         target: [x86_64-pc-windows-gnu, x86_64-pc-windows-msvc]
-    uses: rustyhorde/workflows/.github/workflows/coverage.yml@main
+    # main
+    uses: rustyhorde/workflows/.github/workflows/coverage.yml@7a073ab416038755f63ff549d1331c9644d37cd7
     with:
       os: windows-latest
       channel: nightly
@@ -164,19 +179,25 @@ jobs:
 
   call-vergen-lib:
     name: vergen-lib
-    if: ${{ always() && !failure() && !cancelled() }}
-    needs: [coverage-linux, coverage-macos, coverage-windows]
     uses: ./.github/workflows/vergen_lib.yml
+    secrets: inherit
+
+  call-vergen-git2:
+    name: vergen-git2
+    uses: ./.github/workflows/vergen_git2.yml
+    secrets: inherit
+
+  call-vergen-gitcl:
+    name: vergen-gitcl
+    uses: ./.github/workflows/vergen_gitcl.yml
     secrets: inherit
 
   call-vergen-gix:
     name: vergen-gix
-    needs: [call-vergen-lib]
     uses: ./.github/workflows/vergen_gix.yml
     secrets: inherit
-  
+
   call-vergen-pretty:
     name: vergen-pretty
-    needs: [call-vergen-gix]
     uses: ./.github/workflows/vergen_pretty.yml
     secrets: inherit
