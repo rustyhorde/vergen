@@ -1056,8 +1056,12 @@ mod test {
         let mut map = BTreeMap::new();
         let mut cargo_warning = vec![];
         let repo = Repository::discover(current_dir()?)?;
+        // CI checks out a detached HEAD. With a detached HEAD and a
+        // non-idempotent default, add_branch_name emits only a warning and no
+        // map entry; on a normal branch checkout the branch name is added.
+        let detached = repo.head_detached()?;
         Git2::add_branch_name(false, true, &repo, &mut map, &mut cargo_warning)?;
-        assert_eq!(1, map.len());
+        assert_eq!(usize::from(!detached), map.len());
         assert_eq!(1, cargo_warning.len());
         let mut map = BTreeMap::new();
         let mut cargo_warning = vec![];
