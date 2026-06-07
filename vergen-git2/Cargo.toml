@@ -17,6 +17,7 @@ version = "10.0.0-beta.9"
 [[package.metadata.cargo-matrix.channel]]
 name = "default"
 always_deny = [
+    "allow_remote",
     "build",
     "cargo",
     "cargo_metadata",
@@ -29,6 +30,7 @@ always_deny = [
 [[package.metadata.cargo-matrix.channel]]
 name = "nightly"
 always_deny = [
+    "allow_remote",
     "build",
     "cargo",
     "cargo_metadata",
