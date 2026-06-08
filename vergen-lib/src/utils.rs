@@ -84,3 +84,30 @@ pub fn count_idempotent(map: &CargoRustcEnvMap) -> usize {
         .filter(|x| *x == VERGEN_IDEMPOTENT_DEFAULT)
         .count()
 }
+
+/// Read the git SHA and dirty flag from a `.cargo_vcs_info.json` file at
+/// `CARGO_MANIFEST_DIR`, if one is present.
+///
+/// This is the file [cargo includes in published crate tarballs][vcs-info], which
+/// lets the git SHA and dirty flag be recovered when building from a package where
+/// no `.git` directory exists (e.g. `cargo install` or a crates.io source).
+///
+/// Returns `Some((sha, dirty))` on success, or `None` if the file is absent or
+/// cannot be parsed. `dirty` defaults to `false` when the field is missing.
+///
+/// [vcs-info]: https://doc.rust-lang.org/cargo/commands/cargo-package.html#cargo_vcs_infojson-format
+#[cfg(feature = "vcs_info")]
+#[must_use]
+pub fn vcs_info() -> Option<(String, bool)> {
+    let manifest_dir = env::var_os("CARGO_MANIFEST_DIR")?;
+    let path = std::path::Path::new(&manifest_dir).join(".cargo_vcs_info.json");
+    let contents = std::fs::read_to_string(path).ok()?;
+    let json: serde_json::Value = serde_json::from_str(&contents).ok()?;
+    let git = json.get("git")?;
+    let sha = git.get("sha1")?.as_str()?.to_string();
+    let dirty = git
+        .get("dirty")
+        .and_then(serde_json::Value::as_bool)
+        .unwrap_or(false);
+    Some((sha, dirty))
+}

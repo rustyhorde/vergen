@@ -60,6 +60,7 @@ allow_remote = ["gix/blocking-http-transport-reqwest-rust-tls"]
 rustc = ["vergen/rustc"]
 unstable = ["vergen/unstable", "vergen-lib/unstable"]
 si = ["vergen/si"]
+vcs_info = ["vergen-lib/vcs_info"]
 
 [dependencies]
 anyhow = { workspace = true }

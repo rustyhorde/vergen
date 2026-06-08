@@ -16,9 +16,8 @@ use gix::{
     discover, head,
 };
 use std::{
-    env::{self, VarError},
+    env,
     path::{Path, PathBuf},
-    str::FromStr,
 };
 use time::{
     OffsetDateTime, UtcOffset,
@@ -114,6 +113,12 @@ pub struct Gix {
     /// An optional tag to clone from the remote
     #[builder(into)]
     remote_tag: Option<String>,
+    /// Fall back to `.cargo_vcs_info.json` for the git SHA and dirty flag when no
+    /// repository is available (e.g. building from a published crate or via
+    /// `cargo install`).  Requires the `vcs_info` feature.
+    #[cfg(feature = "vcs_info")]
+    #[builder(default = false)]
+    vcs_info_fallback: bool,
     /// Emit the current git branch
     ///
     /// ```text
@@ -622,14 +627,11 @@ impl Gix {
         cargo_rustc_env: &mut CargoRustcEnvMap,
         cargo_warning: &mut CargoWarning,
     ) -> Result<()> {
-        let (sde, ts) = match env::var("SOURCE_DATE_EPOCH") {
-            Ok(v) => (
-                true,
-                OffsetDateTime::from_unix_timestamp(i64::from_str(&v)?)?,
-            ),
-            Err(VarError::NotPresent) => self.compute_local_offset(commit)?,
-            Err(e) => return Err(e.into()),
-        };
+        // NOTE: SOURCE_DATE_EPOCH intentionally does NOT influence the git
+        // commit date/timestamp. Those derive from the commit itself and are
+        // already reproducible; SOURCE_DATE_EPOCH only affects the build
+        // timestamp (see issue #452).
+        let ts = self.compute_local_offset(commit)?;
 
         if let Ok(_value) = env::var(GIT_COMMIT_DATE_NAME) {
             add_default_map_entry(
@@ -639,7 +641,7 @@ impl Gix {
                 cargo_warning,
             );
         } else {
-            self.add_git_date_entry(idempotent, sde, &ts, cargo_rustc_env, cargo_warning)?;
+            self.add_git_date_entry(idempotent, &ts, cargo_rustc_env, cargo_warning)?;
         }
         if let Ok(_value) = env::var(GIT_COMMIT_TIMESTAMP_NAME) {
             add_default_map_entry(
@@ -649,34 +651,33 @@ impl Gix {
                 cargo_warning,
             );
         } else {
-            self.add_git_timestamp_entry(idempotent, sde, &ts, cargo_rustc_env, cargo_warning)?;
+            self.add_git_timestamp_entry(idempotent, &ts, cargo_rustc_env, cargo_warning)?;
         }
         Ok(())
     }
 
     #[cfg_attr(coverage_nightly, coverage(off))]
     // this in not included in coverage, because on *nix the local offset is always unsafe
-    fn compute_local_offset(&self, commit: &Commit<'_>) -> Result<(bool, OffsetDateTime)> {
+    fn compute_local_offset(&self, commit: &Commit<'_>) -> Result<OffsetDateTime> {
         let no_offset = OffsetDateTime::from_unix_timestamp(commit.time()?.seconds)?;
         if self.use_local {
             let local = UtcOffset::local_offset_at(no_offset)?;
             let local_offset = no_offset.checked_to_offset(local).unwrap_or(no_offset);
-            Ok((false, local_offset))
+            Ok(local_offset)
         } else {
-            Ok((false, no_offset))
+            Ok(no_offset)
         }
     }
 
     fn add_git_date_entry(
         &self,
         idempotent: bool,
-        source_date_epoch: bool,
         ts: &OffsetDateTime,
         cargo_rustc_env: &mut CargoRustcEnvMap,
         cargo_warning: &mut CargoWarning,
     ) -> Result<()> {
         if self.commit_date {
-            if idempotent && !source_date_epoch {
+            if idempotent {
                 add_default_map_entry(
                     idempotent,
                     VergenKey::GitCommitDate,
@@ -698,13 +699,12 @@ impl Gix {
     fn add_git_timestamp_entry(
         &self,
         idempotent: bool,
-        source_date_epoch: bool,
         ts: &OffsetDateTime,
         cargo_rustc_env: &mut CargoRustcEnvMap,
         cargo_warning: &mut CargoWarning,
     ) -> Result<()> {
         if self.commit_timestamp {
-            if idempotent && !source_date_epoch {
+            if idempotent {
                 add_default_map_entry(
                     idempotent,
                     VergenKey::GitCommitTimestamp,
@@ -720,6 +720,23 @@ impl Gix {
             }
         }
         Ok(())
+    }
+
+    /// The git SHA and dirty flag recovered from `.cargo_vcs_info.json`, if the
+    /// `vcs_info` fallback is enabled and the file is present. #448
+    #[cfg(feature = "vcs_info")]
+    fn vcs_fallback(&self) -> Option<(String, bool)> {
+        if self.vcs_info_fallback {
+            vergen_lib::vcs_info()
+        } else {
+            None
+        }
+    }
+
+    #[cfg(not(feature = "vcs_info"))]
+    #[allow(clippy::unused_self)]
+    fn vcs_fallback(&self) -> Option<(String, bool)> {
+        None
     }
 }
 
@@ -755,6 +772,10 @@ impl AddEntries for Gix {
             cargo_rerun_if_changed.clear();
 
             cargo_warning.push(format!("{}", config.error()));
+
+            // With no repository available, optionally recover the SHA and dirty
+            // flag from .cargo_vcs_info.json (e.g. a published crate). #448
+            let vcs = self.vcs_fallback();
 
             if self.branch {
                 add_default_map_entry(
@@ -821,20 +842,28 @@ impl AddEntries for Gix {
                 );
             }
             if self.sha.is_some() {
-                add_default_map_entry(
-                    *config.idempotent(),
-                    VergenKey::GitSha,
-                    cargo_rustc_env_map,
-                    cargo_warning,
-                );
+                if let Some((sha, _)) = &vcs {
+                    add_map_entry(VergenKey::GitSha, sha.clone(), cargo_rustc_env_map);
+                } else {
+                    add_default_map_entry(
+                        *config.idempotent(),
+                        VergenKey::GitSha,
+                        cargo_rustc_env_map,
+                        cargo_warning,
+                    );
+                }
             }
             if self.dirty.is_some() {
-                add_default_map_entry(
-                    *config.idempotent(),
-                    VergenKey::GitDirty,
-                    cargo_rustc_env_map,
-                    cargo_warning,
-                );
+                if let Some((_, dirty)) = &vcs {
+                    add_map_entry(VergenKey::GitDirty, dirty.to_string(), cargo_rustc_env_map);
+                } else {
+                    add_default_map_entry(
+                        *config.idempotent(),
+                        VergenKey::GitDirty,
+                        cargo_rustc_env_map,
+                        cargo_warning,
+                    );
+                }
             }
             Ok(())
         }
@@ -1109,42 +1138,35 @@ mod test {
 
     #[test]
     #[serial]
-    fn source_date_epoch_works() {
-        temp_env::with_var("SOURCE_DATE_EPOCH", Some("1671809360"), || {
-            let result = || -> Result<()> {
-                let mut stdout_buf = vec![];
-                let gix = Gix::builder()
-                    .commit_date(true)
-                    .commit_timestamp(true)
-                    .build();
-                _ = Emitter::new()
-                    .idempotent()
-                    .add_instructions(&gix)?
-                    .emit_to(&mut stdout_buf)?;
-                let output = String::from_utf8_lossy(&stdout_buf);
-                for (idx, line) in output.lines().enumerate() {
-                    if idx == 0 {
-                        assert_eq!("cargo:rustc-env=VERGEN_GIT_COMMIT_DATE=2022-12-23", line);
-                    } else if idx == 1 {
-                        assert_eq!(
-                            "cargo:rustc-env=VERGEN_GIT_COMMIT_TIMESTAMP=2022-12-23T15:29:20.000000000Z",
-                            line
-                        );
-                    }
-                }
-                Ok(())
-            }();
-            assert!(result.is_ok());
-        });
+    fn source_date_epoch_does_not_affect_git() {
+        // SOURCE_DATE_EPOCH must not influence the git commit date/timestamp;
+        // those derive from the commit and are already reproducible (#452). The
+        // git output must therefore be identical whether or not it is set.
+        fn emit() -> Result<String> {
+            let mut stdout_buf = vec![];
+            let gix = Gix::builder()
+                .commit_date(true)
+                .commit_timestamp(true)
+                .build();
+            _ = Emitter::new()
+                .add_instructions(&gix)?
+                .emit_to(&mut stdout_buf)?;
+            Ok(String::from_utf8_lossy(&stdout_buf).into_owned())
+        }
+        let without = temp_env::with_var("SOURCE_DATE_EPOCH", None::<&str>, emit);
+        let with = temp_env::with_var("SOURCE_DATE_EPOCH", Some("1671809360"), emit);
+        assert_eq!(without.unwrap(), with.unwrap());
     }
 
     #[test]
     #[serial]
     #[cfg(unix)]
-    fn bad_source_date_epoch_fails() {
+    fn bad_source_date_epoch_ignored_by_git() {
         use std::ffi::OsStr;
         use std::os::unix::prelude::OsStrExt;
 
+        // A malformed SOURCE_DATE_EPOCH no longer affects git output (#452), so
+        // emission succeeds even with fail_on_error.
         let source = [0x66, 0x6f, 0x80, 0x6f];
         let os_str = OsStr::from_bytes(&source[..]);
         temp_env::with_var("SOURCE_DATE_EPOCH", Some(os_str), || {
@@ -1156,7 +1178,7 @@ mod test {
                     .add_instructions(&gix)?
                     .emit()
             }();
-            assert!(result.is_err());
+            assert!(result.is_ok());
         });
     }
 
@@ -1185,10 +1207,12 @@ mod test {
     #[test]
     #[serial]
     #[cfg(windows)]
-    fn bad_source_date_epoch_fails() {
+    fn bad_source_date_epoch_ignored_by_git() {
         use std::ffi::OsString;
         use std::os::windows::prelude::OsStringExt;
 
+        // A malformed SOURCE_DATE_EPOCH no longer affects git output (#452), so
+        // emission succeeds even with fail_on_error.
         let source = [0x0066, 0x006f, 0xD800, 0x006f];
         let os_string = OsString::from_wide(&source[..]);
         let os_str = os_string.as_os_str();
@@ -1202,7 +1226,7 @@ mod test {
                     .add_instructions(&gix)?
                     .emit_to(&mut stdout_buf)
             }();
-            assert!(result.is_err());
+            assert!(result.is_ok());
         });
     }
 
@@ -1316,6 +1340,51 @@ mod test {
         assert_eq!(10, emitter.cargo_rustc_env_map().len());
         assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
         assert_eq!(1, emitter.cargo_warning().len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    #[cfg(feature = "vcs_info")]
+    fn vcs_info_fallback_populates_sha_and_dirty() -> Result<()> {
+        let tmp = temp_dir().join(format!("vergen_gix_vcs_info_{}", std::process::id()));
+        std::fs::create_dir_all(&tmp)?;
+        let mut file = std::fs::File::create(tmp.join(".cargo_vcs_info.json"))?;
+        write!(
+            file,
+            r#"{{"git":{{"sha1":"deadbeef","dirty":true}},"path_in_vcs":""}}"#
+        )?;
+
+        let gix = Gix::builder()
+            .sha(false)
+            .dirty(false)
+            .vcs_info_fallback(true)
+            // Point at a non-repository so the git lookup fails and the
+            // .cargo_vcs_info.json fallback is exercised.
+            .local_repo_path(tmp.join("not-a-repo"))
+            .build();
+
+        let mut stdout_buf = vec![];
+        temp_env::with_var(
+            "CARGO_MANIFEST_DIR",
+            Some(tmp.as_os_str()),
+            || -> Result<()> {
+                let mut emitter = Emitter::default();
+                _ = emitter.add_instructions(&gix)?.emit_to(&mut stdout_buf)?;
+                Ok(())
+            },
+        )?;
+
+        let output = String::from_utf8_lossy(&stdout_buf);
+        let _ = std::fs::remove_dir_all(&tmp).ok();
+        assert!(
+            output.contains("cargo:rustc-env=VERGEN_GIT_SHA=deadbeef"),
+            "{output}"
+        );
+        assert!(
+            output.contains("cargo:rustc-env=VERGEN_GIT_DIRTY=true"),
+            "{output}"
+        );
         Ok(())
     }
 }

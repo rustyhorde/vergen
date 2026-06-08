@@ -37,10 +37,12 @@ git = []
 rustc = []
 unstable = []
 si = []
+vcs_info = ["dep:serde_json"]
 
 [dependencies]
 anyhow = { workspace = true }
 bon = { workspace = true }
+serde_json = { workspace = true, optional = true }
 
 [build-dependencies]
 rustversion = { workspace = true }
