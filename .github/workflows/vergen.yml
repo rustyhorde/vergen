@@ -208,7 +208,6 @@ jobs:
     # crates.io yet, so the intentional major-version breaks are expected to be
     # reported. Drop `continue-on-error` and add this as a required status check
     # once 10.0.0 ships. See issue #478.
-    continue-on-error: true
     runs-on: ubuntu-latest
     steps:
       - name: ✅ Checkout ✅
