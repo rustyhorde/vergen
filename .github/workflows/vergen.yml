@@ -201,3 +201,30 @@ jobs:
     name: vergen-pretty
     uses: ./.github/workflows/vergen_pretty.yml
     secrets: inherit
+
+  semver-checks:
+    name: 🔍 Semver Checks 🔍
+    # Informational during the 10.0 beta: there is no stable 10.0 baseline on
+    # crates.io yet, so the intentional major-version breaks are expected to be
+    # reported. Drop `continue-on-error` and add this as a required status check
+    # once 10.0.0 ships. See issue #478.
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    steps:
+      - name: ✅ Checkout ✅
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - name: 💾 Install (cargo-binstall) 💾
+        uses: cargo-bins/cargo-binstall@aaa84a43aec4955a42c5ffc65d258961e39f276e # v1.19.1
+      - name: 💾 Install (cargo-semver-checks) 💾
+        env:
+          BINSTALL_MAXIMUM_RESOLUTION_TIMEOUT: "20"
+        run: cargo binstall --no-confirm --no-symlinks cargo-semver-checks
+      - name: 🔍 Semver Checks 🔍
+        run: >-
+          cargo semver-checks
+          --package vergen-lib
+          --package vergen
+          --package vergen-git2
+          --package vergen-gitcl
+          --package vergen-gix
+          --package vergen-pretty
