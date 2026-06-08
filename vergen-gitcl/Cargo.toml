@@ -48,6 +48,7 @@ emit_and_set = ["vergen-lib/emit_and_set"]
 rustc = ["vergen/rustc"]
 unstable = ["vergen/unstable", "vergen-lib/unstable"]
 si = ["vergen/si"]
+vcs_info = ["vergen-lib/vcs_info"]
 
 [dependencies]
 anyhow = { workspace = true }

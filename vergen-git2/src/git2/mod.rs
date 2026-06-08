@@ -116,6 +116,12 @@ pub struct Git2 {
     /// The depth to use when fetching the repository
     #[builder(default = 100)]
     fetch_depth: usize,
+    /// Fall back to `.cargo_vcs_info.json` for the git SHA and dirty flag when no
+    /// repository is available (e.g. building from a published crate or via
+    /// `cargo install`).  Requires the `vcs_info` feature.
+    #[cfg(feature = "vcs_info")]
+    #[builder(default = false)]
+    vcs_info_fallback: bool,
     /// Emit the current git branch
     ///
     /// ```text
@@ -817,6 +823,23 @@ impl Git2 {
         }
         Ok(())
     }
+
+    /// The git SHA and dirty flag recovered from `.cargo_vcs_info.json`, if the
+    /// `vcs_info` fallback is enabled and the file is present. #448
+    #[cfg(feature = "vcs_info")]
+    fn vcs_fallback(&self) -> Option<(String, bool)> {
+        if self.vcs_info_fallback {
+            vergen_lib::vcs_info()
+        } else {
+            None
+        }
+    }
+
+    #[cfg(not(feature = "vcs_info"))]
+    #[allow(clippy::unused_self)]
+    fn vcs_fallback(&self) -> Option<(String, bool)> {
+        None
+    }
 }
 
 impl AddEntries for Git2 {
@@ -854,6 +877,10 @@ impl AddEntries for Git2 {
             cargo_rerun_if_changed.clear();
 
             cargo_warning.push(format!("{}", config.error()));
+
+            // With no repository available, optionally recover the SHA and dirty
+            // flag from .cargo_vcs_info.json (e.g. a published crate). #448
+            let vcs = self.vcs_fallback();
 
             if self.branch {
                 add_default_map_entry(
@@ -920,20 +947,28 @@ impl AddEntries for Git2 {
                 );
             }
             if self.sha.is_some() {
-                add_default_map_entry(
-                    *config.idempotent(),
-                    VergenKey::GitSha,
-                    cargo_rustc_env_map,
-                    cargo_warning,
-                );
+                if let Some((sha, _)) = &vcs {
+                    add_map_entry(VergenKey::GitSha, sha.clone(), cargo_rustc_env_map);
+                } else {
+                    add_default_map_entry(
+                        *config.idempotent(),
+                        VergenKey::GitSha,
+                        cargo_rustc_env_map,
+                        cargo_warning,
+                    );
+                }
             }
             if self.dirty.is_some() {
-                add_default_map_entry(
-                    *config.idempotent(),
-                    VergenKey::GitDirty,
-                    cargo_rustc_env_map,
-                    cargo_warning,
-                );
+                if let Some((_, dirty)) = &vcs {
+                    add_map_entry(VergenKey::GitDirty, dirty.to_string(), cargo_rustc_env_map);
+                } else {
+                    add_default_map_entry(
+                        *config.idempotent(),
+                        VergenKey::GitDirty,
+                        cargo_rustc_env_map,
+                        cargo_warning,
+                    );
+                }
             }
             Ok(())
         }
@@ -1167,7 +1202,7 @@ mod test {
         // SOURCE_DATE_EPOCH must not influence the git commit date/timestamp;
         // those derive from the commit and are already reproducible (#452). The
         // git output must therefore be identical whether or not it is set.
-        let emit = || -> Result<String> {
+        fn emit() -> Result<String> {
             let mut stdout_buf = vec![];
             let git2 = Git2::builder()
                 .commit_date(true)
@@ -1177,9 +1212,9 @@ mod test {
                 .add_instructions(&git2)?
                 .emit_to(&mut stdout_buf)?;
             Ok(String::from_utf8_lossy(&stdout_buf).into_owned())
-        };
-        let without = temp_env::with_var("SOURCE_DATE_EPOCH", None::<&str>, || emit());
-        let with = temp_env::with_var("SOURCE_DATE_EPOCH", Some("1671809360"), || emit());
+        }
+        let without = temp_env::with_var("SOURCE_DATE_EPOCH", None::<&str>, emit);
+        let with = temp_env::with_var("SOURCE_DATE_EPOCH", Some("1671809360"), emit);
         assert_eq!(without.unwrap(), with.unwrap());
     }
 
@@ -1385,6 +1420,53 @@ mod test {
         assert_eq!(10, emitter.cargo_rustc_env_map().len());
         assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
         assert_eq!(1, emitter.cargo_warning().len());
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    #[cfg(feature = "vcs_info")]
+    fn vcs_info_fallback_populates_sha_and_dirty() -> Result<()> {
+        use std::io::Write as _;
+
+        let tmp = std::env::temp_dir().join(format!("vergen_vcs_info_{}", std::process::id()));
+        std::fs::create_dir_all(&tmp)?;
+        let mut file = std::fs::File::create(tmp.join(".cargo_vcs_info.json"))?;
+        write!(
+            file,
+            r#"{{"git":{{"sha1":"deadbeef","dirty":true}},"path_in_vcs":""}}"#
+        )?;
+
+        let git2 = Git2::builder()
+            .sha(false)
+            .dirty(false)
+            .vcs_info_fallback(true)
+            // Point at a non-repository so the git lookup fails and the
+            // .cargo_vcs_info.json fallback is exercised.
+            .local_repo_path(tmp.join("not-a-repo"))
+            .build();
+
+        let mut stdout_buf = vec![];
+        temp_env::with_var(
+            "CARGO_MANIFEST_DIR",
+            Some(tmp.as_os_str()),
+            || -> Result<()> {
+                let mut emitter = Emitter::default();
+                _ = emitter.add_instructions(&git2)?.emit_to(&mut stdout_buf)?;
+                Ok(())
+            },
+        )?;
+
+        let output = String::from_utf8_lossy(&stdout_buf);
+        let _ = std::fs::remove_dir_all(&tmp).ok();
+        assert!(
+            output.contains("cargo:rustc-env=VERGEN_GIT_SHA=deadbeef"),
+            "{output}"
+        );
+        assert!(
+            output.contains("cargo:rustc-env=VERGEN_GIT_DIRTY=true"),
+            "{output}"
+        );
         Ok(())
     }
 }
