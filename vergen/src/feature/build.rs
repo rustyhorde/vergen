@@ -19,7 +19,7 @@ use time::{
 use vergen_lib::{
     AddEntries, CargoRerunIfChanged, CargoRustcEnvMap, CargoWarning, DefaultConfig, VergenKey,
     add_default_map_entry, add_map_entry,
-    constants::{BUILD_DATE_NAME, BUILD_TIMESTAMP_NAME},
+    constants::{BUILD_DATE_NAME, BUILD_TIMESTAMP_NAME, BUILD_TIMESTAMP_UNIX_NAME},
 };
 
 /// The `VERGEN_BUILD_*` configuration features
@@ -157,6 +157,12 @@ pub struct Build {
     /// Enable the `VERGEN_BUILD_TIMESTAMP` date output
     #[builder(default = all)]
     build_timestamp: bool,
+    /// Enable the `VERGEN_BUILD_TIMESTAMP_UNIX` output (the build timestamp as
+    /// Unix seconds since the epoch).
+    ///
+    /// This is opt-in and is not enabled by [`Build::all_build`].
+    #[builder(default = false)]
+    build_timestamp_unix: bool,
     /// Enable local offset date/timestamp output
     #[builder(default = false)]
     use_local: bool,
@@ -185,7 +191,7 @@ impl Build {
     }
 
     fn any(self) -> bool {
-        self.build_date || self.build_timestamp
+        self.build_date || self.build_timestamp || self.build_timestamp_unix
     }
 
     fn add_timestamp_entries(
@@ -211,6 +217,7 @@ impl Build {
 
         self.add_date_entry(idempotent, sde, &ts, cargo_rustc_env, cargo_warning)?;
         self.add_timestamp_entry(idempotent, sde, &ts, cargo_rustc_env, cargo_warning)?;
+        self.add_timestamp_unix_entry(idempotent, sde, &ts, cargo_rustc_env, cargo_warning);
         Ok(())
     }
 
@@ -268,6 +275,34 @@ impl Build {
         }
         Ok(())
     }
+
+    fn add_timestamp_unix_entry(
+        self,
+        idempotent: bool,
+        source_date_epoch: bool,
+        ts: &OffsetDateTime,
+        cargo_rustc_env: &mut CargoRustcEnvMap,
+        cargo_warning: &mut CargoWarning,
+    ) {
+        if self.build_timestamp_unix {
+            if let Ok(value) = env::var(BUILD_TIMESTAMP_UNIX_NAME) {
+                add_map_entry(VergenKey::BuildTimestampUnix, value, cargo_rustc_env);
+            } else if idempotent && !source_date_epoch {
+                add_default_map_entry(
+                    idempotent,
+                    VergenKey::BuildTimestampUnix,
+                    cargo_rustc_env,
+                    cargo_warning,
+                );
+            } else {
+                add_map_entry(
+                    VergenKey::BuildTimestampUnix,
+                    ts.unix_timestamp().to_string(),
+                    cargo_rustc_env,
+                );
+            }
+        }
+    }
 }
 
 impl AddEntries for Build {
@@ -308,6 +343,14 @@ impl AddEntries for Build {
                 add_default_map_entry(
                     *config.idempotent(),
                     VergenKey::BuildTimestamp,
+                    cargo_rustc_env_map,
+                    cargo_warning,
+                );
+            }
+            if self.build_timestamp_unix {
+                add_default_map_entry(
+                    *config.idempotent(),
+                    VergenKey::BuildTimestampUnix,
                     cargo_rustc_env_map,
                     cargo_warning,
                 );
@@ -481,6 +524,61 @@ mod test {
                         );
                     }
                 }
+                Ok(())
+            }();
+            assert!(result.is_ok());
+        });
+    }
+
+    #[test]
+    #[serial]
+    fn build_timestamp_unix_works() {
+        temp_env::with_var("SOURCE_DATE_EPOCH", Some("1671809360"), || {
+            let result = || -> Result<()> {
+                let mut stdout_buf = vec![];
+                let build = Build::builder().build_timestamp_unix(true).build();
+                _ = Emitter::new()
+                    .add_instructions(&build)?
+                    .emit_to(&mut stdout_buf)?;
+                let output = String::from_utf8_lossy(&stdout_buf);
+                assert!(
+                    output.contains("cargo:rustc-env=VERGEN_BUILD_TIMESTAMP_UNIX=1671809360"),
+                    "{output}"
+                );
+                Ok(())
+            }();
+            assert!(result.is_ok());
+        });
+    }
+
+    #[test]
+    #[serial]
+    fn build_timestamp_unix_idempotent() -> Result<()> {
+        let build = Build::builder().build_timestamp_unix(true).build();
+        let emitter = Emitter::default()
+            .idempotent()
+            .add_instructions(&build)?
+            .test_emit();
+        assert_eq!(1, emitter.cargo_rustc_env_map().len());
+        assert_eq!(1, count_idempotent(emitter.cargo_rustc_env_map()));
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn build_timestamp_unix_override_works() {
+        temp_env::with_var("VERGEN_BUILD_TIMESTAMP_UNIX", Some("12345"), || {
+            let result = || -> Result<()> {
+                let mut stdout_buf = vec![];
+                let build = Build::builder().build_timestamp_unix(true).build();
+                _ = Emitter::default()
+                    .add_instructions(&build)?
+                    .emit_to(&mut stdout_buf)?;
+                let output = String::from_utf8_lossy(&stdout_buf);
+                assert!(
+                    output.contains("cargo:rustc-env=VERGEN_BUILD_TIMESTAMP_UNIX=12345"),
+                    "{output}"
+                );
                 Ok(())
             }();
             assert!(result.is_ok());

@@ -16,7 +16,7 @@
 ))]
 pub(crate) mod vergen_key {
     #[cfg(feature = "build")]
-    use crate::constants::{BUILD_DATE_NAME, BUILD_TIMESTAMP_NAME};
+    use crate::constants::{BUILD_DATE_NAME, BUILD_TIMESTAMP_NAME, BUILD_TIMESTAMP_UNIX_NAME};
     #[cfg(feature = "cargo")]
     use crate::constants::{
         CARGO_DEBUG, CARGO_DEPENDENCIES, CARGO_FEATURES, CARGO_OPT_LEVEL, CARGO_TARGET_TRIPLE,
@@ -24,8 +24,8 @@ pub(crate) mod vergen_key {
     #[cfg(feature = "git")]
     use crate::constants::{
         GIT_BRANCH_NAME, GIT_COMMIT_AUTHOR_EMAIL, GIT_COMMIT_AUTHOR_NAME, GIT_COMMIT_COUNT,
-        GIT_COMMIT_DATE_NAME, GIT_COMMIT_MESSAGE, GIT_COMMIT_TIMESTAMP_NAME, GIT_DESCRIBE_NAME,
-        GIT_DIRTY_NAME, GIT_SHA_NAME,
+        GIT_COMMIT_DATE_NAME, GIT_COMMIT_MESSAGE, GIT_COMMIT_TIMESTAMP_NAME,
+        GIT_COMMIT_TIMESTAMP_UNIX_NAME, GIT_DESCRIBE_NAME, GIT_DIRTY_NAME, GIT_SHA_NAME,
     };
     #[cfg(feature = "rustc")]
     use crate::constants::{
@@ -47,6 +47,9 @@ pub(crate) mod vergen_key {
         /// The build timestamp. (`VERGEN_BUILD_TIMESTAMP`)
         #[cfg(feature = "build")]
         BuildTimestamp,
+        /// The build timestamp as Unix seconds. (`VERGEN_BUILD_TIMESTAMP_UNIX`)
+        #[cfg(feature = "build")]
+        BuildTimestampUnix,
         /// The cargo debug flag (`VERGEN_CARGO_DEBUG`)
         #[cfg(feature = "cargo")]
         CargoDebug,
@@ -83,6 +86,9 @@ pub(crate) mod vergen_key {
         /// The commit timestamp. (`VERGEN_GIT_COMMIT_TIMESTAMP`)
         #[cfg(feature = "git")]
         GitCommitTimestamp,
+        /// The commit timestamp as Unix seconds. (`VERGEN_GIT_COMMIT_TIMESTAMP_UNIX`)
+        #[cfg(feature = "git")]
+        GitCommitTimestampUnix,
         /// The semver version from the last git tag. (`VERGEN_GIT_SEMVER`)
         #[cfg(feature = "git")]
         GitDescribe,
@@ -148,6 +154,8 @@ pub(crate) mod vergen_key {
                 VergenKey::BuildDate => BUILD_DATE_NAME,
                 #[cfg(feature = "build")]
                 VergenKey::BuildTimestamp => BUILD_TIMESTAMP_NAME,
+                #[cfg(feature = "build")]
+                VergenKey::BuildTimestampUnix => BUILD_TIMESTAMP_UNIX_NAME,
                 #[cfg(feature = "cargo")]
                 VergenKey::CargoDebug => CARGO_DEBUG,
                 #[cfg(feature = "cargo")]
@@ -172,6 +180,8 @@ pub(crate) mod vergen_key {
                 VergenKey::GitCommitMessage => GIT_COMMIT_MESSAGE,
                 #[cfg(feature = "git")]
                 VergenKey::GitCommitTimestamp => GIT_COMMIT_TIMESTAMP_NAME,
+                #[cfg(feature = "git")]
+                VergenKey::GitCommitTimestampUnix => GIT_COMMIT_TIMESTAMP_UNIX_NAME,
                 #[cfg(feature = "git")]
                 VergenKey::GitDescribe => GIT_DESCRIBE_NAME,
                 #[cfg(feature = "git")]

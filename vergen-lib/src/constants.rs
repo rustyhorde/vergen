@@ -32,6 +32,9 @@ pub mod features {
     /// The timestamp of the current build
     #[cfg(feature = "build")]
     pub const BUILD_TIMESTAMP_NAME: &str = "VERGEN_BUILD_TIMESTAMP";
+    /// The timestamp of the current build as Unix seconds since the epoch
+    #[cfg(feature = "build")]
+    pub const BUILD_TIMESTAMP_UNIX_NAME: &str = "VERGEN_BUILD_TIMESTAMP_UNIX";
     /// The date of the current build
     #[cfg(feature = "build")]
     pub const BUILD_DATE_NAME: &str = "VERGEN_BUILD_DATE";
@@ -57,6 +60,9 @@ pub mod features {
     /// The most recent commit timestamp
     #[cfg(feature = "git")]
     pub const GIT_COMMIT_TIMESTAMP_NAME: &str = "VERGEN_GIT_COMMIT_TIMESTAMP";
+    /// The most recent commit timestamp as Unix seconds since the epoch
+    #[cfg(feature = "git")]
+    pub const GIT_COMMIT_TIMESTAMP_UNIX_NAME: &str = "VERGEN_GIT_COMMIT_TIMESTAMP_UNIX";
     /// The output of git describe
     #[cfg(feature = "git")]
     pub const GIT_DESCRIBE_NAME: &str = "VERGEN_GIT_DESCRIBE";
@@ -160,6 +166,7 @@ mod test {
     fn build_constants_dont_change() {
         // Build Constants
         assert_eq!(BUILD_TIMESTAMP_NAME, "VERGEN_BUILD_TIMESTAMP");
+        assert_eq!(BUILD_TIMESTAMP_UNIX_NAME, "VERGEN_BUILD_TIMESTAMP_UNIX");
         assert_eq!(BUILD_DATE_NAME, "VERGEN_BUILD_DATE");
     }
 
@@ -182,6 +189,10 @@ mod test {
         assert_eq!(GIT_COMMIT_MESSAGE, "VERGEN_GIT_COMMIT_MESSAGE");
         assert_eq!(GIT_COMMIT_DATE_NAME, "VERGEN_GIT_COMMIT_DATE");
         assert_eq!(GIT_COMMIT_TIMESTAMP_NAME, "VERGEN_GIT_COMMIT_TIMESTAMP");
+        assert_eq!(
+            GIT_COMMIT_TIMESTAMP_UNIX_NAME,
+            "VERGEN_GIT_COMMIT_TIMESTAMP_UNIX"
+        );
         assert_eq!(GIT_DESCRIBE_NAME, "VERGEN_GIT_DESCRIBE");
         assert_eq!(GIT_SHA_NAME, "VERGEN_GIT_SHA");
         assert_eq!(GIT_DIRTY_NAME, "VERGEN_GIT_DIRTY");
