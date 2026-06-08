@@ -7,16 +7,17 @@ edition = "2024"
 homepage = "https://github.com/rustyhorde/vergen"
 keywords = ["cargo", "instructions", "build", "tool"]
 license = "MIT OR Apache-2.0"
-rust-version = "1.91.1"
+rust-version = "1.95.0"
 name = "vergen-git2"
 readme = "README.md"
 repository = "https://github.com/rustyhorde/vergen"
-version = "10.0.0-beta.8"
+version = "10.0.0-beta.9"
 
 [package.metadata.cargo-matrix]
 [[package.metadata.cargo-matrix.channel]]
 name = "default"
 always_deny = [
+    "allow_remote",
     "build",
     "cargo",
     "cargo_metadata",
@@ -29,6 +30,7 @@ always_deny = [
 [[package.metadata.cargo-matrix.channel]]
 name = "nightly"
 always_deny = [
+    "allow_remote",
     "build",
     "cargo",
     "cargo_metadata",
@@ -52,10 +54,10 @@ si = ["vergen/si"]
 [dependencies]
 anyhow = { workspace = true }
 bon = { workspace = true }
-git2-rs = { version = "0.20.4", package = "git2", default-features = false }
+git2-rs = { version = "0.21.0", package = "git2", default-features = false }
 time = { workspace = true }
-vergen = { version = "10.0.0-beta.8", path = "../vergen", default-features = false }
-vergen-lib = { version = "10.0.0-beta.8", path = "../vergen-lib", features = [
+vergen = { version = "10.0.0-beta.9", path = "../vergen", default-features = false }
+vergen-lib = { version = "10.0.0-beta.9", path = "../vergen-lib", features = [
     "git",
 ] }
 

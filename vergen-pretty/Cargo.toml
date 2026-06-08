@@ -7,11 +7,11 @@ edition = "2024"
 homepage = "https://github.com/rustyhorde/vergen"
 keywords = ["cargo", "instructions", "build", "tool"]
 license = "MIT OR Apache-2.0"
-rust-version = "1.91.1"
+rust-version = "1.95.0"
 name = "vergen-pretty"
 readme = "README.md"
 repository = "https://github.com/rustyhorde/vergen"
-version = "10.0.0-beta.8"
+version = "10.0.0-beta.9"
 
 [package.metadata.cargo-matrix]
 [[package.metadata.cargo-matrix.channel]]
@@ -58,7 +58,7 @@ tracing = { version = "0.1.44", features = [
 [build-dependencies]
 anyhow = { workspace = true }
 rustversion = { workspace = true }
-vergen-gix = { version = "10.0.0-beta.8", path = "../vergen-gix", features = [
+vergen-gix = { version = "10.0.0-beta.9", path = "../vergen-gix", features = [
     "build",
     "cargo",
     "rustc",
@@ -67,7 +67,7 @@ vergen-gix = { version = "10.0.0-beta.8", path = "../vergen-gix", features = [
 
 [dev-dependencies]
 regex = { workspace = true }
-serde_json = "1.0.149"
+serde_json = "1.0.150"
 tracing-subscriber = { version = "0.3.23", features = ["fmt"] }
 
 [package.metadata.docs.rs]
