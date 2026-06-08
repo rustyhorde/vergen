@@ -28,8 +28,8 @@ use vergen_lib::{
     Dirty, Sha, VergenKey, add_default_map_entry, add_map_entry,
     constants::{
         GIT_BRANCH_NAME, GIT_COMMIT_AUTHOR_EMAIL, GIT_COMMIT_AUTHOR_NAME, GIT_COMMIT_COUNT,
-        GIT_COMMIT_DATE_NAME, GIT_COMMIT_MESSAGE, GIT_COMMIT_TIMESTAMP_NAME, GIT_DESCRIBE_NAME,
-        GIT_DIRTY_NAME, GIT_SHA_NAME,
+        GIT_COMMIT_DATE_NAME, GIT_COMMIT_MESSAGE, GIT_COMMIT_TIMESTAMP_NAME,
+        GIT_COMMIT_TIMESTAMP_UNIX_NAME, GIT_DESCRIBE_NAME, GIT_DIRTY_NAME, GIT_SHA_NAME,
     },
 };
 
@@ -297,6 +297,15 @@ pub struct Gitcl {
     ///
     #[builder(default = all)]
     commit_timestamp: bool,
+    /// Emit the commit timestamp of the latest commit as Unix seconds
+    ///
+    /// ```text
+    /// cargo:rustc-env=VERGEN_GIT_COMMIT_TIMESTAMP_UNIX=<SECONDS>
+    /// ```
+    ///
+    /// This is opt-in and is not enabled by [`Gitcl::all_git`].
+    #[builder(default = false)]
+    commit_timestamp_unix: bool,
     /// Emit the describe output
     ///
     /// ```text
@@ -392,6 +401,7 @@ impl Gitcl {
             || self.commit_date
             || self.commit_message
             || self.commit_timestamp
+            || self.commit_timestamp_unix
             || self.describe.is_some()
             || self.sha.is_some()
             || self.dirty.is_some()
@@ -776,6 +786,7 @@ impl Gitcl {
         Ok(())
     }
 
+    #[allow(clippy::too_many_lines)]
     fn add_git_timestamp_entries(
         &self,
         cmd: &str,
@@ -804,6 +815,17 @@ impl Gitcl {
                 cargo_warning,
             );
             timestamp_override = true;
+        }
+
+        let mut timestamp_unix_override = false;
+        if let Ok(_value) = env::var(GIT_COMMIT_TIMESTAMP_UNIX_NAME) {
+            add_default_map_entry(
+                idempotent,
+                VergenKey::GitCommitTimestampUnix,
+                cargo_rustc_env,
+                cargo_warning,
+            );
+            timestamp_unix_override = true;
         }
 
         let output = Self::run_cmd(cmd, path)?;
@@ -839,6 +861,15 @@ impl Gitcl {
                         cargo_warning,
                     );
                 }
+
+                if self.commit_timestamp_unix && !timestamp_unix_override {
+                    add_default_map_entry(
+                        idempotent,
+                        VergenKey::GitCommitTimestampUnix,
+                        cargo_rustc_env,
+                        cargo_warning,
+                    );
+                }
             } else {
                 if self.commit_date && !date_override {
                     let format = format_description::parse("[year]-[month]-[day]")?;
@@ -853,6 +884,14 @@ impl Gitcl {
                     add_map_entry(
                         VergenKey::GitCommitTimestamp,
                         ts.format(&Iso8601::DEFAULT)?,
+                        cargo_rustc_env,
+                    );
+                }
+
+                if self.commit_timestamp_unix && !timestamp_unix_override {
+                    add_map_entry(
+                        VergenKey::GitCommitTimestampUnix,
+                        ts.unix_timestamp().to_string(),
                         cargo_rustc_env,
                     );
                 }
@@ -871,6 +910,15 @@ impl Gitcl {
                 add_default_map_entry(
                     idempotent,
                     VergenKey::GitCommitTimestamp,
+                    cargo_rustc_env,
+                    cargo_warning,
+                );
+            }
+
+            if self.commit_timestamp_unix && !timestamp_unix_override {
+                add_default_map_entry(
+                    idempotent,
+                    VergenKey::GitCommitTimestampUnix,
                     cargo_rustc_env,
                     cargo_warning,
                 );
@@ -1029,6 +1077,7 @@ impl AddEntries for Gitcl {
         Ok(())
     }
 
+    #[allow(clippy::too_many_lines)]
     fn add_default_entries(
         &self,
         config: &DefaultConfig,
@@ -1103,6 +1152,14 @@ impl AddEntries for Gitcl {
                 add_default_map_entry(
                     *config.idempotent(),
                     VergenKey::GitCommitTimestamp,
+                    cargo_rustc_env_map,
+                    cargo_warning,
+                );
+            }
+            if self.commit_timestamp_unix {
+                add_default_map_entry(
+                    *config.idempotent(),
+                    VergenKey::GitCommitTimestampUnix,
                     cargo_rustc_env_map,
                     cargo_warning,
                 );
@@ -1669,5 +1726,57 @@ mod test {
             "{output}"
         );
         Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn commit_timestamp_unix_works() -> Result<()> {
+        let gitcl = Gitcl::builder().commit_timestamp_unix(true).build();
+        let mut stdout_buf = vec![];
+        _ = Emitter::default()
+            .add_instructions(&gitcl)?
+            .emit_to(&mut stdout_buf)?;
+        let output = String::from_utf8_lossy(&stdout_buf);
+        let line = output
+            .lines()
+            .find(|l| l.starts_with("cargo:rustc-env=VERGEN_GIT_COMMIT_TIMESTAMP_UNIX="))
+            .expect("unix commit timestamp emitted");
+        let value = line.trim_start_matches("cargo:rustc-env=VERGEN_GIT_COMMIT_TIMESTAMP_UNIX=");
+        assert!(value.parse::<i64>().is_ok(), "value: {value}");
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn commit_timestamp_unix_idempotent() -> Result<()> {
+        let gitcl = Gitcl::builder().commit_timestamp_unix(true).build();
+        let emitter = Emitter::default()
+            .idempotent()
+            .add_instructions(&gitcl)?
+            .test_emit();
+        assert_eq!(1, emitter.cargo_rustc_env_map().len());
+        assert_eq!(1, count_idempotent(emitter.cargo_rustc_env_map()));
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn commit_timestamp_unix_override_works() {
+        temp_env::with_var("VERGEN_GIT_COMMIT_TIMESTAMP_UNIX", Some("12345"), || {
+            let result = || -> Result<()> {
+                let gitcl = Gitcl::builder().commit_timestamp_unix(true).build();
+                let mut stdout_buf = vec![];
+                _ = Emitter::default()
+                    .add_instructions(&gitcl)?
+                    .emit_to(&mut stdout_buf)?;
+                let output = String::from_utf8_lossy(&stdout_buf);
+                assert!(
+                    output.contains("cargo:rustc-env=VERGEN_GIT_COMMIT_TIMESTAMP_UNIX=12345"),
+                    "{output}"
+                );
+                Ok(())
+            }();
+            assert!(result.is_ok());
+        });
     }
 }

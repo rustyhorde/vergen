@@ -28,8 +28,8 @@ use vergen_lib::{
     Dirty, Sha, VergenKey, add_default_map_entry, add_map_entry,
     constants::{
         GIT_BRANCH_NAME, GIT_COMMIT_AUTHOR_EMAIL, GIT_COMMIT_AUTHOR_NAME, GIT_COMMIT_COUNT,
-        GIT_COMMIT_DATE_NAME, GIT_COMMIT_MESSAGE, GIT_COMMIT_TIMESTAMP_NAME, GIT_DESCRIBE_NAME,
-        GIT_DIRTY_NAME, GIT_SHA_NAME,
+        GIT_COMMIT_DATE_NAME, GIT_COMMIT_MESSAGE, GIT_COMMIT_TIMESTAMP_NAME,
+        GIT_COMMIT_TIMESTAMP_UNIX_NAME, GIT_DESCRIBE_NAME, GIT_DIRTY_NAME, GIT_SHA_NAME,
     },
 };
 #[cfg(feature = "allow_remote")]
@@ -174,6 +174,15 @@ pub struct Gix {
     ///
     #[builder(default = all)]
     commit_timestamp: bool,
+    /// Emit the commit timestamp of the latest commit as Unix seconds
+    ///
+    /// ```text
+    /// cargo:rustc-env=VERGEN_GIT_COMMIT_TIMESTAMP_UNIX=<SECONDS>
+    /// ```
+    ///
+    /// This is opt-in and is not enabled by [`Gix::all_git`].
+    #[builder(default = false)]
+    commit_timestamp_unix: bool,
     /// Emit the describe output
     ///
     /// ```text
@@ -267,6 +276,7 @@ impl Gix {
             || self.commit_date
             || self.commit_message
             || self.commit_timestamp
+            || self.commit_timestamp_unix
             || self.describe.is_some()
             || self.sha.is_some()
             || self.dirty.is_some()
@@ -653,7 +663,42 @@ impl Gix {
         } else {
             self.add_git_timestamp_entry(idempotent, &ts, cargo_rustc_env, cargo_warning)?;
         }
+        if let Ok(_value) = env::var(GIT_COMMIT_TIMESTAMP_UNIX_NAME) {
+            add_default_map_entry(
+                idempotent,
+                VergenKey::GitCommitTimestampUnix,
+                cargo_rustc_env,
+                cargo_warning,
+            );
+        } else {
+            self.add_git_timestamp_unix_entry(idempotent, &ts, cargo_rustc_env, cargo_warning);
+        }
         Ok(())
+    }
+
+    fn add_git_timestamp_unix_entry(
+        &self,
+        idempotent: bool,
+        ts: &OffsetDateTime,
+        cargo_rustc_env: &mut CargoRustcEnvMap,
+        cargo_warning: &mut CargoWarning,
+    ) {
+        if self.commit_timestamp_unix {
+            if idempotent {
+                add_default_map_entry(
+                    idempotent,
+                    VergenKey::GitCommitTimestampUnix,
+                    cargo_rustc_env,
+                    cargo_warning,
+                );
+            } else {
+                add_map_entry(
+                    VergenKey::GitCommitTimestampUnix,
+                    ts.unix_timestamp().to_string(),
+                    cargo_rustc_env,
+                );
+            }
+        }
     }
 
     #[cfg_attr(coverage_nightly, coverage(off))]
@@ -756,6 +801,7 @@ impl AddEntries for Gix {
         )
     }
 
+    #[allow(clippy::too_many_lines)]
     fn add_default_entries(
         &self,
         config: &DefaultConfig,
@@ -829,6 +875,14 @@ impl AddEntries for Gix {
                 add_default_map_entry(
                     *config.idempotent(),
                     VergenKey::GitCommitTimestamp,
+                    cargo_rustc_env_map,
+                    cargo_warning,
+                );
+            }
+            if self.commit_timestamp_unix {
+                add_default_map_entry(
+                    *config.idempotent(),
+                    VergenKey::GitCommitTimestampUnix,
                     cargo_rustc_env_map,
                     cargo_warning,
                 );
@@ -1386,5 +1440,57 @@ mod test {
             "{output}"
         );
         Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn commit_timestamp_unix_works() -> Result<()> {
+        let gix = Gix::builder().commit_timestamp_unix(true).build();
+        let mut stdout_buf = vec![];
+        _ = Emitter::default()
+            .add_instructions(&gix)?
+            .emit_to(&mut stdout_buf)?;
+        let output = String::from_utf8_lossy(&stdout_buf);
+        let line = output
+            .lines()
+            .find(|l| l.starts_with("cargo:rustc-env=VERGEN_GIT_COMMIT_TIMESTAMP_UNIX="))
+            .expect("unix commit timestamp emitted");
+        let value = line.trim_start_matches("cargo:rustc-env=VERGEN_GIT_COMMIT_TIMESTAMP_UNIX=");
+        assert!(value.parse::<i64>().is_ok(), "value: {value}");
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn commit_timestamp_unix_idempotent() -> Result<()> {
+        let gix = Gix::builder().commit_timestamp_unix(true).build();
+        let emitter = Emitter::default()
+            .idempotent()
+            .add_instructions(&gix)?
+            .test_emit();
+        assert_eq!(1, emitter.cargo_rustc_env_map().len());
+        assert_eq!(1, count_idempotent(emitter.cargo_rustc_env_map()));
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn commit_timestamp_unix_override_works() {
+        temp_env::with_var("VERGEN_GIT_COMMIT_TIMESTAMP_UNIX", Some("12345"), || {
+            let result = || -> Result<()> {
+                let gix = Gix::builder().commit_timestamp_unix(true).build();
+                let mut stdout_buf = vec![];
+                _ = Emitter::default()
+                    .add_instructions(&gix)?
+                    .emit_to(&mut stdout_buf)?;
+                let output = String::from_utf8_lossy(&stdout_buf);
+                assert!(
+                    output.contains("cargo:rustc-env=VERGEN_GIT_COMMIT_TIMESTAMP_UNIX=12345"),
+                    "{output}"
+                );
+                Ok(())
+            }();
+            assert!(result.is_ok());
+        });
     }
 }
