@@ -9,14 +9,13 @@
 use self::gitcl_builder::Empty;
 use anyhow::{Error, Result, anyhow};
 use bon::Builder;
-#[cfg(feature = "allow_remote")]
-use std::{env::temp_dir, fs::create_dir_all};
 use std::{
-    env::{self, VarError},
+    env,
     path::PathBuf,
     process::{Command, Output, Stdio},
-    str::FromStr,
 };
+#[cfg(feature = "allow_remote")]
+use std::{env::temp_dir, fs::create_dir_all};
 use time::{
     OffsetDateTime, UtcOffset,
     format_description::{
@@ -157,44 +156,12 @@ const DIRTY: &str = dirty!();
 /// ```
 ///
 /// # Example
-/// This feature can also be used in conjuction with the [`SOURCE_DATE_EPOCH`](https://reproducible-builds.org/docs/source-date-epoch/)
-/// environment variable to generate deterministic timestamps based off the
-/// last modification time of the source/package
-///
-/// ```
-/// # use anyhow::Result;
-/// # use vergen_gitcl::{Emitter, Gitcl};
-/// #
-/// # fn main() -> Result<()> {
-/// temp_env::with_var("SOURCE_DATE_EPOCH", Some("1671809360"), || {
-///     let result = || -> Result<()> {
-///         let gitcl = Gitcl::all_git();
-///         Emitter::default().add_instructions(&gitcl)?.emit()?;
-///         Ok(())
-///     }();
-///     assert!(result.is_ok());
-/// });
-/// #   Ok(())
-/// # }
-/// ```
-///
-/// The above will always generate the following output for the timestamp
-/// related instructions
-///
-/// ```text
-/// ...
-/// cargo:rustc-env=VERGEN_GIT_COMMIT_DATE=2022-12-23
-/// ...
-/// cargo:rustc-env=VERGEN_GIT_COMMIT_TIMESTAMP=2022-12-23T15:29:20.000000000Z
-/// ...
-/// ```
-///
-/// # Example
 /// This feature also recognizes the idempotent flag.
 ///
-/// **NOTE** - `SOURCE_DATE_EPOCH` takes precedence over the idempotent flag. If you
-/// use both, the output will be based off `SOURCE_DATE_EPOCH`.  This would still be
-/// deterministic.
+/// **NOTE** - The git commit date/timestamp derive from the commit itself and are
+/// already reproducible, so `SOURCE_DATE_EPOCH` does **not** affect them (see issue
+/// #452). `SOURCE_DATE_EPOCH` only influences the build timestamp emitted by
+/// `vergen`'s `build` feature.
 ///
 /// # Example
 /// ```
@@ -843,16 +810,12 @@ impl Gitcl {
                 .trim_matches('\'')
                 .to_string();
 
-            let (sde, ts) = match env::var("SOURCE_DATE_EPOCH") {
-                Ok(v) => (
-                    true,
-                    OffsetDateTime::from_unix_timestamp(i64::from_str(&v)?)?,
-                ),
-                Err(VarError::NotPresent) => self.compute_local_offset(&stdout)?,
-                Err(e) => return Err(e.into()),
-            };
+            // NOTE: SOURCE_DATE_EPOCH intentionally does NOT influence the git
+            // commit date/timestamp; those derive from the commit and are
+            // already reproducible (see issue #452).
+            let ts = self.compute_local_offset(&stdout)?;
 
-            if idempotent && !sde {
+            if idempotent {
                 if self.commit_date && !date_override {
                     add_default_map_entry(
                         idempotent,
@@ -913,14 +876,14 @@ impl Gitcl {
 
     #[cfg_attr(coverage_nightly, coverage(off))]
     // this in not included in coverage, because on *nix the local offset is always unsafe
-    fn compute_local_offset(&self, stdout: &str) -> Result<(bool, OffsetDateTime)> {
+    fn compute_local_offset(&self, stdout: &str) -> Result<OffsetDateTime> {
         let no_offset = OffsetDateTime::parse(stdout, &Rfc3339)?;
         if self.use_local {
             let local = UtcOffset::local_offset_at(no_offset)?;
             let local_offset = no_offset.checked_to_offset(local).unwrap_or(no_offset);
-            Ok((false, local_offset))
+            Ok(local_offset)
         } else {
-            Ok((false, no_offset))
+            Ok(no_offset)
         }
     }
 
@@ -1402,42 +1365,35 @@ mod test {
 
     #[test]
     #[serial]
-    fn source_date_epoch_works() {
-        temp_env::with_var("SOURCE_DATE_EPOCH", Some("1671809360"), || {
-            let result = || -> Result<()> {
-                let mut stdout_buf = vec![];
-                let gitcl = Gitcl::builder()
-                    .commit_date(true)
-                    .commit_timestamp(true)
-                    .build();
-                _ = Emitter::new()
-                    .idempotent()
-                    .add_instructions(&gitcl)?
-                    .emit_to(&mut stdout_buf)?;
-                let output = String::from_utf8_lossy(&stdout_buf);
-                for (idx, line) in output.lines().enumerate() {
-                    if idx == 0 {
-                        assert_eq!("cargo:rustc-env=VERGEN_GIT_COMMIT_DATE=2022-12-23", line);
-                    } else if idx == 1 {
-                        assert_eq!(
-                            "cargo:rustc-env=VERGEN_GIT_COMMIT_TIMESTAMP=2022-12-23T15:29:20.000000000Z",
-                            line
-                        );
-                    }
-                }
-                Ok(())
-            }();
-            assert!(result.is_ok());
-        });
+    fn source_date_epoch_does_not_affect_git() {
+        // SOURCE_DATE_EPOCH must not influence the git commit date/timestamp;
+        // those derive from the commit and are already reproducible (#452). The
+        // git output must therefore be identical whether or not it is set.
+        let emit = || -> Result<String> {
+            let mut stdout_buf = vec![];
+            let gitcl = Gitcl::builder()
+                .commit_date(true)
+                .commit_timestamp(true)
+                .build();
+            _ = Emitter::new()
+                .add_instructions(&gitcl)?
+                .emit_to(&mut stdout_buf)?;
+            Ok(String::from_utf8_lossy(&stdout_buf).into_owned())
+        };
+        let without = temp_env::with_var("SOURCE_DATE_EPOCH", None::<&str>, || emit());
+        let with = temp_env::with_var("SOURCE_DATE_EPOCH", Some("1671809360"), || emit());
+        assert_eq!(without.unwrap(), with.unwrap());
     }
 
     #[test]
     #[serial]
     #[cfg(unix)]
-    fn bad_source_date_epoch_fails() {
+    fn bad_source_date_epoch_ignored_by_git() {
         use std::ffi::OsStr;
         use std::os::unix::prelude::OsStrExt;
 
+        // A malformed SOURCE_DATE_EPOCH no longer affects git output (#452), so
+        // emission succeeds even with fail_on_error.
         let source = [0x66, 0x6f, 0x80, 0x6f];
         let os_str = OsStr::from_bytes(&source[..]);
         temp_env::with_var("SOURCE_DATE_EPOCH", Some(os_str), || {
@@ -1450,7 +1406,7 @@ mod test {
                     .add_instructions(&gitcl)?
                     .emit_to(&mut stdout_buf)
             }();
-            assert!(result.is_err());
+            assert!(result.is_ok());
         });
     }
 
@@ -1479,10 +1435,12 @@ mod test {
     #[test]
     #[serial]
     #[cfg(windows)]
-    fn bad_source_date_epoch_fails() {
+    fn bad_source_date_epoch_ignored_by_git() {
         use std::ffi::OsString;
         use std::os::windows::prelude::OsStringExt;
 
+        // A malformed SOURCE_DATE_EPOCH no longer affects git output (#452), so
+        // emission succeeds even with fail_on_error.
         let source = [0x0066, 0x006f, 0xD800, 0x006f];
         let os_string = OsString::from_wide(&source[..]);
         let os_str = os_string.as_os_str();
@@ -1496,7 +1454,7 @@ mod test {
                     .add_instructions(&gitcl)?
                     .emit_to(&mut stdout_buf)
             }();
-            assert!(result.is_err());
+            assert!(result.is_ok());
         });
     }
 
