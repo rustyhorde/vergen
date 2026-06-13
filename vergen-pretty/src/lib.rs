@@ -174,7 +174,6 @@
         refining_impl_trait_internal,
         refining_impl_trait_reachable,
         renamed_and_removed_lints,
-        
         rust_2021_incompatible_closure_captures,
         rust_2021_incompatible_or_patterns,
         rust_2021_prefixes_incompatible_syntax,
