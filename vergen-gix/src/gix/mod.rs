@@ -730,7 +730,7 @@ impl Gix {
                     cargo_warning,
                 );
             } else {
-                let format = format_description::parse("[year]-[month]-[day]")?;
+                let format = format_description::parse_borrowed::<1>("[year]-[month]-[day]")?;
                 add_map_entry(
                     VergenKey::GitCommitDate,
                     ts.format(&format)?,
