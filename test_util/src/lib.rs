@@ -289,7 +289,6 @@ the [`TestRepos`] struct to creat temporary git repositories useful for `vergen-
     )
 )]
 #![cfg_attr(all(docsrs), feature(doc_cfg))]
-#![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
 #[cfg(all(test, not(feature = "repo")))]
 use {anyhow as _, serial_test as _};
