@@ -237,7 +237,7 @@ impl EmitBuilder {
             } else if idempotent && !source_date_epoch {
                 add_default_map_entry(VergenKey::BuildDate, map, warnings);
             } else {
-                let format = format_description::parse("[year]-[month]-[day]")?;
+                let format = format_description::parse_borrowed::<1>("[year]-[month]-[day]")?;
                 add_map_entry(VergenKey::BuildDate, ts.format(&format)?, map);
             }
         }

@@ -721,7 +721,7 @@ impl EmitBuilder {
                 }
             } else {
                 if self.git_config.git_commit_date && !date_override {
-                    let format = format_description::parse("[year]-[month]-[day]")?;
+                    let format = format_description::parse_borrowed::<1>("[year]-[month]-[day]")?;
                     add_map_entry(VergenKey::GitCommitDate, ts.format(&format)?, map);
                 }
 
