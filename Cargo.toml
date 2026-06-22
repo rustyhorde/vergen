@@ -13,20 +13,20 @@ members = [
 
 [workspace.dependencies]
 anyhow = "1.0.102"
-bon = "3.9.1"
-gix = { version = "0.84.0", default-features = false, features = [
+bon = "3.9.3"
+gix = { version = "0.85.0", default-features = false, features = [
     "revision",
     "worktree-mutation",
     "blocking-network-client",
     "sha1",
 ] }
 rand = { version = "0.10.1" }
-regex = { version = "1.12.3" }
+regex = { version = "1.12.4" }
 rustversion = "1.0.22"
 serde_json = "1.0.150"
 serial_test = "3.5.0"
 temp-env = "0.3.6"
-time = { version = "0.3.47", features = [
+time = { version = "0.3.51", features = [
     "formatting",
     "local-offset",
     "parsing",
