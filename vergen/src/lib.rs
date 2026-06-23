@@ -18,6 +18,8 @@
 //!   to rerun instruction emission if the `build.rs` file changed.
 //! - Will emit [`cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed)
 //!   to rerun instruction emission if the `VERGEN_IDEMPOTENT` environment variable has changed.
+//! - Will emit [`cargo:rerun-if-env-changed=VERGEN_DEFAULT_ON_ERROR`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed)
+//!   to rerun instruction emission if the `VERGEN_DEFAULT_ON_ERROR` environment variable has changed.
 //! - Will emit [`cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed)
 //!   to rerun instruction emission if the `SOURCE_DATE_EPOCH` environment variable has changed.
 //! - Will emit custom instructions via the [`AddCustomEntries`] and the [`add_custom_instructions`](Emitter::add_custom_instructions) function.
@@ -112,6 +114,7 @@
 //! cargo:rustc-env=VERGEN_SYSINFO_CPU_FREQUENCY=3792
 //! cargo:rerun-if-changed=build.rs
 //! cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT
+//! cargo:rerun-if-env-changed=VERGEN_DEFAULT_ON_ERROR
 //! cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
 //! ```
 //!
@@ -171,6 +174,7 @@ let build = Build::builder().build_timestamp(true).build();"
 //! cargo:rustc-env=VERGEN_SYSINFO_CPU_CORE_COUNT=8
 //! cargo:rerun-if-changed=build.rs
 //! cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT
+//! cargo:rerun-if-env-changed=VERGEN_DEFAULT_ON_ERROR
 //! cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
 //! ```
 //!
@@ -210,7 +214,8 @@ let build = Build::builder().build_timestamp(true).build();"
 //!
 //! | Variable | Functionality |
 //! | -------- | ------------- |
-//! | `VERGEN_IDEMPOTENT` | If this environment variable is set `vergen` will use the idempotent output feature regardless of the configuration set in `build.rs`.  This exists mainly to allow package maintainers to force idempotent output to generate deterministic binary output. |
+//! | `VERGEN_IDEMPOTENT` | If this environment variable is set `vergen` will **always** use the idempotent output feature regardless of the configuration set in `build.rs`, even when the requested values could be generated normally.  This exists mainly to allow package maintainers to force idempotent output to generate deterministic binary output. |
+//! | `VERGEN_DEFAULT_ON_ERROR` | If this environment variable is set `vergen` will emit the idempotent default value for any instruction it cannot otherwise generate (e.g. `VERGEN_GIT_*` when building outside a git worktree), rather than leaving the variable unset.  Unlike `VERGEN_IDEMPOTENT`, values that *can* be generated are still emitted normally. |
 //! | `SOURCE_DATE_EPOCH` | If this environment variable is set `vergen` will use the value (unix time since epoch) as the basis for a time based instructions.  This can help emit deterministic instructions. |
 //! | `VERGEN_BUILD_*` | If this environment variable is set `vergen` will use the value you specify for the output rather than generating it. |
 //! | `VERGEN_CARGO_*` | If this environment variable is set `vergen` will use the value you specify for the output rather than generating it. |

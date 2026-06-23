@@ -24,6 +24,8 @@
 //!   to rerun instruction emission if the `build.rs` file changed.
 //! - Will emit [`cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed)
 //!   to rerun instruction emission if the `VERGEN_IDEMPOTENT` environment variable has changed.
+//! - Will emit [`cargo:rerun-if-env-changed=VERGEN_DEFAULT_ON_ERROR`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed)
+//!   to rerun instruction emission if the `VERGEN_DEFAULT_ON_ERROR` environment variable has changed.
 //! - Will emit [`cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed)
 //!   to rerun instruction emission if the `SOURCE_DATE_EPOCH` environment variable has changed.
 //!
@@ -131,6 +133,7 @@
 //! cargo:rerun-if-changed=/home/jozias/projects/rust-lang/vergen-cl/.git/refs/heads/master
 //! cargo:rerun-if-changed=build.rs
 //! cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT
+//! cargo:rerun-if-env-changed=VERGEN_DEFAULT_ON_ERROR
 //! cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
 //! ```
 //!
@@ -195,6 +198,7 @@ let build = Build::builder().build_timestamp(true).build();"
 //! cargo:rerun-if-changed=/home/jozias/projects/rust-lang/vergen-cl/.git/refs/heads/master
 //! cargo:rerun-if-changed=build.rs
 //! cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT
+//! cargo:rerun-if-env-changed=VERGEN_DEFAULT_ON_ERROR
 //! cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
 //! ```
 //!
