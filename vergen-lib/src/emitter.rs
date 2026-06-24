@@ -17,8 +17,10 @@ use std::{
 /// The `Emitter` will emit cargo instructions (i.e. cargo:rustc-env=NAME=VALUE)
 /// base on the configuration you enable.
 #[derive(Clone, Debug, PartialEq)]
+#[allow(clippy::struct_excessive_bools)]
 pub struct Emitter {
     idempotent: bool,
+    default_on_error: bool,
     fail_on_error: bool,
     quiet: bool,
     custom_buildrs: Option<&'static str>,
@@ -65,6 +67,7 @@ impl Emitter {
     pub fn new() -> Self {
         Self {
             idempotent: matches!(env::var("VERGEN_IDEMPOTENT"), Ok(_val)),
+            default_on_error: matches!(env::var("VERGEN_DEFAULT_ON_ERROR"), Ok(_val)),
             fail_on_error: false,
             quiet: false,
             custom_buildrs: None,
@@ -94,6 +97,13 @@ impl Emitter {
     /// | `VERGEN_BUILD_DATE` | `VERGEN_IDEMPOTENT_OUTPUT` |
     /// | `VERGEN_BUILD_TIMESTAMP` | `VERGEN_IDEMPOTENT_OUTPUT` |
     ///
+    /// **NOTE** - This feature **always** forces idempotent output, even when the
+    /// requested instructions *could* be generated normally (e.g. inside a real git
+    /// worktree).  Use it only when you want deterministic builds.  If you instead
+    /// want real values when they are available but a default placeholder only when
+    /// generation fails (e.g. building outside a git worktree), use
+    /// [`default_on_error`](Self::default_on_error) instead.
+    ///
     /// # Example
     ///
     /// ```
@@ -119,18 +129,65 @@ impl Emitter {
         self
     }
 
+    /// Enable the `default_on_error` feature
+    ///
+    /// **NOTE** - This feature can also be enabled via the `VERGEN_DEFAULT_ON_ERROR`
+    /// environment variable.
+    ///
+    /// By default, if `vergen` cannot generate a requested instruction (for example
+    /// when you configure `VERGEN_GIT_*` instructions but build from a source tarball
+    /// with no `.git` directory), the variable is left **unset** and only a
+    /// [`cargo:warning`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#cargo-warning)
+    /// is emitted.  This means a downstream `env!("VERGEN_GIT_SHA")` will fail to
+    /// compile.
+    ///
+    /// When this feature is enabled, those un-generatable instructions are instead
+    /// populated with the idempotent default value (`VERGEN_IDEMPOTENT_OUTPUT`), so
+    /// `env!()` keeps compiling.  Unlike [`idempotent`](Self::idempotent), this only
+    /// affects the fallback path: when the instructions *can* be generated (e.g. inside
+    /// a real git worktree) you still get the real values.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use anyhow::Result;
+    /// # use vergen_lib::Emitter;
+    /// #
+    /// # fn main() -> Result<()> {
+    /// Emitter::new().default_on_error().emit()?;
+    /// // or
+    /// #     temp_env::with_var("VERGEN_DEFAULT_ON_ERROR", Some("true"), || {
+    /// #         let result = || -> Result<()> {
+    /// // set::env("VERGEN_DEFAULT_ON_ERROR", "true");
+    /// Emitter::new().emit()?;
+    /// #         Ok(())
+    /// #         }();
+    /// #     });
+    /// #     Ok(())
+    /// # }
+    /// ```
+    ///
+    pub fn default_on_error(&mut self) -> &mut Self {
+        self.default_on_error = true;
+        self
+    }
+
     /// Enable the `fail_on_error` feature
     ///
     /// By default `vergen` will emit the instructions you requested.  If for some
-    /// reason those instructions cannot be generated correctly, placeholder values
-    /// will be used instead.   `vergen` will also emit [`cargo:warning`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#cargo-warning)
+    /// reason those instructions cannot be generated correctly, the affected variables
+    /// are left unset (unless [`idempotent`](Self::idempotent) or
+    /// [`default_on_error`](Self::default_on_error) is enabled, in which case they are
+    /// populated with the idempotent default value).  `vergen` will also emit
+    /// [`cargo:warning`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#cargo-warning)
     /// instructions notifying you this has happened.
     ///
     /// For example, if you configure `vergen` to emit `VERGEN_GIT_*` instructions and
     /// you run a build from a source tarball with no `.git` directory, the instructions
-    /// will be populated with placeholder values, rather than information gleaned through git.
+    /// will be skipped (or defaulted, per above), rather than information gleaned through
+    /// git.
     ///
-    /// You can turn off this behavior by enabling `fail_on_error`.
+    /// When `fail_on_error` is enabled, that situation produces a hard error instead.
     ///
     /// # Example
     ///
@@ -203,7 +260,11 @@ impl Emitter {
                 &mut self.cargo_warning,
             )
             .or_else(|e| {
-                let default_config = DefaultConfig::new(self.idempotent, self.fail_on_error, e);
+                let default_config = DefaultConfig::new(
+                    self.idempotent || self.default_on_error,
+                    self.fail_on_error,
+                    e,
+                );
                 entries.add_default_entries(
                     &default_config,
                     &mut self.cargo_rustc_env_map,
@@ -237,7 +298,11 @@ impl Emitter {
                 &mut self.cargo_warning,
             )
             .or_else(|e| {
-                let default_config = DefaultConfig::new(self.idempotent, self.fail_on_error, e);
+                let default_config = DefaultConfig::new(
+                    self.idempotent || self.default_on_error,
+                    self.fail_on_error,
+                    e,
+                );
                 custom_entries.add_default_entries(
                     &default_config,
                     &mut map,
@@ -300,6 +365,7 @@ impl Emitter {
             let sanitized_output = Self::filter_newlines(buildrs);
             writeln!(stdout, "cargo:rerun-if-changed={sanitized_output}")?;
             writeln!(stdout, "cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT")?;
+            writeln!(stdout, "cargo:rerun-if-env-changed=VERGEN_DEFAULT_ON_ERROR")?;
             writeln!(stdout, "cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH")?;
         }
         Ok(())
@@ -373,6 +439,7 @@ impl Emitter {
     /// cargo:rerun-if-changed=.git/refs/heads/feature/version8
     /// cargo:rerun-if-changed=build.rs
     /// cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT
+    /// cargo:rerun-if-env-changed=VERGEN_DEFAULT_ON_ERROR
     /// cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
     /// ```
     ///
@@ -480,5 +547,26 @@ pub(crate) mod test {
     #[serial]
     fn default_emit_is_ok() {
         assert!(Emitter::new().emit().is_ok());
+    }
+
+    #[test]
+    #[serial]
+    fn default_on_error_emit_is_ok() {
+        assert!(Emitter::new().default_on_error().emit().is_ok());
+    }
+
+    #[test]
+    #[serial]
+    fn default_on_error_populates_fallback() -> Result<()> {
+        use crate::entries::test_gen::CustomInsGen;
+        let custom = CustomInsGen::builder().fail(true).build();
+        let mut stdout_buf = vec![];
+        _ = Emitter::new()
+            .default_on_error()
+            .add_custom_instructions(&custom)?
+            .emit_to(&mut stdout_buf)?;
+        let output = String::from_utf8_lossy(&stdout_buf);
+        assert!(output.contains("VERGEN_IDEMPOTENT_OUTPUT"));
+        Ok(())
     }
 }

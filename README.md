@@ -10,12 +10,17 @@ for each feature you have enabled.  These can be referenced with the [`env!`](ht
 - If using one of the git enabled libraries, will emit [`cargo:rerun-if-changed=.git/HEAD`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed).  This is done to ensure any git instructions are regenerated when commits are made.
 - If using one of the git enabled libraries, will emit [`cargo:rerun-if-changed=.git/<path_to_ref>`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed).  This is done to ensure any git instructions are regenerated when commits are made.
 - Can emit [`cargo:warning`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#cargo-warning) outputs if the
-[`fail_on_error`](EmitBuilder::fail_on_error) feature is not enabled and the requested variable is defaulted through error or
-the [`idempotent`](EmitBuilder::idempotent) flag.
+[`fail_on_error`](EmitBuilder::fail_on_error) feature is not enabled and the requested variable is defaulted through error,
+the [`idempotent`](EmitBuilder::idempotent) flag, or the [`default_on_error`](EmitBuilder::default_on_error) flag.  By default
+a variable that cannot be generated (for example `VERGEN_GIT_*` when building outside a git worktree) is left unset; enable
+`default_on_error` (or set the `VERGEN_DEFAULT_ON_ERROR` environment variable) to emit the idempotent default value instead so
+`env!` keeps compiling.
 - Will emit [`cargo:rerun-if-changed=build.rs`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed)
 to rerun instruction emission if the `build.rs` file changed.
 - Will emit [`cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed)
 to rerun instruction emission if the `VERGEN_IDEMPOTENT` environment variable has changed.
+- Will emit [`cargo:rerun-if-env-changed=VERGEN_DEFAULT_ON_ERROR`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed)
+to rerun instruction emission if the `VERGEN_DEFAULT_ON_ERROR` environment variable has changed.
 - Will emit [`cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed)
 to rerun instruction emission if the `SOURCE_DATE_EPOCH` environment variable has changed.
 

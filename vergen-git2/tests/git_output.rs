@@ -74,6 +74,7 @@ cargo:warning=VERGEN_GIT_SHA set to default
 cargo:warning=VERGEN_GIT_DIRTY set to default
 cargo:rerun-if-changed=build.rs
 cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT
+cargo:rerun-if-env-changed=VERGEN_DEFAULT_ON_ERROR
 cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH"
     });
     static WARNINGS_ONLY_RE_STR: LazyLock<&'static str> = LazyLock::new(|| {
@@ -90,6 +91,7 @@ cargo:warning=Unable to set VERGEN_GIT_SHA
 cargo:warning=Unable to set VERGEN_GIT_DIRTY
 cargo:rerun-if-changed=build.rs
 cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT
+cargo:rerun-if-env-changed=VERGEN_DEFAULT_ON_ERROR
 cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH"
     });
     static GIT_REGEX_INST: LazyLock<Regex> = LazyLock::new(|| {
@@ -194,6 +196,62 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH"
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(!failed);
         assert!(ALL_IDEM_OUTPUT.is_match(&output));
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn git_all_output_default_on_error() -> Result<()> {
+        let mut stdout_buf = vec![];
+        let mut git2 = Git2::all_git();
+        let _ = git2.at_path(temp_dir());
+        let failed = Emitter::default()
+            .default_on_error()
+            .add_instructions(&git2)?
+            .emit_to(&mut stdout_buf)?;
+        let output = String::from_utf8_lossy(&stdout_buf);
+        assert!(!failed);
+        // Outside a worktree, default_on_error emits the idempotent defaults
+        // (same as idempotent) rather than leaving the vars unset.
+        assert!(ALL_IDEM_OUTPUT.is_match(&output));
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn git_all_output_default_on_error_env() -> Result<()> {
+        with_var("VERGEN_DEFAULT_ON_ERROR", Some("true"), || {
+            let mut stdout_buf = vec![];
+            let mut git2 = Git2::all_git();
+            let _ = git2.at_path(temp_dir());
+            let failed = Emitter::default()
+                .add_instructions(&git2)
+                .unwrap()
+                .emit_to(&mut stdout_buf)
+                .unwrap();
+            let output = String::from_utf8_lossy(&stdout_buf);
+            assert!(!failed);
+            assert!(ALL_IDEM_OUTPUT.is_match(&output));
+        });
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
+    fn git_all_output_default_on_error_test_repo() -> Result<()> {
+        // Inside a real worktree, default_on_error has no effect: the real git
+        // values are still emitted.
+        let repo = TestRepos::new(true, true, false)?;
+        let mut stdout_buf = vec![];
+        let mut git2 = Git2::all().describe(true, false, None).build();
+        let _ = git2.at_path(repo.path());
+        let failed = Emitter::default()
+            .default_on_error()
+            .add_instructions(&git2)?
+            .emit_to(&mut stdout_buf)?;
+        assert!(!failed);
+        let output = String::from_utf8_lossy(&stdout_buf);
+        assert!(GIT_REGEX_INST.is_match(&output));
         Ok(())
     }
 

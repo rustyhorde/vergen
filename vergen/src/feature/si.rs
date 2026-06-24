@@ -148,6 +148,7 @@ use vergen_lib::{
 /// cargo:warning=VERGEN_SYSINFO_CPU_FREQUENCY set to default
 /// cargo:rerun-if-changed=build.rs
 /// cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT
+/// cargo:rerun-if-env-changed=VERGEN_DEFAULT_ON_ERROR
 /// cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
 /// ```
 ///

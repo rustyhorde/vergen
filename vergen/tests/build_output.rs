@@ -48,6 +48,7 @@ cargo:warning=VERGEN_BUILD_DATE set to default
 cargo:warning=VERGEN_BUILD_TIMESTAMP set to default
 cargo:rerun-if-changed=build.rs
 cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT
+cargo:rerun-if-env-changed=VERGEN_DEFAULT_ON_ERROR
 cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
 ";
 
@@ -57,6 +58,7 @@ cargo:warning=VERGEN_BUILD_DATE set to default
 cargo:warning=VERGEN_BUILD_TIMESTAMP set to default
 cargo:rerun-if-changed=a/custom_build.rs
 cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT
+cargo:rerun-if-env-changed=VERGEN_DEFAULT_ON_ERROR
 cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
 ";
 
@@ -64,6 +66,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
 cargo:rustc-env=VERGEN_BUILD_TIMESTAMP=2022-12-23T15:29:20.000000000Z
 cargo:rerun-if-changed=build.rs
 cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT
+cargo:rerun-if-env-changed=VERGEN_DEFAULT_ON_ERROR
 cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
 ";
 
@@ -71,6 +74,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
 cargo:rustc-env=VERGEN_BUILD_TIMESTAMP=VERGEN_IDEMPOTENT_OUTPUT
 cargo:rerun-if-changed=build.rs
 cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT
+cargo:rerun-if-env-changed=VERGEN_DEFAULT_ON_ERROR
 cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH
 ";
 
