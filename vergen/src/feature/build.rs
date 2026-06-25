@@ -6,6 +6,7 @@
 // option. All files in the project carrying such notice may not be copied,
 // modified, or distributed except according to those terms.
 
+use self::build_builder::Empty;
 use anyhow::{Context, Error, Result};
 use bon::Builder;
 use std::{
@@ -189,6 +190,11 @@ impl Build {
     #[must_use]
     pub fn all_build() -> Self {
         Self::builder().all().build()
+    }
+
+    /// Convenience method to setup the [`Build`] builder with all of the `VERGEN_BUILD_*` instructions on
+    pub fn all() -> BuildBuilder<Empty> {
+        Self::builder().all()
     }
 
     fn any(self) -> bool {

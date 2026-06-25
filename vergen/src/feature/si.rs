@@ -6,6 +6,7 @@
 // option. All files in the project carrying such notice may not be copied,
 // modified, or distributed except according to those terms.
 
+use self::sysinfo_builder::Empty;
 use anyhow::{Result, anyhow};
 use bon::Builder;
 use std::env;
@@ -214,6 +215,11 @@ impl Sysinfo {
     #[must_use]
     pub fn all_sysinfo() -> Sysinfo {
         Self::builder().all().build()
+    }
+
+    /// Convenience method to setup the [`Sysinfo`] builder with all of the `VERGEN_SYSINFO_*` instructions on
+    pub fn all() -> SysinfoBuilder<Empty> {
+        Self::builder().all()
     }
 
     fn any(&self) -> bool {

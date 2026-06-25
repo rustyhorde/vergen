@@ -6,6 +6,7 @@
 // option. All files in the project carrying such notice may not be copied,
 // modified, or distributed except according to those terms.
 
+use self::rustc_builder::Empty;
 use anyhow::{Error, Result};
 use bon::Builder;
 use rustc_version::{Channel, VersionMeta, version_meta};
@@ -131,6 +132,11 @@ impl Rustc {
     #[must_use]
     pub fn all_rustc() -> Self {
         Self::builder().all().build()
+    }
+
+    /// Convenience method to setup the [`Rustc`] builder with all of the `VERGEN_RUSTC_*` instructions on
+    pub fn all() -> RustcBuilder<Empty> {
+        Self::builder().all()
     }
 
     fn any(self) -> bool {
