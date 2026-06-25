@@ -6,6 +6,7 @@
 // option. All files in the project carrying such notice may not be copied,
 // modified, or distributed except according to those terms.
 
+use self::cargo_builder::Empty;
 #[cfg(feature = "cargo_metadata")]
 use self::cargo_builder::SetDependencies;
 use self::cargo_builder::{SetDebug, SetFeatures, SetOptLevel, SetTargetTriple};
@@ -196,6 +197,11 @@ impl Cargo {
     #[must_use]
     pub fn all_cargo() -> Self {
         Self::builder().all().build()
+    }
+
+    /// Convenience method to setup the [`Build`] builder with all of the `VERGEN_CARGO_*` instructions on
+    pub fn all() -> CargoBuilder<Empty> {
+        Self::builder().all()
     }
 
     /// Emit all of the `VERGEN_CARGO_*` instructions and return the builder
