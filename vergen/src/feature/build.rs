@@ -192,7 +192,7 @@ impl Build {
         Self::builder().all().build()
     }
 
-    /// Convenience method to setup the [`Build`] builder with all of the `VERGEN_BUILD_*` instructions on
+    /// Convenience method to setup the builder with all of the `VERGEN_BUILD_*` instructions on
     pub fn all() -> BuildBuilder<Empty> {
         Self::builder().all()
     }

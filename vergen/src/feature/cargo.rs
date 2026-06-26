@@ -199,7 +199,7 @@ impl Cargo {
         Self::builder().all().build()
     }
 
-    /// Convenience method to setup the [`Build`] builder with all of the `VERGEN_CARGO_*` instructions on
+    /// Convenience method to setup the builder with all of the `VERGEN_CARGO_*` instructions on
     pub fn all() -> CargoBuilder<Empty> {
         Self::builder().all()
     }

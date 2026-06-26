@@ -217,7 +217,7 @@ impl Sysinfo {
         Self::builder().all().build()
     }
 
-    /// Convenience method to setup the [`Sysinfo`] builder with all of the `VERGEN_SYSINFO_*` instructions on
+    /// Convenience method to setup the builder with all of the `VERGEN_SYSINFO_*` instructions on
     pub fn all() -> SysinfoBuilder<Empty> {
         Self::builder().all()
     }

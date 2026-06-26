@@ -123,7 +123,7 @@ pub trait Add {
 ///     }
 /// }
 /// ```
-/// ## Then in [`build.rs`]
+/// ## Then in build.rs
 ///
 /// ```will_not_compile
 /// let build = BuildBuilder::all_build()?;

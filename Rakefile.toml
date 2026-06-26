@@ -1,0 +1,198 @@
+# =============================================================================
+# Rakefile.toml — vergen workspace build pipeline
+#
+# Quick reference:
+#
+#   cargo rake                           default (most: fmt→clippy→build→test→coverage→docs)
+#   cargo rake most ^coverage            skip coverage
+#   cargo rake most ^docs                skip docs
+#   cargo rake most clean                add cargo clean
+#   cargo rake all                       everything (puc + most + clean)
+#   cargo rake daily                     alias for all (morning full-pipeline run)
+# =============================================================================
+
+# ---------------------------------------------------------------------------
+# tools
+# ---------------------------------------------------------------------------
+
+[tool.cargo.matrix]
+crate = "cargo-matrix"
+check = ["cargo", "matrix", "--version"]
+install = ["cargo", "install", "cargo-matrix", "--force", "--locked"]
+update = true
+
+[tool.cargo.llvm-cov]
+crate = "cargo-llvm-cov"
+check = ["cargo", "llvm-cov", "--version"]
+install = ["cargo", "install", "cargo-llvm-cov", "--force", "--locked"]
+update = true
+
+[tool.fish.puc]
+hint = "The 'puc' fish function is required to run this target"
+
+# ---------------------------------------------------------------------------
+# update
+# ---------------------------------------------------------------------------
+
+[target.puc]
+tools = ["puc"]
+[[target.puc.command]]
+name = "puc"
+platform = ["linux"]
+fish = "puc"
+
+# ---------------------------------------------------------------------------
+# fmt
+# ---------------------------------------------------------------------------
+
+[[target.fmt.command]]
+name = "fmt"
+cmd = ["cargo", "fmt"]
+
+[[target.fmt.command]]
+name = "fmt check"
+cmd = ["cargo", "fmt", "--all", "--", "--check"]
+
+# ---------------------------------------------------------------------------
+# clippy
+# ---------------------------------------------------------------------------
+
+[target.clippy]
+tools = ["matrix"]
+
+[[target.clippy.command]]
+name = "clippy"
+cmd = ["cargo", "matrix", "-c", "nightly", "clippy", "--all-targets", "--", "-Dwarnings"]
+
+# ---------------------------------------------------------------------------
+# build
+# ---------------------------------------------------------------------------
+
+[target.build]
+tools = ["matrix"]
+
+[[target.build.command]]
+name = "build"
+cmd = ["cargo", "matrix", "build"]
+
+# ---------------------------------------------------------------------------
+# test
+# ---------------------------------------------------------------------------
+
+[target.test]
+depends_on = ["build"]
+tools = ["matrix"]
+
+[[target.test.command]]
+name = "test"
+cmd = ["cargo", "matrix", "test"]
+
+# ---------------------------------------------------------------------------
+# coverage
+# ---------------------------------------------------------------------------
+
+[target.coverage]
+depends_on = ["test"]
+tools = ["llvm-cov", "matrix"]
+
+[[target.coverage.command]]
+name = "llvm-cov clean"
+cmd = ["cargo", "llvm-cov", "clean", "--workspace"]
+
+[[target.coverage.command]]
+name = "vergen-lib"
+cmd = ["cargo", "matrix", "-c", "llvm-cov", "-p", "vergen-lib", "--manifest-path", "vergen-lib/Cargo.toml", "llvm-cov", "--no-report"]
+
+[[target.coverage.command]]
+name = "vergen"
+cmd = ["cargo", "matrix", "-c", "nightly", "-p", "vergen", "--manifest-path", "vergen/Cargo.toml", "llvm-cov", "--no-report"]
+
+[[target.coverage.command]]
+name = "vergen-git2"
+cmd = ["cargo", "matrix", "-c", "nightly", "-p", "vergen-git2", "--manifest-path", "vergen-git2/Cargo.toml", "llvm-cov", "--no-report"]
+
+[[target.coverage.command]]
+name = "vergen-gitcl"
+cmd = ["cargo", "matrix", "-c", "nightly", "-p", "vergen-gitcl", "--manifest-path", "vergen-gitcl/Cargo.toml", "llvm-cov", "--no-report"]
+
+[[target.coverage.command]]
+name = "vergen-gix"
+cmd = ["cargo", "matrix", "-c", "nightly", "-p", "vergen-gix", "--manifest-path", "vergen-gix/Cargo.toml", "llvm-cov", "--no-report"]
+
+[[target.coverage.command]]
+name = "vergen-pretty"
+cmd = ["cargo", "matrix", "-c", "nightly", "-p", "vergen-pretty", "--manifest-path", "vergen-pretty/Cargo.toml", "llvm-cov", "--no-report"]
+
+[[target.coverage.command]]
+name = "vergen-pretty empty"
+cmd = ["cargo", "matrix", "-c", "nightly-empty", "-p", "vergen-pretty", "--manifest-path", "vergen-pretty/Cargo.toml", "llvm-cov", "--no-report"]
+
+[[target.coverage.command]]
+name = "lcov.info"
+cmd = ["cargo", "llvm-cov", "report", "--lcov", "--output-path", "lcov.info"]
+
+[[target.coverage.command]]
+name = "html"
+cmd = ["cargo", "llvm-cov", "report", "--html"]
+
+# ---------------------------------------------------------------------------
+# docs
+# ---------------------------------------------------------------------------
+
+[[target.docs.command]]
+name = "test_util"
+cmd = ["cargo", "doc", "-p", "test_util", "-F", "repo"]
+
+[[target.docs.command]]
+name = "vergen-lib"
+cmd = ["cargo", "doc", "-p", "vergen-lib", "-F", "build,cargo,git,rustc,si"]
+
+[[target.docs.command]]
+name = "vergen"
+cmd = ["cargo", "doc", "-p", "vergen", "-F", "build,cargo,emit_and_set,rustc,si"]
+
+[[target.docs.command]]
+name = "vergen-git2"
+cmd = ["cargo", "doc", "-p", "vergen-git2", "-F", "build,cargo,emit_and_set,rustc,si"]
+
+[[target.docs.command]]
+name = "vergen-gitcl"
+cmd = ["cargo", "doc", "-p", "vergen-gitcl", "-F", "build,cargo,emit_and_set,rustc,si"]
+
+[[target.docs.command]]
+name = "vergen-gix"
+cmd = ["cargo", "doc", "-p", "vergen-gix", "-F", "build,cargo,emit_and_set,rustc,si"]
+
+[[target.docs.command]]
+name = "vergen-pretty"
+cmd = ["cargo", "doc", "-p", "vergen-pretty", "-F", "color,header,trace"]
+
+# ---------------------------------------------------------------------------
+# clean
+# ---------------------------------------------------------------------------
+
+[[target.clean.command]]
+name = "clean"
+cmd = ["cargo", "clean"]
+
+[[target.clean.command]]
+name = "rm lcov.info"
+fish = "rm -f lcov.info"
+sh = "rm -f lcov.info"
+ps = "Remove-Item -Force lcov.info -ErrorAction Ignore"
+
+# ---------------------------------------------------------------------------
+# aggregates
+# ---------------------------------------------------------------------------
+
+[target.most]
+depends_on = ["fmt", "clippy", "build", "test", "coverage", "docs"]
+
+[target.all]
+depends_on = ["puc", "fmt", "clippy", "build", "test", "coverage", "docs", "clean"]
+
+[target.daily]
+depends_on = ["all"]
+
+[target.default]
+depends_on = ["most"]
