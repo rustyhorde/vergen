@@ -1,0 +1,109 @@
+# =============================================================================
+# Rakefile.toml — vergen-1 build pipeline
+#
+# Quick reference:
+#
+#   cargo rake                           default (most: fmt→clippy→build→test)
+#   cargo rake daily                     puc + fmt + clippy + build + test
+#   cargo rake all                       daily + clean
+# =============================================================================
+
+# ---------------------------------------------------------------------------
+# tools
+# ---------------------------------------------------------------------------
+
+[tool.cargo.matrix]
+crate = "cargo-matrix"
+check = ["cargo", "matrix", "--version"]
+install = ["cargo", "install", "cargo-matrix", "--force", "--locked"]
+update = true
+
+[tool.cargo.nextest]
+crate = "cargo-nextest"
+check = ["cargo", "nextest", "--version"]
+install = ["cargo", "install", "cargo-nextest", "--force", "--locked"]
+update = true
+
+[tool.fish.puc]
+hint = "The 'puc' fish function is required to run this target"
+
+# ---------------------------------------------------------------------------
+# update
+# ---------------------------------------------------------------------------
+
+[target.puc]
+tools = ["puc"]
+[[target.puc.command]]
+name = "puc"
+platform = ["linux"]
+fish = "puc"
+
+# ---------------------------------------------------------------------------
+# fmt
+# ---------------------------------------------------------------------------
+
+[[target.fmt.command]]
+name = "fmt"
+cmd = ["cargo", "fmt"]
+
+[[target.fmt.command]]
+name = "fmt check"
+cmd = ["cargo", "fmt", "--all", "--", "--check"]
+
+# ---------------------------------------------------------------------------
+# clippy
+# ---------------------------------------------------------------------------
+
+[target.clippy]
+tools = ["matrix"]
+
+[[target.clippy.command]]
+name = "clippy"
+cmd = ["cargo", "matrix", "clippy", "--all-targets", "--", "-Dwarnings"]
+
+# ---------------------------------------------------------------------------
+# build
+# ---------------------------------------------------------------------------
+
+[target.build]
+tools = ["matrix"]
+
+[[target.build.command]]
+name = "build"
+cmd = ["cargo", "matrix", "build"]
+
+# ---------------------------------------------------------------------------
+# test
+# ---------------------------------------------------------------------------
+
+[target.test]
+depends_on = ["build"]
+tools = ["matrix", "nextest"]
+
+[[target.test.command]]
+name = "nextest"
+cmd = ["cargo", "matrix", "nextest", "run", "--no-tests", "pass"]
+
+# ---------------------------------------------------------------------------
+# clean
+# ---------------------------------------------------------------------------
+
+[[target.clean.command]]
+name = "clean"
+cmd = ["cargo", "clean"]
+
+# ---------------------------------------------------------------------------
+# aggregates
+# ---------------------------------------------------------------------------
+
+[target.most]
+depends_on = ["fmt", "clippy", "build", "test"]
+
+[target.daily]
+depends_on = ["all"]
+
+[target.all]
+depends_on = ["puc", "fmt", "clippy", "build", "test", "clean"]
+
+[target.default]
+depends_on = ["most"]

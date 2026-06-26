@@ -125,6 +125,7 @@ fn trace(config: &Config) -> Result<()> {
 }
 
 #[cfg(not(feature = "trace"))]
+#[allow(clippy::unnecessary_wraps)]
 fn trace(_config: &Config) -> Result<()> {
     Ok(())
 }

@@ -51,6 +51,7 @@ mod keys {
 
     /// Build information keys.
     #[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
+    #[allow(clippy::enum_variant_names)]
     pub(crate) enum VergenKey {
         /// The build date. (`VERGEN_BUILD_DATE`)
         #[cfg(feature = "build")]

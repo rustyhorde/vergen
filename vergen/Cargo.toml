@@ -12,22 +12,11 @@ readme = "README.md"
 repository = "https://github.com/rustyhorde/vergen"
 version = "8.3.5"
 
-[package.metadata.cargo-all-features]
-denylist = [
-    "cargo_metadata",
-    "cfg-if",
-    "git",
-    "git2",
-    "git2-rs",
-    "gitcl",
-    "gix",
-    "gitoxide",
-    "regex",
-    "rustc_version",
-    "sysinfo",
-    "time",
-    "unstable",
-]
+[package.metadata.cargo-matrix]
+[[package.metadata.cargo-matrix.channel]]
+name = "default"
+always_deny = ["unstable", "gitcl", "git2"]
+always_include = ["git", "gitoxide"]
 
 [features]
 default = []
