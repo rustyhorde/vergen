@@ -29,6 +29,16 @@ name = "nightly-empty"
 always_deny = []
 always_include = ["__vergen_empty_test", "unstable"]
 
+[[package.metadata.cargo-matrix.channel]]
+name = "llvm-cov"
+always_deny = []
+always_include = ["__vergen_test", "unstable"]
+
+[[package.metadata.cargo-matrix.channel]]
+name = "llvm-cov-empty"
+always_deny = []
+always_include = ["__vergen_empty_test", "unstable"]
+
 [features]
 default = []
 unstable = ["vergen-gix/unstable"]

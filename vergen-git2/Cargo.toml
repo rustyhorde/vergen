@@ -23,6 +23,11 @@ name = "nightly"
 always_deny = ["emit_and_set"]
 always_include = ["unstable"]
 
+[[package.metadata.cargo-matrix.channel]]
+name = "llvm-cov"
+always_deny = ["emit_and_set"]
+always_include = ["unstable"]
+
 [features]
 default = []
 build = ["vergen/build"]
