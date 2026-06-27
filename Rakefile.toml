@@ -206,7 +206,7 @@ depends_on = ["all"]
 depends_on = ["puc", "fmt", "clippy"]
 
 [target.daily.macos]
-depends_on = ["puc", "fmt", "clippy"]
+depends_on = ["puc", "fmt", "clippy", "clean"]
 
 [target.default]
 depends_on = ["most"]
