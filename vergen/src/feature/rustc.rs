@@ -134,7 +134,7 @@ impl Rustc {
         Self::builder().all().build()
     }
 
-    /// Convenience method to setup the [`Rustc`] builder with all of the `VERGEN_RUSTC_*` instructions on
+    /// Convenience method to setup the builder with all of the `VERGEN_RUSTC_*` instructions on
     pub fn all() -> RustcBuilder<Empty> {
         Self::builder().all()
     }
