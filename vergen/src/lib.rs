@@ -487,8 +487,7 @@ let build = Build::builder().build_timestamp(true).build();"
 #![cfg_attr(
     all(feature = "unstable", nightly),
     deny(
-        fuzzy_provenance_casts,
-        lossy_provenance_casts,
+        implicit_provenance_casts,
         multiple_supertrait_upcastable,
         must_not_suspend,
         non_exhaustive_omitted_patterns,
