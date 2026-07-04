@@ -43,6 +43,7 @@ hint = "The 'puc' fish function is required to run this target"
 
 [target.puc.linux]
 tools = ["puc"]
+time_tracking = false
 
 [[target.puc.linux.command]]
 name = "puc"
