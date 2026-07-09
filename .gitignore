@@ -6,3 +6,4 @@ Cargo.lock
 cobertura.xml
 lcov.info
 CLAUDE.md
+/.rake
