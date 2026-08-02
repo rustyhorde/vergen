@@ -12,21 +12,21 @@ members = [
 ]
 
 [workspace.dependencies]
-anyhow = "1.0.102"
+anyhow = "1.0.104"
 bon = "3.9.3"
-gix = { version = "0.85.0", default-features = false, features = [
+gix = { version = "0.86.0", default-features = false, features = [
     "revision",
     "worktree-mutation",
     "blocking-network-client",
     "sha1",
 ] }
-rand = { version = "0.10.1" }
-regex = { version = "1.12.4" }
-rustversion = "1.0.22"
-serde_json = "1.0.150"
-serial_test = "3.5.0"
+rand = { version = "0.10.2" }
+regex = { version = "1.13.1" }
+rustversion = "1.0.23"
+serde_json = "1.0.151"
+serial_test = "4.0.1"
 temp-env = "0.3.6"
-time = { version = "0.3.51", features = [
+time = { version = "0.3.55", features = [
     "formatting",
     "local-offset",
     "parsing",

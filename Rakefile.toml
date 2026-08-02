@@ -188,7 +188,7 @@ cmd = ["cargo", "clean"]
 name = "rm lcov.info"
 fish = "rm -f lcov.info"
 sh = "rm -f lcov.info"
-ps = "Remove-Item -Force lcov.info -ErrorAction Ignore"
+ps = "if (Test-Path lcov.info) { Remove-Item -Force lcov.info }"
 
 # ---------------------------------------------------------------------------
 # aggregates
