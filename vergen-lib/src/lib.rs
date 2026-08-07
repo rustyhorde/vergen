@@ -100,7 +100,6 @@
         mixed_script_confusables,
         named_arguments_used_positionally,
         never_type_fallback_flowing_into_unsafe,
-        no_mangle_generic_items,
         non_ascii_idents,
         non_camel_case_types,
         non_contiguous_range_endpoints,
