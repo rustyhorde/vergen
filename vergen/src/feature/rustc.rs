@@ -410,7 +410,7 @@ mod test {
         let rustc = Rustc::all_rustc();
         let mut buf = vec![];
         write!(buf, "{rustc:?}")?;
-        assert!(!buf.is_empty());
+        assert_ne!(buf.len(), 0);
         Ok(())
     }
 

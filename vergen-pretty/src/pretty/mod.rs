@@ -252,7 +252,7 @@ mod tests {
         let pretty = Pretty::builder().env(map).build();
         let mut buf = vec![];
         write!(buf, "{pretty:?}")?;
-        assert!(!buf.is_empty());
+        assert_ne!(buf.len(), 0);
         Ok(())
     }
 
@@ -264,9 +264,9 @@ mod tests {
         let fmt = Pretty::builder().env(map).build();
         fmt.display(&mut stdout)?;
         if empty {
-            assert!(stdout.is_empty());
+            assert_eq!(stdout.len(), 0);
         } else {
-            assert!(!stdout.is_empty());
+            assert_ne!(stdout.len(), 0);
         }
         Ok(())
     }
@@ -279,9 +279,9 @@ mod tests {
         let fmt = Pretty::builder().env(map).category(false).build();
         fmt.display(&mut stdout)?;
         if empty {
-            assert!(stdout.is_empty());
+            assert_eq!(stdout.len(), 0);
         } else {
-            assert!(!stdout.is_empty());
+            assert_ne!(stdout.len(), 0);
         }
         Ok(())
     }
@@ -294,9 +294,9 @@ mod tests {
         let fmt = Pretty::builder().env(map).build();
         fmt.display(&mut stdout)?;
         if empty {
-            assert!(stdout.is_empty());
+            assert_eq!(stdout.len(), 0);
         } else {
-            assert!(!stdout.is_empty());
+            assert_ne!(stdout.len(), 0);
         }
         Ok(())
     }

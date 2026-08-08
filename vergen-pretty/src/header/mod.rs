@@ -51,7 +51,7 @@ pub type Env = BTreeMap<&'static str, Option<&'static str>>;
 ///     .suffix("HEADER_SUFFIX")
 ///     .build();
 /// assert!(header(&config, Some(&mut buf)).is_ok());
-/// assert!(!buf.is_empty());
+/// assert_ne!(buf.len(), 0);
 /// #     Ok(())
 /// # }
 /// ```
@@ -90,7 +90,7 @@ pub struct Config {
 ///     .suffix("HEADER_SUFFIX")
 ///     .build();
 /// assert!(header(&config, Some(&mut buf)).is_ok());
-/// assert!(!buf.is_empty());
+/// assert_ne!(buf.len(), 0);
 /// #     Ok(())
 /// # }
 /// ```
@@ -284,7 +284,7 @@ mod test {
         let config = Config::default();
         let mut buf = vec![];
         write!(buf, "{config:?}")?;
-        assert!(!buf.is_empty());
+        assert_ne!(buf.len(), 0);
         Ok(())
     }
 
@@ -310,7 +310,7 @@ mod test {
         let mut buf = vec![];
         let config = Config::builder().env(vergen_pretty_env!()).build();
         assert!(header(&config, Some(&mut buf)).is_ok());
-        assert!(!buf.is_empty());
+        assert_ne!(buf.len(), 0);
         let header_str = String::from_utf8_lossy(&buf);
         assert!(BUILD_TIMESTAMP.is_match(&header_str));
         assert!(BUILD_SEMVER.is_match(&header_str));
@@ -326,7 +326,7 @@ mod test {
         let buf: Vec<u8> = vec![];
         let config = Config::builder().env(vergen_pretty_env!()).build();
         assert!(header(&config, None::<&mut Vec<u8>>).is_ok());
-        assert!(buf.is_empty());
+        assert_eq!(buf.len(), 0);
     }
 
     #[test]
@@ -342,7 +342,7 @@ mod test {
             .suffix(HEADER_SUFFIX)
             .build();
         assert!(header(&config, Some(&mut buf)).is_ok());
-        assert!(!buf.is_empty());
+        assert_ne!(buf.len(), 0);
         let header_str = String::from_utf8_lossy(&buf);
         assert!(BUILD_TIMESTAMP.is_match(&header_str));
         assert!(BUILD_SEMVER.is_match(&header_str));
@@ -363,7 +363,7 @@ mod test {
             .suffix(HEADER_SUFFIX)
             .build();
         assert!(header(&config, Some(&mut buf)).is_ok());
-        assert!(!buf.is_empty());
+        assert_ne!(buf.len(), 0);
         let header_str = String::from_utf8_lossy(&buf);
         assert!(BUILD_TIMESTAMP.is_match(&header_str));
         assert!(BUILD_SEMVER.is_match(&header_str));
@@ -384,7 +384,7 @@ mod test {
             .suffix(HEADER_SUFFIX)
             .build();
         assert!(header(&config, Some(&mut buf)).is_ok());
-        assert!(!buf.is_empty());
+        assert_ne!(buf.len(), 0);
         let header_str = String::from_utf8_lossy(&buf);
         assert!(BUILD_TIMESTAMP.is_match(&header_str));
         assert!(BUILD_SEMVER.is_match(&header_str));
@@ -404,7 +404,7 @@ mod test {
             .env(vergen_pretty_env!())
             .build();
         assert!(header(&config, Some(&mut buf)).is_ok());
-        assert!(!buf.is_empty());
+        assert_ne!(buf.len(), 0);
         let header_str = String::from_utf8_lossy(&buf);
         assert!(BUILD_TIMESTAMP.is_match(&header_str));
         assert!(BUILD_SEMVER.is_match(&header_str));
@@ -424,7 +424,7 @@ mod test {
             .env(vergen_pretty_env!())
             .build();
         assert!(header(&config, Some(&mut buf)).is_ok());
-        assert!(!buf.is_empty());
+        assert_ne!(buf.len(), 0);
         let header_str = String::from_utf8_lossy(&buf);
         assert!(BUILD_TIMESTAMP.is_match(&header_str));
         assert!(BUILD_SEMVER.is_match(&header_str));

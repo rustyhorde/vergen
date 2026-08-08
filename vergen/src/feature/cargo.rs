@@ -522,7 +522,7 @@ mod test {
         let cargo = Cargo::all_cargo();
         let mut buf = vec![];
         write!(buf, "{cargo:?}")?;
-        assert!(!buf.is_empty());
+        assert_ne!(buf.len(), 0);
         Ok(())
     }
 

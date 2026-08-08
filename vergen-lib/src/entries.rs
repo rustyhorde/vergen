@@ -242,7 +242,7 @@ mod test {
         let config = DefaultConfig::new(true, true, anyhow!("blah"));
         let mut buf = vec![];
         write!(buf, "{config:?}")?;
-        assert!(!buf.is_empty());
+        assert_ne!(buf.len(), 0);
         Ok(())
     }
 }

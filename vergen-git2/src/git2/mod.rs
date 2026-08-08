@@ -1059,7 +1059,7 @@ mod test {
         let git2 = Git2::all_git();
         let mut buf = vec![];
         write!(buf, "{git2:?}")?;
-        assert!(!buf.is_empty());
+        assert_ne!(buf.len(), 0);
         Ok(())
     }
 

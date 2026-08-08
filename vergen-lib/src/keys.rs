@@ -272,7 +272,7 @@ mod test {
 
     #[test]
     fn empty_name() {
-        assert!(VergenKey::Empty.name().is_empty());
+        assert_eq!(VergenKey::Empty.name().len(), 0);
     }
 
     #[test]
@@ -288,7 +288,7 @@ mod test {
         let key = VergenKey::Empty;
         let mut buf = vec![];
         write!(buf, "{key:?}")?;
-        assert!(!buf.is_empty());
+        assert_ne!(buf.len(), 0);
         Ok(())
     }
 
@@ -342,7 +342,7 @@ mod test {
         let key = VergenKey::BuildDate;
         let mut buf = vec![];
         write!(buf, "{key:?}")?;
-        assert!(!buf.is_empty());
+        assert_ne!(buf.len(), 0);
         Ok(())
     }
 
