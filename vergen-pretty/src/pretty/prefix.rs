@@ -97,7 +97,7 @@ mod test {
             .build();
         let mut buf = vec![];
         write!(buf, "{prefix:?}")?;
-        assert!(!buf.is_empty());
+        assert_ne!(buf.len(), 0);
         Ok(())
     }
 
@@ -110,7 +110,7 @@ mod test {
             .build();
         let fmt = Pretty::builder().env(map).prefix(prefix).build();
         fmt.display(&mut stdout)?;
-        assert!(!stdout.is_empty());
+        assert_ne!(stdout.len(), 0);
         Ok(())
     }
 }

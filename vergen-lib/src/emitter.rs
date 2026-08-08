@@ -530,7 +530,7 @@ pub(crate) mod test {
         let emitter = Emitter::default();
         let mut buf = vec![];
         write!(buf, "{emitter:?}")?;
-        assert!(!buf.is_empty());
+        assert_ne!(buf.len(), 0);
         Ok(())
     }
 
@@ -539,7 +539,7 @@ pub(crate) mod test {
     fn default_is_no_emit() -> Result<()> {
         let mut stdout_buf = vec![];
         _ = Emitter::new().emit_to(&mut stdout_buf)?;
-        assert!(stdout_buf.is_empty());
+        assert_eq!(stdout_buf.len(), 0);
         Ok(())
     }
 

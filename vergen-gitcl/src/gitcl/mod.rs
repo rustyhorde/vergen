@@ -1231,7 +1231,7 @@ mod test {
         let gitcl = Gitcl::all_git();
         let mut buf = vec![];
         write!(buf, "{gitcl:?}")?;
-        assert!(!buf.is_empty());
+        assert_ne!(buf.len(), 0);
         Ok(())
     }
 

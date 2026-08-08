@@ -391,7 +391,7 @@ mod test {
         let build = Build::all_build();
         let mut buf = vec![];
         write!(buf, "{build:?}")?;
-        assert!(!buf.is_empty());
+        assert_ne!(buf.len(), 0);
         Ok(())
     }
 

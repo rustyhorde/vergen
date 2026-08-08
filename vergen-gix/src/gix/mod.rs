@@ -954,7 +954,7 @@ mod test {
         let gix = Gix::all_git();
         let mut buf = vec![];
         write!(buf, "{gix:?}")?;
-        assert!(!buf.is_empty());
+        assert_ne!(buf.len(), 0);
         Ok(())
     }
 

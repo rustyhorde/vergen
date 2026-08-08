@@ -87,9 +87,9 @@ mod test {
         let fmt = Pretty::builder().env(map).key_style(red_bold).build();
         fmt.display(&mut stdout)?;
         if empty {
-            assert!(stdout.is_empty());
+            assert_eq!(stdout.len(), 0);
         } else {
-            assert!(!stdout.is_empty());
+            assert_ne!(stdout.len(), 0);
         }
         Ok(())
     }
@@ -103,9 +103,9 @@ mod test {
         let fmt = Pretty::builder().env(map).value_style(red_bold).build();
         fmt.display(&mut stdout)?;
         if empty {
-            assert!(stdout.is_empty());
+            assert_eq!(stdout.len(), 0);
         } else {
-            assert!(!stdout.is_empty());
+            assert_ne!(stdout.len(), 0);
         }
         Ok(())
     }
@@ -121,7 +121,7 @@ mod test {
             .build();
         let fmt = Pretty::builder().env(map).prefix(prefix).build();
         fmt.display(&mut stdout)?;
-        assert!(!stdout.is_empty());
+        assert_ne!(stdout.len(), 0);
         Ok(())
     }
 
@@ -136,7 +136,7 @@ mod test {
             .build();
         let fmt = Pretty::builder().env(map).suffix(suffix).build();
         fmt.display(&mut stdout)?;
-        assert!(!stdout.is_empty());
+        assert_ne!(stdout.len(), 0);
         Ok(())
     }
 }

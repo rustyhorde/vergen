@@ -40,9 +40,9 @@
 //!     .build()
 //!     .display(&mut stdout)?;
 //! # if empty {
-//! #    assert!(stdout.is_empty());
+//! #    assert_eq!(stdout.len(), 0);
 //! # } else {
-//! assert!(!stdout.is_empty());
+//! assert_ne!(stdout.len(), 0);
 //! # }
 //! #     Ok(())
 //! # }
@@ -81,7 +81,7 @@ let config = Config::builder()"
     .suffix("HEADER_SUFFIX")
     .build();
 assert!(header(&config, Some(&mut buf)).is_ok());
-assert!(!buf.is_empty());
+assert_ne!(buf.len(), 0);
 #     Ok(())
 # }
 ```

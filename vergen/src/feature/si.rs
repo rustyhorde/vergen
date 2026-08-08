@@ -609,7 +609,7 @@ mod test {
         let si = Sysinfo::all_sysinfo();
         let mut buf = vec![];
         write!(buf, "{si:?}")?;
-        assert!(!buf.is_empty());
+        assert_ne!(buf.len(), 0);
         Ok(())
     }
 
