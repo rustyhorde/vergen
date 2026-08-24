@@ -34,7 +34,7 @@ serde_json = "1.0.151"
 serial_test = "4.0.1"
 sysinfo = "0.39.6"
 temp-env = "0.3.6"
-test_util = { version = "10.0.3", path = "test_util" }
+test_util = { path = "test_util" }
 time = { version = "0.3.55", features = [
     "formatting",
     "local-offset",
