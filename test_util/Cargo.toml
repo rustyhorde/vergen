@@ -30,7 +30,7 @@ repo = ["gix", "rand"]
 
 [dependencies]
 anyhow = { workspace = true }
-gix = { workspace = true, optional = true}
+gix = { workspace = true, optional = true }
 rand = { workspace = true, optional = true }
 temp-env = { workspace = true }
 

@@ -14,7 +14,11 @@ members = [
 [workspace.dependencies]
 anyhow = "1.0.104"
 bon = "3.9.3"
-gix = { version = "0.86.0", default-features = false, features = [
+cargo_metadata = "0.23.1"
+console = "0.16.4"
+convert_case = "0.11.0"
+git2-rs = { version = "0.21.0", package = "git2", default-features = false }
+gix = { version = "0.87.1", default-features = false, features = [
     "revision",
     "worktree-mutation",
     "blocking-network-client",
@@ -22,12 +26,25 @@ gix = { version = "0.86.0", default-features = false, features = [
 ] }
 rand = { version = "0.10.2" }
 regex = { version = "1.13.1" }
+rkyv = { version = "0.8.18", features = ["std"] }
+rustc_version = "0.4.1"
 rustversion = "1.0.23"
+serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.151"
 serial_test = "4.0.1"
+sysinfo = "0.39.6"
 temp-env = "0.3.6"
+test_util = { version = "10.0.3", path = "test_util" }
 time = { version = "0.3.55", features = [
     "formatting",
     "local-offset",
     "parsing",
 ] }
+tracing = { version = "0.1.44", features = [
+    "max_level_trace",
+    "release_max_level_trace",
+] }
+tracing-subscriber = { version = "0.3.23", features = ["fmt"] }
+vergen = { version = "10.0.3", path = "vergen", default-features = false }
+vergen-gix = { version = "10.0.3", path = "vergen-gix" }
+vergen-lib = { version = "10.0.3", path = "vergen-lib" }

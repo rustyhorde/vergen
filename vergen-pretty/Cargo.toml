@@ -45,20 +45,17 @@ __vergen_empty_test = ["vergen-gix", "vergen-gix/unstable"]
 [dependencies]
 anyhow = { workspace = true }
 bon = { workspace = true }
-console = { version = "0.16.4", optional = true }
-convert_case = "0.11.0"
+console = { workspace = true, optional = true }
+convert_case = { workspace = true }
 rand = { workspace = true, optional = true }
-serde = { version = "1.0.229", features = ["derive"], optional = true }
-rkyv = { version = "0.8.17", features = ["std"], optional = true }
-tracing = { version = "0.1.44", features = [
-    "max_level_trace",
-    "release_max_level_trace",
-], optional = true }
+serde = { workspace = true, optional = true }
+rkyv = { workspace = true, optional = true }
+tracing = { workspace = true, optional = true }
 
 [build-dependencies]
 anyhow = { workspace = true }
 rustversion = { workspace = true }
-vergen-gix = { version = "10.0.3", path = "../vergen-gix", features = [
+vergen-gix = { workspace = true, features = [
     "build",
     "cargo",
     "rustc",
@@ -67,8 +64,8 @@ vergen-gix = { version = "10.0.3", path = "../vergen-gix", features = [
 
 [dev-dependencies]
 regex = { workspace = true }
-serde_json = "1.0.151"
-tracing-subscriber = { version = "0.3.23", features = ["fmt"] }
+serde_json = { workspace = true }
+tracing-subscriber = { workspace = true }
 
 [package.metadata.docs.rs]
 features = ["color", "header", "rkyv", "serde", "trace"]
