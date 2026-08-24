@@ -49,7 +49,7 @@ console = { version = "0.16.4", optional = true }
 convert_case = "0.11.0"
 rand = { workspace = true, optional = true }
 serde = { version = "1.0.229", features = ["derive"], optional = true }
-rkyv = { version = "0.8.17", features = ["std"], optional = true }
+rkyv = { version = "0.8.18", features = ["std"], optional = true }
 tracing = { version = "0.1.44", features = [
     "max_level_trace",
     "release_max_level_trace",

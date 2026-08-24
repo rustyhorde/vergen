@@ -14,7 +14,7 @@ members = [
 [workspace.dependencies]
 anyhow = "1.0.104"
 bon = "3.9.3"
-gix = { version = "0.86.0", default-features = false, features = [
+gix = { version = "0.87.0", default-features = false, features = [
     "revision",
     "worktree-mutation",
     "blocking-network-client",
