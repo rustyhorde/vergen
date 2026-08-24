@@ -55,12 +55,10 @@ vcs_info = ["vergen-lib/vcs_info"]
 [dependencies]
 anyhow = { workspace = true }
 bon = { workspace = true }
-git2-rs = { version = "0.21.0", package = "git2", default-features = false }
+git2-rs = { workspace = true }
 time = { workspace = true }
-vergen = { version = "10.0.3", path = "../vergen", default-features = false }
-vergen-lib = { version = "10.0.3", path = "../vergen-lib", features = [
-    "git",
-] }
+vergen = { workspace = true }
+vergen-lib = { workspace = true, features = ["git"] }
 
 [build-dependencies]
 rustversion = { workspace = true }
@@ -69,7 +67,7 @@ rustversion = { workspace = true }
 regex = { workspace = true }
 serial_test = { workspace = true }
 temp-env = { workspace = true }
-test_util = { path = "../test_util", features = ["repo", "unstable"] }
+test_util = { workspace = true, features = ["repo", "unstable"] }
 
 [package.metadata.docs.rs]
 features = ["build", "cargo", "emit_and_set", "rustc", "si"]

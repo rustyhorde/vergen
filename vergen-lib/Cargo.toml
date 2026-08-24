@@ -50,7 +50,7 @@ rustversion = { workspace = true }
 [dev-dependencies]
 serial_test = { workspace = true }
 temp-env = { workspace = true }
-test_util = { path = "../test_util", features = ["unstable"] }
+test_util = { workspace = true, features = ["unstable"] }
 
 [package.metadata.docs.rs]
 features = ["build", "cargo", "git", "rustc", "si"]
