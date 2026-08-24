@@ -9,7 +9,7 @@ keywords = ["cargo", "instructions", "build", "tool"]
 license = "MIT OR Apache-2.0"
 rust-version = "1.96.0"
 name = "test_util"
-readme = "README.md"
+publish = false
 repository = "https://github.com/rustyhorde/vergen"
 version = "10.0.3"
 
