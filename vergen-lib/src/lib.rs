@@ -45,7 +45,6 @@
         const_item_mutation,
         dangling_pointers_from_temporaries,
         dead_code,
-        dependency_on_unit_never_type_fallback,
         deprecated,
         deprecated_in_future,
         deprecated_safe_2024,
