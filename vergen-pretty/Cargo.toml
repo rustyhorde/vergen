@@ -4,12 +4,10 @@ categories = ["development-tools", "development-tools::build-utils"]
 description = "Output vergen information in a formatted manner"
 documentation = "https://docs.rs/vergen-pretty"
 edition = "2024"
-homepage = "https://github.com/rustyhorde/vergen"
 keywords = ["cargo", "instructions", "build", "tool"]
 license = "MIT OR Apache-2.0"
 rust-version = "1.96.0"
 name = "vergen-pretty"
-readme = "README.md"
 repository = "https://github.com/rustyhorde/vergen"
 version = "10.0.3"
 

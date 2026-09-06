@@ -4,12 +4,10 @@ categories = ["development-tools", "development-tools::build-utils"]
 description = "Generate 'cargo:rustc-env' instructions via 'build.rs' for use in your code via the 'env!' macro"
 documentation = "https://docs.rs/vergen"
 edition = "2024"
-homepage = "https://github.com/rustyhorde/vergen"
 keywords = ["cargo", "instructions", "build", "tool"]
 license = "MIT OR Apache-2.0"
 rust-version = "1.96.0"
 name = "vergen-gix"
-readme = "README.md"
 repository = "https://github.com/rustyhorde/vergen"
 version = "10.0.3"
 
