@@ -413,7 +413,7 @@ impl AddEntries for Cargo {
                 } else {
                     let features: Vec<String> =
                         env::vars().filter_map(Self::is_cargo_feature).collect();
-                    let feature_str = features.as_slice().join(",");
+                    let feature_str = features.join(",");
                     add_map_entry(VergenKey::CargoFeatures, feature_str, cargo_rustc_env);
                 }
             }
