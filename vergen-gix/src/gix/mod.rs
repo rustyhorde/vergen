@@ -593,7 +593,7 @@ impl Gix {
     }
 
     fn get_commit<'a>(repo: &Repository, head: &mut Head<'a>) -> Result<Commit<'a>> {
-        Ok(if repo.is_shallow() {
+        Ok(if repo.is_shallow()? {
             let id = Self::get_id(head)?.ok_or_else(|| anyhow!("Not an Id"))?;
             let object = id.try_object()?.ok_or_else(|| anyhow!("Not an Object"))?;
             object.try_into_commit()?
@@ -620,9 +620,11 @@ impl Gix {
             cargo_rerun_if_changed.push(format!("{}", head_path.display()));
         }
 
-        if let head::Kind::Symbolic(reference) = &head.kind {
+        if let head::Kind::Symbolic(reference) = &head.kind
+            && let Ok(name_path) = reference.name.to_path()
+        {
             let mut ref_path = git_path.to_path_buf();
-            ref_path.push(reference.name.to_path());
+            ref_path.push(name_path);
             // Check whether the path exists in the filesystem before emitting it
             if ref_path.exists() {
                 cargo_rerun_if_changed.push(format!("{}", ref_path.display()));

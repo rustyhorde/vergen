@@ -240,13 +240,13 @@ impl Sysinfo {
         self
     }
 
-    fn setup_system(refresh_kind: Option<RefreshKind>) -> System {
+    fn setup_system(refresh_kind: Option<RefreshKind>) -> Result<System> {
         if let Some(refresh_kind) = refresh_kind {
-            let mut system = System::new();
+            let mut system = System::new()?;
             system.refresh_specifics(refresh_kind);
-            system
+            Ok(system)
         } else {
-            System::new_all()
+            Ok(System::new_all()?)
         }
     }
 
@@ -285,7 +285,7 @@ impl Sysinfo {
                 Self::add_sysinfo_map_entry(
                     VergenKey::SysinfoName,
                     idempotent,
-                    System::name(),
+                    System::name().ok(),
                     cargo_rustc_env,
                     cargo_warning,
                 );
@@ -307,7 +307,7 @@ impl Sysinfo {
                 Self::add_sysinfo_map_entry(
                     VergenKey::SysinfoOsVersion,
                     idempotent,
-                    System::long_os_version(),
+                    System::long_os_version().ok(),
                     cargo_rustc_env,
                     cargo_warning,
                 );
@@ -341,7 +341,7 @@ impl Sysinfo {
         if let Ok(pid) = self.get_pid()
             && let Some(process) = system.process(pid)
         {
-            let users = Users::new_with_refreshed_list();
+            let users = Users::new_with_refreshed_list().ok()?;
             for user in &users {
                 if Self::check_user(process, user) {
                     return Some(user.name().to_string());
@@ -453,7 +453,7 @@ impl Sysinfo {
                 Self::add_sysinfo_map_entry(
                     VergenKey::SysinfoCpuCoreCount,
                     idempotent,
-                    System::physical_core_count().as_ref().map(usize::to_string),
+                    System::physical_core_count().ok().as_ref().map(usize::to_string),
                     cargo_rustc_env,
                     cargo_warning,
                 );
@@ -550,7 +550,7 @@ impl AddEntries for Sysinfo {
         cargo_warning: &mut CargoWarning,
     ) -> Result<()> {
         if self.any() {
-            let system = Self::setup_system(self.refresh_kind);
+            let system = Self::setup_system(self.refresh_kind)?;
 
             self.add_sysinfo_name(&system, idempotent, cargo_rustc_env, cargo_warning);
             self.add_sysinfo_os_verison(&system, idempotent, cargo_rustc_env, cargo_warning);
