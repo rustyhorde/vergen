@@ -453,7 +453,10 @@ impl Sysinfo {
                 Self::add_sysinfo_map_entry(
                     VergenKey::SysinfoCpuCoreCount,
                     idempotent,
-                    System::physical_core_count().ok().as_ref().map(usize::to_string),
+                    System::physical_core_count()
+                        .ok()
+                        .as_ref()
+                        .map(usize::to_string),
                     cargo_rustc_env,
                     cargo_warning,
                 );
