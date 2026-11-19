@@ -759,7 +759,7 @@ mod test {
     fn sysinfo_refresh_kind() -> Result<()> {
         let refresh_kind = RefreshKind::nothing();
         let cpu_refresh_kind = CpuRefreshKind::everything()
-            .without_cpu_usage()
+            .without_usage()
             .without_frequency();
         let si = Sysinfo::builder()
             .refresh_kind(refresh_kind.with_cpu(cpu_refresh_kind))
