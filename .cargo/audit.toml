@@ -1,2 +1,15 @@
 [advisories]
-ignore = ["RUSTSEC-2026-0173"]
+ignore = [
+    "RUSTSEC-2026-0173",
+    # heapless 0.8.0 (via gix -> gix-hash -> faster-hex); fixed in heapless >=0.9.4.
+    # Remove once gix updates faster-hex.
+    "RUSTSEC-2026-0574",
+    "RUSTSEC-2026-0575",
+    "RUSTSEC-2026-0576",
+    "RUSTSEC-2026-0577",
+    "RUSTSEC-2026-0578",
+    "RUSTSEC-2026-0579",
+    "RUSTSEC-2026-0580",
+    "RUSTSEC-2026-0581",
+    "RUSTSEC-2026-0582",
+]
