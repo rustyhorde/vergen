@@ -113,7 +113,7 @@ use vergen_lib::{
 /// # pub fn main() -> Result<()> {
 /// let refresh_kind = RefreshKind::nothing();
 /// let cpu_refresh_kind = CpuRefreshKind::everything()
-///     .without_cpu_usage()
+///     .without_usage()
 ///     .without_frequency();
 /// let si = Sysinfo::builder()
 ///     .cpu_brand(true)
