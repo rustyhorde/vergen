@@ -25,7 +25,7 @@ use time::{
 };
 use vergen_lib::{
     AddEntries, CargoRerunIfChanged, CargoRustcEnvMap, CargoWarning, DefaultConfig, Describe,
-    Dirty, Sha, VergenKey, add_default_map_entry, add_map_entry,
+    Dirty, Sha, VergenKey, add_default_map_entry, add_map_entry, add_unavailable_map_entry,
     constants::{
         GIT_BRANCH_NAME, GIT_COMMIT_AUTHOR_EMAIL, GIT_COMMIT_AUTHOR_NAME, GIT_COMMIT_COUNT,
         GIT_COMMIT_DATE_NAME, GIT_COMMIT_MESSAGE, GIT_COMMIT_TIMESTAMP_NAME,
@@ -677,7 +677,7 @@ impl Git2 {
     ) -> Result<()> {
         if repo.head_detached()? {
             if add_default {
-                add_default_map_entry(
+                add_unavailable_map_entry(
                     idempotent,
                     VergenKey::GitBranch,
                     cargo_rustc_env,
@@ -699,7 +699,7 @@ impl Git2 {
                 }
             }
             if !found_head {
-                add_default_map_entry(
+                add_unavailable_map_entry(
                     idempotent,
                     VergenKey::GitBranch,
                     cargo_rustc_env,
@@ -720,7 +720,7 @@ impl Git2 {
         if let Some(val) = value {
             add_map_entry(key, val, cargo_rustc_env);
         } else {
-            add_default_map_entry(idempotent, key, cargo_rustc_env, cargo_warning);
+            add_unavailable_map_entry(idempotent, key, cargo_rustc_env, cargo_warning);
         }
     }
 
@@ -739,7 +739,7 @@ impl Git2 {
             add_map_entry(key, revwalk.count().to_string(), cargo_rustc_env);
             return;
         }
-        add_default_map_entry(idempotent, key, cargo_rustc_env, cargo_warning);
+        add_unavailable_map_entry(idempotent, key, cargo_rustc_env, cargo_warning);
     }
 
     fn add_git_timestamp_entries(
@@ -939,7 +939,7 @@ impl AddEntries for Git2 {
             let vcs = self.vcs_fallback();
 
             if self.branch {
-                add_default_map_entry(
+                add_unavailable_map_entry(
                     *config.idempotent(),
                     VergenKey::GitBranch,
                     cargo_rustc_env_map,
@@ -947,7 +947,7 @@ impl AddEntries for Git2 {
                 );
             }
             if self.commit_author_email {
-                add_default_map_entry(
+                add_unavailable_map_entry(
                     *config.idempotent(),
                     VergenKey::GitCommitAuthorEmail,
                     cargo_rustc_env_map,
@@ -955,7 +955,7 @@ impl AddEntries for Git2 {
                 );
             }
             if self.commit_author_name {
-                add_default_map_entry(
+                add_unavailable_map_entry(
                     *config.idempotent(),
                     VergenKey::GitCommitAuthorName,
                     cargo_rustc_env_map,
@@ -963,7 +963,7 @@ impl AddEntries for Git2 {
                 );
             }
             if self.commit_count {
-                add_default_map_entry(
+                add_unavailable_map_entry(
                     *config.idempotent(),
                     VergenKey::GitCommitCount,
                     cargo_rustc_env_map,
@@ -971,7 +971,7 @@ impl AddEntries for Git2 {
                 );
             }
             if self.commit_date {
-                add_default_map_entry(
+                add_unavailable_map_entry(
                     *config.idempotent(),
                     VergenKey::GitCommitDate,
                     cargo_rustc_env_map,
@@ -979,7 +979,7 @@ impl AddEntries for Git2 {
                 );
             }
             if self.commit_message {
-                add_default_map_entry(
+                add_unavailable_map_entry(
                     *config.idempotent(),
                     VergenKey::GitCommitMessage,
                     cargo_rustc_env_map,
@@ -987,7 +987,7 @@ impl AddEntries for Git2 {
                 );
             }
             if self.commit_timestamp {
-                add_default_map_entry(
+                add_unavailable_map_entry(
                     *config.idempotent(),
                     VergenKey::GitCommitTimestamp,
                     cargo_rustc_env_map,
@@ -995,7 +995,7 @@ impl AddEntries for Git2 {
                 );
             }
             if self.commit_timestamp_unix {
-                add_default_map_entry(
+                add_unavailable_map_entry(
                     *config.idempotent(),
                     VergenKey::GitCommitTimestampUnix,
                     cargo_rustc_env_map,
@@ -1003,7 +1003,7 @@ impl AddEntries for Git2 {
                 );
             }
             if self.describe.is_some() {
-                add_default_map_entry(
+                add_unavailable_map_entry(
                     *config.idempotent(),
                     VergenKey::GitDescribe,
                     cargo_rustc_env_map,
@@ -1014,7 +1014,7 @@ impl AddEntries for Git2 {
                 if let Some((sha, _)) = &vcs {
                     add_map_entry(VergenKey::GitSha, sha.clone(), cargo_rustc_env_map);
                 } else {
-                    add_default_map_entry(
+                    add_unavailable_map_entry(
                         *config.idempotent(),
                         VergenKey::GitSha,
                         cargo_rustc_env_map,
@@ -1026,7 +1026,7 @@ impl AddEntries for Git2 {
                 if let Some((_, dirty)) = &vcs {
                     add_map_entry(VergenKey::GitDirty, dirty.to_string(), cargo_rustc_env_map);
                 } else {
-                    add_default_map_entry(
+                    add_unavailable_map_entry(
                         *config.idempotent(),
                         VergenKey::GitDirty,
                         cargo_rustc_env_map,
@@ -1052,7 +1052,7 @@ mod test {
     use test_util::TEST_MTIME;
     use test_util::TestRepos;
     use vergen::Emitter;
-    use vergen_lib::{VergenKey, count_idempotent};
+    use vergen_lib::{VergenKey, count_idempotent, count_unavailable};
 
     #[test]
     #[serial]
@@ -1255,7 +1255,8 @@ mod test {
             .add_instructions(&git2)?
             .test_emit();
         assert_eq!(10, emitter.cargo_rustc_env_map().len());
-        assert_eq!(10, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(10, count_unavailable(emitter.cargo_rustc_env_map()));
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
         assert_eq!(11, emitter.cargo_warning().len());
         Ok(())
     }

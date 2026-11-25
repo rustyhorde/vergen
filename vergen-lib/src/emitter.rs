@@ -104,6 +104,10 @@ impl Emitter {
     /// generation fails (e.g. building outside a git worktree), use
     /// [`default_on_error`](Self::default_on_error) instead.
     ///
+    /// Values that cannot be generated at all (e.g. `VERGEN_GIT_*` outside a git
+    /// worktree) are set to `VERGEN_UNAVAILABLE` rather than `VERGEN_IDEMPOTENT_OUTPUT`,
+    /// so a failure is never mistaken for deliberately idempotent output.
+    ///
     /// # Example
     ///
     /// ```
@@ -142,7 +146,7 @@ impl Emitter {
     /// compile.
     ///
     /// When this feature is enabled, those un-generatable instructions are instead
-    /// populated with the idempotent default value (`VERGEN_IDEMPOTENT_OUTPUT`), so
+    /// populated with the placeholder value `VERGEN_UNAVAILABLE`, so
     /// `env!()` keeps compiling.  Unlike [`idempotent`](Self::idempotent), this only
     /// affects the fallback path: when the instructions *can* be generated (e.g. inside
     /// a real git worktree) you still get the real values.
@@ -178,7 +182,7 @@ impl Emitter {
     /// reason those instructions cannot be generated correctly, the affected variables
     /// are left unset (unless [`idempotent`](Self::idempotent) or
     /// [`default_on_error`](Self::default_on_error) is enabled, in which case they are
-    /// populated with the idempotent default value).  `vergen` will also emit
+    /// populated with the `VERGEN_UNAVAILABLE` placeholder).  `vergen` will also emit
     /// [`cargo:warning`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#cargo-warning)
     /// instructions notifying you this has happened.
     ///

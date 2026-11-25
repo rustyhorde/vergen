@@ -215,7 +215,7 @@ let build = Build::builder().build_timestamp(true).build();"
 //! | Variable | Functionality |
 //! | -------- | ------------- |
 //! | `VERGEN_IDEMPOTENT` | If this environment variable is set `vergen` will **always** use the idempotent output feature regardless of the configuration set in `build.rs`, even when the requested values could be generated normally.  This exists mainly to allow package maintainers to force idempotent output to generate deterministic binary output. |
-//! | `VERGEN_DEFAULT_ON_ERROR` | If this environment variable is set `vergen` will emit the idempotent default value for any instruction it cannot otherwise generate (e.g. `VERGEN_GIT_*` when building outside a git worktree), rather than leaving the variable unset.  Unlike `VERGEN_IDEMPOTENT`, values that *can* be generated are still emitted normally. |
+//! | `VERGEN_DEFAULT_ON_ERROR` | If this environment variable is set `vergen` will emit the `VERGEN_UNAVAILABLE` placeholder for any instruction it cannot otherwise generate (e.g. `VERGEN_GIT_*` when building outside a git worktree), rather than leaving the variable unset.  Unlike `VERGEN_IDEMPOTENT`, values that *can* be generated are still emitted normally. |
 //! | `SOURCE_DATE_EPOCH` | If this environment variable is set `vergen` will use the value (unix time since epoch) as the basis for a time based instructions.  This can help emit deterministic instructions. |
 //! | `VERGEN_BUILD_*` | If this environment variable is set `vergen` will use the value you specify for the output rather than generating it. |
 //! | `VERGEN_CARGO_*` | If this environment variable is set `vergen` will use the value you specify for the output rather than generating it. |

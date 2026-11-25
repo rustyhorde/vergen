@@ -477,10 +477,6 @@ use vergen as _;
 mod gix;
 
 pub use self::gix::{Gix, GixBuilder};
-#[cfg(feature = "build")]
-pub use vergen::{Build, BuildBuilder};
-#[cfg(feature = "cargo")]
-pub use vergen::{Cargo, CargoBuilder};
 #[cfg(feature = "si")]
 pub use vergen::CpuRefreshKind;
 #[cfg(feature = "cargo_metadata")]
@@ -491,6 +487,10 @@ pub use vergen::MemoryRefreshKind;
 pub use vergen::ProcessRefreshKind;
 #[cfg(feature = "si")]
 pub use vergen::RefreshKind;
+#[cfg(feature = "build")]
+pub use vergen::{Build, BuildBuilder};
+#[cfg(feature = "cargo")]
+pub use vergen::{Cargo, CargoBuilder};
 #[cfg(feature = "rustc")]
 pub use vergen::{Rustc, RustcBuilder};
 #[cfg(feature = "si")]

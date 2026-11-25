@@ -19,7 +19,7 @@ use time::{
 };
 use vergen_lib::{
     AddEntries, CargoRerunIfChanged, CargoRustcEnvMap, CargoWarning, DefaultConfig, VergenKey,
-    add_default_map_entry, add_map_entry,
+    add_default_map_entry, add_map_entry, add_unavailable_map_entry,
     constants::{BUILD_DATE_NAME, BUILD_TIMESTAMP_NAME, BUILD_TIMESTAMP_UNIX_NAME},
 };
 
@@ -339,7 +339,7 @@ impl AddEntries for Build {
             Err(error)
         } else {
             if self.build_date {
-                add_default_map_entry(
+                add_unavailable_map_entry(
                     *config.idempotent(),
                     VergenKey::BuildDate,
                     cargo_rustc_env_map,
@@ -347,7 +347,7 @@ impl AddEntries for Build {
                 );
             }
             if self.build_timestamp {
-                add_default_map_entry(
+                add_unavailable_map_entry(
                     *config.idempotent(),
                     VergenKey::BuildTimestamp,
                     cargo_rustc_env_map,
@@ -355,7 +355,7 @@ impl AddEntries for Build {
                 );
             }
             if self.build_timestamp_unix {
-                add_default_map_entry(
+                add_unavailable_map_entry(
                     *config.idempotent(),
                     VergenKey::BuildTimestampUnix,
                     cargo_rustc_env_map,

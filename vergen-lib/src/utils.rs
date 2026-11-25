@@ -1,4 +1,7 @@
-use crate::{CargoRustcEnvMap, CargoWarning, VergenKey, constants::VERGEN_IDEMPOTENT_DEFAULT};
+use crate::{
+    CargoRustcEnvMap, CargoWarning, VergenKey,
+    constants::{VERGEN_IDEMPOTENT_DEFAULT, VERGEN_UNAVAILABLE_DEFAULT},
+};
 use std::env;
 
 /// Add a [`VergenKey`] entry as a default string into the [`CargoRustcEnvMap`].
@@ -32,6 +35,47 @@ pub fn add_default_map_entry(
         warnings.push(format!("{} overidden", key.name()));
     } else if idempotent {
         add_map_entry(key, VERGEN_IDEMPOTENT_DEFAULT, map);
+        warnings.push(format!("{} set to default", key.name()));
+    } else {
+        warnings.push(format!("Unable to set {}", key.name()));
+    }
+}
+
+/// Add a [`VergenKey`] entry for a value that could not be generated.
+///
+/// The value is either from an environment variable override or, when `add_placeholder`
+/// is set, [`crate::constants::VERGEN_UNAVAILABLE_DEFAULT`]. Otherwise the entry is
+/// left unset and a warning is recorded.
+///
+/// Use this on failure paths (for example in
+/// [`AddEntries::add_default_entries`](crate::AddEntries::add_default_entries)) and
+/// [`add_default_map_entry`] for values deliberately replaced in idempotent mode.
+///
+/// # Example
+/// ```
+/// # use std::collections::BTreeMap;
+/// # use vergen_lib::{add_unavailable_map_entry, CargoRustcEnvMap, CargoWarning, VergenKey};
+/// let mut map: CargoRustcEnvMap = BTreeMap::new();
+/// let mut warning: CargoWarning = vec![];
+#[cfg_attr(
+    feature = "build",
+    doc = r#"add_unavailable_map_entry(true, VergenKey::BuildDate, &mut map, &mut warning);
+assert_eq!(Some(&"VERGEN_UNAVAILABLE".to_string()), map.get(&VergenKey::BuildDate));
+assert_eq!(1, warning.len());"#
+)]
+/// ```
+///
+pub fn add_unavailable_map_entry(
+    add_placeholder: bool,
+    key: VergenKey,
+    map: &mut CargoRustcEnvMap,
+    warnings: &mut CargoWarning,
+) {
+    if let Ok(value) = env::var(key.name()) {
+        add_map_entry(key, value, map);
+        warnings.push(format!("{} overidden", key.name()));
+    } else if add_placeholder {
+        add_map_entry(key, VERGEN_UNAVAILABLE_DEFAULT, map);
         warnings.push(format!("{} set to default", key.name()));
     } else {
         warnings.push(format!("Unable to set {}", key.name()));
@@ -82,6 +126,32 @@ where
 pub fn count_idempotent(map: &CargoRustcEnvMap) -> usize {
     map.values()
         .filter(|x| *x == VERGEN_IDEMPOTENT_DEFAULT)
+        .count()
+}
+
+/// Count the number of unavailable entries in a [`CargoRustcEnvMap`]
+///
+/// **NOTE** - This is mainly used for testing.
+///
+/// # Example
+///
+/// ```
+/// # use std::collections::BTreeMap;
+/// # use vergen_lib::{count_unavailable, CargoRustcEnvMap, VergenKey, constants::VERGEN_UNAVAILABLE_DEFAULT};
+/// #
+/// let mut map: CargoRustcEnvMap = BTreeMap::new();
+/// assert_eq!(0, count_unavailable(&map));
+#[cfg_attr(
+    feature = "build",
+    doc = r"_ = map.insert(VergenKey::BuildDate, VERGEN_UNAVAILABLE_DEFAULT.to_string());"
+)]
+#[cfg_attr(feature = "build", doc = r"assert_eq!(1, count_unavailable(&map));")]
+/// ```
+///
+#[must_use]
+pub fn count_unavailable(map: &CargoRustcEnvMap) -> usize {
+    map.values()
+        .filter(|x| *x == VERGEN_UNAVAILABLE_DEFAULT)
         .count()
 }
 

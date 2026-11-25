@@ -11,6 +11,13 @@
 /// The default idempotent output string
 pub const VERGEN_IDEMPOTENT_DEFAULT: &str = "VERGEN_IDEMPOTENT_OUTPUT";
 
+/// The placeholder output string for values that could not be generated
+///
+/// Used instead of [`VERGEN_IDEMPOTENT_DEFAULT`] when a value is filled in because
+/// generating it failed (e.g. building outside a git worktree), so a failure is not
+/// mistaken for deliberately idempotent output.
+pub const VERGEN_UNAVAILABLE_DEFAULT: &str = "VERGEN_UNAVAILABLE";
+
 #[cfg(any(
     feature = "build",
     feature = "cargo",
@@ -160,6 +167,12 @@ pub mod features {}
 ))]
 mod test {
     use super::*;
+
+    #[test]
+    fn placeholder_constants_dont_change() {
+        assert_eq!(VERGEN_IDEMPOTENT_DEFAULT, "VERGEN_IDEMPOTENT_OUTPUT");
+        assert_eq!(VERGEN_UNAVAILABLE_DEFAULT, "VERGEN_UNAVAILABLE");
+    }
 
     #[cfg(feature = "build")]
     #[test]

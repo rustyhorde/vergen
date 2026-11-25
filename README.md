@@ -13,8 +13,8 @@ for each feature you have enabled.  These can be referenced with the [`env!`](ht
 [`fail_on_error`](EmitBuilder::fail_on_error) feature is not enabled and the requested variable is defaulted through error,
 the [`idempotent`](EmitBuilder::idempotent) flag, or the [`default_on_error`](EmitBuilder::default_on_error) flag.  By default
 a variable that cannot be generated (for example `VERGEN_GIT_*` when building outside a git worktree) is left unset; enable
-`default_on_error` (or set the `VERGEN_DEFAULT_ON_ERROR` environment variable) to emit the idempotent default value instead so
-`env!` keeps compiling.
+`default_on_error` (or set the `VERGEN_DEFAULT_ON_ERROR` environment variable) to emit the `VERGEN_UNAVAILABLE` placeholder
+instead so `env!` keeps compiling.
 - Will emit [`cargo:rerun-if-changed=build.rs`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed)
 to rerun instruction emission if the `build.rs` file changed.
 - Will emit [`cargo:rerun-if-env-changed=VERGEN_IDEMPOTENT`](https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed)
@@ -73,6 +73,18 @@ The current minimum supported rust version is 1.96.0
 
 ### Why?
 This was done to resolve issues with [Cargo feature unification](https://doc.rust-lang.org/cargo/reference/features.html#mutually-exclusive-features) and mutually exclusive features.  Previous versions of `vergen` had 3 mutually exclusive features (`git2`, `gitcl`, and `gix`).  Feature unification could cause compilation issues if you had included a dependency that also used `vergen` but had configured a different git feature.  Splitting the git backends into separate libraries helps alleviate this issue.
+
+## Placeholder values
+
+`vergen` uses two placeholder values:
+
+- `VERGEN_IDEMPOTENT_OUTPUT` replaces values that idempotent mode (`idempotent` or `VERGEN_IDEMPOTENT`)
+  removes on purpose to keep builds reproducible, such as build and commit timestamps.
+- `VERGEN_UNAVAILABLE` fills values that could not be generated, such as `VERGEN_GIT_*` when building
+  outside a git worktree, when `idempotent` or `default_on_error` is enabled.
+
+Before 10.1.0 both cases used `VERGEN_IDEMPOTENT_OUTPUT`. Any variable can still be overridden by setting it in the
+build environment (e.g. `VERGEN_GIT_SHA=abc123`).
 
 ## Multi-line commit messages
 

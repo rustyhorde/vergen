@@ -38,27 +38,26 @@ mod test_git_git2 {
         LazyLock::new(|| r"cargo:rustc-env=VERGEN_GIT_SHA=[0-9a-f]{7}");
     static GIT_DIRTY_RE_STR: LazyLock<&'static str> =
         LazyLock::new(|| r"cargo:rustc-env=VERGEN_GIT_DIRTY=(true|false)");
-    static GIT_BRANCH_IDEM_RE_STR: LazyLock<&'static str> =
-        LazyLock::new(|| r"cargo:rustc-env=VERGEN_GIT_BRANCH=VERGEN_IDEMPOTENT_OUTPUT");
-    static GIT_COMMIT_AUTHOR_EMAIL_IDEM_RE_STR: LazyLock<&'static str> = LazyLock::new(
-        || r"cargo:rustc-env=VERGEN_GIT_COMMIT_AUTHOR_EMAIL=VERGEN_IDEMPOTENT_OUTPUT",
-    );
-    static GIT_COMMIT_AUTHOR_NAME_IDEM_RE_STR: LazyLock<&'static str> =
-        LazyLock::new(|| r"cargo:rustc-env=VERGEN_GIT_COMMIT_AUTHOR_NAME=VERGEN_IDEMPOTENT_OUTPUT");
-    static GIT_COMMIT_COUNT_IDEM_RE_STR: LazyLock<&'static str> =
-        LazyLock::new(|| r"cargo:rustc-env=VERGEN_GIT_COMMIT_COUNT=VERGEN_IDEMPOTENT_OUTPUT");
-    static GIT_COMMIT_DATE_IDEM_RE_STR: LazyLock<&'static str> =
-        LazyLock::new(|| r"cargo:rustc-env=VERGEN_GIT_COMMIT_DATE=VERGEN_IDEMPOTENT_OUTPUT");
-    static GIT_COMMIT_MESSAGE_IDEM_RE_STR: LazyLock<&'static str> =
-        LazyLock::new(|| r"cargo:rustc-env=VERGEN_GIT_COMMIT_MESSAGE=VERGEN_IDEMPOTENT_OUTPUT");
-    static GIT_COMMIT_TIMESTAMP_IDEM_RE_STR: LazyLock<&'static str> =
-        LazyLock::new(|| r"cargo:rustc-env=VERGEN_GIT_COMMIT_TIMESTAMP=VERGEN_IDEMPOTENT_OUTPUT");
-    static GIT_DESCRIBE_IDEM_RE_STR: LazyLock<&'static str> =
-        LazyLock::new(|| r"cargo:rustc-env=VERGEN_GIT_DESCRIBE=VERGEN_IDEMPOTENT_OUTPUT");
-    static GIT_SHA_IDEM_RE_STR: LazyLock<&'static str> =
-        LazyLock::new(|| r"cargo:rustc-env=VERGEN_GIT_SHA=VERGEN_IDEMPOTENT_OUTPUT");
-    static GIT_DIRTY_IDEM_RE_STR: LazyLock<&'static str> =
-        LazyLock::new(|| r"cargo:rustc-env=VERGEN_GIT_DIRTY=VERGEN_IDEMPOTENT_OUTPUT");
+    static GIT_BRANCH_UNAVAIL_RE_STR: LazyLock<&'static str> =
+        LazyLock::new(|| r"cargo:rustc-env=VERGEN_GIT_BRANCH=VERGEN_UNAVAILABLE");
+    static GIT_COMMIT_AUTHOR_EMAIL_UNAVAIL_RE_STR: LazyLock<&'static str> =
+        LazyLock::new(|| r"cargo:rustc-env=VERGEN_GIT_COMMIT_AUTHOR_EMAIL=VERGEN_UNAVAILABLE");
+    static GIT_COMMIT_AUTHOR_NAME_UNAVAIL_RE_STR: LazyLock<&'static str> =
+        LazyLock::new(|| r"cargo:rustc-env=VERGEN_GIT_COMMIT_AUTHOR_NAME=VERGEN_UNAVAILABLE");
+    static GIT_COMMIT_COUNT_UNAVAIL_RE_STR: LazyLock<&'static str> =
+        LazyLock::new(|| r"cargo:rustc-env=VERGEN_GIT_COMMIT_COUNT=VERGEN_UNAVAILABLE");
+    static GIT_COMMIT_DATE_UNAVAIL_RE_STR: LazyLock<&'static str> =
+        LazyLock::new(|| r"cargo:rustc-env=VERGEN_GIT_COMMIT_DATE=VERGEN_UNAVAILABLE");
+    static GIT_COMMIT_MESSAGE_UNAVAIL_RE_STR: LazyLock<&'static str> =
+        LazyLock::new(|| r"cargo:rustc-env=VERGEN_GIT_COMMIT_MESSAGE=VERGEN_UNAVAILABLE");
+    static GIT_COMMIT_TIMESTAMP_UNAVAIL_RE_STR: LazyLock<&'static str> =
+        LazyLock::new(|| r"cargo:rustc-env=VERGEN_GIT_COMMIT_TIMESTAMP=VERGEN_UNAVAILABLE");
+    static GIT_DESCRIBE_UNAVAIL_RE_STR: LazyLock<&'static str> =
+        LazyLock::new(|| r"cargo:rustc-env=VERGEN_GIT_DESCRIBE=VERGEN_UNAVAILABLE");
+    static GIT_SHA_UNAVAIL_RE_STR: LazyLock<&'static str> =
+        LazyLock::new(|| r"cargo:rustc-env=VERGEN_GIT_SHA=VERGEN_UNAVAILABLE");
+    static GIT_DIRTY_UNAVAIL_RE_STR: LazyLock<&'static str> =
+        LazyLock::new(|| r"cargo:rustc-env=VERGEN_GIT_DIRTY=VERGEN_UNAVAILABLE");
     static WARNINGS_RERUN_RE_STR: LazyLock<&'static str> = LazyLock::new(|| {
         r"cargo:warning=(.*?)
 cargo:warning=VERGEN_GIT_BRANCH set to default
@@ -141,18 +140,18 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH"
         .join("\n");
         Regex::new(&re_str).unwrap()
     });
-    static ALL_IDEM_OUTPUT: LazyLock<Regex> = LazyLock::new(|| {
+    static ALL_UNAVAILABLE_OUTPUT: LazyLock<Regex> = LazyLock::new(|| {
         let re_str = [
-            *GIT_BRANCH_IDEM_RE_STR,
-            *GIT_COMMIT_AUTHOR_EMAIL_IDEM_RE_STR,
-            *GIT_COMMIT_AUTHOR_NAME_IDEM_RE_STR,
-            *GIT_COMMIT_COUNT_IDEM_RE_STR,
-            *GIT_COMMIT_DATE_IDEM_RE_STR,
-            *GIT_COMMIT_MESSAGE_IDEM_RE_STR,
-            *GIT_COMMIT_TIMESTAMP_IDEM_RE_STR,
-            *GIT_DESCRIBE_IDEM_RE_STR,
-            *GIT_SHA_IDEM_RE_STR,
-            *GIT_DIRTY_IDEM_RE_STR,
+            *GIT_BRANCH_UNAVAIL_RE_STR,
+            *GIT_COMMIT_AUTHOR_EMAIL_UNAVAIL_RE_STR,
+            *GIT_COMMIT_AUTHOR_NAME_UNAVAIL_RE_STR,
+            *GIT_COMMIT_COUNT_UNAVAIL_RE_STR,
+            *GIT_COMMIT_DATE_UNAVAIL_RE_STR,
+            *GIT_COMMIT_MESSAGE_UNAVAIL_RE_STR,
+            *GIT_COMMIT_TIMESTAMP_UNAVAIL_RE_STR,
+            *GIT_DESCRIBE_UNAVAIL_RE_STR,
+            *GIT_SHA_UNAVAIL_RE_STR,
+            *GIT_DIRTY_UNAVAIL_RE_STR,
             *WARNINGS_RERUN_RE_STR,
         ]
         .join("\n");
@@ -192,7 +191,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH"
             .emit_to(&mut stdout_buf)?;
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(!failed);
-        assert!(ALL_IDEM_OUTPUT.is_match(&output));
+        assert!(ALL_UNAVAILABLE_OUTPUT.is_match(&output));
         Ok(())
     }
 
@@ -208,9 +207,9 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH"
             .emit_to(&mut stdout_buf)?;
         let output = String::from_utf8_lossy(&stdout_buf);
         assert!(!failed);
-        // Outside a worktree, default_on_error emits the idempotent defaults
+        // Outside a worktree, default_on_error emits the unavailable placeholder
         // (same as idempotent) rather than leaving the vars unset.
-        assert!(ALL_IDEM_OUTPUT.is_match(&output));
+        assert!(ALL_UNAVAILABLE_OUTPUT.is_match(&output));
         Ok(())
     }
 
@@ -228,7 +227,7 @@ cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH"
                 .unwrap();
             let output = String::from_utf8_lossy(&stdout_buf);
             assert!(!failed);
-            assert!(ALL_IDEM_OUTPUT.is_match(&output));
+            assert!(ALL_UNAVAILABLE_OUTPUT.is_match(&output));
         });
         Ok(())
     }
