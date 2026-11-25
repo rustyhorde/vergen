@@ -476,11 +476,11 @@ use vergen as _;
 
 mod gitcl;
 
-pub use self::gitcl::Gitcl;
+pub use self::gitcl::{Gitcl, GitclBuilder};
 #[cfg(feature = "build")]
-pub use vergen::Build;
+pub use vergen::{Build, BuildBuilder};
 #[cfg(feature = "cargo")]
-pub use vergen::Cargo;
+pub use vergen::{Cargo, CargoBuilder};
 #[cfg(feature = "si")]
 pub use vergen::CpuRefreshKind;
 #[cfg(feature = "cargo_metadata")]
@@ -492,9 +492,9 @@ pub use vergen::ProcessRefreshKind;
 #[cfg(feature = "si")]
 pub use vergen::RefreshKind;
 #[cfg(feature = "rustc")]
-pub use vergen::Rustc;
+pub use vergen::{Rustc, RustcBuilder};
 #[cfg(feature = "si")]
-pub use vergen::Sysinfo;
+pub use vergen::{Sysinfo, SysinfoBuilder};
 pub use vergen_lib::AddCustomEntries;
 pub use vergen_lib::CargoRerunIfChanged;
 pub use vergen_lib::CargoWarning;

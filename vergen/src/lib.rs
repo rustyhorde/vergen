@@ -527,13 +527,13 @@ use {anyhow as _, bon as _};
 use {regex as _, serial_test as _, temp_env as _, test_util as _};
 
 #[cfg(feature = "build")]
-pub use self::feature::build::Build;
+pub use self::feature::build::{Build, BuildBuilder};
 #[cfg(feature = "cargo")]
-pub use self::feature::cargo::Cargo;
+pub use self::feature::cargo::{Cargo, CargoBuilder};
 #[cfg(feature = "rustc")]
-pub use self::feature::rustc::Rustc;
+pub use self::feature::rustc::{Rustc, RustcBuilder};
 #[cfg(feature = "si")]
-pub use self::feature::si::Sysinfo;
+pub use self::feature::si::{Sysinfo, SysinfoBuilder};
 #[cfg(feature = "cargo_metadata")]
 pub use cargo_metadata::DependencyKind;
 #[cfg(feature = "si")]
