@@ -1409,6 +1409,20 @@ mod test {
 
     #[test]
     #[serial]
+    fn bad_git_command_unix_timestamp_unavailable() -> Result<()> {
+        let mut gitcl = Gitcl::builder().commit_timestamp_unix(true).build();
+        let _ = gitcl.git_cmd(Some("this_is_not_a_git_cmd"));
+        let emitter = Emitter::default()
+            .idempotent()
+            .add_instructions(&gitcl)?
+            .test_emit();
+        assert_eq!(1, emitter.cargo_rustc_env_map().len());
+        assert_eq!(1, count_unavailable(emitter.cargo_rustc_env_map()));
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
     fn idempotent_on_bad_git_command() -> Result<()> {
         let mut gitcl = Gitcl::all_git();
         let _ = gitcl.git_cmd(Some("this_is_not_a_git_cmd"));
@@ -1450,7 +1464,7 @@ mod test {
     fn bad_timestamp_idempotent() -> Result<()> {
         let mut map = BTreeMap::new();
         let mut warnings = vec![];
-        let gitcl = Gitcl::all_git();
+        let gitcl = Gitcl::all().commit_timestamp_unix(true).build();
         assert!(
             gitcl
                 .add_git_timestamp_entries(
@@ -1462,8 +1476,9 @@ mod test {
                 )
                 .is_ok()
         );
-        assert_eq!(2, map.len());
-        assert_eq!(2, warnings.len());
+        assert_eq!(3, map.len());
+        assert_eq!(3, count_unavailable(&map));
+        assert_eq!(3, warnings.len());
         Ok(())
     }
 

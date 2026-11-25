@@ -181,3 +181,43 @@ pub fn vcs_info() -> Option<(String, bool)> {
         .unwrap_or(false);
     Some((sha, dirty))
 }
+
+#[cfg(all(test, feature = "build"))]
+mod test {
+    use super::{add_unavailable_map_entry, count_unavailable};
+    use crate::{CargoRustcEnvMap, CargoWarning, VergenKey};
+    use serial_test::serial;
+    use std::collections::BTreeMap;
+    use temp_env::with_var;
+
+    #[test]
+    #[serial]
+    fn add_unavailable_map_entry_uses_env_override() {
+        with_var("VERGEN_BUILD_DATE", Some("my own date"), || {
+            let mut map: CargoRustcEnvMap = BTreeMap::new();
+            let mut warnings: CargoWarning = vec![];
+            add_unavailable_map_entry(true, VergenKey::BuildDate, &mut map, &mut warnings);
+            assert_eq!(
+                Some(&"my own date".to_string()),
+                map.get(&VergenKey::BuildDate)
+            );
+            assert_eq!(0, count_unavailable(&map));
+            assert_eq!(vec!["VERGEN_BUILD_DATE overidden".to_string()], warnings);
+        });
+    }
+
+    #[test]
+    #[serial]
+    fn add_unavailable_map_entry_without_placeholder_warns() {
+        with_var("VERGEN_BUILD_DATE", None::<&str>, || {
+            let mut map: CargoRustcEnvMap = BTreeMap::new();
+            let mut warnings: CargoWarning = vec![];
+            add_unavailable_map_entry(false, VergenKey::BuildDate, &mut map, &mut warnings);
+            assert!(map.is_empty());
+            assert_eq!(
+                vec!["Unable to set VERGEN_BUILD_DATE".to_string()],
+                warnings
+            );
+        });
+    }
+}

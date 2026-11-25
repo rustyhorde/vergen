@@ -1247,6 +1247,20 @@ mod test {
 
     #[test]
     #[serial]
+    fn git_error_unix_timestamp_unavailable() -> Result<()> {
+        let mut git2 = Git2::builder().commit_timestamp_unix(true).build();
+        let _ = git2.fail();
+        let emitter = Emitter::default()
+            .idempotent()
+            .add_instructions(&git2)?
+            .test_emit();
+        assert_eq!(1, emitter.cargo_rustc_env_map().len());
+        assert_eq!(1, count_unavailable(emitter.cargo_rustc_env_map()));
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
     fn git_error_idempotent() -> Result<()> {
         let mut git2 = Git2::all_git();
         let _ = git2.fail();

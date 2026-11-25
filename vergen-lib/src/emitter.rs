@@ -384,13 +384,12 @@ impl Emitter {
     /// Multi-line values (currently only `VERGEN_GIT_COMMIT_MESSAGE`) are escaped
     /// with [`escape_newlines`](Self::escape_newlines) so the newlines survive.
     /// All other values have their newlines stripped.
+    #[cfg_attr(not(feature = "git"), allow(unused_variables))]
     fn sanitize_value(key: VergenKey, value: &str) -> String {
         #[cfg(feature = "git")]
         if matches!(key, VergenKey::GitCommitMessage) {
             return Self::escape_newlines(value);
         }
-        #[cfg(not(feature = "git"))]
-        let _ = key;
         Self::filter_newlines(value)
     }
 
