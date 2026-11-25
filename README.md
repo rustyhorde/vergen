@@ -74,6 +74,19 @@ The current minimum supported rust version is 1.96.0
 ### Why?
 This was done to resolve issues with [Cargo feature unification](https://doc.rust-lang.org/cargo/reference/features.html#mutually-exclusive-features) and mutually exclusive features.  Previous versions of `vergen` had 3 mutually exclusive features (`git2`, `gitcl`, and `gix`).  Feature unification could cause compilation issues if you had included a dependency that also used `vergen` but had configured a different git feature.  Splitting the git backends into separate libraries helps alleviate this issue.
 
+## Multi-line commit messages
+
+`VERGEN_GIT_COMMIT_MESSAGE` contains the full commit message (subject and body) from every git
+backend. Cargo build script instructions must fit on one line, so newlines in the message are
+escaped: each line feed becomes a backslash followed by `n`, and each backslash is doubled.
+
+`vergen-pretty` decodes the message and lines up the extra lines under the value column. If you
+read the value with `env!` yourself, decode it with `vergen_pretty::unescape_newlines` or by
+reversing those two rules.
+
+Previously the newlines were stripped, which joined the message into one long line, and
+`vergen-gitcl` emitted only the subject line.
+
 ## Migration from version 8
 See the documentation at [MIGRATING_v8_to_v9.md](MIGRATING_v8_to_v9.md)
 

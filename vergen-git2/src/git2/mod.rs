@@ -159,6 +159,16 @@ pub struct Git2 {
     /// cargo:rustc-env=VERGEN_GIT_COMMIT_MESSAGE=<MESSAGE>
     /// ```
     ///
+    /// The full message (subject and body) is emitted. A `cargo:rustc-env` value must fit
+    /// on one line, so newlines are escaped: each line feed is written as a backslash
+    /// followed by `n`, and each backslash is doubled. `vergen-pretty` decodes this for
+    /// you; when reading the value with `env!` yourself, decode it with
+    /// `vergen_pretty::unescape_newlines` or by reversing the two rules above.
+    ///
+    /// ```text
+    /// cargo:rustc-env=VERGEN_GIT_COMMIT_MESSAGE=feat: subject\n\n* detail one\n* detail two
+    /// ```
+    ///
     #[builder(default = all)]
     commit_message: bool,
     /// Emit the commit date of the latest commit
@@ -537,7 +547,7 @@ impl Git2 {
             } else {
                 Self::add_opt_value(
                     idempotent,
-                    commit.message().ok(),
+                    commit.message().ok().map(str::trim),
                     VergenKey::GitCommitMessage,
                     cargo_rustc_env,
                     cargo_warning,

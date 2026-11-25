@@ -26,6 +26,11 @@ fn setup_env() -> Result<()> {
     Ok(())
 }
 
+// Both test features enabled (e.g. `--all-features`): nothing is emitted, but the
+// `vergen-gix` build-dependency is still pulled in, so mark it as used.
+#[cfg(all(feature = "__vergen_test", feature = "__vergen_empty_test"))]
+use vergen_gix as _;
+
 #[cfg(all(feature = "__vergen_test", feature = "__vergen_empty_test"))]
 fn emit() -> Result<()> {
     Ok(())

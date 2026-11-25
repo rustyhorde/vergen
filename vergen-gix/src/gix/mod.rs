@@ -13,7 +13,7 @@ use gix::{
     Commit, Head, Id, Repository,
     commit::describe::SelectRef,
     dir::{entry::Status, walk::EmissionMode},
-    discover, head,
+    discover,
 };
 use std::{
     env,
@@ -154,6 +154,16 @@ pub struct Gix {
     ///
     /// ```text
     /// cargo:rustc-env=VERGEN_GIT_COMMIT_MESSAGE=<MESSAGE>
+    /// ```
+    ///
+    /// The full message (subject and body) is emitted. A `cargo:rustc-env` value must fit
+    /// on one line, so newlines are escaped: each line feed is written as a backslash
+    /// followed by `n`, and each backslash is doubled. `vergen-pretty` decodes this for
+    /// you; when reading the value with `env!` yourself, decode it with
+    /// `vergen_pretty::unescape_newlines` or by reversing the two rules above.
+    ///
+    /// ```text
+    /// cargo:rustc-env=VERGEN_GIT_COMMIT_MESSAGE=feat: subject\n\n* detail one\n* detail two
     /// ```
     ///
     #[builder(default = all)]
@@ -620,8 +630,9 @@ impl Gix {
             cargo_rerun_if_changed.push(format!("{}", head_path.display()));
         }
 
-        if let head::Kind::Symbolic(reference) = &head.kind
-            && let Ok(name_path) = reference.name.to_path()
+        if !head.is_unborn()
+            && let Some(referent) = head.referent_name()
+            && let Ok(name_path) = referent.to_path()
         {
             let mut ref_path = git_path.to_path_buf();
             ref_path.push(name_path);

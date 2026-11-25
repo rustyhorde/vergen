@@ -8,7 +8,7 @@
 
 #[cfg(feature = "color")]
 use super::color::{BOLD_BLUE, BOLD_GREEN};
-use crate::{Prefix, Suffix, pretty::Pretty};
+use crate::{Prefix, Suffix, pretty::Pretty, utils::indent_continuation};
 use tracing::{Level, event};
 
 impl Pretty {
@@ -37,18 +37,19 @@ impl Pretty {
 
     #[cfg(feature = "color")]
     fn inner_trace(&self, key: &str, value: &str) {
+        let indent = key.len() + 2;
         let key = if let Some(style) = &self.key_style {
             style
         } else {
             &BOLD_BLUE
         }
         .apply_to(key);
-        let value = if let Some(style) = &self.value_style {
+        let value_so = if let Some(style) = &self.value_style {
             style
         } else {
             &BOLD_GREEN
-        }
-        .apply_to(value);
+        };
+        let value = indent_continuation(value, indent, |line| value_so.apply_to(line).to_string());
         match self.level {
             Level::DEBUG => event!(Level::DEBUG, "{key}: {value}"),
             Level::ERROR => event!(Level::ERROR, "{key}: {value}"),
@@ -60,6 +61,7 @@ impl Pretty {
 
     #[cfg(not(feature = "color"))]
     fn inner_trace(&self, key: &str, value: &str) {
+        let value = indent_continuation(value, key.len() + 2, str::to_string);
         match self.level {
             Level::DEBUG => event!(Level::DEBUG, "{key}: {value}"),
             Level::ERROR => event!(Level::ERROR, "{key}: {value}"),

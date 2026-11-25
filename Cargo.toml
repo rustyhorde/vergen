@@ -12,13 +12,13 @@ members = [
 ]
 
 [workspace.dependencies]
-anyhow = "1.0.104"
+anyhow = "1.0.105"
 bon = "3.10.3"
 cargo_metadata = "0.23.1"
 console = "0.16.6"
 convert_case = "0.12.0"
 git2-rs = { version = "0.21.0", package = "git2", default-features = false }
-gix = { version = "0.90.0", default-features = false, features = [
+gix = { version = "0.91.0", default-features = false, features = [
     "revision",
     "worktree-mutation",
     "blocking-network-client",
@@ -45,6 +45,6 @@ tracing = { version = "0.1.44", features = [
     "release_max_level_trace",
 ] }
 tracing-subscriber = { version = "0.3.23", features = ["fmt"] }
-vergen = { version = "10.0.4", path = "vergen", default-features = false }
-vergen-gix = { version = "10.0.4", path = "vergen-gix" }
-vergen-lib = { version = "10.0.4", path = "vergen-lib" }
+vergen = { version = "10.1.0", path = "vergen", default-features = false }
+vergen-gix = { version = "10.1.0", path = "vergen-gix" }
+vergen-lib = { version = "10.1.0", path = "vergen-lib" }

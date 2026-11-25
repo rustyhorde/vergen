@@ -8,6 +8,64 @@
 
 use convert_case::{Case, Casing};
 
+/// The `vergen` key whose value is emitted with escaped newlines.
+const GIT_COMMIT_MESSAGE: &str = "VERGEN_GIT_COMMIT_MESSAGE";
+
+/// Decode a value escaped by `vergen` so it could be emitted on a single
+/// `cargo:rustc-env` line.
+///
+/// `vergen` escapes the multi-line `VERGEN_GIT_COMMIT_MESSAGE` value: each line feed
+/// is written as a backslash followed by `n`, and each backslash is doubled. This
+/// reverses that encoding. A backslash followed by any other character is left as-is.
+///
+/// [`Pretty`](crate::Pretty) calls this for you. Use it directly when reading the value
+/// with [`env!`](std::env!) yourself.
+///
+/// ```
+/// # use vergen_pretty::unescape_newlines;
+/// assert_eq!(unescape_newlines(r"feat: x\n\n* detail"), "feat: x\n\n* detail");
+/// assert_eq!(unescape_newlines(r"C:\\path"), r"C:\path");
+/// ```
+#[must_use]
+pub fn unescape_newlines(value: &str) -> String {
+    let mut unescaped = String::with_capacity(value.len());
+    let mut chars = value.chars();
+    while let Some(c) = chars.next() {
+        if c == '\\' {
+            match chars.next() {
+                Some('n') => unescaped.push('\n'),
+                Some('\\') | None => unescaped.push('\\'),
+                Some(other) => {
+                    unescaped.push('\\');
+                    unescaped.push(other);
+                }
+            }
+        } else {
+            unescaped.push(c);
+        }
+    }
+    unescaped
+}
+
+/// Join the lines of `value`, indenting every line after the first by `indent`
+/// spaces so they line up under the value column. `style` is applied to each
+/// line separately so styling never covers the indentation. Blank lines stay blank.
+pub(crate) fn indent_continuation<F>(value: &str, indent: usize, style: F) -> String
+where
+    F: Fn(&str) -> String,
+{
+    let mut lines = value.split('\n');
+    let mut output = style(lines.next().unwrap_or_default());
+    for line in lines {
+        output.push('\n');
+        if !line.is_empty() {
+            output.push_str(&" ".repeat(indent));
+            output.push_str(&style(line));
+        }
+    }
+    output
+}
+
 #[allow(clippy::ref_option_ref)]
 pub(crate) fn has_value(
     tuple: (&&'static str, &Option<&'static str>),
@@ -23,12 +81,17 @@ pub(crate) fn has_value(
 #[allow(clippy::unnecessary_wraps)]
 pub(crate) fn split_key(tuple: (&str, &str)) -> Option<(Vec<String>, String)> {
     let (key, value) = tuple;
+    let value = if key == GIT_COMMIT_MESSAGE {
+        unescape_newlines(value)
+    } else {
+        value.to_string()
+    };
     let key = key.to_ascii_lowercase();
     if key.starts_with("vergen") {
         let kv_vec: Vec<String> = key.split('_').filter_map(not_vergen).collect();
-        Some((kv_vec, value.to_string()))
+        Some((kv_vec, value))
     } else {
-        Some((vec![key], value.to_string()))
+        Some((vec![key], value))
     }
 }
 
@@ -66,7 +129,7 @@ fn caps_proper(val: String) -> String {
 
 #[cfg(test)]
 pub(crate) mod test_utils {
-    use super::{has_value, split_key, split_kv};
+    use super::{has_value, indent_continuation, split_key, split_kv, unescape_newlines};
     use std::collections::BTreeMap;
 
     pub(crate) const TEST_PREFIX_SUFFIX: &str = r"██████╗ ██████╗ ███████╗████████╗████████╗██╗   ██╗
@@ -103,5 +166,37 @@ pub(crate) mod test_utils {
         assert_eq!("custom", category);
         assert_eq!("test_k", label);
         assert_eq!("test_v", value);
+    }
+
+    #[test]
+    fn unescape_newlines_works() {
+        assert_eq!(unescape_newlines("subject"), "subject");
+        assert_eq!(unescape_newlines(r"a\n\nb"), "a\n\nb");
+        assert_eq!(unescape_newlines(r"C:\\path\\n"), r"C:\path\n");
+        assert_eq!(
+            unescape_newlines(r"keep \t and trailing \"),
+            r"keep \t and trailing \"
+        );
+    }
+
+    #[test]
+    fn split_key_unescapes_commit_message() {
+        let (_, value) = split_key(("VERGEN_GIT_COMMIT_MESSAGE", r"a\nb")).unwrap_or_default();
+        assert_eq!("a\nb", value);
+        let (_, value) = split_key(("VERGEN_GIT_BRANCH", r"a\nb")).unwrap_or_default();
+        assert_eq!(r"a\nb", value);
+    }
+
+    #[test]
+    fn indent_continuation_works() {
+        assert_eq!(indent_continuation("one", 4, str::to_string), "one");
+        assert_eq!(
+            indent_continuation("one\n\ntwo", 4, str::to_string),
+            "one\n\n    two"
+        );
+        assert_eq!(
+            indent_continuation("one\ntwo", 2, |l| format!("<{l}>")),
+            "<one>\n  <two>"
+        );
     }
 }

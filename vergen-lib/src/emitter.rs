@@ -6,7 +6,7 @@
 // option. All files in the project carrying such notice may not be copied,
 // modified, or distributed except according to those terms.
 
-use crate::{AddCustomEntries, AddEntries, CargoRustcEnvMap, DefaultConfig};
+use crate::{AddCustomEntries, AddEntries, CargoRustcEnvMap, DefaultConfig, VergenKey};
 use anyhow::Result;
 use std::{
     collections::BTreeMap,
@@ -335,7 +335,7 @@ impl Emitter {
     {
         // Emit the 'cargo:rustc-env' instructions
         for (k, v) in &self.cargo_rustc_env_map {
-            let sanitized_value = Self::filter_newlines(v);
+            let sanitized_value = Self::sanitize_value(*k, v);
             writeln!(stdout, "cargo:rustc-env={}={sanitized_value}", k.name())?;
         }
 
@@ -373,6 +373,40 @@ impl Emitter {
 
     fn filter_newlines(s: &str) -> String {
         s.chars().filter(|c| *c != '\n').collect()
+    }
+
+    /// Sanitize a value so it can be emitted on a single `cargo:rustc-env` line.
+    ///
+    /// Multi-line values (currently only `VERGEN_GIT_COMMIT_MESSAGE`) are escaped
+    /// with [`escape_newlines`](Self::escape_newlines) so the newlines survive.
+    /// All other values have their newlines stripped.
+    fn sanitize_value(key: VergenKey, value: &str) -> String {
+        #[cfg(feature = "git")]
+        if matches!(key, VergenKey::GitCommitMessage) {
+            return Self::escape_newlines(value);
+        }
+        #[cfg(not(feature = "git"))]
+        let _ = key;
+        Self::filter_newlines(value)
+    }
+
+    /// Escape a value so it fits on one line and can be decoded losslessly.
+    ///
+    /// * a backslash becomes two backslashes
+    /// * a line feed becomes a backslash followed by `n`
+    /// * carriage returns are dropped (so `CRLF` line endings become `\n`)
+    #[cfg_attr(not(feature = "git"), allow(dead_code))]
+    fn escape_newlines(s: &str) -> String {
+        let mut escaped = String::with_capacity(s.len());
+        for c in s.chars() {
+            match c {
+                '\\' => escaped.push_str("\\\\"),
+                '\n' => escaped.push_str("\\n"),
+                '\r' => {}
+                _ => escaped.push(c),
+            }
+        }
+        escaped
     }
 
     /// Emit cargo instructions from your build script
@@ -478,7 +512,7 @@ impl Emitter {
             for (k, v) in &self.cargo_rustc_env_map {
                 if env::var(k.name()).is_err() {
                     unsafe {
-                        env::set_var(k.name(), v);
+                        env::set_var(k.name(), Self::sanitize_value(*k, v));
                     }
                 }
             }
@@ -514,6 +548,28 @@ pub(crate) mod test {
     use anyhow::Result;
     use serial_test::serial;
     use std::io::Write;
+
+    #[test]
+    fn escape_newlines_works() {
+        assert_eq!(Emitter::escape_newlines("subject"), "subject");
+        assert_eq!(
+            Emitter::escape_newlines("subject\n\n* body"),
+            "subject\\n\\n* body"
+        );
+        assert_eq!(Emitter::escape_newlines("a\r\nb"), "a\\nb");
+        assert_eq!(Emitter::escape_newlines(r"C:\path\n"), r"C:\\path\\n");
+    }
+
+    #[test]
+    #[cfg(feature = "git")]
+    fn sanitize_value_escapes_commit_message() {
+        use crate::VergenKey;
+        assert_eq!(
+            Emitter::sanitize_value(VergenKey::GitCommitMessage, "a\nb"),
+            "a\\nb"
+        );
+        assert_eq!(Emitter::sanitize_value(VergenKey::GitBranch, "a\nb"), "ab");
+    }
 
     #[test]
     #[serial]

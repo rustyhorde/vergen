@@ -7,6 +7,8 @@
 // modified, or distributed except according to those terms.
 
 use self::{prefix::Prefix, suffix::Suffix};
+#[cfg(not(feature = "color"))]
+use crate::utils::indent_continuation;
 use crate::utils::{has_value, split_key, split_kv};
 use anyhow::Result;
 use bon::Builder;
@@ -226,6 +228,7 @@ impl Pretty {
     where
         T: Write + ?Sized,
     {
+        let value = indent_continuation(value, key.len() + 2, str::to_string);
         Ok(writeln!(writer, "{key}: {value}")?)
     }
 }
@@ -298,6 +301,31 @@ mod tests {
         } else {
             assert_ne!(stdout.len(), 0);
         }
+        Ok(())
+    }
+
+    #[test]
+    fn multiline_commit_message_aligns_under_value() -> Result<()> {
+        let mut map = std::collections::BTreeMap::new();
+        let _old = map.insert("VERGEN_GIT_BRANCH", Some("master"));
+        let _old = map.insert(
+            "VERGEN_GIT_COMMIT_MESSAGE",
+            Some(r"feat: subject\n\n* detail one\n* detail two"),
+        );
+        let mut stdout = vec![];
+        Pretty::builder().env(map).build().display(&mut stdout)?;
+        let output = String::from_utf8(stdout)?;
+        #[cfg(feature = "color")]
+        let output = console::strip_ansi_codes(&output).to_string();
+        let lines: Vec<&str> = output.lines().collect();
+        assert_eq!(lines.len(), 5);
+        let value_col = lines[1]
+            .find("feat: subject")
+            .expect("subject on first line");
+        assert_eq!(lines[2], "");
+        assert_eq!(lines[3].find("* detail one"), Some(value_col));
+        assert_eq!(lines[3][..value_col].trim(), "");
+        assert_eq!(lines[4].find("* detail two"), Some(value_col));
         Ok(())
     }
 }
