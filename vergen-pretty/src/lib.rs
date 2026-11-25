@@ -50,6 +50,22 @@
 //!
 //! See the [`Pretty`] documentation for more examples
 //!
+//! # Multi-line values
+//!
+//! `vergen` escapes the newlines in `VERGEN_GIT_COMMIT_MESSAGE` so the full message fits on
+//! one `cargo:rustc-env` line. [`Pretty`] decodes it with [`unescape_newlines`] and lines up
+//! the extra lines under the value column:
+//!
+//! ```text
+//!         Commit Message (  git): feat: subject
+//!
+//!                                 * detail one
+//!                                 * detail two
+//! ```
+//!
+//! The serialized output (with the `serde` or `rkyv` features) holds the decoded message,
+//! with real newlines.
+//!
 #![cfg_attr(
     feature = "header",
     doc = r"If you enable the header feature, you can also use the [`header()`] function
@@ -338,6 +354,7 @@ pub use self::pretty::feature::PrettyExt;
 pub use self::pretty::feature::rkyv_support::StyleWith;
 pub use self::pretty::prefix::Prefix;
 pub use self::pretty::suffix::Suffix;
+pub use self::utils::unescape_newlines;
 #[cfg(feature = "color")]
 #[doc(inline)]
 pub use console::Style;

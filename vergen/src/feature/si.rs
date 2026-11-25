@@ -13,7 +13,7 @@ use std::env;
 use sysinfo::{Cpu, Pid, Process, RefreshKind, System, User, Users, get_current_pid};
 use vergen_lib::{
     AddEntries, CargoRerunIfChanged, CargoRustcEnvMap, CargoWarning, DefaultConfig, VergenKey,
-    add_default_map_entry, add_map_entry,
+    add_default_map_entry, add_map_entry, add_unavailable_map_entry,
     constants::{
         SYSINFO_CPU_BRAND, SYSINFO_CPU_CORE_COUNT, SYSINFO_CPU_FREQUENCY, SYSINFO_CPU_NAME,
         SYSINFO_CPU_VENDOR, SYSINFO_MEMORY, SYSINFO_NAME, SYSINFO_OS_VERSION, SYSINFO_USER,
@@ -262,7 +262,7 @@ impl Sysinfo {
         } else if let Some(val) = value {
             add_map_entry(key, val, cargo_rustc_env);
         } else {
-            add_default_map_entry(idempotent, key, cargo_rustc_env, cargo_warning);
+            add_unavailable_map_entry(idempotent, key, cargo_rustc_env, cargo_warning);
         }
     }
 

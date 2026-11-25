@@ -23,7 +23,7 @@ use std::env;
 use vergen_lib::constants::CARGO_DEPENDENCIES;
 use vergen_lib::{
     AddEntries, CargoRerunIfChanged, CargoRustcEnvMap, CargoWarning, DefaultConfig, VergenKey,
-    add_default_map_entry, add_map_entry,
+    add_map_entry, add_unavailable_map_entry,
     constants::{CARGO_DEBUG, CARGO_FEATURES, CARGO_OPT_LEVEL, CARGO_TARGET_TRIPLE},
 };
 
@@ -380,7 +380,7 @@ impl Cargo {
         cargo_warning: &mut CargoWarning,
     ) {
         if self.dependencies {
-            add_default_map_entry(
+            add_unavailable_map_entry(
                 *config.idempotent(),
                 VergenKey::CargoDependencies,
                 cargo_rustc_env_map,
@@ -459,7 +459,7 @@ impl AddEntries for Cargo {
             Err(error)
         } else {
             if self.debug {
-                add_default_map_entry(
+                add_unavailable_map_entry(
                     *config.idempotent(),
                     VergenKey::CargoDebug,
                     cargo_rustc_env_map,
@@ -467,7 +467,7 @@ impl AddEntries for Cargo {
                 );
             }
             if self.features {
-                add_default_map_entry(
+                add_unavailable_map_entry(
                     *config.idempotent(),
                     VergenKey::CargoFeatures,
                     cargo_rustc_env_map,
@@ -475,7 +475,7 @@ impl AddEntries for Cargo {
                 );
             }
             if self.opt_level {
-                add_default_map_entry(
+                add_unavailable_map_entry(
                     *config.idempotent(),
                     VergenKey::CargoOptLevel,
                     cargo_rustc_env_map,
@@ -483,7 +483,7 @@ impl AddEntries for Cargo {
                 );
             }
             if self.target_triple {
-                add_default_map_entry(
+                add_unavailable_map_entry(
                     *config.idempotent(),
                     VergenKey::CargoTargetTriple,
                     cargo_rustc_env_map,
@@ -504,7 +504,7 @@ mod test {
     use serial_test::serial;
     use std::io::Write;
     use test_util::{with_cargo_vars, with_cargo_vars_ext};
-    use vergen_lib::count_idempotent;
+    use vergen_lib::{count_idempotent, count_unavailable};
 
     #[test]
     #[serial]
@@ -703,9 +703,10 @@ mod test {
         #[cfg(not(feature = "cargo_metadata"))]
         assert_eq!(4, config.cargo_rustc_env_map().len());
         #[cfg(feature = "cargo_metadata")]
-        assert_eq!(5, count_idempotent(config.cargo_rustc_env_map()));
+        assert_eq!(5, count_unavailable(config.cargo_rustc_env_map()));
         #[cfg(not(feature = "cargo_metadata"))]
-        assert_eq!(4, count_idempotent(config.cargo_rustc_env_map()));
+        assert_eq!(4, count_unavailable(config.cargo_rustc_env_map()));
+        assert_eq!(0, count_idempotent(config.cargo_rustc_env_map()));
         #[cfg(feature = "cargo_metadata")]
         assert_eq!(5, config.cargo_warning().len());
         #[cfg(not(feature = "cargo_metadata"))]

@@ -25,7 +25,7 @@ use time::{
 };
 use vergen_lib::{
     AddEntries, CargoRerunIfChanged, CargoRustcEnvMap, CargoWarning, DefaultConfig, Describe,
-    Dirty, Sha, VergenKey, add_default_map_entry, add_map_entry,
+    Dirty, Sha, VergenKey, add_default_map_entry, add_map_entry, add_unavailable_map_entry,
     constants::{
         GIT_BRANCH_NAME, GIT_COMMIT_AUTHOR_EMAIL, GIT_COMMIT_AUTHOR_NAME, GIT_COMMIT_COUNT,
         GIT_COMMIT_DATE_NAME, GIT_COMMIT_MESSAGE, GIT_COMMIT_TIMESTAMP_NAME,
@@ -65,7 +65,7 @@ macro_rules! commit_date {
 }
 macro_rules! commit_message {
     () => {
-        "git log -1 --format=%s"
+        "git log -1 --format=%B"
     };
 }
 const COMMIT_MESSAGE: &str = commit_message!();
@@ -274,6 +274,16 @@ pub struct Gitcl {
     ///
     /// ```text
     /// cargo:rustc-env=VERGEN_GIT_COMMIT_MESSAGE=<MESSAGE>
+    /// ```
+    ///
+    /// The full message (subject and body) is emitted. A `cargo:rustc-env` value must fit
+    /// on one line, so newlines are escaped: each line feed is written as a backslash
+    /// followed by `n`, and each backslash is doubled. `vergen-pretty` decodes this for
+    /// you; when reading the value with `env!` yourself, decode it with
+    /// `vergen_pretty::unescape_newlines` or by reversing the two rules above.
+    ///
+    /// ```text
+    /// cargo:rustc-env=VERGEN_GIT_COMMIT_MESSAGE=feat: subject\n\n* detail one\n* detail two
     /// ```
     ///
     #[builder(default = all)]
@@ -899,7 +909,7 @@ impl Gitcl {
             }
         } else {
             if self.commit_date && !date_override {
-                add_default_map_entry(
+                add_unavailable_map_entry(
                     idempotent,
                     VergenKey::GitCommitDate,
                     cargo_rustc_env,
@@ -908,7 +918,7 @@ impl Gitcl {
             }
 
             if self.commit_timestamp && !timestamp_override {
-                add_default_map_entry(
+                add_unavailable_map_entry(
                     idempotent,
                     VergenKey::GitCommitTimestamp,
                     cargo_rustc_env,
@@ -917,7 +927,7 @@ impl Gitcl {
             }
 
             if self.commit_timestamp_unix && !timestamp_unix_override {
-                add_default_map_entry(
+                add_unavailable_map_entry(
                     idempotent,
                     VergenKey::GitCommitTimestampUnix,
                     cargo_rustc_env,
@@ -1102,7 +1112,7 @@ impl AddEntries for Gitcl {
             let vcs = self.vcs_fallback();
 
             if self.branch {
-                add_default_map_entry(
+                add_unavailable_map_entry(
                     *config.idempotent(),
                     VergenKey::GitBranch,
                     cargo_rustc_env_map,
@@ -1110,7 +1120,7 @@ impl AddEntries for Gitcl {
                 );
             }
             if self.commit_author_email {
-                add_default_map_entry(
+                add_unavailable_map_entry(
                     *config.idempotent(),
                     VergenKey::GitCommitAuthorEmail,
                     cargo_rustc_env_map,
@@ -1118,7 +1128,7 @@ impl AddEntries for Gitcl {
                 );
             }
             if self.commit_author_name {
-                add_default_map_entry(
+                add_unavailable_map_entry(
                     *config.idempotent(),
                     VergenKey::GitCommitAuthorName,
                     cargo_rustc_env_map,
@@ -1126,7 +1136,7 @@ impl AddEntries for Gitcl {
                 );
             }
             if self.commit_count {
-                add_default_map_entry(
+                add_unavailable_map_entry(
                     *config.idempotent(),
                     VergenKey::GitCommitCount,
                     cargo_rustc_env_map,
@@ -1134,7 +1144,7 @@ impl AddEntries for Gitcl {
                 );
             }
             if self.commit_date {
-                add_default_map_entry(
+                add_unavailable_map_entry(
                     *config.idempotent(),
                     VergenKey::GitCommitDate,
                     cargo_rustc_env_map,
@@ -1142,7 +1152,7 @@ impl AddEntries for Gitcl {
                 );
             }
             if self.commit_message {
-                add_default_map_entry(
+                add_unavailable_map_entry(
                     *config.idempotent(),
                     VergenKey::GitCommitMessage,
                     cargo_rustc_env_map,
@@ -1150,7 +1160,7 @@ impl AddEntries for Gitcl {
                 );
             }
             if self.commit_timestamp {
-                add_default_map_entry(
+                add_unavailable_map_entry(
                     *config.idempotent(),
                     VergenKey::GitCommitTimestamp,
                     cargo_rustc_env_map,
@@ -1158,7 +1168,7 @@ impl AddEntries for Gitcl {
                 );
             }
             if self.commit_timestamp_unix {
-                add_default_map_entry(
+                add_unavailable_map_entry(
                     *config.idempotent(),
                     VergenKey::GitCommitTimestampUnix,
                     cargo_rustc_env_map,
@@ -1166,7 +1176,7 @@ impl AddEntries for Gitcl {
                 );
             }
             if self.describe.is_some() {
-                add_default_map_entry(
+                add_unavailable_map_entry(
                     *config.idempotent(),
                     VergenKey::GitDescribe,
                     cargo_rustc_env_map,
@@ -1177,7 +1187,7 @@ impl AddEntries for Gitcl {
                 if let Some((sha, _)) = &vcs {
                     add_map_entry(VergenKey::GitSha, sha.clone(), cargo_rustc_env_map);
                 } else {
-                    add_default_map_entry(
+                    add_unavailable_map_entry(
                         *config.idempotent(),
                         VergenKey::GitSha,
                         cargo_rustc_env_map,
@@ -1189,7 +1199,7 @@ impl AddEntries for Gitcl {
                 if let Some((_, dirty)) = &vcs {
                     add_map_entry(VergenKey::GitDirty, dirty.to_string(), cargo_rustc_env_map);
                 } else {
-                    add_default_map_entry(
+                    add_unavailable_map_entry(
                         *config.idempotent(),
                         VergenKey::GitDirty,
                         cargo_rustc_env_map,
@@ -1214,7 +1224,7 @@ mod test {
     #[cfg(unix)]
     use test_util::TEST_MTIME;
     use test_util::TestRepos;
-    use vergen_lib::{VergenKey, count_idempotent};
+    use vergen_lib::{VergenKey, count_idempotent, count_unavailable};
 
     #[test]
     #[serial]
@@ -1399,6 +1409,20 @@ mod test {
 
     #[test]
     #[serial]
+    fn bad_git_command_unix_timestamp_unavailable() -> Result<()> {
+        let mut gitcl = Gitcl::builder().commit_timestamp_unix(true).build();
+        let _ = gitcl.git_cmd(Some("this_is_not_a_git_cmd"));
+        let emitter = Emitter::default()
+            .idempotent()
+            .add_instructions(&gitcl)?
+            .test_emit();
+        assert_eq!(1, emitter.cargo_rustc_env_map().len());
+        assert_eq!(1, count_unavailable(emitter.cargo_rustc_env_map()));
+        Ok(())
+    }
+
+    #[test]
+    #[serial]
     fn idempotent_on_bad_git_command() -> Result<()> {
         let mut gitcl = Gitcl::all_git();
         let _ = gitcl.git_cmd(Some("this_is_not_a_git_cmd"));
@@ -1407,7 +1431,8 @@ mod test {
             .add_instructions(&gitcl)?
             .test_emit();
         assert_eq!(10, emitter.cargo_rustc_env_map().len());
-        assert_eq!(10, count_idempotent(emitter.cargo_rustc_env_map()));
+        assert_eq!(10, count_unavailable(emitter.cargo_rustc_env_map()));
+        assert_eq!(0, count_idempotent(emitter.cargo_rustc_env_map()));
         assert_eq!(11, emitter.cargo_warning().len());
         Ok(())
     }
@@ -1439,7 +1464,7 @@ mod test {
     fn bad_timestamp_idempotent() -> Result<()> {
         let mut map = BTreeMap::new();
         let mut warnings = vec![];
-        let gitcl = Gitcl::all_git();
+        let gitcl = Gitcl::all().commit_timestamp_unix(true).build();
         assert!(
             gitcl
                 .add_git_timestamp_entries(
@@ -1451,8 +1476,9 @@ mod test {
                 )
                 .is_ok()
         );
-        assert_eq!(2, map.len());
-        assert_eq!(2, warnings.len());
+        assert_eq!(3, map.len());
+        assert_eq!(3, count_unavailable(&map));
+        assert_eq!(3, warnings.len());
         Ok(())
     }
 

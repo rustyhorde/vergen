@@ -260,6 +260,8 @@ pub use self::entries::test_gen::CustomInsGen;
 pub use self::keys::vergen_key::VergenKey;
 pub use self::utils::add_default_map_entry;
 pub use self::utils::add_map_entry;
+pub use self::utils::add_unavailable_map_entry;
 pub use self::utils::count_idempotent;
+pub use self::utils::count_unavailable;
 #[cfg(feature = "vcs_info")]
 pub use self::utils::vcs_info;

@@ -10,7 +10,7 @@ rust-version = "1.96.0"
 name = "test_util"
 publish = false
 repository = "https://github.com/rustyhorde/vergen"
-version = "10.0.4"
+version = "10.1.0"
 
 [package.metadata.cargo-matrix]
 [[package.metadata.cargo-matrix.channel]]

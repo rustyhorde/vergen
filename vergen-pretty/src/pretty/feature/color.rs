@@ -6,7 +6,7 @@
 // option. All files in the project carrying such notice may not be copied,
 // modified, or distributed except according to those terms.
 
-use crate::{Prefix, Suffix, pretty::Pretty};
+use crate::{Prefix, Suffix, pretty::Pretty, utils::indent_continuation};
 use anyhow::Result;
 use console::Style;
 use std::{io::Write, sync::LazyLock};
@@ -30,8 +30,10 @@ impl Pretty {
         } else {
             &*BOLD_GREEN
         };
+        let value = indent_continuation(value, key.len() + 2, |line| {
+            value_so.apply_to(line).to_string()
+        });
         let key = key_so.apply_to(key);
-        let value = value_so.apply_to(value);
         Ok(writeln!(writer, "{key}: {value}")?)
     }
 }

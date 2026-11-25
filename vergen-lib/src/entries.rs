@@ -126,11 +126,11 @@ pub trait Add {
 /// ## Then in build.rs
 ///
 /// ```will_not_compile
-/// let build = BuildBuilder::all_build()?;
-/// let cargo = CargoBuilder::all_cargo()?;
-/// let gix = GixBuilder::all_git()?;
-/// let rustc = RustcBuilder::all_rustc()?;
-/// let si = SysinfoBuilder::all_sysinfo()?;
+/// let build = Build::all_build();
+/// let cargo = Cargo::all_cargo();
+/// let gix = Gix::all_git();
+/// let rustc = Rustc::all_rustc();
+/// let si = Sysinfo::all_sysinfo();
 /// Emitter::default()
 ///     .add_instructions(&build)?
 ///     .add_instructions(&cargo)?
